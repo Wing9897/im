@@ -169,7 +169,7 @@ async def insert_analysis_task(
     output_calendar: int = 0,
     output_analysis_events: int = 1,
     llm_profile_id: str,
-    notify_pref: str = "follow",
+    notify_pref: str = "inherit",
     now: str,
 ) -> None:
     await tx.execute(
@@ -244,7 +244,7 @@ async def update_analysis_task(
     output_calendar: int = 0,
     output_analysis_events: int = 1,
     llm_profile_id: str,
-    notify_pref: str = "follow",
+    notify_pref: str = "inherit",
     now: str,
 ) -> None:
     await tx.execute(

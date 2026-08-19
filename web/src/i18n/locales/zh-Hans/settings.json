@@ -22,10 +22,7 @@
     "saving": "储存中…",
     "saveSuccess": "✓ 储存成功！",
     "restarting": "重启中…",
-    "resetting": "重置中…",
-    "cleaning": "清理中…",
-    "enabled": "已启用",
-    "disabled": "已关闭"
+    "cleaning": "清理中…"
   },
   "concurrentBatchesConfirm": {
     "title": "确认增加并行批次数",
@@ -98,7 +95,6 @@
     "removeImage": "移除图片",
     "bgPreviewAlt": "背景预览",
     "opacity": "透明度",
-    "customizeHeading": "自定义此主题",
     "personalizationSectionTitle": "个性化",
     "colorsHeading": "颜色与不透明度",
     "colorAccent": "强调色",
@@ -159,12 +155,10 @@
       "appLogs": "日志",
       "userEvents": "用户事件",
       "timelineDismissals": "时间轴隐藏",
-      "assistantStores": "助手工作区",
       "deviceAccessTokens": "设备访问令牌",
       "deviceSessions": "设备会话",
       "separator": "、"
     },
-    "restartApp": "重新启动应用程式",
     "retentionCleanupDescription": "依目前保留天数设定立即执行一次清理，并回传各类删除笔数。不会重启服务。",
     "runCleanupButton": "立即清理",
     "retentionRunConfirmTitle": "确定要立即清理？",
@@ -182,13 +176,8 @@
     "testSuccess": "AI 测试成功（{latency}ms，{tokens}{preview}）",
     "testPreviewSuffix": "，回复：{preview}",
     "testFailedDefault": "AI 测试失败",
-    "loading": "载入 AI 设定档中…",
-    "loadError": "无法载入 AI 设定档",
-    "testHint": "「AI 测试」只验证该设定档的 LLM 连线（极短请求），不含联网搜索。",
-    "testHintUnsaved": "（含未保存变更）",
     "testing": "测试中…",
-    "testButton": "AI 测试",
-    "saveLabel": "储存 AI 设定档"
+    "testButton": "AI 测试"
   },
   "webSearch": {
     "sectionTitle": "联网搜索",
@@ -485,17 +474,13 @@
     "docsHint": "完整契约见仓库 docs/agent/mcp.md。"
   },
   "staff": {
-    "title": "AI 员工介绍",
     "intro": "前线两位：助手、任务顾问。后勤三位：排行榜分析员、情报任务分析员、项目经理（由分析任务自动召唤）。另有「客户经理」接待外部系统（A2A，与助手同组，不跟你聊天）。",
     "capabilitiesLabel": "能做什么",
     "backofficeNote": "后勤员工由分析任务自动召唤，不会出现在对话框。",
     "openAssistant": "打开助手对话",
     "openTaskEditor": "打开任务顾问对话",
     "displayNameLabel": "显示名称",
-    "displayNameHelp": "留空则使用默认名称。",
     "editNameAria": "编辑助手显示名称",
-    "editLlmAria": "编辑助手对话保留设定",
-    "llmDialogTitle": "助手对话保留",
     "llmDialogCancel": "取消",
     "llmDialogSave": "保存",
     "uploadAvatar": "上传",
@@ -504,14 +489,10 @@
     "resetAvatarAria": "将助手头像重设为默认",
     "avatarTooLarge": "压缩后图片仍过大，请换一张更小的图。",
     "avatarReadFailed": "无法读取该图片。",
-    "llmProviderLabel": "LLM 供应商",
-    "llmProviderFollow": "跟随默认 AI 设定档",
-    "llmProviderHelp": "LLM 连线请在「AI 设定档」中配置，并在此绑定员工类别。",
     "historyMaxMessagesLabel": "对话保留条数",
     "historyMaxMessagesHelp": "送入模型时最多保留的近期消息数（系统提示不计）。超出时省略较早轮次；界面记录仍完整保留。默认 40。",
     "historyMaxCharsLabel": "对话字符上限",
     "historyMaxCharsHelp": "送入模型的对话总字符约略上限（含系统提示）。超出时省略较早轮次。默认 48000。",
-    "saveLabel": "保存",
     "kind": {
       "agent": "Agent 级",
       "oneshot": "单次／专职 AI"
@@ -631,7 +612,6 @@
     "namePlaceholder": "例如：本机 Ollama",
     "nameRequired": "请填写设定档名称。",
     "apiKeyRequired": "此供应商需要 API 密钥。",
-    "staffClassesLabel": "任务员工类别",
     "staffClassesHelp": "哪些任务模式角色可使用此设定档。任务仍须在表单挑选 llmProfileId。助手／A2A／任务顾问请用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析员",

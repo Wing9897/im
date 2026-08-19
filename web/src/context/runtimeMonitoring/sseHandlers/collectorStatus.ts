@@ -72,17 +72,17 @@ export function handleCollectorStatusChanged(
   const aggregateStatus = normalizeCollectorStatus(String(payload.status));
 
   if (
-    payload.adapter_name
-    && payload.error_summary
+    payload.adapterName
+    && payload.errorSummary
     && aggregateStatus !== "running"
-    && !isTransientCollectorError(payload.error_summary)
+    && !isTransientCollectorError(payload.errorSummary)
   ) {
     errorToastEmitter.emit({
       errorCode: "COLLECTOR_UNAVAILABLE",
       message: String(
         i18n.t("common:runtime.adapterConnectFailed", {
-          name: payload.adapter_name,
-          summary: payload.error_summary,
+          name: payload.adapterName,
+          summary: payload.errorSummary,
         }),
       ),
       correlationId: payload.correlation_id ?? crypto.randomUUID(),

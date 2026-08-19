@@ -118,8 +118,6 @@
     "quietCaption": "此時段內不播報。",
     "preambleCaption": "朗讀前播放的提示音。",
     "enableLabel": "啟用通知",
-    "channelVoiceLabel": "語音",
-    "channelFlashLabel": "畫面",
     "flashModeLabel": "呈現方式",
     "flashModeTimed": "閃現",
     "flashModePersistent": "持續",
@@ -134,7 +132,6 @@
       "240": "4 小時",
       "1440": "1 天"
     },
-    "leadAria": "提前通知 {label}",
     "chime": {
       "broadcast": "公共廣播開場",
       "station": "捷運／車站提示",

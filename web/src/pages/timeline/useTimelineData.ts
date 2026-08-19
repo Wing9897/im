@@ -18,7 +18,7 @@ import { useGanttData } from "./useGanttData";
 const EMPTY_EVENTS: TimelineItem[] = [];
 
 interface UseTimelineDataOptions {
-  /** `null` = all, `[]` = none, otherwise multi-select (may include `__user__`). */
+  /** `null` = all, `[]` = none, otherwise multi-select (may include `__general__`). */
   selectedSources: SourceFilterSelection;
   /** Current view mode — span fetching only triggers in "gantt" mode. */
   viewMode: "calendar" | "gantt";

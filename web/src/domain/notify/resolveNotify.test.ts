@@ -8,20 +8,21 @@ import {
 import { resolveEventNotify, resolveNotify } from "./resolveNotify";
 
 describe("normalizeNotifyPref", () => {
-  it("defaults blank and unknown values to follow", () => {
-    expect(normalizeNotifyPref(null)).toBe("follow");
-    expect(normalizeNotifyPref(undefined)).toBe("follow");
-    expect(normalizeNotifyPref("")).toBe("follow");
-    expect(normalizeNotifyPref("maybe")).toBe("follow");
-    expect(normalizeNotifyPref("follow")).toBe("follow");
+  it("defaults blank and unknown values to inherit", () => {
+    expect(normalizeNotifyPref(null)).toBe("inherit");
+    expect(normalizeNotifyPref(undefined)).toBe("inherit");
+    expect(normalizeNotifyPref("")).toBe("inherit");
+    expect(normalizeNotifyPref("maybe")).toBe("inherit");
+    expect(normalizeNotifyPref("inherit")).toBe("inherit");
     expect(normalizeNotifyPref("off")).toBe("off");
-    expect(normalizeNotifyPref("on")).toBe("follow"); // HTTP "on" is 422; read coerce → default
+    expect(normalizeNotifyPref("follow")).toBe("inherit"); // HTTP "follow" is 422; read coerce → default
+    expect(normalizeNotifyPref("on")).toBe("inherit"); // HTTP "on" is 422; read coerce → default
   });
 
-  it("maps checkbox state to follow / off", () => {
-    expect(notifyPrefChecked("follow")).toBe(true);
+  it("maps checkbox state to inherit / off", () => {
+    expect(notifyPrefChecked("inherit")).toBe(true);
     expect(notifyPrefChecked("off")).toBe(false);
-    expect(notifyPrefFromChecked(true)).toBe("follow");
+    expect(notifyPrefFromChecked(true)).toBe("inherit");
     expect(notifyPrefFromChecked(false)).toBe("off");
   });
 });
@@ -29,7 +30,7 @@ describe("normalizeNotifyPref", () => {
 describe("resolveNotify", () => {
   it("mutes everything when the global master is off", () => {
     expect(
-      resolveNotify({ override: "follow", worksetNotifyEnabled: true, globalEnabled: false }),
+      resolveNotify({ override: "inherit", worksetNotifyEnabled: true, globalEnabled: false }),
     ).toBe(false);
     expect(
       resolveNotify({ override: "off", worksetNotifyEnabled: true, globalEnabled: false }),
@@ -39,7 +40,7 @@ describe("resolveNotify", () => {
   it("mutes everything during quiet hours / DND", () => {
     expect(
       resolveNotify({
-        override: "follow",
+        override: "inherit",
         worksetNotifyEnabled: true,
         globalEnabled: true,
         quietHoursActive: true,
@@ -49,10 +50,10 @@ describe("resolveNotify", () => {
 
   it("follows the workset default", () => {
     expect(
-      resolveNotify({ override: "follow", worksetNotifyEnabled: true, globalEnabled: true }),
+      resolveNotify({ override: "inherit", worksetNotifyEnabled: true, globalEnabled: true }),
     ).toBe(true);
     expect(
-      resolveNotify({ override: "follow", worksetNotifyEnabled: false, globalEnabled: true }),
+      resolveNotify({ override: "inherit", worksetNotifyEnabled: false, globalEnabled: true }),
     ).toBe(false);
     expect(
       resolveNotify({ override: undefined, worksetNotifyEnabled: null, globalEnabled: true }),
@@ -80,7 +81,7 @@ describe("resolveEventNotify", () => {
 
   it("uses analysis-task pref and workset from the catalog", () => {
     const tasksById = new Map([
-      ["task-1", { notifyPref: "follow" as const, worksetId: "ws-muted" }],
+      ["task-1", { notifyPref: "inherit" as const, worksetId: "ws-muted" }],
       ["task-2", { notifyPref: "off" as const, worksetId: SYSTEM_WORKSET_ID }],
     ]);
     expect(
@@ -103,7 +104,7 @@ describe("resolveEventNotify", () => {
     ]);
     expect(
       resolveEventNotify(
-        { kind: "recurring", taskId: "ser-1", notifyPref: "follow" },
+        { kind: "recurring", taskId: "ser-1", notifyPref: "inherit" },
         { globalEnabled: true, worksetNotifyById, seriesById },
       ),
     ).toBe(false);
@@ -118,7 +119,7 @@ describe("resolveEventNotify", () => {
     ).toBe(false);
     expect(
       resolveEventNotify(
-        { kind: "recurring", taskId: "ser-missing", notifyPref: "follow", worksetId: "ws-muted" },
+        { kind: "recurring", taskId: "ser-missing", notifyPref: "inherit", worksetId: "ws-muted" },
         { globalEnabled: true, worksetNotifyById, seriesById: new Map() },
       ),
     ).toBe(false);
@@ -127,7 +128,7 @@ describe("resolveEventNotify", () => {
   it("uses the user-event row pref and workset", () => {
     expect(
       resolveEventNotify(
-        { kind: "user", worksetId: "ws-muted", notifyPref: "follow" },
+        { kind: "user", worksetId: "ws-muted", notifyPref: "inherit" },
         { globalEnabled: true, worksetNotifyById },
       ),
     ).toBe(false);
@@ -139,7 +140,7 @@ describe("resolveEventNotify", () => {
     ).toBe(false);
     expect(
       resolveEventNotify(
-        { kind: "user", worksetId: SYSTEM_WORKSET_ID, notifyPref: "follow" },
+        { kind: "user", worksetId: SYSTEM_WORKSET_ID, notifyPref: "inherit" },
         { globalEnabled: true, worksetNotifyById },
       ),
     ).toBe(true);

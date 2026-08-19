@@ -5,7 +5,7 @@ import type { ChannelWithSource, Message } from "../types";
 
 /** Fetches all channels with their associated source metadata. */
 export function listChannelsWithSources(): Promise<ChannelWithSource[]> {
-  return apiClient.get<ChannelWithSource[]>("/api/v1/channels/with-sources");
+  return apiClient.get<ChannelWithSource[]>("/api/v1/channels");
 }
 
 /** Bootstraps the newest messages per channel for the wall page. */

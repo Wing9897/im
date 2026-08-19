@@ -16,7 +16,7 @@ Do **not** merge these surfaces — lifecycles differ:
 | Admin + device session | `/api/v1/setup/*` | Everyday UI auth: register, login, change/reset password, refresh, logout, list/revoke devices |
 | Access key CRUD | `/api/v1/access-keys` | Household automation secrets (Webhook / scripts / A2A / MCP); UI at `/account/keys` (create always `*`). Bearer API keys authenticate automation only — they do **not** mint UI device sessions |
 | A2A | `/api/v1/a2a/agent` | External agents; natural-language LLM agent (single-shot); **access key + `*` only** (no device session). Household master `a2a_enabled` (default on) closes this HTTP when off. Tool loop is also gated by household `mcp_cap_*` and `worksets.external_enabled` (same as MCP). See [`docs/agent/a2a.md`](agent/a2a.md) |
-| MCP | `/api/v1/mcp` | External agents; Streamable HTTP structured tools (calendar／messages／intelligence／items allowlist); **same access-key + `*` gate as A2A** (no device session, no local LLM). Household master `mcp_enabled` (default on) is independent of A2A. Capability groups `mcp_cap_*` are household settings, not key scopes. Workset visibility is `worksets.external_enabled` on the Worksets page. See [`docs/agent/mcp.md`](agent/mcp.md) |
+| MCP | `/api/v1/mcp` | External agents; Streamable HTTP structured tools (base-20 calendar／messages／intelligence／items／`worksets.list` allowlist); **same access-key + `*` gate as A2A** (no device session, no local LLM). Household master `mcp_enabled` (default on) is independent of A2A. Capability groups `mcp_cap_*` are household settings, not key scopes. Workset visibility is `worksets.external_enabled` on the Worksets page. See [`docs/agent/mcp.md`](agent/mcp.md) |
 
 ## Desktop ↔ Web connection vocabulary
 

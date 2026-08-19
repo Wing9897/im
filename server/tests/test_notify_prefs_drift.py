@@ -19,7 +19,7 @@ from server.domain.notify_prefs import (
 )
 
 _NOTIFY_CHECK = re.compile(
-    r"notify_pref\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'(follow|off)'\s+"
+    r"notify_pref\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'(inherit|off)'\s+"
     r"CHECK\s+\(\s*notify_pref\s+IN\s+\(([^)]+)\)\s*\)",
     re.IGNORECASE,
 )
@@ -47,12 +47,12 @@ def test_notify_prefs_match_ddl_check() -> None:
     assert calendar_values == ALLOWED_NOTIFY_PREFS
     assert tasks_values == ALLOWED_NOTIFY_PREFS
     assert {default for default, _ in calendar_matches} == {"off"}
-    assert {default for default, _ in tasks_matches} == {"follow"}
+    assert {default for default, _ in tasks_matches} == {"inherit"}
     assert calendar_ddl.DDL.count(NOTIFY_PREF_CHECK_SQL) == 2
     assert NOTIFY_PREF_CHECK_SQL in tasks_ddl.DDL
     assert len(ALL_NOTIFY_PREFS) == len(set(ALL_NOTIFY_PREFS))
     assert set(ALL_NOTIFY_PREFS) == ALLOWED_NOTIFY_PREFS
-    assert tuple(ALL_NOTIFY_PREFS) == ("follow", "off")
+    assert tuple(ALL_NOTIFY_PREFS) == ("inherit", "off")
 
 
 def test_worksets_notify_enabled_default_on() -> None:
@@ -61,14 +61,14 @@ def test_worksets_notify_enabled_default_on() -> None:
 
 
 def test_normalize_notify_pref_blank_and_invalid() -> None:
-    assert normalize_notify_pref(None) == "follow"
-    assert normalize_notify_pref("") == "follow"
+    assert normalize_notify_pref(None) == "inherit"
+    assert normalize_notify_pref("") == "inherit"
     assert normalize_notify_pref("off") == "off"
     from server.domain.notify_prefs import DEFAULT_CALENDAR_NOTIFY_PREF
 
     assert DEFAULT_CALENDAR_NOTIFY_PREF == "off"
     assert normalize_notify_pref(None, default=DEFAULT_CALENDAR_NOTIFY_PREF) == "off"
-    for invalid in ("on", " on ", "maybe"):
+    for invalid in ("on", " on ", "maybe", "follow"):
         try:
             normalize_notify_pref(invalid)
         except ValueError as exc:
@@ -77,17 +77,18 @@ def test_normalize_notify_pref_blank_and_invalid() -> None:
             raise AssertionError(f"expected ValueError for notifyPref={invalid!r}")
 
 
-def test_coerced_notify_pref_rejects_legacy_on() -> None:
+def test_coerced_notify_pref_rejects_legacy_on_and_follow() -> None:
     from pydantic import TypeAdapter, ValidationError
 
     from server.api.schemas.notify_pref import CoercedNotifyPref
 
     adapter = TypeAdapter(CoercedNotifyPref)
-    try:
-        adapter.validate_python("on")
-    except ValidationError:
-        pass
-    else:
-        raise AssertionError("expected ValidationError for notifyPref='on'")
-    assert adapter.validate_python("follow") == "follow"
+    for invalid in ("on", "follow"):
+        try:
+            adapter.validate_python(invalid)
+        except ValidationError:
+            pass
+        else:
+            raise AssertionError(f"expected ValidationError for notifyPref={invalid!r}")
+    assert adapter.validate_python("inherit") == "inherit"
     assert adapter.validate_python("off") == "off"

@@ -117,6 +117,7 @@ async def test_create_recurring_series_weekly(app) -> None:
     assert task["eventStartTime"] == "10:00"
     assert task["eventEndTime"] == "11:00"
     assert task["isActive"] is True
+    assert task["worksetId"] == "__general__"
 
     row = await db.fetch_one("SELECT * FROM recurring_schedules WHERE id = ?", (task["id"],))
     assert row is not None
@@ -127,6 +128,62 @@ async def test_create_recurring_series_weekly(app) -> None:
 
     listed = await execute_calendar_tool(db, "calendar.list_calendars", {})
     assert any(c["id"] == task["id"] and c["analysisMode"] == "" for c in listed["calendars"])
+
+
+async def test_create_and_update_recurring_series_workset_id(app) -> None:
+    db = app.state.db
+    from server.db.database import TransactionDb
+    from server.queries.worksets_queries import insert_workset
+    from server.util import utc_now_iso
+
+    now = utc_now_iso()
+    async with db.transaction() as conn:
+        await insert_workset(TransactionDb(conn), workset_id="ws-recurring", name="Recurring WS", now=now)
+
+    created = await execute_calendar_tool(
+        db,
+        "calendar.create_recurring_series",
+        {
+            "name": "歸屬工作集",
+            "rrule": "FREQ=DAILY;COUNT=2",
+            "eventStartTime": "08:00",
+            "worksetId": "ws-recurring",
+        },
+    )
+    assert "error" not in created
+    assert created["series"]["worksetId"] == "ws-recurring"
+
+    moved = await execute_calendar_tool(
+        db,
+        "calendar.update_recurring_series",
+        {"id": created["series"]["id"], "worksetId": "__general__"},
+    )
+    assert moved["series"]["worksetId"] == "__general__"
+
+
+async def test_create_recurring_series_uses_context_default_workset(app) -> None:
+    from server.agent.tools_registry import execute_tool
+    from server.db.database import TransactionDb
+    from server.queries.worksets_queries import insert_workset
+    from server.util import utc_now_iso
+
+    db = app.state.db
+    now = utc_now_iso()
+    async with db.transaction() as conn:
+        await insert_workset(TransactionDb(conn), workset_id="ws-voice-default", name="Voice", now=now)
+
+    created = await execute_tool(
+        db,
+        "calendar.create_recurring_series",
+        {
+            "name": "語音預設工作集",
+            "rrule": "FREQ=WEEKLY;BYDAY=FR",
+            "eventStartTime": "19:00",
+        },
+        context={"default_workset_id": "ws-voice-default"},
+    )
+    assert "error" not in created
+    assert created["series"]["worksetId"] == "ws-voice-default"
 
 
 async def test_create_recurring_series_appears_in_upcoming(app) -> None:

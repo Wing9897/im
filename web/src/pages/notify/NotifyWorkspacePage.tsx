@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AppPageShell } from "../../components/ui";
 import { ActionTypesTab } from "./components/ActionTypesTab";
@@ -12,26 +12,13 @@ import { LocalNotifyPanel } from "./components/LocalNotifyPanel";
  * outbound ActionType rules, local notifications, and trigger history.
  * Tab state is `?tab=` (same pattern as source management).
  * Default wire tab id is `"types"` (ActionTypesTab).
- * Legacy `?tab=voice` redirects once to `?tab=notify`.
+ * Unknown `?tab=` values (including retired `voice`) fall back to types — no redirect.
  */
-export function ActionsPage() {
+export function NotifyWorkspacePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    if (searchParams.get("tab") !== "voice") return;
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set("tab", "notify");
-        return next;
-      },
-      { replace: true },
-    );
-  }, [searchParams, setSearchParams]);
 
   const activeTab = useMemo((): ActionsTabKey => {
     const tab = searchParams.get("tab");
-    if (tab === "voice") return "notify";
     return isActionsTabKey(tab) ? tab : "types";
   }, [searchParams]);
 

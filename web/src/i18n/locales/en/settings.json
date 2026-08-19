@@ -22,10 +22,7 @@
     "saving": "Saving…",
     "saveSuccess": "✓ Saved!",
     "restarting": "Restarting…",
-    "resetting": "Resetting…",
-    "cleaning": "Cleaning up…",
-    "enabled": "Enabled",
-    "disabled": "Disabled"
+    "cleaning": "Cleaning up…"
   },
   "concurrentBatchesConfirm": {
     "title": "Confirm increasing concurrent batches",
@@ -99,7 +96,6 @@
     "removeImage": "Remove image",
     "bgPreviewAlt": "Background preview",
     "opacity": "Opacity",
-    "customizeHeading": "Customize this theme",
     "personalizationSectionTitle": "Personalization",
     "colorsHeading": "Colors & opacity",
     "colorAccent": "Accent",
@@ -160,12 +156,10 @@
       "appLogs": "logs",
       "userEvents": "user events",
       "timelineDismissals": "timeline dismissals",
-      "assistantStores": "assistant stores",
       "deviceAccessTokens": "device access tokens",
       "deviceSessions": "device sessions",
       "separator": ", "
     },
-    "restartApp": "Restart application",
     "retentionCleanupDescription": "Runs a cleanup pass immediately using the current retention days, and returns the deleted counts per category. Does not restart the service.",
     "runCleanupButton": "Run now",
     "retentionRunConfirmTitle": "Run cleanup now?",
@@ -183,13 +177,8 @@
     "testSuccess": "AI test succeeded ({latency}ms, {tokens}{preview})",
     "testPreviewSuffix": ", reply: {preview}",
     "testFailedDefault": "AI test failed",
-    "loading": "Loading AI profiles…",
-    "loadError": "Could not load AI profiles",
-    "testHint": "“AI test” only checks the profile’s LLM connection (tiny request)—not web search.",
-    "testHintUnsaved": " (includes unsaved changes)",
     "testing": "Testing…",
-    "testButton": "AI test",
-    "saveLabel": "Save AI profile"
+    "testButton": "AI test"
   },
   "globalSlots": {
     "title": "Global AI roles",
@@ -240,7 +229,6 @@
     "namePlaceholder": "e.g. Local Ollama",
     "nameRequired": "Profile name is required.",
     "apiKeyRequired": "API key is required for this provider.",
-    "staffClassesLabel": "Task staff classes",
     "staffClassesHelp": "Which task-mode roles may use this profile. Tasks still pick llmProfileId on the task form. Assistant / A2A / Task advisor use the global slots above.",
     "staffClass": {
       "leaderboard": "Leaderboard analyst",
@@ -551,18 +539,14 @@
     "docsHint": "Full contract: docs/agent/mcp.md in the repo."
   },
   "staff": {
-    "title": "AI staff",
     "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, and Project Manager (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
     "capabilitiesLabel": "What they can do",
     "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
     "openAssistant": "Open assistant chat",
     "openTaskEditor": "Open task advisor chat",
     "displayNameLabel": "Display name",
-    "displayNameHelp": "Leave blank to use the default name.",
     "editNameAria": "Edit assistant display name",
     "editHistoryAria": "Edit assistant history caps",
-    "editLlmAria": "Edit assistant history caps",
-    "llmDialogTitle": "Assistant history",
     "historyDialogTitle": "Assistant history",
     "llmDialogCancel": "Cancel",
     "llmDialogSave": "Save",
@@ -572,14 +556,10 @@
     "resetAvatarAria": "Reset assistant avatar to default",
     "avatarTooLarge": "Image is still too large after compression. Try a smaller file.",
     "avatarReadFailed": "Could not read that image.",
-    "llmProviderLabel": "LLM provider",
-    "llmProviderFollow": "Follow default AI profile",
-    "llmProviderHelp": "LLM connection is configured under AI profiles. Use staff-class bindings there.",
     "historyMaxMessagesLabel": "History message cap",
     "historyMaxMessagesHelp": "Max recent dialogue messages sent to the model (system prompt excluded from the count). Older turns are omitted when exceeded; the UI transcript stays complete. Default 40.",
     "historyMaxCharsLabel": "History character cap",
     "historyMaxCharsHelp": "Approx. max characters for the model-facing history (including the system prompt). Older turns are omitted when exceeded. Default 48000.",
-    "saveLabel": "Save",
     "kind": {
       "agent": "Agent-grade",
       "oneshot": "One-shot / specialist"

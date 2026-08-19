@@ -74,7 +74,7 @@ vi.mock("../../hooks/useAssistantChat", () => ({
     ttsAvailable: false,
     ttsEnabled: false,
     spacePttMode: "hold" as const,
-    worksetId: "__user__",
+    worksetId: "__general__",
     setWorksetId: vi.fn(),
     sendDraft: vi.fn(),
     startListening: vi.fn(),
@@ -138,7 +138,7 @@ describe("Route module imports", () => {
       () => import("../intelligence/IntelligencePage"),
       () => import("../timeline/TimelinePage"),
       () => import("../sources/SourceManagementPage"),
-      () => import("../actions/ActionsPage"),
+      () => import("../notify/NotifyWorkspacePage"),
       () => import("../logs/LogPage"),
       () => import("../ai/AiWorkspacePage"),
       () => import("../ai/assistant/AssistantPage"),
@@ -442,5 +442,22 @@ describe("Agent detail route contract", () => {
     expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
     expect(src).not.toContain("AgentDetailLegacyRedirect");
+  });
+});
+
+describe("Retired SPA shims", () => {
+  it("drops legacy redirects — no 301, no redirect components", () => {
+    const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
+    expect(src).toContain('path="/notify"');
+    expect(src).toContain("../pages/notify/NotifyWorkspacePage");
+    expect(src).not.toContain("LegacyTasksWorksetRedirect");
+    expect(src).not.toContain("isLegacyTasksWorksetPath");
+    expect(src).not.toContain('path="/tasks/worksets');
+    expect(src).not.toContain('path="api"');
+    expect(src).not.toContain('path="mcp"');
+    expect(src).not.toContain("SETTINGS_API_REDIRECT");
+    expect(src).not.toContain("SETTINGS_MCP_REDIRECT");
+    expect(src).not.toContain('path="/actions"');
+    expect(src).not.toContain("tab=voice");
   });
 });

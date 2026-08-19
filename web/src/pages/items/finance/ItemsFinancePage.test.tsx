@@ -45,7 +45,7 @@ describe("ItemsFinancePage", () => {
         dismissed: false,
         isAllDay: false,
         origin: "manual",
-        worksetId: "__user__",
+        worksetId: "__general__",
         amount: 500,
         direction: "expense",
         createdAt: "",

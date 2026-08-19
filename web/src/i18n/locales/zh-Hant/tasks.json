@@ -431,7 +431,6 @@
       "readItems": "讀物品（查詢到期／庫存物品）",
       "webSearch": "上網搜尋（啟用時強制可用）"
     },
-    "outputLabel": "輸出模式",
     "output": {
       "calendar": "日曆事件（寫入即含寫日曆權限）"
     },

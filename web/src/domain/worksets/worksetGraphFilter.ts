@@ -60,6 +60,17 @@ export function resolveGraphWorksetIds(
   return catalogOrderIds(worksets).filter((id) => seen.has(id));
 }
 
+/**
+ * Individual checkbox adds are capped at `max`.
+ * While the set is still over `max` (全選), catalog ids may be re-checked.
+ */
+export function graphWorksetAddCapped(
+  selectedCount: number,
+  max = PIPELINE_MAX_VISIBLE_WORKSETS,
+): boolean {
+  return selectedCount === max;
+}
+
 export function toggleGraphWorksetId(
   selected: readonly string[],
   worksetId: string,
@@ -72,7 +83,9 @@ export function toggleGraphWorksetId(
   if (next.has(worksetId)) {
     next.delete(worksetId);
   } else {
-    if (next.size >= max) return catalogIds.filter((id) => next.has(id));
+    if (graphWorksetAddCapped(next.size, max)) {
+      return catalogIds.filter((id) => next.has(id));
+    }
     next.add(worksetId);
   }
   return catalogIds.filter((id) => next.has(id));

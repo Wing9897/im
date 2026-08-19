@@ -1,4 +1,4 @@
-"""Unified Agent tool registry (calendar + messages + intelligence + conditional tools)."""
+"""Unified Agent tool registry (calendar + messages + intelligence + items + worksets)."""
 
 from __future__ import annotations
 
@@ -19,16 +19,19 @@ from server.agent.tools_tasks import execute_tasks_tool
 from server.agent.tools_web_search import TOOL_HANDLERS as WEB_HANDLERS
 from server.agent.tools_web_search import TOOL_SCHEMAS as WEB_SCHEMAS
 from server.agent.tools_web_search import execute_web_search_tool
-from server.agent.workset_scope import apply_household_workset_scope
+from server.agent.tools_worksets import TOOL_HANDLERS as WORKSETS_HANDLERS
+from server.agent.tools_worksets import TOOL_SCHEMAS as WORKSETS_SCHEMAS
 from server.db.database import Database
+from server.domain.workset_scope import apply_household_workset_scope
 from server.sse import publish_resource_modified
 
-#: Handlers with signature ``(db, arguments)`` — calendar + messages + intelligence + items.
+#: Handlers with signature ``(db, arguments)`` — calendar + messages + intelligence + items + worksets.
 BASE_TOOL_HANDLERS: dict[str, Any] = {
     **CALENDAR_HANDLERS,
     **MESSAGES_HANDLERS,
     **INTELLIGENCE_HANDLERS,
     **ITEMS_HANDLERS,
+    **WORKSETS_HANDLERS,
 }
 
 BASE_TOOL_SCHEMAS: list[dict[str, Any]] = [
@@ -36,6 +39,7 @@ BASE_TOOL_SCHEMAS: list[dict[str, Any]] = [
     *MESSAGES_SCHEMAS,
     *INTELLIGENCE_SCHEMAS,
     *ITEMS_SCHEMAS,
+    *WORKSETS_SCHEMAS,
 ]
 
 WEB_TOOL_NAMES = frozenset(WEB_HANDLERS)
@@ -214,12 +218,13 @@ async def execute_tool(
         origin = context.get("user_event_origin")
         if origin:
             args["_origin"] = origin
-        # Default target workset from chat request when the tool omits worksetId.
-        if "worksetId" not in args and "workset_id" not in args:
-            default_wid = context.get("default_workset_id")
-            if default_wid is not None:
-                args["_default_workset_id"] = default_wid
-    if name == "items.create" and context and "worksetId" not in args and "workset_id" not in args:
+    if (
+        name in {"calendar.create_event", "calendar.create_recurring_series", "items.create"}
+        and context
+        and "worksetId" not in args
+        and "workset_id" not in args
+    ):
+        # Default target workset from chat / voice IO when the tool omits worksetId.
         default_wid = context.get("default_workset_id")
         if default_wid is not None:
             args["_default_workset_id"] = default_wid

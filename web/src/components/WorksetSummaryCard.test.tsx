@@ -146,15 +146,15 @@ describe("WorksetSummaryCard", () => {
 
   it("does not show rename or delete on the builtin workset", async () => {
     await renderCard({
-      id: "__user__",
+      id: "__general__",
       title: "一般",
       isSystem: true,
       onRename: undefined,
       onDelete: undefined,
     });
 
-    expect(container.querySelector('[data-testid="workset-card-rename-__user__"]')).toBeNull();
-    expect(container.querySelector('[data-testid="workset-card-delete-__user__"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-card-rename-__general__"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-card-delete-__general__"]')).toBeNull();
   });
 
   it("enters inline rename, saves on Enter, then leaves edit mode", async () => {

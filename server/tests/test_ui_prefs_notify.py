@@ -23,10 +23,7 @@ def test_sanitize_notify_settings_defaults_and_leads() -> None:
         {
             "enabled": True,
             "leadOffsetsMinutes": [60, 15, 0, 15, 10081, 30],
-            "sourceFilter": {
-                "taskIds": ["a", "", "a", "b"],
-                "worksetIds": ["__user__", "ws-1", "ws-1"],
-            },
+            "unknownKey": {"nested": True},
             "preambleChimeId": "soft-bell",
             "quietHours": {"enabled": False, "start": "bad", "end": "08:30"},
         }
@@ -36,10 +33,9 @@ def test_sanitize_notify_settings_defaults_and_leads() -> None:
     assert clean["flashEnabled"] is True
     assert clean["flashMode"] == "timed"
     assert clean["leadOffsetsMinutes"] == [15, 30, 60]
-    assert "sourceFilter" not in clean
+    assert "unknownKey" not in clean
     assert clean["preambleChimeId"] == "broadcast"
     assert clean["quietHours"] == {"enabled": False, "start": "22:00", "end": "08:30"}
-    assert "taskIds" not in clean
 
     missing = sanitize_notify_settings({"enabled": False})
     assert missing["voiceEnabled"] is True
@@ -51,12 +47,8 @@ def test_sanitize_notify_settings_defaults_and_leads() -> None:
     persist = sanitize_notify_settings({"flashMode": "persistent"})
     assert persist["flashMode"] == "persistent"
     assert sanitize_notify_settings({"flashMode": "nope"})["flashMode"] == "timed"
-    assert "sourceFilter" not in missing
-    assert "sourceFilter" not in sanitize_notify_settings({"sourceFilter": None})
-    # Flat leftover taskIds / invalid sourceFilter are ignored, not rewritten.
-    assert "sourceFilter" not in sanitize_notify_settings({"taskIds": []})
-    assert "sourceFilter" not in sanitize_notify_settings({"taskIds": ["__user__", "t1"]})
-    assert "sourceFilter" not in sanitize_notify_settings({"sourceFilter": ["t1"]})
+    dropped = sanitize_notify_settings({"enabled": True, "mystery": 1})
+    assert "mystery" not in dropped
 
 
 def test_sanitize_notify_history_caps_at_100() -> None:
@@ -90,7 +82,7 @@ def test_sanitize_fired_keys_prunes_old() -> None:
     assert kept == [f"evt-1::60::{fresh_start}"]
 
 
-async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
+async def test_notify_settings_empty_and_roundtrip(client, app) -> None:
     empty = await client.get("/api/v1/ui-prefs/notify/settings")
     assert empty.status_code == 200
     assert empty.json() == {"configured": False, "settings": None}
@@ -116,7 +108,6 @@ async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
     assert settings["flashEnabled"] is True
     assert settings["flashMode"] == "persistent"
     assert settings["leadOffsetsMinutes"] == [15, 30]
-    assert "sourceFilter" not in settings
     assert settings["preambleChimeId"] == "airport"
     stored = await ui_pref_payload(app.state.db, KEY_NOTIFY_SETTINGS)
     assert stored is not None
@@ -124,7 +115,7 @@ async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
     assert await get_config(app.state.db, KEY_NOTIFY_SETTINGS) == ""
 
 
-async def test_voice_fired_claim_dedupes_across_clients(client, app) -> None:
+async def test_notify_fired_claim_dedupes_across_clients(client, app) -> None:
     now = datetime.now(UTC)
     fresh = (now + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
     key = f"ev-1::60::{fresh}"
@@ -145,7 +136,7 @@ async def test_voice_fired_claim_dedupes_across_clients(client, app) -> None:
     assert second.json()["claimed"] == []
 
 
-async def test_voice_fired_empty_roundtrip_and_prune(client, app) -> None:
+async def test_notify_fired_empty_roundtrip_and_prune(client, app) -> None:
     empty = await client.get("/api/v1/ui-prefs/notify/fired")
     assert empty.status_code == 200
     assert empty.json() == {"configured": False, "keys": None}
@@ -166,7 +157,7 @@ async def test_voice_fired_empty_roundtrip_and_prune(client, app) -> None:
     assert "e2::15::" not in stored
 
 
-async def test_voice_history_empty_roundtrip_and_truncate(client, app) -> None:
+async def test_notify_history_empty_roundtrip_and_truncate(client, app) -> None:
     empty = await client.get("/api/v1/ui-prefs/notify/history")
     assert empty.status_code == 200
     assert empty.json() == {"configured": False, "entries": None}
@@ -197,7 +188,7 @@ async def test_voice_history_empty_roundtrip_and_truncate(client, app) -> None:
     assert stored is not None and stored.startswith("[")
 
 
-async def test_voice_history_oversized_payload_422(client) -> None:
+async def test_notify_history_oversized_payload_422(client) -> None:
     # One huge reason string forces the encoded JSON over the cap.
     huge = "x" * (MAX_PREF_JSON_CHARS)
     resp = await client.put(

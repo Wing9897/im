@@ -85,7 +85,7 @@ def test_sanitize_board_widget_state_drops_flat_source_filters() -> None:
             "sourceFilters": {
                 "events-1": {
                     "taskIds": ["t1", "t1", ""],
-                    "worksetIds": ["__user__", "ws-a"],
+                    "worksetIds": ["__general__", "ws-a"],
                 },
                 "legacy-flat": ["old-a", "old-b"],
                 "bad-shape": {"taskIds": "nope"},
@@ -95,7 +95,7 @@ def test_sanitize_board_widget_state_drops_flat_source_filters() -> None:
         }
     )
     assert clean["sourceFilters"] == {
-        "events-1": {"taskIds": ["t1"], "worksetIds": ["__user__", "ws-a"]},
+        "events-1": {"taskIds": ["t1"], "worksetIds": ["__general__", "ws-a"]},
         "all-sources": None,
     }
     assert clean["ganttViewModes"] == {"gantt-1": "day"}
@@ -111,7 +111,7 @@ async def test_board_source_filters_hierarchical_shape(client) -> None:
                 "sourceFilters": {
                     "events-1": {
                         "taskIds": ["t1", "t1", ""],
-                        "worksetIds": ["__user__", "ws-a"],
+                        "worksetIds": ["__general__", "ws-a"],
                     },
                     "all-sources": None,
                 },
@@ -123,7 +123,7 @@ async def test_board_source_filters_hierarchical_shape(client) -> None:
     filters = put.json()["widgetState"]["sourceFilters"]
     assert filters["events-1"] == {
         "taskIds": ["t1"],
-        "worksetIds": ["__user__", "ws-a"],
+        "worksetIds": ["__general__", "ws-a"],
     }
     assert filters["all-sources"] is None
 

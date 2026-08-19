@@ -193,16 +193,9 @@
     "save": "储存",
     "saving": "储存中…",
     "saveAndReconnect": "储存并重连",
-    "create": "建立",
     "edit": "编辑",
-    "delete": "删除",
     "close": "关闭",
-    "optional": "（选填）",
-    "loading": "载入中…",
-    "copy": "复制",
-    "copied": "已复制",
     "reconnect": "重新连线",
-    "reconnecting": "连线中…",
     "reconnectingShort": "重连中…",
     "processing": "处理中…",
     "remove": "移除"
@@ -348,11 +341,6 @@
     "tokenPlaceholder": "输入 Discord Bot Token",
     "botToken": "Bot Token *",
     "botTokenOptional": "Bot Token"
-  },
-  "commonForm": {
-    "processing": "处理中…",
-    "reconnect": "重新连线",
-    "reconnecting": "重连中…"
   },
   "verify": {
     "codeTitle": "输入验证码",

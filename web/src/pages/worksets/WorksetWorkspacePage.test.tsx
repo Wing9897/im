@@ -51,7 +51,7 @@ describe("WorksetWorkspacePage", () => {
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -100,7 +100,7 @@ describe("WorksetWorkspacePage", () => {
   });
 
   it("hides rename and delete for the built-in General workset", async () => {
-    await harness.render(WorkspaceAt, { entry: "/worksets/__user__" });
+    await harness.render(WorkspaceAt, { entry: "/worksets/__general__" });
 
     expect(harness.container.querySelector('[data-testid="workset-workspace-rename"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-workspace-delete"]')).toBeNull();

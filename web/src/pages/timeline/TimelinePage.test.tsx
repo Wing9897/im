@@ -186,7 +186,7 @@ const formValues: UserEventFormValues = {
   endTime: "",
   location: "Office",
   body: "Notes",
-  worksetId: "__user__",
+  worksetId: "__general__",
   isAllDay: false,
   remindBeforeDays: "",
   itemId: "",
@@ -195,7 +195,7 @@ const formValues: UserEventFormValues = {
   rrule: "",
   eventStartTime: "",
   eventEndTime: "",
-  notifyPref: "follow",
+  notifyPref: "inherit",
 };
 
 function makeUserEvent(): TimelineItem {
@@ -362,8 +362,8 @@ describe("TimelinePage user-event CRUD", () => {
       remindBeforeDays: null,
       itemId: null,
       kind: "normal",
-      worksetId: "__user__",
-      notifyPref: "follow",
+      worksetId: "__general__",
+      notifyPref: "inherit",
     });
     expect(mockCreateRecurringTimelineEvent).not.toHaveBeenCalled();
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
@@ -382,20 +382,20 @@ describe("TimelinePage user-event CRUD", () => {
         endTime: "",
         location: "Zoom",
         body: "Sync",
-        worksetId: "__user__",
+        worksetId: "__general__",
         isAllDay: false,
         remindBeforeDays: "",
         itemId: "",
         rrule: "FREQ=WEEKLY;BYDAY=MO",
         eventStartTime: "09:00",
         eventEndTime: "09:30",
-        notifyPref: "follow",
+        notifyPref: "inherit",
       }),
     );
 
     expect(mockCreateRecurringTimelineEvent).toHaveBeenCalledWith({
       title: "Weekly standup",
-      worksetId: "__user__",
+      worksetId: "__general__",
       isAllDay: false,
       eventStartTime: "09:00",
       eventEndTime: "09:30",
@@ -403,7 +403,7 @@ describe("TimelinePage user-event CRUD", () => {
       body: "Sync",
       rrule: "FREQ=WEEKLY;BYDAY=MO",
       itemId: null,
-      notifyPref: "follow",
+      notifyPref: "inherit",
     });
     expect(mockCreateUserEvent).not.toHaveBeenCalled();
     expect(mockRefreshEvents).toHaveBeenCalledWith();

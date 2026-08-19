@@ -20,7 +20,7 @@ export const COMMAND_PALETTE_ACTIONS_DEFS: readonly CommandPaletteItemDef[] = [
   {
     id: "new-action",
     labelKey: "commandPalette.newAction",
-    to: "/actions",
+    to: "/notify",
     icon: BellRing,
     groupId: "actions",
     keywords: ["notify", "webhook"],

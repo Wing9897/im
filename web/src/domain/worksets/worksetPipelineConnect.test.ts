@@ -189,7 +189,7 @@ describe("worksetPipelineConnect", () => {
           kind: "page",
           entityId: "page:notify",
           label: "通知",
-          href: "/actions",
+          href: "/notify",
         },
         data,
       ),
@@ -225,7 +225,7 @@ describe("worksetPipelineConnect", () => {
       pipelinePairConnected(assistant, workset, { ...data, assistantDefaultWorksetId: "ws-1" }),
     ).toBe(true);
     expect(
-      pipelinePairConnected(assistant, workset, { ...data, assistantDefaultWorksetId: "__user__" }),
+      pipelinePairConnected(assistant, workset, { ...data, assistantDefaultWorksetId: "__general__" }),
     ).toBe(false);
   });
 
@@ -239,7 +239,7 @@ describe("worksetPipelineConnect", () => {
   it("maps handle ids back to point ids for onConnect", () => {
     expect(pointIdFromPipelineHandle(pipelinePointHandleId(task.id, "out"))).toBe(task.id);
     expect(pointIdFromPipelineHandle(pipelinePointHandleId(workset.id, "in"))).toBe(workset.id);
-    expect(pointIdFromPipelineHandle("workset:__user____in")).toBe("workset:__user__");
+    expect(pointIdFromPipelineHandle("workset:__general____in")).toBe("workset:__general__");
     expect(pointIdFromPipelineHandle(null)).toBeNull();
   });
 

@@ -144,7 +144,7 @@ describe("boardPrefsStore hydrate / save", () => {
       widgetState: {
         mapViews: {},
         sourceFilters: {
-          "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
+          "w-events": { taskIds: ["t1"], worksetIds: ["__general__"] },
           "w-legacy": ["old-a", "old-b"],
         },
         ganttViewModes: {},
@@ -158,7 +158,7 @@ describe("boardPrefsStore hydrate / save", () => {
     await hydrateBoardPrefs();
     expect(loadSourceFilterFromCache("w-events")).toEqual({
       taskIds: ["t1"],
-      worksetIds: ["__user__"],
+      worksetIds: ["__general__"],
     });
     expect(loadSourceFilterFromCache("w-legacy")).toBeNull();
     expect(putBoardPrefs).toHaveBeenCalledWith({
@@ -166,7 +166,7 @@ describe("boardPrefsStore hydrate / save", () => {
       widgetState: {
         mapViews: {},
         sourceFilters: {
-          "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
+          "w-events": { taskIds: ["t1"], worksetIds: ["__general__"] },
         },
         ganttViewModes: {},
       },
@@ -178,7 +178,7 @@ describe("boardPrefsStore hydrate / save", () => {
     const widgetState = {
       mapViews: { "w-map": { center: [25, 121], zoom: 7 } },
       sourceFilters: {
-        "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
+        "w-events": { taskIds: ["t1"], worksetIds: ["__general__"] },
       },
       ganttViewModes: { "w-gantt": "month" as const },
     };

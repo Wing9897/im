@@ -19,7 +19,7 @@ describe("UserEventDialog create", () => {
     root = null;
   });
 
-  it("renders create title and submits trimmed values with default __user__ workset", async () => {
+  it("renders create title and submits trimmed values with default __general__ workset", async () => {
     const onSubmit = vi.fn();
     const onClose = vi.fn();
     const host = document.createElement("div");
@@ -145,7 +145,7 @@ describe("UserEventDialog create", () => {
     host.remove();
   });
 
-  it("checking notify submits notifyPref follow", async () => {
+  it("checking notify submits notifyPref inherit", async () => {
     const onSubmit = vi.fn();
     const host = document.createElement("div");
     document.body.appendChild(host);
@@ -188,7 +188,7 @@ describe("UserEventDialog create", () => {
       submit!.click();
     });
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: "one_off", notifyPref: "follow" }),
+      expect.objectContaining({ kind: "one_off", notifyPref: "inherit" }),
     );
     host.remove();
   });

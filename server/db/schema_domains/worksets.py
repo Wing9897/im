@@ -2,8 +2,8 @@
 
 DDL = """
 -- Ownership dimension for analysis tasks (orthogonal to analysis_mode).
--- Builtin system row id ``__user__`` (is_system=1) is the default bucket
--- (same as items / user_events). delete_workset reassigns to __user__ first.
+-- Builtin system row id ``__general__`` (is_system=1) is the default bucket
+-- (same as items / user_events). delete_workset reassigns to __general__ first.
 CREATE TABLE IF NOT EXISTS worksets (
     id         TEXT PRIMARY KEY,
     name       TEXT NOT NULL,
@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS worksets (
 CREATE INDEX IF NOT EXISTS idx_worksets_updated_at_asc
     ON worksets(updated_at ASC);
 INSERT OR IGNORE INTO worksets (id, name, is_system, created_at, updated_at)
-VALUES ('__user__', '一般', 1, '1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z');
+VALUES ('__general__', '一般', 1, '1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z');
 """

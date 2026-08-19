@@ -49,7 +49,7 @@ class TaskConfigBody(BaseModel):
     analysisStrategyMode: AnalysisStrategyMode | None = None
     worksetId: str | None = Field(
         default=None,
-        description="Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`).",
+        description="Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__general__`).",
     )
     #: Agent-mode policy (ignored unless analysisMode=agent).
     triggerMode: TriggerMode | None = None
@@ -73,5 +73,5 @@ class TaskConfigBody(BaseModel):
     )
     #: LLM profile id. Omitted / null on create → oldest complete profile (else 400).
     llmProfileId: str | None = None
-    #: Per-task reminder; omitted / null → ``follow`` on create, keep existing on update.
+    #: Per-task reminder; omitted / null → ``inherit`` on create, keep existing on update.
     notifyPref: CoercedNotifyPref | None = None

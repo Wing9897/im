@@ -22,11 +22,11 @@ interface UserEventWriteParams {
   isAllDay?: boolean;
   /** Optional remind N days before start; null clears. */
   remindBeforeDays?: number | null;
-  /** Analysis-task provenance; `""` / omit → null. `"__user__"` stripped client-side. */
+  /** Analysis-task provenance; `""` / omit → null. `"__general__"` stripped client-side. */
   taskId?: string | null;
   /** Optional parent inventory item (item owns this calendar entry). */
   itemId?: string | null;
-  /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset (LIVE). */
+  /** Ownership workset; `""` / `"__general__"` / omit → builtin system workset (LIVE). */
   worksetId?: string | null;
   /** ``normal`` (default) | ``expires`` | ``purchase_effective``. */
   kind?: "normal" | "expires" | "purchase_effective";
@@ -34,16 +34,16 @@ interface UserEventWriteParams {
   amount?: number | null;
   /** expense | income; cleared when amount is null; server defaults expense. */
   direction?: "expense" | "income" | null;
-  /** Per-row notify override. ``follow`` | ``off``. */
-  notifyPref?: "follow" | "off";
+  /** Per-row notify override. ``inherit`` | ``off``. */
+  notifyPref?: "inherit" | "off";
 }
 
 export type ListUserEventsParams = {
   start?: string;
   end?: string;
-  /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__user__`. */
+  /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__general__`. */
   taskId?: string;
-  /** Ownership workset id (incl. builtin `__user__`). */
+  /** Ownership workset id (incl. builtin `__general__`). */
   worksetId?: string;
   /** Parent item id; `""` = stand-alone only. */
   itemId?: string;
@@ -54,7 +54,7 @@ export type ListUserEventsParams = {
   offset?: number;
 };
 
-/** Strip fake `__user__` / blank provenance so it never hits the API as taskId. */
+/** Strip fake `__general__` / blank provenance so it never hits the API as taskId. */
 function normalizeWriteTaskId(taskId: string | null | undefined): string | null | undefined {
   if (taskId === undefined) return undefined;
   if (taskId === null) return null;

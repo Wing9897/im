@@ -36,7 +36,7 @@ const sampleBase: TaskFormState = {
   analysisStrategyMode: null,
   worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
-  notifyPref: "follow",
+  notifyPref: "inherit",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,

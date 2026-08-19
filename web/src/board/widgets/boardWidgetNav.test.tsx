@@ -287,7 +287,7 @@ describe("board widget in-frame interactions", () => {
     ]);
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         createdAt: "1970-01-01T00:00:00Z",
         updatedAt: "1970-01-01T00:00:00Z",

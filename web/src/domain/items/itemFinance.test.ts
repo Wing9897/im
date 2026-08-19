@@ -28,7 +28,7 @@ function event(overrides: Partial<UserEvent> & { id: string }): UserEvent {
     isAllDay: false,
     taskId: "",
     itemId: overrides.itemId ?? "a",
-    worksetId: "__user__",
+    worksetId: "__general__",
     source: "user",
     createdAt: "",
     updatedAt: "",

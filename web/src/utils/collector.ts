@@ -43,12 +43,12 @@ export function isAggregateCollectorStatus(value: string): boolean {
 /** Whether collector SSE should refetch REST instead of normalizing payload.status. */
 export function shouldRefetchCollectorStatus(payload: {
   status: string;
-  adapter_name?: string | null;
+  adapterName?: string | null;
 }): boolean {
   if (isWireAdapterCollectorEvent(payload.status)) {
     return true;
   }
-  return Boolean(payload.adapter_name) && !isAggregateCollectorStatus(payload.status);
+  return Boolean(payload.adapterName) && !isAggregateCollectorStatus(payload.status);
 }
 
 /** Normalizes a raw collector status string to a known CollectorStatus enum value. */

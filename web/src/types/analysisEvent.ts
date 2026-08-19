@@ -32,7 +32,7 @@ export type AnalysisEvent = Omit<
   timezone?: string | null;
   /** Present when source === "user": wire origin from user_events (OpenAPI). */
   origin?: UserEventOrigin;
-  /** Ownership workset (user_events / items / board projections); builtin `__user__` when system. */
+  /** Ownership workset (user_events / items / board projections); builtin `__general__` when system. */
   worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */
   dismissed?: boolean;
@@ -53,7 +53,7 @@ export type AnalysisEvent = Omit<
   /** Optional remind-N-days-before-start (user events). */
   remindBeforeDays?: number | null;
   /** Per-row reminder override when source === user or item_remind. */
-  notifyPref?: "follow" | "off" | null;
+  notifyPref?: "inherit" | "off" | null;
 };
 
 /** Generated envelope with domain-enriched item projections. */

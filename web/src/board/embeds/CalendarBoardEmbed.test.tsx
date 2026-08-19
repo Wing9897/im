@@ -5,6 +5,37 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnalysisEvent } from "../../types";
 import { CalendarBoardEmbed } from "./CalendarBoardEmbed";
 
+const { mockUseMonthHolidays } = vi.hoisted(() => ({
+  mockUseMonthHolidays: vi.fn(),
+}));
+
+vi.mock("../../hooks/useMonthHolidays", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../hooks/useMonthHolidays")>();
+  return {
+    ...actual,
+    useMonthHolidays: mockUseMonthHolidays,
+  };
+});
+
+const emptyHolidays = {
+  holidaysByDate: {} as Record<string, Array<{ date: string; localName: string; name: string }>>,
+  error: null,
+  loading: false,
+  refresh: () => {},
+};
+
+function nagerHoliday(overrides: Record<string, unknown> = {}) {
+  return {
+    date: "2026-07-01",
+    localName: "元旦",
+    name: "New Year's Day",
+    countryCode: "TW",
+    isGlobal: true,
+    types: ["Public"],
+    ...overrides,
+  };
+}
+
 /** Local calendar helpers — avoid UTC ISO pitfalls when asserting "today". */
 function localIso(y: number, m0: number, d: number, h = 0, min = 0): string {
   return new Date(y, m0, d, h, min, 0, 0).toISOString();
@@ -44,6 +75,7 @@ describe("CalendarBoardEmbed day mode", () => {
   let root: ReturnType<typeof createRoot>;
 
   beforeEach(() => {
+    mockUseMonthHolidays.mockReset().mockReturnValue(emptyHolidays);
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -157,5 +189,124 @@ describe("CalendarBoardEmbed day mode", () => {
         seriesId: null,
       }),
     );
+  });
+
+  it("does not paint a Nager overlay in day mode", () => {
+    mockUseMonthHolidays.mockReturnValue({
+      ...emptyHolidays,
+      holidaysByDate: { "2026-07-22": [nagerHoliday({ date: "2026-07-22" })] },
+    });
+    act(() => {
+      root.render(createElement(CalendarBoardEmbed, { mode: "day", events: [makeEvent()] }));
+    });
+    expect(mockUseMonthHolidays).toHaveBeenCalledWith(false, expect.any(Array));
+    expect(container.querySelector('[data-testid="board-calendar-month-holiday"]')).toBeNull();
+    expect(container.querySelector(".board-calendar-month__day--holiday")).toBeNull();
+  });
+});
+
+describe("CalendarBoardEmbed month Nager overlay", () => {
+  let container: HTMLDivElement;
+  let root: ReturnType<typeof createRoot>;
+
+  beforeEach(() => {
+    mockUseMonthHolidays.mockReset().mockReturnValue(emptyHolidays);
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 22, 12, 0, 0, 0));
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+    vi.useRealTimers();
+  });
+
+  function renderMonth(events: AnalysisEvent[] = []) {
+    act(() => {
+      root.render(createElement(CalendarBoardEmbed, { mode: "month", events }));
+    });
+  }
+
+  it("paints the in-month date red and puts the Nager name under the number", () => {
+    mockUseMonthHolidays.mockReturnValue({
+      ...emptyHolidays,
+      holidaysByDate: { "2026-07-01": [nagerHoliday()] },
+    });
+    renderMonth();
+
+    expect(mockUseMonthHolidays).toHaveBeenCalledWith(true, expect.any(Array));
+    const jul1 = container.querySelector('[data-date="2026-07-01"]');
+    const num = jul1?.querySelector(".board-calendar-month__num");
+    const holiday = jul1?.querySelector('[data-testid="board-calendar-month-holiday"]');
+    expect(jul1?.className).toContain("board-calendar-month__day--holiday");
+    expect(num?.textContent).toBe("1");
+    expect(holiday?.textContent).toContain("元旦");
+    expect(holiday?.className).toContain("board-calendar-month__holiday");
+    expect(holiday?.getAttribute("title")).toContain("元旦");
+    expect(
+      num && holiday
+        ? Boolean(num.compareDocumentPosition(holiday) & Node.DOCUMENT_POSITION_FOLLOWING)
+        : false,
+    ).toBe(true);
+
+    const jul2 = container.querySelector('[data-date="2026-07-02"]');
+    expect(jul2?.className).not.toContain("board-calendar-month__day--holiday");
+    expect(jul2?.querySelector('[data-testid="board-calendar-month-holiday"]')).toBeNull();
+  });
+
+  it("shows the first holiday name plus +N when several Nager holidays share a day", () => {
+    mockUseMonthHolidays.mockReturnValue({
+      ...emptyHolidays,
+      holidaysByDate: {
+        "2026-07-01": [
+          nagerHoliday(),
+          nagerHoliday({ localName: "開國紀念日", name: "Founding Day" }),
+        ],
+      },
+    });
+    renderMonth();
+
+    const holiday = container.querySelector(
+      '[data-date="2026-07-01"] [data-testid="board-calendar-month-holiday"]',
+    );
+    expect(holiday?.textContent).toContain("元旦");
+    expect(holiday?.textContent).toContain("+1");
+    expect(holiday?.textContent).not.toContain("開國紀念日");
+    expect(holiday?.getAttribute("title")).toContain("開國紀念日");
+  });
+
+  it("keeps event dots under the holiday name instead of cloning the Timeline month grid", () => {
+    mockUseMonthHolidays.mockReturnValue({
+      ...emptyHolidays,
+      holidaysByDate: { "2026-07-22": [nagerHoliday({ date: "2026-07-22", localName: "假期" })] },
+    });
+    renderMonth([makeEvent()]);
+
+    const cell = container.querySelector('[data-date="2026-07-22"]');
+    expect(cell?.className).toContain("board-calendar-month__day--holiday");
+    expect(cell?.querySelector('[data-testid="board-calendar-month-holiday"]')?.textContent).toContain(
+      "假期",
+    );
+    expect(cell?.querySelectorAll(".board-calendar-month__dot")).toHaveLength(1);
+    expect(container.querySelector(".im-timeline-month-grid")).toBeNull();
+    expect(container.querySelector(".im-month-day-watermark-stack")).toBeNull();
+  });
+
+  it("does not overlay Nager names on out-of-month padded days", () => {
+    mockUseMonthHolidays.mockReturnValue({
+      ...emptyHolidays,
+      holidaysByDate: { "2026-06-30": [nagerHoliday({ date: "2026-06-30", localName: "六月假" })] },
+    });
+    renderMonth();
+
+    const jun30 = container.querySelector('[data-date="2026-06-30"]');
+    expect(jun30?.className).toContain("board-calendar-month__day--muted");
+    expect(jun30?.className).not.toContain("board-calendar-month__day--holiday");
+    expect(jun30?.querySelector('[data-testid="board-calendar-month-holiday"]')).toBeNull();
   });
 });

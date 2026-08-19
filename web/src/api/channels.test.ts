@@ -29,7 +29,7 @@ describe("channels API", () => {
 
       const result = await listChannelsWithSources();
 
-      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/channels/with-sources");
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/channels");
       expect(result).toEqual(data);
     });
 

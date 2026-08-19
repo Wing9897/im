@@ -66,7 +66,7 @@ export interface TaskFormState
    * Empty on create → backend uses the oldest complete profile (or UI may preselect).
    */
   llmProfileId: string;
-  /** Per-task reminder override; omit → follow workset. */
+  /** Per-task reminder override; omit → inherit workset. */
   notifyPref?: NotifyPref;
   /** Agent trigger / capabilities / calendar output (ignored unless analysisMode=agent). */
   triggerMode: "schedule" | "message_cursor" | "message_threshold";

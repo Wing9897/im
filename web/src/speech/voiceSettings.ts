@@ -35,7 +35,7 @@ export interface VoiceSettings {
   ttsVoiceUri: string;
   /**
    * Default ``worksetId`` for assistant chat / pure-voice creates
-   * when the composer has no override. ``__user__`` = builtin system workset (一般).
+   * when the composer has no override. ``__general__`` = builtin system workset (一般).
    */
   defaultWorksetId: string;
 }

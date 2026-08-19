@@ -1,6 +1,4 @@
-import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
-import { worksetDetailPath } from "../domain/worksets/worksetRoutes";
-import { SETTINGS_API_REDIRECT, SETTINGS_MCP_REDIRECT } from "../domain/navigation/integrationsRoutes";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
@@ -65,7 +63,10 @@ const SourceManagementPage = lazyNamed(
   () => import("../pages/sources/SourceManagementPage"),
   "SourceManagementPage",
 );
-const ActionsPage = lazyNamed(() => import("../pages/actions/ActionsPage"), "ActionsPage");
+const NotifyWorkspacePage = lazyNamed(
+  () => import("../pages/notify/NotifyWorkspacePage"),
+  "NotifyWorkspacePage",
+);
 const AssistantPage = lazyNamed(() => import("../pages/ai/assistant/AssistantPage"), "AssistantPage");
 const AiWorkspacePage = lazyNamed(() => import("../pages/ai/AiWorkspacePage"), "AiWorkspacePage");
 const SettingsAiProviderPage = lazyNamed(
@@ -105,11 +106,6 @@ const ViewerTasksPage = lazyNamed(() => import("../pages/viewer/ViewerTasksPage"
 const ViewerResultsPage = lazyNamed(() => import("../pages/viewer/ViewerResultsPage"), "ViewerResultsPage");
 const ViewerStatusPage = lazyNamed(() => import("../pages/viewer/ViewerStatusPage"), "ViewerStatusPage");
 
-function LegacyTasksWorksetRedirect() {
-  const { worksetId } = useParams();
-  return <Navigate to={worksetDetailPath(worksetId ?? "")} replace />;
-}
-
 /** App route tree — always follows the live router location (no controlled location). */
 export function AppRoutes() {
   return (
@@ -121,7 +117,6 @@ export function AppRoutes() {
         <Route path="/worksets/:worksetId" element={<LazyPage Page={WorksetWorkspacePage} />} />
         <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
-        <Route path="/tasks/worksets/:worksetId" element={<LegacyTasksWorksetRedirect />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/agent" element={<LazyPage Page={AgentDetailPage} />} />
         <Route path="/schedule" element={<LazyPage Page={SchedulePage} />} />
@@ -138,7 +133,7 @@ export function AppRoutes() {
         <Route path="/items/:itemId/edit" element={<LazyPage Page={ItemFormPage} />} />
         <Route path="/items/category/:categoryId" element={<LazyPage Page={ItemsPage} />} />
         <Route path="/sources" element={<LazyPage Page={SourceManagementPage} />} />
-        <Route path="/actions" element={<LazyPage Page={ActionsPage} />} />
+        <Route path="/notify" element={<LazyPage Page={NotifyWorkspacePage} />} />
         <Route path="/assistant" element={<LazyPage Page={AssistantPage} />} />
         <Route path="/account" element={<LazyPage Page={AccountShell} />}>
           <Route index element={<Navigate to="/account/identity" replace />} />
@@ -160,8 +155,6 @@ export function AppRoutes() {
             <Route path="theme" element={<LazyPage Page={SettingsThemePage} />} />
             <Route path="data" element={<LazyPage Page={SettingsDataPage} />} />
             <Route path="integrations" element={<LazyPage Page={SettingsIntegrationsPage} />} />
-            <Route path="api" element={<Navigate to={SETTINGS_API_REDIRECT} replace />} />
-            <Route path="mcp" element={<Navigate to={SETTINGS_MCP_REDIRECT} replace />} />
             <Route path="logs" element={<LazyPage Page={LogPage} />} />
           </Route>
         </Route>

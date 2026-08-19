@@ -394,7 +394,7 @@ describe("DashboardViewer", () => {
     mockPathname = "/worksets";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
-      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
     ];
     const promptSpy = vi.spyOn(window, "prompt").mockImplementation(() => {
       throw new Error("prompt() is not supported.");
@@ -437,7 +437,7 @@ describe("DashboardViewer", () => {
     mockPathname = "/worksets";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
-      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
     ];
 
@@ -452,7 +452,7 @@ describe("DashboardViewer", () => {
     expect(container.textContent).toContain("Ops");
     expect(container.textContent).toContain("新建工作集");
     expect(container.textContent).not.toContain("建立新任務");
-    expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
     expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
@@ -465,7 +465,7 @@ describe("DashboardViewer", () => {
     mockPathname = "/worksets";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
-      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
     ];
 
@@ -479,7 +479,7 @@ describe("DashboardViewer", () => {
     typeInput(search, "Ops");
 
     expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeNull();
   });
 
   it("restores mode filter from localStorage", () => {
@@ -521,7 +521,7 @@ describe("DashboardViewer", () => {
     beforeEach(() => {
       mockPathname = "/worksets";
       taskCatalogState.worksets = [
-        { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+        { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
         { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       ];
       taskCatalogState.tasks = [
@@ -541,7 +541,7 @@ describe("DashboardViewer", () => {
       expect(container.textContent).not.toContain("未歸屬");
       expect(container.textContent).toContain("Assigned Task");
       expect(container.textContent).toContain("Unassigned Task");
-      expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeTruthy();
       expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
       expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-create-workset"]')).toBeTruthy();
@@ -607,14 +607,14 @@ describe("DashboardViewer", () => {
       });
 
       const opsCard = container.querySelector('[data-testid="workset-card-ws-1"]');
-      const generalCard = container.querySelector('[data-testid="workset-card-__user__"]');
+      const generalCard = container.querySelector('[data-testid="workset-card-__general__"]');
       expect(opsCard?.querySelector('[data-testid="workset-card-rename-ws-1"]')).toBeTruthy();
       expect(opsCard?.querySelector('[data-testid="workset-card-delete-ws-1"]')).toBeTruthy();
       expect(opsCard?.textContent ?? "").not.toContain("重新命名");
       expect(opsCard?.textContent ?? "").not.toContain("刪除");
       expect(generalCard?.textContent).toContain("內建");
-      expect(generalCard?.querySelector('[data-testid="workset-card-rename-__user__"]')).toBeNull();
-      expect(generalCard?.querySelector('[data-testid="workset-card-delete-__user__"]')).toBeNull();
+      expect(generalCard?.querySelector('[data-testid="workset-card-rename-__general__"]')).toBeNull();
+      expect(generalCard?.querySelector('[data-testid="workset-card-delete-__general__"]')).toBeNull();
       expect(container.textContent).not.toContain("未歸屬");
     });
   });

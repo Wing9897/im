@@ -13,7 +13,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "never amount/direction. Special linked-calendar kinds are Items UI only. "
             "For recurring schedules (每週三／daily／monthly), use "
             "calendar.create_recurring_series instead. "
-            "Optional worksetId attaches ownership to a workset (builtin __user__ = 一般). "
+            "Optional worksetId attaches ownership to a workset (builtin __general__ = 一般). "
             "Optional taskId keeps analysis-task provenance only. "
             "Confirm title and startTime with the user "
             "in natural language before calling. Never invent times the user did not confirm."
@@ -37,7 +37,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "location": {"type": "string"},
                 "worksetId": {
                     "type": "string",
-                    "description": ("Optional ownership workset id, or __user__ for builtin 一般 workset"),
+                    "description": ("Optional ownership workset id, or __general__ for builtin 一般 workset"),
                 },
                 "taskId": {
                     "type": "string",
@@ -56,6 +56,8 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "eventStartTime=10:00). This never creates an analysis task. To change or "
             "hard-delete an existing series use calendar.update_recurring_series / "
             "delete_recurring_series. "
+            "Optional worksetId attaches ownership to a workset (builtin __general__ = 一般); "
+            "omit to use the request/voice IO default (then __general__). "
             "Confirm name, recurrence, and clock time with the user before calling."
         ),
         "parameters": {
@@ -94,6 +96,10 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "location": {"type": "string", "description": "Alias of eventLocation"},
                 "body": {"type": "string", "description": "Alias of eventDescription"},
                 "title": {"type": "string", "description": "Alias of name"},
+                "worksetId": {
+                    "type": "string",
+                    "description": ("Optional ownership workset id, or __general__ for builtin 一般 workset"),
+                },
             },
             "required": ["rrule"],
             "additionalProperties": False,
@@ -103,7 +109,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         "name": "calendar.update_recurring_series",
         "description": (
             "Update an EXISTING standalone recurring series (name, rrule, clock times, "
-            "location, description, isActive). Analysis tasks are outside this tool. "
+            "location, description, isActive, worksetId). Analysis tasks are outside this tool. "
             "Use isActive=false to pause without deleting. Confirm changes with the user. Prefer "
             "calendar.list_calendars (includeInactive=true when resuming a paused series) to resolve id."
         ),
@@ -133,6 +139,10 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "isActive": {
                     "type": "boolean",
                     "description": "Set false to pause the series, or true to reactivate it.",
+                },
+                "worksetId": {
+                    "type": "string",
+                    "description": ("Optional ownership workset id, or __general__ for builtin 一般 workset"),
                 },
             },
             "required": ["id"],
@@ -178,12 +188,12 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": (
                         "Optional analysis-task provenance "
                         "(intel_event / agent); empty string clears provenance. "
-                        "Never pass __user__ (that is a workset id)."
+                        "Never pass __general__ (that is a workset id)."
                     ),
                 },
                 "worksetId": {
                     "type": "string",
-                    "description": ("Optional ownership workset id, or __user__ for builtin 一般 workset"),
+                    "description": ("Optional ownership workset id, or __general__ for builtin 一般 workset"),
                 },
             },
             "required": ["id"],

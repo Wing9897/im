@@ -7,7 +7,7 @@
   "keyEvents": "Intel events",
   "timeline": "Timeline",
   "items": "Items",
-  "actions": "Notifications",
+  "notify": "Notifications",
   "sources": "Sources",
   "assistant": "Assistant",
   "aiSettings": "AI Settings",

@@ -8,12 +8,12 @@ import {
 describe("boardSourceFilterOptions", () => {
   it("uses the localized general label without mutating other worksets", () => {
     const worksets = [
-      { id: "__user__", name: "General", isSystem: true },
+      { id: "__general__", name: "General", isSystem: true },
       { id: "ws-1", name: "Operations", isSystem: false },
     ] as Workset[];
 
     expect(boardSourceFilterWorksets(worksets, "一般")).toEqual([
-      { id: "__user__", name: "一般", isSystem: true },
+      { id: "__general__", name: "一般", isSystem: true },
       { id: "ws-1", name: "Operations", isSystem: false },
     ]);
   });

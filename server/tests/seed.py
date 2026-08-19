@@ -352,7 +352,7 @@ async def seed_database(db: Any) -> None:
     await db.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, dtend, is_all_day, location, description, "
-        "timezone, created_at, updated_at) VALUES (?, ?, '__user__', 1, ?, ?, ?, 0, ?, ?, 'UTC', ?, ?)",
+        "timezone, created_at, updated_at) VALUES (?, ?, '__general__', 1, ?, ?, ?, 0, ?, ?, 'UTC', ?, ?)",
         (
             SERIES_CALENDAR,
             "每週例會",
@@ -461,18 +461,18 @@ async def seed_database(db: Any) -> None:
         (TASK_WEB_INTEL, BATCH_WEB_INTEL, json.dumps(["Web"]), now, now),
     )
 
-    # ── sample items (DDL seed categories + __user__ workset) ─────────
+    # ── sample items (DDL seed categories + __general__ workset) ─────────
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
         "notes, status, emoji, "
-        "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__user__', "
+        "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__general__', "
         "'seed passport id A123456789', 'active', NULL, ?, ?)",
         (ITEM_PASSPORT, "護照樣本", now, now),
     )
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
         "notes, status, emoji, "
-        "created_at, updated_at) VALUES (?, ?, 'seed_food', '__user__', "
+        "created_at, updated_at) VALUES (?, ?, 'seed_food', '__general__', "
         "'seed food brand SeedDairy', 'active', NULL, ?, ?)",
         (ITEM_FOOD, "牛奶樣本", now, now),
     )

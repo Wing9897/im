@@ -199,16 +199,9 @@
     "save": "Save",
     "saving": "Saving…",
     "saveAndReconnect": "Save and reconnect",
-    "create": "Create",
     "edit": "Edit",
-    "delete": "Delete",
     "close": "Close",
-    "optional": "(optional)",
-    "loading": "Loading…",
-    "copy": "Copy",
-    "copied": "Copied",
     "reconnect": "Reconnect",
-    "reconnecting": "Connecting…",
     "reconnectingShort": "Reconnecting…",
     "processing": "Working…",
     "remove": "Remove"
@@ -355,11 +348,6 @@
     "tokenPlaceholder": "Enter Discord Bot Token",
     "botToken": "Bot Token *",
     "botTokenOptional": "Bot Token"
-  },
-  "commonForm": {
-    "processing": "Working…",
-    "reconnect": "Reconnect",
-    "reconnecting": "Reconnecting…"
   },
   "verify": {
     "codeTitle": "Enter verification code",

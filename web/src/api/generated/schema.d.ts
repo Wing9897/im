@@ -1034,7 +1034,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels/with-sources": {
+    "/api/v1/channels": {
         parameters: {
             query?: never;
             header?: never;
@@ -1042,10 +1042,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Channels With Sources
+         * List Channels
          * @description ChannelWithSource[] — sourceName populated server-side.
          */
-        get: operations["list_channels_with_sources_api_v1_channels_with_sources_get"];
+        get: operations["list_channels_api_v1_channels_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2693,7 +2693,7 @@ export interface components {
             ttsVoiceUri: string;
             /**
              * Defaultworksetid
-             * @default __user__
+             * @default __general__
              */
             defaultWorksetId: string;
         };
@@ -3004,10 +3004,10 @@ export interface components {
             itemDateKind?: "remind" | null;
             /**
              * Notifypref
-             * @default follow
+             * @default inherit
              * @enum {string}
              */
-            notifyPref: "follow" | "off";
+            notifyPref: "inherit" | "off";
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -4162,7 +4162,7 @@ export interface components {
              */
             itemId?: string | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /** RecurringSeriesPageResponse */
         RecurringSeriesPageResponse: {
@@ -4198,7 +4198,7 @@ export interface components {
             /** Itemid */
             itemId?: string | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /**
          * RecurringSeriesResponse
@@ -4253,10 +4253,10 @@ export interface components {
             itemId?: string | null;
             /**
              * Notifypref
-             * @default follow
+             * @default inherit
              * @enum {string}
              */
-            notifyPref: "follow" | "off";
+            notifyPref: "inherit" | "off";
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -4720,7 +4720,7 @@ export interface components {
             analysisStrategyMode?: ("conservative" | "balanced" | "aggressive") | null;
             /**
              * Worksetid
-             * @description Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`).
+             * @description Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__general__`).
              */
             worksetId?: string | null;
             /** Triggermode */
@@ -4747,7 +4747,7 @@ export interface components {
             /** Llmprofileid */
             llmProfileId?: string | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -4806,7 +4806,7 @@ export interface components {
             /** Llmprofileid */
             llmProfileId?: string | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /** TaskResponse */
         TaskResponse: {
@@ -4901,10 +4901,10 @@ export interface components {
             llmProfileId: string;
             /**
              * Notifypref
-             * @default follow
+             * @default inherit
              * @enum {string}
              */
-            notifyPref: "follow" | "off";
+            notifyPref: "inherit" | "off";
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -5140,7 +5140,7 @@ export interface components {
             /** Direction */
             direction?: ("expense" | "income") | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /** UserEventPatchBody */
         UserEventPatchBody: {
@@ -5171,7 +5171,7 @@ export interface components {
             /** Direction */
             direction?: ("expense" | "income") | null;
             /** Notifypref */
-            notifyPref?: ("follow" | "off") | null;
+            notifyPref?: ("inherit" | "off") | null;
         };
         /** UserEventResponse */
         UserEventResponse: {
@@ -5226,10 +5226,10 @@ export interface components {
             direction?: ("expense" | "income") | null;
             /**
              * Notifypref
-             * @default follow
+             * @default inherit
              * @enum {string}
              */
-            notifyPref: "follow" | "off";
+            notifyPref: "inherit" | "off";
             /**
              * Source
              * @constant
@@ -5394,18 +5394,18 @@ export interface components {
              */
             status: "running" | "stopped" | "error";
             /**
-             * Adapter Name
-             * @description Failing adapter name. Deliberately snake_case (wire contract).
+             * Adaptername
+             * @description Failing adapter name.
              */
-            adapter_name?: string | null;
+            adapterName?: string | null;
             /**
-             * Error Summary
-             * @description Error summary when an adapter connection fails. Deliberately snake_case.
+             * Errorsummary
+             * @description Error summary when an adapter connection fails.
              */
-            error_summary?: string | null;
+            errorSummary?: string | null;
             /**
              * Correlation Id
-             * @description Trace id for error-toast correlation. Deliberately snake_case.
+             * @description Trace id for error-toast correlation. Deliberately snake_case (error-body convention).
              */
             correlation_id?: string | null;
         };
@@ -7977,7 +7977,7 @@ export interface operations {
             };
         };
     };
-    list_channels_with_sources_api_v1_channels_with_sources_get: {
+    list_channels_api_v1_channels_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9897,7 +9897,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. `collector_status_changed` deliberately uses snake_case adapter fields (`adapter_name`, `error_summary`, `correlation_id`). */
+            /** @description Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. Resource/status payloads are camelCase (`adapterName`, `errorSummary`); error-body fields `error_code` / `correlation_id` stay snake_case. */
             200: {
                 headers: {
                     [name: string]: unknown;

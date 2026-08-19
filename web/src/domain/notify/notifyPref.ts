@@ -1,21 +1,21 @@
-/** Per-row reminder: follow the workset default, or mute this entity. */
+/** Per-row reminder: inherit the workset default, or mute this entity. */
 
-export const NOTIFY_PREFS = ["follow", "off"] as const;
+export const NOTIFY_PREFS = ["inherit", "off"] as const;
 
 export type NotifyPref = (typeof NOTIFY_PREFS)[number];
 
-export const DEFAULT_NOTIFY_PREF: NotifyPref = "follow";
+export const DEFAULT_NOTIFY_PREF: NotifyPref = "inherit";
 
-/** Calendar / item-linked event create (unchecked 通知). Tasks stay ``follow``. */
+/** Calendar / item-linked event create (unchecked 通知). Tasks stay ``inherit``. */
 export const DEFAULT_CALENDAR_NOTIFY_PREF: NotifyPref = "off";
 
 export function isNotifyPref(value: unknown): value is NotifyPref {
-  return value === "follow" || value === "off";
+  return value === "inherit" || value === "off";
 }
 
 /**
- * Blank / unknown → ``fallback`` (default ``follow``). Never throws.
- * HTTP ``"on"`` is 422 on write; read-side coerce treats it as unknown → default.
+ * Blank / unknown → ``fallback`` (default ``inherit``). Never throws.
+ * HTTP ``"follow"`` / ``"on"`` are 422 on write; read-side coerce treats them as unknown → default.
  */
 export function normalizeNotifyPref(
   value: unknown,
@@ -29,11 +29,11 @@ export function normalizeNotifyPref(
   return fallback;
 }
 
-/** Checked checkbox = participate / follow workset. */
+/** Checked checkbox = participate / inherit workset. */
 export function notifyPrefChecked(value: unknown): boolean {
   return normalizeNotifyPref(value) !== "off";
 }
 
 export function notifyPrefFromChecked(checked: boolean): NotifyPref {
-  return checked ? "follow" : "off";
+  return checked ? "inherit" : "off";
 }

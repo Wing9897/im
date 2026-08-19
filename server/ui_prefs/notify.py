@@ -65,10 +65,7 @@ def _sanitize_preamble_chime_id(value: Any) -> str:
 
 
 def sanitize_notify_settings(raw: Any) -> dict[str, Any]:
-    """Align with web ``domain/notify/scanner/settings.ts`` normalize rules.
-
-    Leftover ``sourceFilter`` in stored JSON is ignored (not read or written).
-    """
+    """Align with web ``domain/notify/scanner/settings.ts`` normalize rules."""
     data = raw if isinstance(raw, Mapping) else {}
     lead_raw = data.get("leadOffsetsMinutes")
     leads: list[int] = []

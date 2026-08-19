@@ -33,7 +33,7 @@ async def test_publish_aggregate_collector_status_without_adapters(app: FastAPI)
     assert event["event"] == "collector_status_changed"
     payload = json.loads(event["data"])["payload"]
     assert payload["status"] == "stopped"
-    assert "adapter_name" not in payload
+    assert "adapterName" not in payload
 
 
 async def test_publish_aggregate_collector_status_includes_adapter_error_fields(app: FastAPI):
@@ -51,5 +51,6 @@ async def test_publish_aggregate_collector_status_includes_adapter_error_fields(
 
     payload = json.loads(event["data"])["payload"]
     assert payload["status"] == "stopped"
-    assert payload["adapter_name"] == "telegram"
-    assert payload["error_summary"] == "connection refused"
+    assert payload["adapterName"] == "telegram"
+    assert payload["errorSummary"] == "connection refused"
+    assert "correlation_id" in payload

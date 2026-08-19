@@ -19,7 +19,7 @@ export type BoardFilterWorksetOption = {
   isSystem: boolean;
 };
 
-/** Label builtin `__user__` with the localized「一般」name. */
+/** Label builtin `__general__` with the localized「一般」name. */
 export function boardSourceFilterWorksets(
   worksets: readonly Workset[],
   generalWorksetLabel: string,

@@ -431,7 +431,6 @@
       "readItems": "读物品（查询到期／库存物品）",
       "webSearch": "上网搜索（启用时强制可用）"
     },
-    "outputLabel": "输出模式",
     "output": {
       "calendar": "日历事件（写入即含写日历权限）"
     },

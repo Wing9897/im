@@ -81,12 +81,12 @@ describe("postAgentChat", () => {
 
     await postAgentChat({
       messages: [{ role: "user", content: "加日程" }],
-      worksetId: "__user__",
+      worksetId: "__general__",
     });
 
     expect(apiClient.post).toHaveBeenCalledWith("/api/v1/agent/chat", {
       messages: [{ role: "user", content: "加日程" }],
-      worksetId: "__user__",
+      worksetId: "__general__",
     });
   });
 

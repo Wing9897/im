@@ -4,37 +4,13 @@ Nager.Date is country-level (not city / subdivision). Known weather cities
 are mapped locally so holidays share the same region picker as weather
 without a second control. Unknown names fall through to Open-Meteo
 ``country_code`` in ``services/holidays.py``.
+
+City table lives in ``services/location_map.py`` (shared with weather aliases).
 """
 
 from __future__ import annotations
 
-# Keys: exact CJK labels plus casefolded English forms used by weather / timezone.
-_LOCATION_COUNTRY: dict[str, str] = {
-    "臺北": "TW",
-    "台北": "TW",
-    "taipei": "TW",
-    "臺中": "TW",
-    "台中": "TW",
-    "taichung": "TW",
-    "臺南": "TW",
-    "台南": "TW",
-    "tainan": "TW",
-    "高雄": "TW",
-    "kaohsiung": "TW",
-    "香港": "HK",
-    "hong kong": "HK",
-    "東京": "JP",
-    "tokyo": "JP",
-    "上海": "CN",
-    "singapore": "SG",
-    "新加坡": "SG",
-    "首爾": "KR",
-    "seoul": "KR",
-    "new york": "US",
-    "los angeles": "US",
-    "london": "GB",
-    "paris": "FR",
-}
+from server.services.location_map import LOCATION_COUNTRY as _LOCATION_COUNTRY
 
 
 def normalize_country_code(raw: object) -> str | None:

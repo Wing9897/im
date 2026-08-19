@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     -- Never calendar-expanded (hard-gated by analysis_mode / purpose=trigger).
     schedule_rrule       TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
-    -- Always a workset; omit / empty on create → __user__. Delete reassigns first.
-    workset_id           TEXT NOT NULL DEFAULT '__user__'
+    -- Always a workset; omit / empty on create → __general__. Delete reassigns first.
+    workset_id           TEXT NOT NULL DEFAULT '__general__'
                          REFERENCES worksets(id),
     -- Per-task analysis-scheduling overrides (NULL = use system_config defaults).
     agent_wave_interval_seconds INTEGER DEFAULT NULL,
@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     -- LLM connection profile; tasks always bind a profile.
     llm_profile_id       TEXT NOT NULL
                          REFERENCES llm_profiles(id),
-    -- Per-task reminder: follow workset default, or mute this task.
-    notify_pref          TEXT NOT NULL DEFAULT 'follow'
+    -- Per-task reminder: inherit workset default, or mute this task.
+    notify_pref          TEXT NOT NULL DEFAULT 'inherit'
                          {NOTIFY_PREF_CHECK_SQL},
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL

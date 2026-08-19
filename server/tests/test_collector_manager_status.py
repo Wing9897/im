@@ -112,7 +112,7 @@ async def test_publish_aggregate_partial_failure_status_running(app: FastAPI):
 
     payload = json.loads(event["data"])["payload"]
     assert payload["status"] == "running"
-    assert payload["adapter_name"] == "rss"
+    assert payload["adapterName"] == "rss"
 
 
 async def test_public_facade_delegates_representative_platform_calls(app: FastAPI, monkeypatch):

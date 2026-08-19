@@ -6,7 +6,7 @@ from server.calendar.query_merge import merge_calendar_items, source_policy
 def test_source_policy_keeps_ownership_and_task_filters_distinct() -> None:
     assert source_policy(task_id=None, workset_id=None).include_items
     assert not source_policy(task_id="task-1", workset_id=None).include_items
-    system = source_policy(task_id=None, workset_id="__user__")
+    system = source_policy(task_id=None, workset_id="__general__")
     assert not system.include_analysis_and_recurrence
     assert system.include_items
 

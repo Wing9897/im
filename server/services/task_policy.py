@@ -102,10 +102,10 @@ async def resolve_workset_id(
 ) -> str:
     """Normalize workset ownership (always a real workset id).
 
-    - Explicit ``worksetId`` (including null/empty → ``__user__``) when in
+    - Explicit ``worksetId`` (including null/empty → ``__general__``) when in
       ``fields_set`` or when ``fields_set`` is None (create path).
     - Else inherit from the parent task when creating a child without an explicit value.
-    - Else keep ``existing`` on update, falling back to ``__user__``.
+    - Else keep ``existing`` on update, falling back to ``__general__``.
     """
     explicit = fields_set is None or "worksetId" in fields_set
     if explicit:

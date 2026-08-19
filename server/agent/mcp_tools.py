@@ -1,11 +1,13 @@
-"""MCP control-plane tool façade: base-19 allowlist → ``execute_tool``.
+"""MCP control-plane tool façade: base-20 allowlist → ``execute_tool``.
 
 No ``web.search`` / ``tasks.consult_advisor``. Calendar writes stamp
 ``user_events.origin = mcp``. Capability groups (system_config) filter
 ``list_tools`` / ``call_tool``; default all enabled. Workset visibility
 comes from ``worksets.external_enabled`` and filters intelligence／messages／items
-data; empty (all off) fails closed. Master switch
-``mcp_enabled`` gates the HTTP control plane (see routes).
+plus ``worksets.list``; empty (all off) fails closed. Master switch
+``mcp_enabled`` gates the HTTP control plane (see routes). Read-only
+``worksets.list`` is in the allowlist with no ``mcp_cap_*`` toggle
+(create/delete worksets stay UI-only).
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ from server.domain.mcp_capabilities import (
 )
 from server.queries.worksets_queries import fetch_external_enabled_workset_ids
 
-#: Exactly the base tool set (calendar + messages + intelligence + items).
+#: Exactly the base tool set (calendar + messages + intelligence + items + worksets.list).
 MCP_TOOL_ALLOWLIST = frozenset(BASE_TOOL_HANDLERS)
 
 #: Destructive calendar deletes that require ``confirm=true`` on the MCP path only.
@@ -65,6 +67,12 @@ MCP_CAPABILITY_TOOLS: dict[str, frozenset[str]] = {
 }
 
 _TOOL_TO_CAPABILITY: dict[str, str] = {tool: cap for cap, tools in MCP_CAPABILITY_TOOLS.items() for tool in tools}
+
+#: Allowlist tools with no ``mcp_cap_*`` toggle (data still filtered by ``external_enabled``).
+MCP_UNGATED_ALLOWLIST_TOOLS: frozenset[str] = frozenset({"worksets.list"})
+assert frozenset(_TOOL_TO_CAPABILITY) | MCP_UNGATED_ALLOWLIST_TOOLS == MCP_TOOL_ALLOWLIST, (
+    "MCP allowlist must equal capability-grouped tools plus ungated worksets.list"
+)
 
 
 @dataclass(frozen=True, slots=True)

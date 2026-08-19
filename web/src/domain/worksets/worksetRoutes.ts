@@ -63,7 +63,3 @@ export function worksetsCatalogPath(
 export function worksetDetailPath(worksetId: string): string {
   return `${WORKSETS_PATH}/${encodeURIComponent(worksetId)}`;
 }
-
-export function isLegacyTasksWorksetPath(pathname: string): boolean {
-  return pathname.startsWith("/tasks/worksets/");
-}

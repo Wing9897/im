@@ -70,7 +70,7 @@ async def update_workset(
 
 async def delete_workset(tx: TransactionDb, workset_id: str) -> None:
     # analysis_tasks / user_events / items / recurring_schedules.workset_id are
-    # NOT NULL — reassign to __user__ before deleting the row.
+    # NOT NULL — reassign to __general__ before deleting the row.
     await tx.execute(
         "UPDATE analysis_tasks SET workset_id = ? WHERE workset_id = ?",
         (SYSTEM_WORKSET_ID, workset_id),

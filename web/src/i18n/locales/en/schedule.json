@@ -1,5 +1,4 @@
 {
-  "pageTitle": "My schedule",
   "toolbarAria": "Schedule toolbar",
   "badge": {
     "oneOff": "One-off",
@@ -20,8 +19,7 @@
     "rrule": "Recurrence rule",
     "start": "Start time",
     "end": "End time",
-    "location": "Location",
-    "itemId": "Linked item ID"
+    "location": "Location"
   },
   "empty": {
     "title": "No schedule events yet",
@@ -59,8 +57,7 @@
     "recurringResumed": "Recurring event resumed",
     "recurringDeleted": "Recurring event deleted",
     "saveFailed": "Save failed",
-    "deleteFailed": "Delete failed",
-    "loadFailed": "Load failed"
+    "deleteFailed": "Delete failed"
   },
   "gridAria": "Schedule cards",
   "rruleFreq": {

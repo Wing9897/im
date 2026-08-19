@@ -53,7 +53,7 @@ type UserEventDialogProps = {
   open: boolean;
   mode: "create" | "edit";
   initial?: Partial<UserEventFormValues> | null;
-  /** Available worksets (incl. builtin ``__user__``). */
+  /** Available worksets (incl. builtin ``__general__``). */
   worksetOptions?: readonly UserEventTaskOption[];
   busy?: boolean;
   error?: string | null;

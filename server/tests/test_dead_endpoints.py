@@ -14,8 +14,8 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("GET", "/health", None),
         ("GET", "/api/v1/messages", None),
         ("POST", "/api/v1/channels", {}),
-        # Plain channel list: every caller needs /channels/with-sources instead.
-        ("GET", "/api/v1/channels", None),
+        # Retired alias: live list is GET /api/v1/channels (ChannelWithSource[]).
+        ("GET", "/api/v1/channels/with-sources", None),
         ("POST", "/api/v1/tasks/suggest", {}),
         # FE uses agent ``tasks.consult_advisor``; REST chat-assistant retired.
         ("POST", "/api/v1/tasks/chat-assistant", {"messages": []}),

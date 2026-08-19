@@ -780,4 +780,90 @@ describe("TimelineCalendarView", () => {
     });
   });
 
+  describe("week view — calendar and analysis chips", () => {
+    it("renders recurring calendar occurrences beside analysis events with a status rail", () => {
+      const calendarEvent = makeEvent({
+        id: "cal-task1-2025-01-15T09:00:00Z",
+        seriesId: "cal-task-1",
+        taskName: "Weekly Standup",
+        title: "Weekly Standup",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+        source: "recurring",
+        isAllDay: false,
+      });
+      const analysisEvent = makeEvent({
+        id: "evt-analysis-1",
+        taskId: "task-analysis-1",
+        taskName: "Analysis Task",
+        title: "Analysis Meeting",
+        startTime: "2025-01-15T14:00:00Z",
+        endTime: "2025-01-15T15:00:00Z",
+      });
+      const container = render(
+        makeProps({
+          timeScale: "week",
+          rangeEvents: [calendarEvent, analysisEvent],
+        }),
+      );
+      expect(container.textContent).toContain("Weekly Standup");
+      expect(container.textContent).toContain("Analysis Meeting");
+      const calendarCard = Array.from(
+        container.querySelectorAll('[data-testid="timeline-week-event-chip"]'),
+      ).find((btn) => btn.textContent?.includes("Weekly Standup"));
+      expect(calendarCard).toBeDefined();
+      expect((calendarCard as HTMLElement).className).toContain("im-surface-inset");
+      expect((calendarCard as HTMLElement).className).not.toContain("bg-surface-card");
+      const statusRail = calendarCard!.querySelector('[aria-hidden="true"]') as HTMLElement | null;
+      expect(statusRail).not.toBeNull();
+      expect(statusRail!.style.backgroundColor).toBe("var(--warning)");
+    });
+  });
+
+  describe("day view — all-day zone", () => {
+    it("shows all-day calendar events with the 全日 label beside timed calendar and analysis cards", () => {
+      const allDayCalendar = makeEvent({
+        id: "cal-task2-2025-01-15T00:00:00Z",
+        seriesId: "cal-task-2",
+        title: "Company Holiday",
+        startTime: "2025-01-15T00:00:00Z",
+        endTime: "2025-01-15T23:59:59Z",
+        source: "recurring",
+        isAllDay: true,
+      });
+      const timedCalendar = makeEvent({
+        id: "cal-task1-2025-01-15T09:00:00Z",
+        seriesId: "cal-task-1",
+        title: "Weekly Standup",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+        source: "recurring",
+        isAllDay: false,
+      });
+      const analysisEvent = makeEvent({
+        id: "evt-analysis-1",
+        title: "Analysis Meeting",
+        startTime: "2025-01-15T14:00:00Z",
+        endTime: "2025-01-15T15:00:00Z",
+      });
+      const container = render(
+        makeProps({
+          timeScale: "day",
+          rangeStart: new Date(2025, 0, 15),
+          rangeEvents: [allDayCalendar, timedCalendar, analysisEvent],
+        }),
+      );
+      const cards = Array.from(
+        container.querySelectorAll('[data-testid="timeline-day-event-card"]'),
+      );
+      expect(cards).toHaveLength(3);
+      const holiday = cards.find((card) => card.textContent?.includes("Company Holiday"));
+      const standup = cards.find((card) => card.textContent?.includes("Weekly Standup"));
+      const analysis = cards.find((card) => card.textContent?.includes("Analysis Meeting"));
+      expect(holiday?.textContent).toContain("全日");
+      expect(standup?.textContent).not.toContain("全日");
+      expect(analysis?.textContent).not.toContain("全日");
+    });
+  });
+
 });

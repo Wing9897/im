@@ -33,7 +33,7 @@ const chatMock = {
   ttsAvailable: false,
   ttsEnabled: false,
   spacePttMode: "hold" as const,
-  worksetId: "__user__",
+  worksetId: "__general__",
   setWorksetId: vi.fn(),
   sendDraft: vi.fn(),
   startListening,

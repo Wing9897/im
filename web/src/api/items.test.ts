@@ -68,13 +68,13 @@ describe("items API", () => {
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/items", {});
 
     await listItems({
-      worksetId: "__user__",
+      worksetId: "__general__",
       categoryId: "seed_food",
       status: "active",
       search: "milk",
     });
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/items", {
-      worksetId: "__user__",
+      worksetId: "__general__",
       categoryId: "seed_food",
       status: "active",
       search: "milk",
@@ -96,7 +96,7 @@ describe("items API", () => {
 
     const body = {
       title: "Milk",
-      worksetId: "__user__",
+      worksetId: "__general__",
       categoryId: "seed_food",
       expiresAt: "2026-08-10",
       remindBeforeDays: 3,

@@ -1,4 +1,4 @@
-"""Pydantic wire alias for ``notifyPref`` (``follow`` / ``off``; ``on`` is 422)."""
+"""Pydantic wire alias for ``notifyPref`` (``inherit`` / ``off``; ``follow`` / ``on`` are 422)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from server.domain.notify_prefs import NotifyPref, normalize_notify_pref
 
 
 def coerce_notify_pref_wire(value: Any) -> Any:
-    """Accept omitted / blank as-is; reject unknown values including legacy ``on``."""
+    """Accept omitted / blank as-is; reject unknown values including legacy ``follow`` / ``on``."""
     if value is None:
         return None
     if isinstance(value, str) and not value.strip():

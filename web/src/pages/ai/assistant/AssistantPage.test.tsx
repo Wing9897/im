@@ -349,7 +349,7 @@ describe("AssistantPage", () => {
         messages: [{ role: "user", content: "最近一星期家庭事務？" }],
         sessionId: undefined,
         locale: "zh-Hant",
-        worksetId: "__user__",
+        worksetId: "__general__",
       },
       expect.objectContaining({
         onToolStart: expect.any(Function),

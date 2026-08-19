@@ -168,7 +168,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Manual event included",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([]);
@@ -248,7 +248,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Follow muted workset",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 
@@ -288,7 +288,7 @@ describe("useNotifyScanner notify resolve", () => {
         startTime: "2026-07-20T10:00:00.000Z",
         source: "item_remind",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 
@@ -342,7 +342,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Voice only",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 
@@ -373,7 +373,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Flash only",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 
@@ -407,7 +407,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Persistent flash",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 
@@ -437,7 +437,7 @@ describe("useNotifyScanner notify resolve", () => {
         title: "Inbox only",
         startTime: "2026-07-20T10:00:00.000Z",
         worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       },
     ]);
 

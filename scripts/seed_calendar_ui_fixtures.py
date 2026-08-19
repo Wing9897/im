@@ -2,7 +2,7 @@
 
 Prefix: ``[cal-ui]`` on titles so they are easy to spot and delete later.
 Run against the live app DB (default data dir) while the server may be running.
-Requires wipe-only stamp 40 (``SCHEMA_SEMVER`` ``0.1.0-beta.41``); reset first if needed.
+Requires wipe-only stamp 42 (``SCHEMA_SEMVER`` ``0.1.0-beta.43``); reset first if needed.
 
   python scripts/seed_calendar_ui_fixtures.py
   python scripts/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first
@@ -79,7 +79,7 @@ async def _ensure_intel_tasks(db: Database) -> None:
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
             "analysis_time_range, version, is_active, include_in_timeline, "
             "schedule_rrule, workset_id, llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', ?, ?, ?)",
+            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__general__', ?, ?, ?)",
             (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", INTEL_EVENT_MODE, LLM_PROFILE_ID, now, now),
         )
 
@@ -99,7 +99,7 @@ async def _ensure_intel_tasks(db: Database) -> None:
             "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
             "output_calendar, output_analysis_events, "
             "llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', "
+            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__general__', "
             "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task_id,

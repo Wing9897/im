@@ -18,7 +18,7 @@ async def test_remove_item_nulls_linked_user_event_and_recurring_item_id(client,
     """ON DELETE SET NULL: calendar rows survive; item_id becomes NULL."""
     item = await client.post(
         "/api/v1/items",
-        json={"title": "FK parent", "worksetId": "__user__"},
+        json={"title": "FK parent", "worksetId": "__general__"},
     )
     assert item.status_code == 201, item.text
     item_id = item.json()["id"]
@@ -41,7 +41,7 @@ async def test_remove_item_nulls_linked_user_event_and_recurring_item_id(client,
             "rrule": "FREQ=WEEKLY;BYDAY=MO",
             "eventStartTime": "09:00",
             "eventIsAllDay": False,
-            "worksetId": "__user__",
+            "worksetId": "__general__",
             "itemId": item_id,
         },
     )

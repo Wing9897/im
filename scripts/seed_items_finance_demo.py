@@ -7,8 +7,8 @@ Uses real ``create_item`` + ``create_user_event`` (kind / amount / direction).
   uv run python scripts/seed_items_finance_demo.py --clean
   uv run python scripts/seed_items_finance_demo.py --verify-only
 
-After a stamp wipe (or older local DB) — current wipe-only floor is stamp 40
-(``SCHEMA_SEMVER`` ``0.1.0-beta.41``; SoT ``server/db/schema_inspect.py``):
+After a stamp wipe (or older local DB) — current wipe-only floor is stamp 42
+(``SCHEMA_SEMVER`` ``0.1.0-beta.43``; SoT ``server/db/schema_inspect.py``):
 
   uv run python scripts/reset_local_databases.py --apply
   uv run python scripts/seed_items_finance_demo.py

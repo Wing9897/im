@@ -93,7 +93,8 @@ async def test_messages_page_searches_sender_id_and_channel_name(client):
 
 
 async def test_channels_with_sources(client):
-    resp = await client.get("/api/v1/channels/with-sources")
+    resp = await client.get("/api/v1/channels")
+    assert resp.status_code == 200
     body = resp.json()
     assert len(body) == 5
     for channel in body:
@@ -110,7 +111,7 @@ async def test_channels_with_sources(client):
 
 async def test_channel_id_matches_message_synthesis(client):
     """Monitor filter compares channel.id to `${platform}:${platformId}`."""
-    channels = (await client.get("/api/v1/channels/with-sources")).json()
+    channels = (await client.get("/api/v1/channels")).json()
     messages = (await client.get("/api/v1/messages/page")).json()["messages"]
     channel_ids = {c["id"] for c in channels}
     for message in messages:

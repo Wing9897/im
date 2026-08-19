@@ -77,6 +77,9 @@ def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
         return f"{name}: ok"
     if "calendars" in result:
         return f"{name}: {result.get('count', len(result.get('calendars') or []))} calendars"
+    worksets = result.get("worksets")
+    if isinstance(worksets, list):
+        return f"{name}: {result.get('count', len(worksets))} worksets"
     task = result.get("task")
     if isinstance(task, dict) and task.get("id"):
         return f"{name}: task={task.get('id')}"

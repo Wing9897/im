@@ -56,11 +56,14 @@ describe("commandPaletteCommands", () => {
 
   it("includes actions voice and history tab shortcuts", () => {
     const voice = filterCommandPaletteItems("本機通知");
-    expect(voice.some((item) => item.to === "/actions?tab=notify")).toBe(true);
+    expect(voice.some((item) => item.to === "/notify?tab=notify")).toBe(true);
     const legacyVoice = filterCommandPaletteItems("語音提醒");
-    expect(legacyVoice.some((item) => item.to === "/actions?tab=notify")).toBe(true);
+    expect(legacyVoice.some((item) => item.to === "/notify?tab=notify")).toBe(true);
     const history = filterCommandPaletteItems("觸發");
-    expect(history.some((item) => item.to === "/actions?tab=history")).toBe(true);
+    expect(history.some((item) => item.to === "/notify?tab=history")).toBe(true);
+    const all = filterCommandPaletteItems("");
+    expect(all.some((item) => item.to === "/notify")).toBe(true);
+    expect(all.some((item) => item.to?.startsWith("/actions"))).toBe(false);
   });
 
   it("includes the Board canvas switch action", () => {

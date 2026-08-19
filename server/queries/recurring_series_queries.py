@@ -30,7 +30,7 @@ SELECT id,
        ics_import_fingerprint,
        parent_task_id,
        item_id,
-       COALESCE(notify_pref, 'follow') AS notify_pref,
+       COALESCE(notify_pref, 'inherit') AS notify_pref,
        created_at,
        updated_at
 FROM recurring_schedules
@@ -109,7 +109,7 @@ async def insert_series(
     ics_uid: str | None = None,
     ics_source: str | None = None,
     ics_import_fingerprint: str | None = None,
-    notify_pref: str = "follow",
+    notify_pref: str = "inherit",
 ) -> None:
     await tx.execute(
         "INSERT INTO recurring_schedules "

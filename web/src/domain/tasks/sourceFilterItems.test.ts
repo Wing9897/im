@@ -40,7 +40,7 @@ describe("filterItemsBySourceSelection", () => {
     {
       taskId: null as string | null,
       sourceKind: "workset",
-      worksetId: "__user__",
+      worksetId: "__general__",
     },
     {
       taskId: null as string | null,
@@ -62,12 +62,12 @@ describe("filterItemsBySourceSelection", () => {
   it("matches workset ownership spans via worksetId + sourceKind", () => {
     const filtered = filterItemsBySourceSelection(
       spans,
-      { taskIds: [], worksetIds: ["__user__", "ws-1"] },
+      { taskIds: [], worksetIds: ["__general__", "ws-1"] },
       new Set(),
     );
     expect(filtered.map((s) => s.worksetId ?? s.taskId)).toEqual([
       "ws-1",
-      "__user__",
+      "__general__",
       "ws-1",
     ]);
   });
@@ -166,7 +166,7 @@ describe("filterItemsBySourceSelection", () => {
     expect(filtered.map((item) => item.id)).toEqual(["rrule-a"]);
   });
 
-  it("matches item_remind by workset ownership (default __user__)", () => {
+  it("matches item_remind by workset ownership (default __general__)", () => {
     const items = [
       {
         id: "item-user",
@@ -182,7 +182,7 @@ describe("filterItemsBySourceSelection", () => {
     expect(
       filterItemsBySourceSelection(
         items,
-        { taskIds: [], worksetIds: ["__user__"] },
+        { taskIds: [], worksetIds: ["__general__"] },
         new Set(),
       ).map((item) => item.id),
     ).toEqual(["item-user"]);

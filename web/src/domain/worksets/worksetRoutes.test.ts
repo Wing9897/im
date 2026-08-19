@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_WORKSET_CATALOG_TAB,
-  isLegacyTasksWorksetPath,
   isWorksetCatalogTab,
   isWorksetsPath,
   parseWorksetCatalogTab,
@@ -35,14 +36,18 @@ describe("worksetRoutes", () => {
     expect(serializeWorksetGraphFilter([])).toBe("__none__");
     expect(worksetsCatalogPath("graph", [])).toBe("/worksets?tab=graph&worksetId=__none__");
     expect(parseWorksetGraphFilter("ws-1")).toEqual(["ws-1"]);
-    expect(parseWorksetGraphFilter("ws-1,__user__")).toEqual(["ws-1", "__user__"]);
-    const multi = worksetsCatalogPath("graph", ["ws-1", "__user__"]);
+    expect(parseWorksetGraphFilter("ws-1,__general__")).toEqual(["ws-1", "__general__"]);
+    const multi = worksetsCatalogPath("graph", ["ws-1", "__general__"]);
     expect(parseWorksetGraphFilter(new URL(multi, "https://app.local").searchParams.get("worksetId"))).toEqual([
       "ws-1",
-      "__user__",
+      "__general__",
     ]);
-    expect(isLegacyTasksWorksetPath("/tasks/worksets/ws-1")).toBe(true);
-    expect(isLegacyTasksWorksetPath("/worksets/ws-1")).toBe(false);
+  });
+
+  it("does not keep the retired /tasks/worksets helper", () => {
+    const src = readFileSync(resolve(__dirname, "./worksetRoutes.ts"), "utf8");
+    expect(src).not.toContain("isLegacyTasksWorksetPath");
+    expect(src).not.toContain("/tasks/worksets/");
   });
 
   it("parses catalog tabs with catalog as the default and flow as a graph alias", () => {

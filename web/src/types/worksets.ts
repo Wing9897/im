@@ -8,4 +8,4 @@ import type { components } from "../api/generated/schema";
 export type Workset = components["schemas"]["WorksetResponse"];
 
 /** Builtin system workset for handwritten / assistant ownership. */
-export const SYSTEM_WORKSET_ID = "__user__";
+export const SYSTEM_WORKSET_ID = "__general__";

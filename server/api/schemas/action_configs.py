@@ -6,7 +6,7 @@ configuration is encrypted at rest and credential-masked on read
 directly. They are exported to OpenAPI as components via
 ``server/api/openapi_ext.py`` — the web client generates its
 ``web/src/types/actions.ts`` config aliases from them; parsing/normalization
-stays in ``web/src/pages/actions/actionConfigParsers.ts``.
+stays in ``web/src/pages/notify/actionConfigParsers.ts``.
 
 Deliberate wire quirk: field names are snake_case (``bot_token`` …) because
 they mirror the stored configuration JSON, not the camelCase API surface.

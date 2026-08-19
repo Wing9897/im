@@ -133,13 +133,13 @@ async def test_query_window_merges_user_events(app) -> None:
     )
     assert any(i["id"] == tagged["id"] and i["taskId"] == seed.TASK_EVENT for i in filtered_tagged["items"])
 
-    # System-workset filter: ownership ``__user__`` only (no analysis/RRULE).
+    # System-workset filter: ownership ``__general__`` only (no analysis/RRULE).
     # Events with task provenance still appear when their workset is builtin.
     system_ws = await query_window(
         db,
         start="2026-07-13T00:00:00Z",
         end="2026-07-21T23:59:59Z",
-        workset_id="__user__",
+        workset_id="__general__",
         limit=100,
     )
     assert all(i["source"] == "user" for i in system_ws["items"])
@@ -284,7 +284,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
     assert detail == {
         "id": created["id"],
         "taskId": "",
-        "worksetId": "__user__",
+        "worksetId": "__general__",
         "title": "用戶事件詳情",
         "startTime": "2026-07-23T09:00:00Z",
         "endTime": "2026-07-23T10:00:00Z",
@@ -329,7 +329,7 @@ async def test_query_window_filters_by_workset_id(app) -> None:
         db,
         title="System owned",
         start_time="2026-07-16T15:00:00Z",
-        workset_id="__user__",
+        workset_id="__general__",
     )
     filtered = await query_window(
         db,

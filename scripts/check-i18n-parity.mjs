@@ -1,11 +1,12 @@
 /**
- * Compare leaf i18n keys across zh-Hant / zh-Hans / en for every namespace JSON.
+ * Compare leaf i18n keys across zh-Hant / zh-Hans / en for every namespace JSON,
+ * then fail if zh-Hant keys have no t() / quoted-literal reference (unless allowlisted).
  * zh-Hant is the source of truth (see docs/I18N-GLOSSARY.md).
  *
  * Usage: node scripts/check-i18n-parity.mjs
  */
-import { readdirSync, readFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { join, dirname, extname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -62,12 +63,197 @@ const FORBIDDEN_KEYS = [
   // Items chrome: category hub / finance omit redundant page titles (nav labels the page).
   "items:pageTitle",
   "items:finance.pageTitle",
+  "timeline:userEvent.parentItemAria",
+  "timeline:userEvent.parentItemNone",
+  "timeline:userEvent.parentItemHint",
 ];
+
+/**
+ * Unused-key exceptions (`ns:leaf` or `ns:prefix.*`).
+ * Dynamic `t(\`prefix${}\`)` is auto-covered; list keys the scanner cannot prove
+ * (open catalogs, FORBIDDEN siblings kept for enum lookup). One-line reason each.
+ */
+const UNUSED_ALLOWLIST = [
+  {
+    key: "common:errors.*",
+    reason: "Resolved via errors.${code} / i18n.exists from API error_code",
+  },
+  {
+    key: "items:seed.*",
+    reason: "t(`seed.${cat.slug}`, { defaultValue }); slugs come from category records",
+  },
+  {
+    key: "logs:category.*",
+    reason: "t(`category.${entry.category}`, { defaultValue }); categories from backend",
+  },
+  {
+    key: "settings:theme.textureMotif.*",
+    reason: "t(`theme.textureMotif.${motif}`, { defaultValue: motif }); ids from texture catalog",
+  },
+  {
+    key: "settings:profiles.staffClass.*",
+    reason: "t(`profiles.staffClass.${staffClass}`); assistant counterpart is FORBIDDEN",
+  },
+  {
+    key: "tasks:presets.*",
+    reason: "localizeTaskPreset: tasks:presets.${id}.*; ids from shared/task_presets.json",
+  },
+  {
+    key: "tasks:modes.*",
+    reason: "getTaskFormAnalysisModeMeta: tasks:modes.${analysisMode}.*",
+  },
+  {
+    key: "tasks:employees.*",
+    reason: "t(`tasks:employees.${employeeId}.name|blurb`)",
+  },
+];
+
+const SCAN_ROOTS = [
+  join(ROOT, "web", "src"),
+  join(ROOT, "desktop"),
+  join(ROOT, "server"),
+  join(ROOT, "tests"),
+  join(ROOT, "scripts"),
+];
+const SCAN_EXTS = new Set([".ts", ".tsx", ".js", ".mjs", ".py"]);
+const SKIP_DIR_NAMES = new Set([
+  "node_modules",
+  "dist",
+  "build",
+  "release",
+  ".venv",
+  "__pycache__",
+  "locales",
+  "generated",
+]);
+const SKIP_FILE_RE = /(?:^|[/\\])check-i18n-parity\.mjs$/;
 
 function forbiddenMatches(ns, leafPath, forbidden) {
   const colon = forbidden.indexOf(":");
   if (colon === -1) return leafPath === forbidden;
   return ns === forbidden.slice(0, colon) && leafPath === forbidden.slice(colon + 1);
+}
+
+function allowlistReason(ns, leafPath) {
+  const qualified = `${ns}:${leafPath}`;
+  for (const { key, reason } of UNUSED_ALLOWLIST) {
+    if (key.endsWith(".*")) {
+      const prefix = key.slice(0, -1); // keep trailing "."
+      if (qualified.startsWith(prefix)) return reason;
+      continue;
+    }
+    if (key === qualified) return reason;
+  }
+  return null;
+}
+
+function walkScanFiles(dir, out) {
+  if (!existsSync(dir)) return;
+  for (const name of readdirSync(dir)) {
+    if (SKIP_DIR_NAMES.has(name)) continue;
+    const full = join(dir, name);
+    let st;
+    try {
+      st = statSync(full);
+    } catch {
+      continue;
+    }
+    if (st.isDirectory()) walkScanFiles(full, out);
+    else if (SCAN_EXTS.has(extname(name))) out.push(full);
+  }
+}
+
+function extractQuotedStrings(text, into) {
+  // Extract "..." and '...' independently so keys nested in `...${t("ns:key")}...`
+  // are not swallowed by the outer template literal.
+  for (const re of [/"((?:\\.|[^"\\])*)"/g, /'((?:\\.|[^'\\])*)'/g]) {
+    let m;
+    while ((m = re.exec(text))) into.add(m[1].replace(/\\./g, (s) => s[1]));
+  }
+  const tick = /`([^`$\\]*)`/g;
+  let m;
+  while ((m = tick.exec(text))) into.add(m[1]);
+}
+
+/** `timeline:` / `nav:` cover an entire namespace — too broad for unused detection. */
+function isSpecificDynamicPrefix(prefix) {
+  const body = prefix.includes(":") ? prefix.slice(prefix.indexOf(":") + 1) : prefix;
+  return body.length > 0 && (/[.:]/.test(prefix) || body.includes("."));
+}
+
+/**
+ * Patterns from t(`prefix${var}suffix`) / i18n.t(`...`) / exists(`...`).
+ * Prefix must be non-empty so `${base}.name` does not match every *.name key.
+ */
+function extractDynamicPatterns(text, into) {
+  const callRe = /(?:(?:i18n\.)?t|\.exists|exists)\(\s*`([^`]*)`/g;
+  let m;
+  while ((m = callRe.exec(text))) {
+    const tpl = m[1];
+    if (!tpl.includes("${")) continue;
+    const parts = tpl.split(/\$\{[^}]*\}/);
+    const prefix = parts[0];
+    const suffix = parts.length > 1 ? parts[parts.length - 1] : "";
+    if (!isSpecificDynamicPrefix(prefix)) continue;
+    into.push({ prefix, suffix });
+  }
+  const freeRe = /`([A-Za-z][A-Za-z0-9_.:-]*\.\$\{[^}]+\}[^`]*)`/g;
+  while ((m = freeRe.exec(text))) {
+    const tpl = m[1];
+    const parts = tpl.split(/\$\{[^}]*\}/);
+    const prefix = parts[0];
+    const suffix = parts.length > 1 ? parts[parts.length - 1] : "";
+    if (!isSpecificDynamicPrefix(prefix)) continue;
+    into.push({ prefix, suffix });
+  }
+}
+
+function coversKey(ns, leaf, patterns) {
+  const qualified = `${ns}:${leaf}`;
+  for (const { prefix, suffix } of patterns) {
+    const haystacks = prefix.includes(":") ? [qualified] : [leaf, qualified];
+    for (const hay of haystacks) {
+      if (!hay.startsWith(prefix)) continue;
+      if (suffix && !hay.endsWith(suffix)) continue;
+      if (hay.length === prefix.length && suffix) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+function collectKeyReferences() {
+  const files = [];
+  for (const root of SCAN_ROOTS) walkScanFiles(root, files);
+  const literals = new Set();
+  const patterns = [];
+  for (const file of files) {
+    const rel = relative(ROOT, file).replaceAll("\\", "/");
+    if (SKIP_FILE_RE.test(rel)) continue;
+    const text = readFileSync(file, "utf8");
+    extractQuotedStrings(text, literals);
+    extractDynamicPatterns(text, patterns);
+  }
+  return { fileCount: files.length, literals, patterns };
+}
+
+function findUnusedKeys(keysByNs, refs) {
+  const unused = [];
+  for (const [ns, keys] of keysByNs) {
+    for (const leaf of keys) {
+      const qualified = `${ns}:${leaf}`;
+      if (
+        refs.literals.has(leaf) ||
+        refs.literals.has(qualified) ||
+        refs.literals.has(`${ns}.${leaf}`)
+      ) {
+        continue;
+      }
+      if (coversKey(ns, leaf, refs.patterns)) continue;
+      unused.push({ ns, leaf, qualified, allowReason: allowlistReason(ns, leaf) });
+    }
+  }
+  return unused;
 }
 
 /**
@@ -144,6 +330,7 @@ function main() {
 
   let failed = false;
   const summary = [];
+  const keysByNs = new Map();
 
   for (const fileName of namespaces) {
     const ns = fileName.replace(/\.json$/, "");
@@ -165,6 +352,7 @@ function main() {
     }
 
     const sourceKeys = byLocale[SOURCE];
+    keysByNs.set(ns, sourceKeys);
     for (const locale of LOCALES) {
       if (locale === SOURCE) continue;
       const missing = [...sourceKeys].filter((k) => !byLocale[locale].has(k)).sort();
@@ -205,12 +393,25 @@ function main() {
     console.log(`  ${row.ns.padEnd(14)} ${row.keys}`);
   }
 
+  const refs = collectKeyReferences();
+  const unusedHits = findUnusedKeys(keysByNs, refs);
+  const unused = unusedHits.filter((row) => !row.allowReason);
+  if (unused.length) {
+    failed = true;
+    console.error(`\nUnused i18n keys (${unused.length}; no t() / quoted literal, not allowlisted):`);
+    for (const row of unused) console.error(`  - ${row.qualified}`);
+  } else {
+    console.log(
+      `\ni18n unused-key check OK (scanned ${refs.fileCount} files; ${UNUSED_ALLOWLIST.length} allowlist rules).`,
+    );
+  }
+
   if (failed) {
-    console.error("\ni18n parity check FAILED.");
+    console.error("\ni18n check FAILED.");
     process.exit(1);
   }
 
-  console.log("\ni18n parity check OK (all locales aligned with zh-Hant).");
+  console.log("\ni18n check OK (parity vs zh-Hant + unused-key scan).");
 }
 
 main();

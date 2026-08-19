@@ -1,7 +1,7 @@
-"""Channels routes: list-with-sources and latest-messages.
+"""Channels routes: live list (ChannelWithSource[]) and latest-messages.
 
-There is deliberately no bare ``GET /api/v1/channels``: every caller needs the
-source each channel belongs to, so the plain list was dead weight.
+``GET /api/v1/channels`` is the list; retired ``GET /api/v1/channels/with-sources``
+stays 404 (see ``test_dead_endpoints``).
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ def _primary_source_name(source: dict | None) -> str | None:
     return None
 
 
-@router.get("/with-sources", response_model=list[ChannelWithSourceResponse])
-async def list_channels_with_sources(request: Request) -> list[dict]:
+@router.get("", response_model=list[ChannelWithSourceResponse])
+async def list_channels(request: Request) -> list[dict]:
     """ChannelWithSource[] — sourceName populated server-side."""
     db = get_db(request)
     channels = await fetch_channel_rows(db)

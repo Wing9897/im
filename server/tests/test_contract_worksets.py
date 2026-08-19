@@ -13,7 +13,7 @@ async def test_worksets_crud_and_task_workset_id(client):
     listed0 = empty.json()
     # Builtin system workset is always present.
     assert len(listed0) == 1
-    assert listed0[0]["id"] == "__user__"
+    assert listed0[0]["id"] == "__general__"
     assert listed0[0]["isSystem"] is True
     assert listed0[0]["name"] == "一般"
 
@@ -71,9 +71,9 @@ async def test_worksets_crud_and_task_workset_id(client):
         },
     )
     assert cleared.status_code == 200
-    assert cleared.json()["worksetId"] == "__user__"
+    assert cleared.json()["worksetId"] == "__general__"
 
-    # Re-attach then delete workset → task and events reassign to __user__
+    # Re-attach then delete workset → task and events reassign to __general__
     await client.put(
         f"/api/v1/tasks/{task_body['id']}",
         json={
@@ -101,31 +101,31 @@ async def test_worksets_crud_and_task_workset_id(client):
     # GET single task may 405 — list instead
     tasks = await client.get("/api/v1/tasks")
     owned = next(t for t in tasks.json() if t["id"] == task_body["id"])
-    assert owned["worksetId"] == "__user__"
+    assert owned["worksetId"] == "__general__"
 
-    events = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
+    events = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__general__"})
     assert events.status_code == 200
     reassigned = next(e for e in events.json()["items"] if e["id"] == ue_id)
-    assert reassigned["worksetId"] == "__user__"
+    assert reassigned["worksetId"] == "__general__"
 
     again = await client.delete(f"/api/v1/worksets/{workset_id}")
     assert again.status_code == 404
 
 
 async def test_system_workset_cannot_be_deleted(client):
-    resp = await client.delete("/api/v1/worksets/__user__")
+    resp = await client.delete("/api/v1/worksets/__general__")
     assert resp.status_code == 403
     assert resp.json()["error_code"] == "FORBIDDEN"
     listed = await client.get("/api/v1/worksets")
-    assert any(row["id"] == "__user__" and row["isSystem"] for row in listed.json())
+    assert any(row["id"] == "__general__" and row["isSystem"] for row in listed.json())
 
 
 async def test_system_workset_cannot_be_renamed(client):
-    resp = await client.put("/api/v1/worksets/__user__", json={"name": "Hacked"})
+    resp = await client.put("/api/v1/worksets/__general__", json={"name": "Hacked"})
     assert resp.status_code == 403
     assert resp.json()["error_code"] == "FORBIDDEN"
     listed = await client.get("/api/v1/worksets")
-    builtin = next(row for row in listed.json() if row["id"] == "__user__")
+    builtin = next(row for row in listed.json() if row["id"] == "__general__")
     assert builtin["isSystem"] is True
     assert builtin["name"] != "Hacked"
 
@@ -136,12 +136,12 @@ async def test_user_event_create_by_workset(client):
         json={
             "title": "By workset",
             "startTime": "2026-07-01T09:00:00Z",
-            "worksetId": "__user__",
+            "worksetId": "__general__",
         },
     )
     assert created.status_code == 201
     body = created.json()
-    assert body["worksetId"] == "__user__"
+    assert body["worksetId"] == "__general__"
     assert body["taskId"] == ""
 
     custom = await client.post("/api/v1/worksets", json={"name": "Desk"})
@@ -187,4 +187,4 @@ async def test_task_create_without_workset_id_defaults_to_system(client):
         },
     )
     assert resp.status_code == 201
-    assert resp.json()["worksetId"] == "__user__"
+    assert resp.json()["worksetId"] == "__general__"

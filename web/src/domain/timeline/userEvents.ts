@@ -1,8 +1,8 @@
 /**
  * User-event helpers: provenance task ids vs ownership workset ids.
  *
- * - `taskId` on user_events = analysis-task provenance only (never `__user__`).
- * - `worksetId` = ownership (builtin `__user__` displayed as「一般」).
+ * - `taskId` on user_events = analysis-task provenance only (never `__general__`).
+ * - `worksetId` = ownership (builtin `__general__` displayed as「一般」).
  */
 
 import i18n from "../../i18n";
@@ -13,20 +13,20 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 export { isTimelineAssignableAnalysisMode } from "../tasks/analysisModeCapabilities";
 
-/** Localized display name for builtin workset `__user__`. */
+/** Localized display name for builtin workset `__general__`. */
 export function getGeneralWorksetLabel(): string {
   return String(i18n.t("workset:generalName"));
 }
 
 /**
  * True when analysis-task provenance is absent.
- * Legacy wire may still carry `__user__` as a fake task id — treat as null provenance.
+ * Legacy wire may still carry `__general__` as a fake task id — treat as null provenance.
  */
 export function isNullProvenanceTaskId(taskId: string | null | undefined): boolean {
   return taskId == null || taskId === "" || taskId === SYSTEM_WORKSET_ID;
 }
 
-/** Normalize ownership workset id for forms / prefs (empty → builtin `__user__`). */
+/** Normalize ownership workset id for forms / prefs (empty → builtin `__general__`). */
 export function toUserEventFormWorksetId(worksetId: string | null | undefined): string {
   if (typeof worksetId !== "string") return SYSTEM_WORKSET_ID;
   const trimmed = worksetId.trim();
@@ -89,7 +89,7 @@ function lookupName(id: string, names?: TaskNameLookup | WorksetNameLookup): str
 /**
  * Display label for a user_event row's "source" column:
  * 1. Real analysis-task provenance name when `taskId` is set
- * 2. Else ownership workset name (`__user__` →「一般」)
+ * 2. Else ownership workset name (`__general__` →「一般」)
  */
 export function resolveUserEventTaskName(
   taskId: string | null | undefined,

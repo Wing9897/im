@@ -4,6 +4,7 @@ import { PIPELINE_MAX_VISIBLE_WORKSETS } from "./pipelineConstants";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   defaultGraphWorksetIds,
+  graphWorksetAddCapped,
   graphWorksetIdSetEquals,
   resolveGraphWorksetIds,
   selectAllGraphWorksetIds,
@@ -75,5 +76,35 @@ describe("worksetGraphFilter", () => {
     expect(graphWorksetIdSetEquals(selected, defaultGraphWorksetIds(worksets))).toBe(true);
     expect(selectAllGraphWorksetIds(worksets)).toHaveLength(11);
     expect(selectAllGraphWorksetIds(worksets)).toContain(excluded);
+  });
+
+  it("after 全選 (>10), allows uncheck and re-check; once ≤10, new adds are capped", () => {
+    const worksets = Array.from({ length: 12 }, (_, index) => row(`ws-${index + 1}`));
+    let selected = selectAllGraphWorksetIds(worksets);
+    expect(selected).toHaveLength(12);
+    expect(graphWorksetAddCapped(selected.length)).toBe(false);
+
+    selected = toggleGraphWorksetId(selected, "ws-1", worksets);
+    expect(selected).not.toContain("ws-1");
+    expect(selected).toHaveLength(11);
+
+    selected = toggleGraphWorksetId(selected, "ws-1", worksets);
+    expect(selected).toContain("ws-1");
+    expect(selected).toHaveLength(12);
+
+    selected = toggleGraphWorksetId(selected, "ws-1", worksets);
+    selected = toggleGraphWorksetId(selected, "ws-2", worksets);
+    expect(selected).toHaveLength(10);
+    expect(graphWorksetAddCapped(selected.length)).toBe(true);
+    expect(toggleGraphWorksetId(selected, "ws-1", worksets)).toEqual(selected);
+    expect(toggleGraphWorksetId(selected, "ws-2", worksets)).toEqual(selected);
+
+    selected = toggleGraphWorksetId(selected, "ws-3", worksets);
+    expect(selected).toHaveLength(9);
+    expect(graphWorksetAddCapped(selected.length)).toBe(false);
+    selected = toggleGraphWorksetId(selected, "ws-1", worksets);
+    expect(selected).toContain("ws-1");
+    expect(selected).toHaveLength(10);
+    expect(toggleGraphWorksetId(selected, "ws-2", worksets)).toEqual(selected);
   });
 });

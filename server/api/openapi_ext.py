@@ -66,9 +66,9 @@ _EVENTS_PATH = "/api/v1/events"
 _EVENTS_RESPONSE_DESCRIPTION = (
     "Server-Sent Events stream. Each named event's `data` field is the JSON "
     'envelope `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`); '
-    "clients unwrap `payload` per event type. `collector_status_changed` "
-    "deliberately uses snake_case adapter fields (`adapter_name`, "
-    "`error_summary`, `correlation_id`)."
+    "clients unwrap `payload` per event type. Resource/status payloads are "
+    "camelCase (`adapterName`, `errorSummary`); error-body fields "
+    "`error_code` / `correlation_id` stay snake_case."
 )
 
 

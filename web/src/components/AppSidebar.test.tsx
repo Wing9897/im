@@ -214,7 +214,7 @@ describe("AppSidebar", () => {
       "/leaderboard",
       "/intelligence",
       "/timeline",
-      "/actions",
+      "/notify",
       "/assistant",
       "/ai/provider",
       "/settings",
@@ -349,7 +349,7 @@ describe("AppSidebar", () => {
       "/schedule",
       "/items",
       "/timeline",
-      "/actions",
+      "/notify",
       "/assistant",
       "/ai/provider",
       "/settings",
@@ -358,7 +358,7 @@ describe("AppSidebar", () => {
     expect(hrefs).not.toContain("/monitor");
     expect(hrefs).not.toContain("/sources");
     expect(hrefs).not.toContain("/leaderboard");
-    expect(hrefs).toContain("/actions");
+    expect(hrefs).toContain("/notify");
     expect(hrefs).toContain("/items");
   });
 

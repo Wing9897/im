@@ -51,7 +51,7 @@ function graphData(overrides: Partial<WorksetPipelineGraphData> = {}): WorksetPi
     channels: [{ channelId: "telegram:42", sourceId: "src-1" }],
     events: [],
     labels,
-    assistantDefaultWorksetId: "__user__",
+    assistantDefaultWorksetId: "__general__",
     reload: vi.fn(),
     ...overrides,
   };
@@ -79,7 +79,7 @@ describe("WorksetGraphPointModal", () => {
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -104,7 +104,7 @@ describe("WorksetGraphPointModal", () => {
         worksetId: "ws-1",
         outputAnalysisEvents: true,
         includeInTimeline: true,
-        notifyPref: "follow",
+        notifyPref: "inherit",
         channelIds: ["telegram:42"],
       }),
     ];
@@ -169,7 +169,7 @@ describe("WorksetGraphPointModal", () => {
         outputAnalysisEvents: true,
         includeInTimeline: true,
         outputCalendar: false,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       }),
     ];
     await harness.render(ModalAt, {
@@ -194,7 +194,7 @@ describe("WorksetGraphPointModal", () => {
         analysisMode: "leaderboard",
         worksetId: "ws-1",
         outputAnalysisEvents: true,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       }),
     ];
     await harness.render(ModalAt, {

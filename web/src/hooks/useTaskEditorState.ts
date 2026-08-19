@@ -44,7 +44,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   analysisStrategyMode: null,
   worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
-  notifyPref: "follow",
+  notifyPref: "inherit",
   triggerMode: "message_cursor",
   capCalendarRead: true,
   capCalendarWrites: true,

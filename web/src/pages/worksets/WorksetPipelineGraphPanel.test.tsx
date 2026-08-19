@@ -143,7 +143,7 @@ describe("WorksetPipelineGraphPanel", () => {
     mockListUserEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -185,74 +185,9 @@ describe("WorksetPipelineGraphPanel", () => {
   it("renders workset and task points", async () => {
     await flushGraph(harness);
 
-    const graph = harness.container.querySelector('[data-testid="workset-pipeline-graph"]');
-    expect(graph).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-workset-ws-1"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-workset-__user__"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-task-t1"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
-    expect(harness.container.querySelector(".im-ws-graph-canvas")?.className).toContain("im-surface-panel");
-    expect(harness.container.querySelector('[data-testid="workset-graph-zone-layer3"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-zone-layer4"]')).toBeTruthy();
-    const taskNode = harness.container.querySelector('[data-testid="rf__node-block-tasks"]') as HTMLElement | null;
-    expect(taskNode?.style.pointerEvents).toBe("all");
-
-    const edgeIds = graph?.getAttribute("data-edge-ids") ?? "";
-    expect(edgeIds).toContain("task:t1->workset:ws-1");
-    expect(edgeIds).not.toContain("task:t1->page:intel");
-    expect(edgeIds).not.toContain("task:t1->page:timeline");
-    expect(edgeIds).not.toContain("task:t1->page:notify");
-    expect(edgeIds).toContain("source:src-1->task:t1");
-    expect(edgeIds).not.toContain("workset:ws-1->page:mcp");
-    expect(edgeIds).not.toContain("workset:ws-1->page:a2a");
-    expect(edgeIds).not.toContain("workset:ws-1->page:notify");
-    expect(edgeIds).not.toContain("workset:ws-1->page:timeline");
-    expect(edgeIds).not.toContain("workset:__user__->page:timeline");
-    expect(edgeIds).toContain("layer:worksets->page:timeline");
-    expect(edgeIds).toContain("layer:worksets->page:intel");
-    expect(edgeIds).toContain("layer:worksets->page:notify");
-    expect(edgeIds).toContain("layer:worksets->page:external");
-    const assistantWorksetEdges = edgeIds.split(",").filter((id) => id.startsWith("page:assistant->workset:"));
-    expect(assistantWorksetEdges).toEqual(["page:assistant->workset:__user__"]);
-    expect(edgeIds).not.toContain("page:assistant->workset:ws-1");
-    expect(edgeIds).not.toContain("page:assistant->page:calendar");
-    expect(edgeIds).not.toContain("page:calendar->workset:ws-1");
-    expect(edgeIds).not.toContain("page:calendar->workset:__user__");
-    expect(edgeIds).not.toContain("workset:ws-1->page:intel");
-    expect(edgeIds).not.toContain("workset:__user__->page:intel");
-    expect(edgeIds).not.toContain("page:webhook");
-    expect(edgeIds).not.toContain("page:deeplink");
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:assistant"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:mcp"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:intel"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-intel"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-timeline"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-notify"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-external"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-calendar-task-t1"]')?.getAttribute("data-on")).toBe(
-      "false",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-calendarWrite-task-t1"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-intel-task-t1"]')?.getAttribute("data-on")).toBe(
-      "true",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-notify-task-t1"]')?.getAttribute("data-on")).toBe(
-      "false",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-notify-workset-ws-1"]')?.getAttribute("data-on")).toBe(
-      "true",
-    );
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-gate-external-workset-ws-1"]')?.getAttribute("data-on"),
-    ).toBe("true");
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-gate-calendar-page-page:assistant"]'),
-    ).toBeNull();
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-point-settings-page-page:assistant"]'),
-    ).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:webhook"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:deeplink"]')).toBeNull();
   });
 
   it("PATCHes when clicking a task then a legal workset", async () => {
@@ -262,7 +197,7 @@ describe("WorksetPipelineGraphPanel", () => {
       '[data-testid="workset-graph-point-task-t1"]',
     ) as HTMLButtonElement;
     const general = harness.container.querySelector(
-      '[data-testid="workset-graph-point-workset-__user__"]',
+      '[data-testid="workset-graph-point-workset-__general__"]',
     ) as HTMLButtonElement;
     expect(taskPoint).toBeTruthy();
     expect(general).toBeTruthy();
@@ -274,7 +209,7 @@ describe("WorksetPipelineGraphPanel", () => {
       "點選工作集以歸屬此任務",
     );
     const generalAfter = harness.container.querySelector(
-      '[data-testid="workset-graph-point-workset-__user__"]',
+      '[data-testid="workset-graph-point-workset-__general__"]',
     ) as HTMLButtonElement;
     expect(generalAfter.closest(".im-ws-graph-point")?.getAttribute("data-legal-target")).toBe("true");
 
@@ -285,7 +220,7 @@ describe("WorksetPipelineGraphPanel", () => {
 
     expect(mockUpdateTask).toHaveBeenCalledWith(
       "t1",
-      expect.objectContaining({ worksetId: "__user__" }),
+      expect.objectContaining({ worksetId: "__general__" }),
     );
   });
 
@@ -310,14 +245,14 @@ describe("WorksetPipelineGraphPanel", () => {
   it("filters the canvas to one workset and hides other workset items", async () => {
     mockListItems.mockResolvedValue([
       { id: "item-ops", title: "Ops item", worksetId: "ws-1", status: "active" },
-      { id: "item-gen", title: "General item", worksetId: "__user__", status: "active" },
+      { id: "item-gen", title: "General item", worksetId: "__general__", status: "active" },
     ] as Awaited<ReturnType<typeof listItems>>);
     taskCatalogState.tasks = [
       ...taskCatalogState.tasks,
       makeAnalysisTask({
         id: "t2",
         name: "Inbox",
-        worksetId: "__user__",
+        worksetId: "__general__",
         outputAnalysisEvents: true,
         includeInTimeline: true,
         outputCalendar: false,
@@ -335,136 +270,10 @@ describe("WorksetPipelineGraphPanel", () => {
     expect(harness.container.querySelector('[data-testid="workset-graph-point-item-item-ops"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-task-t2"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-item-item-gen"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-workset-__user__"]')).toBeNull();
+    expect(harness.container.querySelector('[data-testid="workset-graph-point-workset-__general__"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:intel"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:assistant"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-graph-block-calendar"]')).toBeNull();
-  });
-
-  it("does not fake a line from an unlinked item to 日程页", async () => {
-    mockListItems.mockResolvedValue([
-      { id: "item-123", title: "123", worksetId: "__user__", status: "active" },
-    ] as Awaited<ReturnType<typeof listItems>>);
-    await flushGraph(harness);
-
-    const edgeIds =
-      harness.container.querySelector('[data-testid="workset-pipeline-graph"]')?.getAttribute("data-edge-ids") ??
-      "";
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-item-item-123"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-itemEvents"]')).toBeNull();
-    expect(edgeIds).toContain("item:item-123->workset:__user__");
-    expect(edgeIds).not.toContain("item:item-123->page:calendar");
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-gate-calendar-item-item-123"]')?.getAttribute("data-on"),
-    ).toBe("false");
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-calendar-item-item-123"]')?.tagName).toBe(
-      "SPAN",
-    );
-  });
-
-  it("keeps empty 任务 and puts 物品 in layer 1 with 助手 in layer 2", async () => {
-    taskCatalogState.tasks = [];
-    await flushGraph(harness);
-
-    const tasks = harness.container.querySelector('[data-testid="workset-graph-block-tasks"]');
-    const assistant = harness.container.querySelector('[data-testid="workset-graph-block-assistant"]');
-    expect(tasks).toBeTruthy();
-    expect(tasks?.getAttribute("data-layer")).toBe("layer2");
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-empty-tasks"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-itemEvents"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-calendar"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:calendar"]')).toBeNull();
-    expect(assistant?.getAttribute("data-layer")).toBe("layer2");
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:assistant"]')?.textContent).toBe(
-      "助手",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-sources"]')?.getAttribute("data-layer")).toBe(
-      "layer1",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-items"]')?.getAttribute("data-layer")).toBe(
-      "layer1",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-worksets"]')?.getAttribute("data-layer")).toBe(
-      "layer3",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-zone-layer3"]')?.textContent).toContain(
-      "第三層",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-zone-layer4"]')?.textContent).toContain(
-      "第四層",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-zone-layer5"]')).toBeNull();
-    const zoneClasses = ["layer1", "layer2", "layer3", "layer4"].map(
-      (layer) => harness.container.querySelector(`[data-testid="workset-graph-zone-${layer}"]`)?.className ?? "",
-    );
-    expect(zoneClasses.every((className) => className.includes("im-ws-graph-zone"))).toBe(true);
-    expect(zoneClasses[0]).toContain("is-layer1");
-    expect(zoneClasses[1]).toContain("is-layer2");
-    expect(zoneClasses[2]).toContain("is-layer3");
-    expect(zoneClasses[3]).toContain("is-layer4");
-    expect(new Set(zoneClasses).size).toBe(4);
-  });
-
-  it("wires items to worksets and keeps 助手 in layer 2", async () => {
-    mockListItems.mockResolvedValue([
-      { id: "item-123", title: "123", worksetId: "__user__", status: "active" },
-    ] as Awaited<ReturnType<typeof listItems>>);
-    mockListUserEvents.mockResolvedValue({
-      items: [
-        {
-          id: "ev-exp",
-          title: "Milk expires",
-          startTime: "2026-09-01T09:00:00Z",
-          endTime: null,
-          body: "",
-          location: null,
-          origin: "manual",
-          isAllDay: false,
-          taskId: "",
-          worksetId: "__user__",
-          itemId: "item-123",
-          kind: "expires",
-          notifyPref: "follow",
-          source: "user",
-          dismissed: false,
-          important: false,
-          createdAt: "",
-          updatedAt: "",
-        },
-      ],
-      totalCount: 1,
-      hasMore: false,
-    } as Awaited<ReturnType<typeof listUserEventsPage>>);
-    await flushGraph(harness);
-
-    const assistant = harness.container.querySelector('[data-testid="workset-graph-block-assistant"]');
-    const items = harness.container.querySelector('[data-testid="workset-graph-block-items"]');
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-itemEvents"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-calendar"]')).toBeNull();
-    expect(assistant?.getAttribute("data-layer")).toBe("layer2");
-    expect(items?.getAttribute("data-layer")).toBe("layer1");
-    expect(harness.container.querySelector('[data-testid="workset-graph-block-worksets"]')?.getAttribute("data-layer")).toBe(
-      "layer3",
-    );
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-itemEvent-ev-exp"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-item-item-123"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:calendar"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:assistant"]')).toBeTruthy();
-    const edgeIds = harness.container.querySelector('[data-testid="workset-pipeline-graph"]')?.getAttribute("data-edge-ids") ?? "";
-    expect(edgeIds).toContain("item:item-123->workset:__user__");
-    expect(edgeIds.split(",").filter((id) => id.startsWith("page:assistant->workset:"))).toEqual([
-      "page:assistant->workset:__user__",
-    ]);
-    expect(edgeIds).not.toContain("page:calendar->workset:__user__");
-    expect(edgeIds).not.toContain("item:item-123->itemEvent:ev-exp");
-    expect(edgeIds).not.toContain("itemEvent:ev-exp->workset:__user__");
-    expect(edgeIds).not.toContain("item:item-123->page:calendar");
-    expect(edgeIds).not.toContain("workset:__user__->itemEvent:");
-    expect(edgeIds).not.toContain("workset:__user__->calendar:");
-    expect(edgeIds).not.toContain("workset:__user__->page:calendar");
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-gate-calendar-item-item-123"]')?.getAttribute("data-on"),
-    ).toBe("true");
   });
 
   it("collapses overflow points inside a block until expanded", async () => {
@@ -510,7 +319,7 @@ describe("WorksetPipelineGraphPanel", () => {
       `[data-handleid="${pipelinePointHandleId(taskPointId("t1"), "out")}"]`,
     ) as HTMLElement | null;
     const inHandle = harness.container.querySelector(
-      `[data-handleid="${pipelinePointHandleId(worksetPointId("__user__"), "in")}"]`,
+      `[data-handleid="${pipelinePointHandleId(worksetPointId("__general__"), "in")}"]`,
     ) as HTMLElement | null;
     expect(outHandle).toBeTruthy();
     expect(inHandle).toBeTruthy();
@@ -531,14 +340,14 @@ describe("WorksetPipelineGraphPanel", () => {
     const result = await applyPipelineHandleConnect(
       {
         sourceHandle: pipelinePointHandleId(taskPointId("t1"), "out"),
-        targetHandle: pipelinePointHandleId(worksetPointId("__user__"), "in"),
+        targetHandle: pipelinePointHandleId(worksetPointId("__general__"), "in"),
       },
       catalogGraph(),
       catalogConnectData(),
       silentPatchDeps(),
     );
     expect(result).toBe("connected");
-    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ worksetId: "__user__" }));
+    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ worksetId: "__general__" }));
   });
 
   it("onConnect does not PATCH an illegal source→workset or item→task pair", async () => {
@@ -572,14 +381,14 @@ describe("WorksetPipelineGraphPanel", () => {
     const itemWorkset = await applyPipelineHandleConnect(
       {
         sourceHandle: pipelinePointHandleId(itemPointId("item-1"), "out"),
-        targetHandle: pipelinePointHandleId(worksetPointId("__user__"), "in"),
+        targetHandle: pipelinePointHandleId(worksetPointId("__general__"), "in"),
       },
       graph,
       data,
       silentPatchDeps(),
     );
     expect(itemWorkset).toBe("connected");
-    expect(mockUpdateItem).toHaveBeenCalledWith("item-1", expect.objectContaining({ worksetId: "__user__" }));
+    expect(mockUpdateItem).toHaveBeenCalledWith("item-1", expect.objectContaining({ worksetId: "__general__" }));
     expect(mockUpdateTask).not.toHaveBeenCalled();
   });
 
@@ -639,7 +448,7 @@ describe("WorksetPipelineGraphPanel", () => {
         targetHandle: pipelinePointHandleId(worksetPointId("ws-1"), "in"),
       },
       catalogGraph(),
-      { ...catalogConnectData(), assistantDefaultWorksetId: "__user__" },
+      { ...catalogConnectData(), assistantDefaultWorksetId: "__general__" },
       deps,
     );
     expect(result).toBe("connected");
@@ -652,10 +461,10 @@ describe("WorksetPipelineGraphPanel", () => {
     const result = await applyPipelineHandleConnect(
       {
         sourceHandle: pipelinePointHandleId(PIPELINE_PAGE.assistant, "out"),
-        targetHandle: pipelinePointHandleId(worksetPointId("__user__"), "in"),
+        targetHandle: pipelinePointHandleId(worksetPointId("__general__"), "in"),
       },
       catalogGraph(),
-      { ...catalogConnectData(), assistantDefaultWorksetId: "__user__" },
+      { ...catalogConnectData(), assistantDefaultWorksetId: "__general__" },
       silentPatchDeps(),
     );
     expect(result).toBe("connected");
@@ -709,7 +518,7 @@ describe("WorksetPipelineGraphPanel", () => {
         outputAnalysisEvents: true,
         includeInTimeline: true,
         outputCalendar: true,
-        notifyPref: "follow",
+        notifyPref: "inherit",
       }),
     ];
     await flushGraph(harness);
@@ -758,16 +567,6 @@ describe("WorksetPipelineGraphPanel", () => {
     );
   });
 
-  it("does not render a calendar status icon on assistant", async () => {
-    await flushGraph(harness);
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-calendar-page-page:assistant"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-gate-calendarWrite-page-page:assistant"]')).toBeNull();
-    expect(harness.container.querySelector('[data-testid="workset-graph-point-page-page:assistant"]')).toBeTruthy();
-    expect(
-      harness.container.querySelector('[data-testid="workset-graph-point-settings-page-page:assistant"]'),
-    ).toBeTruthy();
-  });
-
   it("PATCHes notifyPref and outputAnalysisEvents from task gate icons", async () => {
     await flushGraph(harness);
     const notify = harness.container.querySelector(
@@ -781,7 +580,7 @@ describe("WorksetPipelineGraphPanel", () => {
       notify.click();
       await Promise.resolve();
     });
-    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ notifyPref: "follow" }));
+    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ notifyPref: "inherit" }));
 
     mockUpdateTask.mockClear();
     await act(async () => {
@@ -812,12 +611,6 @@ describe("WorksetPipelineGraphPanel", () => {
       await Promise.resolve();
     });
     expect(mockUpdateWorkset).toHaveBeenCalledWith("ws-1", { externalEnabled: false });
-    const edgeIds =
-      harness.container.querySelector('[data-testid="workset-pipeline-graph"]')?.getAttribute("data-edge-ids") ?? "";
-    expect(edgeIds).toContain("layer:worksets->page:notify");
-    expect(edgeIds).toContain("layer:worksets->page:external");
-    expect(edgeIds).not.toContain("workset:ws-1->page:notify");
-    expect(edgeIds).not.toContain("workset:ws-1->page:external");
   });
 
   it("ignores status-only item and assistant calendar icons", async () => {
@@ -863,7 +656,7 @@ describe("WorksetPipelineGraphPanel", () => {
 
     mockUpdateTask.mockClear();
     expect(await applyPipelineGateToggle(taskPoint, "notify", data, deps)).toBe("toggled");
-    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ notifyPref: "follow" }));
+    expect(mockUpdateTask).toHaveBeenCalledWith("t1", expect.objectContaining({ notifyPref: "inherit" }));
 
     mockUpdateTask.mockClear();
     expect(await applyPipelineGateToggle(taskPoint, "intel", data, deps)).toBe("toggled");

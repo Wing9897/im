@@ -115,7 +115,7 @@ async def test_atomic_recurring_create_endpoint(client, app):
             "eventStartTime": "09:00",
             "eventEndTime": "09:30",
             "eventIsAllDay": False,
-            "worksetId": "__user__",
+            "worksetId": "__general__",
             "description": "notes",
             "eventDescription": "notes",
         },
@@ -123,7 +123,7 @@ async def test_atomic_recurring_create_endpoint(client, app):
     assert created.status_code == 201, created.text
     body = created.json()
     assert "analysisMode" not in body
-    assert body["worksetId"] == "__user__"
+    assert body["worksetId"] == "__general__"
     series_id = body["id"]
 
     schedule = await client.get(f"/api/v1/calendar/recurring/{series_id}")
@@ -149,7 +149,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
     """Recurring calendar may belong to an inventory item (not event→sub-event)."""
     item = await client.post(
         "/api/v1/items",
-        json={"title": "Passport", "worksetId": "__user__"},
+        json={"title": "Passport", "worksetId": "__general__"},
     )
     assert item.status_code == 201, item.text
     item_id = item.json()["id"]
@@ -161,7 +161,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
             "rrule": "FREQ=WEEKLY;BYDAY=MO",
             "eventStartTime": "10:00",
             "eventIsAllDay": False,
-            "worksetId": "__user__",
+            "worksetId": "__general__",
             "itemId": item_id,
         },
     )
@@ -217,7 +217,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
     assert bad.status_code == 422
 
 
-async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
+async def test_timeline_all_day_recurring_with_until_z_appears_in_occurrences(client, app):
     """Dialog-shaped create: atomic recurring + all-day schedule with UI UNTIL=...Z."""
     created = await client.post(
         "/api/v1/calendar/recurring",
@@ -227,7 +227,7 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
             "eventIsAllDay": True,
             "eventStartTime": None,
             "eventEndTime": None,
-            "worksetId": "__user__",
+            "worksetId": "__general__",
         },
     )
     assert created.status_code == 201, created.text
@@ -237,9 +237,9 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
         (series_id,),
     )
     assert row is not None
-    assert row["workset_id"] == "__user__"
+    assert row["workset_id"] == "__general__"
 
-    items = await client.get(
+    occurrences = await client.get(
         "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-07-31T16:00:00Z",
@@ -247,10 +247,10 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
             "seriesIds": [series_id],
         },
     )
-    assert items.status_code == 200
-    body = items.json()
+    assert occurrences.status_code == 200
+    body = occurrences.json()
     # Series DTSTART is "today" (manual_anchor); August window length therefore
     # depends on the wall clock — require a non-empty expand, not a fixed day count.
     assert len(body) >= 1
-    assert all(item["seriesId"] == series_id and item["title"] == "1234" for item in body)
-    assert all(item["isAllDay"] is True and item["source"] == "recurring" for item in body)
+    assert all(occ["seriesId"] == series_id and occ["title"] == "1234" for occ in body)
+    assert all(occ["isAllDay"] is True and occ["source"] == "recurring" for occ in body)

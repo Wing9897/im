@@ -54,7 +54,7 @@ describe("DashboardViewerToolbar", () => {
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,

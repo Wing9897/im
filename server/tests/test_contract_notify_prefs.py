@@ -1,4 +1,4 @@
-"""Contract tests for workset notifyEnabled + per-row notifyPref (follow / off)."""
+"""Contract tests for workset notifyEnabled + per-row notifyPref (inherit / off)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ TASK_NOTIFY_KEYS = ["id", "name", "notifyPref"]
 async def test_builtin_workset_notify_enabled_defaults_on(client):
     listed = await client.get("/api/v1/worksets")
     assert listed.status_code == 200
-    builtin = next(row for row in listed.json() if row["id"] == "__user__")
+    builtin = next(row for row in listed.json() if row["id"] == "__general__")
     assert_keys(builtin, WORKSET_KEYS, "builtin WorksetResponse")
     assert builtin["notifyEnabled"] is True
     assert builtin["externalEnabled"] is True
@@ -40,15 +40,15 @@ async def test_workset_create_and_patch_notify_enabled(client):
 
 
 async def test_system_workset_can_toggle_notify_but_not_rename(client):
-    renamed = await client.put("/api/v1/worksets/__user__", json={"name": "Hacked"})
+    renamed = await client.put("/api/v1/worksets/__general__", json={"name": "Hacked"})
     assert renamed.status_code == 403
 
-    toggled = await client.put("/api/v1/worksets/__user__", json={"notifyEnabled": False})
+    toggled = await client.put("/api/v1/worksets/__general__", json={"notifyEnabled": False})
     assert toggled.status_code == 200
     assert toggled.json()["notifyEnabled"] is False
     assert toggled.json()["name"] == "一般"
 
-    restored = await client.put("/api/v1/worksets/__user__", json={"notifyEnabled": True})
+    restored = await client.put("/api/v1/worksets/__general__", json={"notifyEnabled": True})
     assert restored.status_code == 200
     assert restored.json()["notifyEnabled"] is True
 
@@ -69,13 +69,13 @@ async def test_workset_create_and_patch_external_enabled(client):
 
 
 async def test_system_workset_can_toggle_external(client):
-    toggled = await client.put("/api/v1/worksets/__user__", json={"externalEnabled": False})
+    toggled = await client.put("/api/v1/worksets/__general__", json={"externalEnabled": False})
     assert toggled.status_code == 200
     assert toggled.json()["externalEnabled"] is False
     assert toggled.json()["name"] == "一般"
     assert toggled.json()["notifyEnabled"] is True
 
-    restored = await client.put("/api/v1/worksets/__user__", json={"externalEnabled": True})
+    restored = await client.put("/api/v1/worksets/__general__", json={"externalEnabled": True})
     assert restored.status_code == 200
     assert restored.json()["externalEnabled"] is True
 
@@ -104,10 +104,10 @@ async def test_user_event_notify_pref_default_and_override(client):
 
     patched = await client.patch(
         f"/api/v1/calendar/user-events/{event_id}",
-        json={"notifyPref": "follow"},
+        json={"notifyPref": "inherit"},
     )
     assert patched.status_code == 200
-    assert patched.json()["notifyPref"] == "follow"
+    assert patched.json()["notifyPref"] == "inherit"
 
     rejected_on = await client.post(
         "/api/v1/calendar/user-events",
@@ -118,6 +118,16 @@ async def test_user_event_notify_pref_default_and_override(client):
         },
     )
     assert rejected_on.status_code == 422
+
+    rejected_follow = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Legacy follow rejected",
+            "startTime": "2026-08-14T10:35:00Z",
+            "notifyPref": "follow",
+        },
+    )
+    assert rejected_follow.status_code == 422
 
     deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
     assert deleted.status_code == 204
@@ -162,6 +172,16 @@ async def test_recurring_series_notify_pref_without_remind_before_days(client):
         },
     )
     assert rejected_on.status_code == 422
+    rejected_follow = await client.post(
+        "/api/v1/calendar/recurring",
+        json={
+            "name": "Forced follow",
+            "rrule": "FREQ=DAILY",
+            "eventStartTime": "08:00",
+            "notifyPref": "follow",
+        },
+    )
+    assert rejected_follow.status_code == 422
     deleted = await client.delete(f"/api/v1/calendar/recurring/{series_id}")
     assert deleted.status_code == 204
 
@@ -174,7 +194,7 @@ async def test_analysis_task_notify_pref_default_and_update(client):
     assert created.status_code == 201
     body = created.json()
     assert_keys(body, TASK_NOTIFY_KEYS, "TaskResponse notifyPref")
-    assert body["notifyPref"] == "follow"
+    assert body["notifyPref"] == "inherit"
     task_id = body["id"]
 
     updated = await client.put(

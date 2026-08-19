@@ -36,7 +36,6 @@
     "purchaseEffective": "购买/生效"
   },
   "linkedCalendarGridAria": "关联日历图标",
-  "quickLinkedCalendarAddAria": "快速添加{name}日历",
   "editTitleAria": "编辑名称",
   "linkedCalendarCreated": "已添加关联日历",
   "linkedCalendarUpdated": "已更新关联日历",

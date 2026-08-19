@@ -15,7 +15,7 @@ DDL = f"""
 CREATE TABLE IF NOT EXISTS recurring_schedules (
     id                      TEXT PRIMARY KEY,
     name                    TEXT NOT NULL,
-    workset_id              TEXT NOT NULL DEFAULT '__user__'
+    workset_id              TEXT NOT NULL DEFAULT '__general__'
                             REFERENCES worksets(id),
     is_active               INTEGER NOT NULL DEFAULT 1,
     rrule                   TEXT NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     -- Optional parent trackable item (linked recurring calendar under an inventory Thing).
     item_id                 TEXT DEFAULT NULL
                             REFERENCES items(id) ON DELETE SET NULL,
-    -- Per-series reminder: follow workset default, or mute this series.
+    -- Per-series reminder: inherit workset default, or mute this series.
     -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
     notify_pref             TEXT NOT NULL DEFAULT 'off'
                             {NOTIFY_PREF_CHECK_SQL},
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS user_events (
     -- Optional parent trackable item (linked calendar under an inventory Thing).
     item_id     TEXT DEFAULT NULL
                 REFERENCES items(id) ON DELETE SET NULL,
-    -- Ownership is always a workset; delete_workset reassigns to __user__ first.
-    workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
+    -- Ownership is always a workset; delete_workset reassigns to __general__ first.
+    workset_id  TEXT NOT NULL DEFAULT '__general__' REFERENCES worksets(id),
     -- Special linked-calendar semantics (authority over title presets).
     -- normal = generic; expires = primary expiry projection; purchase_effective = finance.
     kind        TEXT NOT NULL DEFAULT 'normal'
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS user_events (
     amount      REAL DEFAULT NULL,
     direction   TEXT DEFAULT NULL
                 {USER_EVENT_DIRECTION_CHECK_SQL},
-    -- Per-event reminder: follow workset default, or mute this row.
+    -- Per-event reminder: inherit workset default, or mute this row.
     -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
     notify_pref TEXT NOT NULL DEFAULT 'off'
                 {NOTIFY_PREF_CHECK_SQL},

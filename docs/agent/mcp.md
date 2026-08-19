@@ -8,7 +8,7 @@ MCP 工具門面：`/api/v1/mcp`（本文件；Streamable HTTP）。
 
 MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）；**不**注入 `web.search`／`tasks.consult_advisor`；**不**需要本機 AI 供應商即可 list／call。
 
-設定頁：`/settings/integrations?tab=mcp`（MCP 總開關 + 連線測試 + 能力群組；舊路徑 `/settings/mcp` 轉址）。同一能力群組也出現在 `/settings/integrations?tab=a2a`（MCP 與 A2A 共用；A2A 另有獨立總開關 `a2a_enabled`）。工作集可見性在 `/worksets`（每張工作集的「外部接口」；`worksets.external_enabled`）。預設 `mcp_enabled=true`；關閉後 MCP 協議入口回 403。能力群組預設全開，**同時**約束 MCP `list_tools`／`call_tool` 與 A2A 內部 tool loop（各自總開關開啟時）。新建工作集預設 `external_enabled=1`。
+設定頁：`/settings/integrations?tab=mcp`（MCP 總開關 + 連線測試 + 能力群組）。同一能力群組也出現在 `/settings/integrations?tab=a2a`（MCP 與 A2A 共用；A2A 另有獨立總開關 `a2a_enabled`）。工作集可見性在 `/worksets`（每張工作集的「外部接口」；`worksets.external_enabled`）。預設 `mcp_enabled=true`；關閉後 MCP 協議入口回 403。能力群組預設全開，**同時**約束 MCP `list_tools`／`call_tool` 與 A2A 內部 tool loop（各自總開關開啟時）。新建工作集預設 `external_enabled=1`。
 
 ## 與 A2A 的區別
 
@@ -69,9 +69,9 @@ OpenClaw 側概念配置（寫入 `~/.openclaw/openclaw.json` 的 `mcp.servers`�
 
 握手與每次 tool call 都須帶 Bearer。可用 OpenClaw 的 `mcp probe`／設定檢查對上述 URL 做連通性驗證。細節以官方 MCP Streamable HTTP 與本機 SDK 掛載為準。
 
-## 工具範圍（最多 19）
+## 工具範圍（最多 20）
 
-Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.search_events` + 物品）。`user_event_origin` 固定為 `"mcp"`。
+Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.search_events` + 物品 + 唯讀 `worksets.list`）。`user_event_origin` 固定為 `"mcp"`。不開放 MCP 建／刪工作集。
 
 能力群組（設定頁勾選；`system_config` 鍵預設 `"true"`）：
 
@@ -83,15 +83,16 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 | 情報搜尋 | `mcp_cap_intelligence_search` | `intelligence.search_events` |
 | 物品讀 | `mcp_cap_items_read` | `items.list` / `items.list_expiring` |
 | 物品寫 | `mcp_cap_items_write` | `items.create` / `items.update` |
+| 工作集讀 | （無獨立 `mcp_cap_*`；MCP 開啟即有） | `worksets.list` |
 
 工作集權限（工作集頁「外部接口」；`worksets.external_enabled` 預設 1）：
 
 | 狀態 | 行為 |
 |------|------|
-| 開（預設） | 該工作集對 MCP／A2A 的情報／訊息／物品可見、可寫 |
+| 開（預設） | 該工作集對 MCP／A2A 的情報／訊息／物品可見、可寫；`worksets.list` 會列出 |
 | 關 | 該工作集從 MCP／A2A 隱藏。全部關閉時 fail closed |
 
-套用：`intelligence.search_events`、`messages.search`、`items.*`。不套用：日曆「我的日程」、`web.search`、內建助手。
+套用：`intelligence.search_events`、`messages.search`、`items.*`、`worksets.list`。不套用：日曆「我的日程」、`web.search`、內建助手。
 
 | 工具 | 類別 |
 |------|------|
@@ -103,8 +104,8 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 | `calendar.create_event` | 日曆寫 |
 | `calendar.update_event` | 日曆寫 |
 | `calendar.delete_event` | 日曆寫（時間規劃 soft-dismiss，非 REST 硬刪） |
-| `calendar.create_recurring_series` | 日曆寫（循環） |
-| `calendar.update_recurring_series` | 日曆寫（循環） |
+| `calendar.create_recurring_series` | 日曆寫（循環；可選 `worksetId`，預設同 `create_event` → `__general__`） |
+| `calendar.update_recurring_series` | 日曆寫（循環；可改 `worksetId`） |
 | `calendar.delete_recurring_series` | 日曆寫（循環） |
 | `calendar.mark_important` | 日曆寫 |
 | `calendar.unmark_important` | 日曆寫 |
@@ -114,6 +115,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 | `items.list_expiring` | 物品讀 |
 | `items.create` | 物品寫 |
 | `items.update` | 物品寫 |
+| `worksets.list` | 工作集讀（id／name／notifyEnabled／externalEnabled；MCP／A2A 僅 `external_enabled`） |
 
 - `list_tools` 只回傳目前啟用群組內的工具。
 - `call_tool` 對關閉群組回傳 `{"error": "mcp capability disabled: <group>"}`；allowlist 外仍為 `tool not allowed: …`。
@@ -132,6 +134,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 - `web.search`（聯網搜）
 - `tasks.consult_advisor`（任務顧問）
 - 分析任務／來源／Actions／LLM 設定／專案經理（`agent`）tick 控制面
+- 工作集建／刪（僅唯讀 `worksets.list`）
 - 把整份 OpenAPI 包成 MCP tools
 - 設定類／系統組態 MCP tools（保留給用戶 UI；總開關與能力群組走 `/config/settings`）
 
@@ -139,7 +142,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **40**／`SCHEMA_SEMVER` `0.1.0-beta.41`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`（stamp 38+）。
+**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **42**／`SCHEMA_SEMVER` `0.1.0-beta.43`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`（stamp 38+）。
 
 ## 非目標
 

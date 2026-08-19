@@ -84,13 +84,13 @@ describe("voiceSettings", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
-  it("normalizes empty defaultWorksetId to __user__", () => {
+  it("normalizes empty defaultWorksetId to __general__", () => {
     expect(
       normalizeVoiceSettings({
         defaultWorksetId: "",
       } as never).defaultWorksetId,
-    ).toBe("__user__");
-    expect(DEFAULT_VOICE_SETTINGS.defaultWorksetId).toBe("__user__");
+    ).toBe("__general__");
+    expect(DEFAULT_VOICE_SETTINGS.defaultWorksetId).toBe("__general__");
   });
 
   it("falls back to defaults for unknown / legacy reserved provider ids", () => {
