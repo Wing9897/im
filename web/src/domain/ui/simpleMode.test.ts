@@ -29,14 +29,18 @@ describe("simpleMode", () => {
     expect(homePathForMode(false)).toBe("/monitor");
   });
 
-  it("hides collect/analyze paths", () => {
+  it("hides collect/analyze paths and the Tasks page", () => {
     expect(isSimpleModeHiddenPath("/monitor")).toBe(true);
     expect(isSimpleModeHiddenPath("/sources")).toBe(true);
     expect(isSimpleModeHiddenPath("/notify")).toBe(false);
     expect(isSimpleModeHiddenPath("/intelligence")).toBe(true);
     expect(isSimpleModeHiddenPath("/leaderboard")).toBe(true);
     expect(isSimpleModeHiddenPath("/timeline")).toBe(false);
-    expect(isSimpleModeHiddenPath("/tasks")).toBe(false);
+    expect(isSimpleModeHiddenPath("/schedule")).toBe(false);
+    expect(isSimpleModeHiddenPath("/items")).toBe(false);
+    expect(isSimpleModeHiddenPath("/tasks")).toBe(true);
+    expect(isSimpleModeHiddenPath("/tasks/new")).toBe(true);
+    expect(isSimpleModeHiddenPath("/tasks/abc/edit")).toBe(true);
     expect(isSimpleModeHiddenPath("/assistant")).toBe(false);
     expect(isSimpleModeHiddenPath("/settings/general")).toBe(false);
   });

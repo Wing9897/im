@@ -249,7 +249,7 @@ export function MonitorPage() {
         <DataList
           variant="flush"
           ref={setListContainerRef}
-          className={`im-animate-in ${contentFadeClass}`}
+          className={`im-monitor-stream-list im-animate-in ${contentFadeClass}`}
           role="table"
           data-allow-opacity-transition
         >

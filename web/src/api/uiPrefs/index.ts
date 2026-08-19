@@ -14,6 +14,11 @@
  * - Unsaved drafts use sessionStorage (`storage: "session"`).
  * - Timeline client statuses / time overrides: `/ui-prefs/timeline/annotations`
  *   (not soft-dismiss; that stays on `/api/v1/calendar/dismissals`).
+ * - Schedule card emojis: `/ui-prefs/schedule/emojis` (keyed `oneOff:<id>` /
+ *   `recurring:<id>`; empty glyph omitted). Stamp 42 has no emoji column.
+ * - Task card emojis: `/ui-prefs/tasks/emojis` (keyed by analysis task id;
+ *   empty glyph omitted → default task logo). Same ui_prefs unification; no
+ *   `analysis_tasks.emoji` column / schema stamp.
  * - UI locale remains LS-first (`i18n/locale.ts`); do not make server authoritative
  *   for `auto` locale the same way as board layout.
  * Transport is hand-written; request/response shapes derive from OpenAPI
@@ -24,3 +29,5 @@ export * from "./board";
 export * from "./notify";
 export * from "./assistant";
 export * from "./timelineAnnotations";
+export * from "./scheduleEmojis";
+export * from "./taskEmojis";

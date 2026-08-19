@@ -155,6 +155,38 @@ describe("TaskCard", () => {
     expect(container.querySelector('[data-testid="ai-staff-avatar-intel_event"]')).not.toBeNull();
   });
 
+  it("uses the task logo as the large mark and the AI head as a badge overlay", () => {
+    renderCard({ task: createMockTask({ analysisMode: "intel_event" }) });
+    const stack = container.querySelector('[data-testid="task-avatar-stack"]') as HTMLElement | null;
+    const logo = container.querySelector('[data-testid="task-logo-mark"]') as HTMLElement | null;
+    const ai = container.querySelector(
+      '[data-testid="task-avatar-ai-badge"] [data-testid="ai-staff-avatar-intel_event"]',
+    ) as HTMLElement | null;
+    expect(stack).not.toBeNull();
+    expect(logo).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).not.toBeNull();
+    expect(ai).not.toBeNull();
+    expect(logo?.style.width).toBe("38px");
+    expect(ai?.style.width).toBe("18px");
+    expect(stack?.style.width).toBe("44px");
+  });
+
+  it("replaces the large logo with a picked emoji and keeps the AI overlay", () => {
+    renderCard({
+      task: createMockTask({ analysisMode: "intel_event" }),
+      emoji: "🎯",
+    });
+    const emoji = container.querySelector('[data-testid="item-emoji-avatar"]') as HTMLElement | null;
+    const ai = container.querySelector(
+      '[data-testid="task-avatar-ai-badge"] [data-testid="ai-staff-avatar-intel_event"]',
+    ) as HTMLElement | null;
+    expect(container.querySelector('[data-testid="task-logo-mark"]')).toBeNull();
+    expect(emoji?.textContent).toContain("🎯");
+    expect(emoji?.style.width).toBe("38px");
+    expect(ai).not.toBeNull();
+    expect(ai?.style.width).toBe("18px");
+  });
+
   it("shows leaderboard staff avatar for leaderboard tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
     expect(container.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
@@ -253,6 +285,18 @@ describe("TaskCard", () => {
       "重試",
     );
     expect(container.querySelector('[data-testid="task-card-paused-task-1"]')).not.toBeNull();
+  });
+
+  it("maps raw KeyError candidates string to human zh-Hant copy", () => {
+    renderCard({
+      stats: createMockStats({
+        lastErrorMessage: "'candidates'",
+        analysisPaused: true,
+      }),
+    });
+    const error = container.querySelector('[data-testid="task-card-error-task-1"]');
+    expect(error?.textContent).toContain("Gemini");
+    expect(error?.textContent).not.toMatch(/'candidates'/);
   });
 
   it("uses simplified stat labels", () => {

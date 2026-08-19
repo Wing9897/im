@@ -22,15 +22,19 @@ from server.api.schemas.responses import (
     AssistantVoiceIoResponse,
     BoardPrefsPutBody,
     BoardPrefsResponse,
-    TimelineAnnotationsPutBody,
-    TimelineAnnotationsResponse,
     NotifyFiredBody,
-    NotifyHistoryBody,
     NotifyFiredClaimResponse,
     NotifyFiredResponse,
+    NotifyHistoryBody,
     NotifyHistoryResponse,
-    NotifySettingsResponse,
     NotifySettingsBody,
+    NotifySettingsResponse,
+    ScheduleEmojisPutBody,
+    ScheduleEmojisResponse,
+    TaskEmojisPutBody,
+    TaskEmojisResponse,
+    TimelineAnnotationsPutBody,
+    TimelineAnnotationsResponse,
 )
 from server.errors import VALIDATION_ERROR, http_error
 from server.ui_prefs import (
@@ -39,17 +43,21 @@ from server.ui_prefs import (
     get_assistant_sessions,
     get_assistant_voice_io,
     get_board_prefs,
-    get_timeline_annotations,
     get_notify_fired,
     get_notify_history,
     get_notify_settings,
+    get_schedule_emojis,
+    get_task_emojis,
+    get_timeline_annotations,
     put_assistant_sessions,
     put_assistant_voice_io,
     put_board_prefs,
-    put_timeline_annotations,
     put_notify_fired,
     put_notify_history,
     put_notify_settings,
+    put_schedule_emojis,
+    put_task_emojis,
+    put_timeline_annotations,
 )
 
 router = APIRouter(prefix="/api/v1/ui-prefs", tags=["ui-prefs"], dependencies=API_DEPS)
@@ -215,3 +223,39 @@ async def save_timeline_annotations(
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
     return TimelineAnnotationsResponse.model_validate(saved)
+
+
+@router.get("/schedule/emojis", response_model=ScheduleEmojisResponse)
+async def fetch_schedule_emojis(request: Request) -> ScheduleEmojisResponse:
+    """Per-item emoji glyphs for the manage-area schedule list."""
+    return ScheduleEmojisResponse.model_validate(await get_schedule_emojis(get_db(request)))
+
+
+@router.put("/schedule/emojis", response_model=ScheduleEmojisResponse)
+async def save_schedule_emojis(
+    request: Request,
+    body: ScheduleEmojisPutBody,
+) -> ScheduleEmojisResponse:
+    try:
+        saved = await put_schedule_emojis(get_db(request), body.model_dump())
+    except UiPrefsValidationError as exc:
+        raise _http_from_validation(exc) from exc
+    return ScheduleEmojisResponse.model_validate(saved)
+
+
+@router.get("/tasks/emojis", response_model=TaskEmojisResponse)
+async def fetch_task_emojis(request: Request) -> TaskEmojisResponse:
+    """Per-task emoji glyphs for the manage-area task list (ui_prefs ``task_emojis``)."""
+    return TaskEmojisResponse.model_validate(await get_task_emojis(get_db(request)))
+
+
+@router.put("/tasks/emojis", response_model=TaskEmojisResponse)
+async def save_task_emojis(
+    request: Request,
+    body: TaskEmojisPutBody,
+) -> TaskEmojisResponse:
+    try:
+        saved = await put_task_emojis(get_db(request), body.model_dump())
+    except UiPrefsValidationError as exc:
+        raise _http_from_validation(exc) from exc
+    return TaskEmojisResponse.model_validate(saved)

@@ -10,13 +10,15 @@ import {
   getTaskEmployeeIdForMode,
 } from "./task/taskFormAnalysisModeMeta";
 import { MODE_ACCENT_CLASS, MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
-import { TaskEmployeeAvatar } from "./task/TaskEmployeeAvatar";
+import { TaskCardEmoji } from "./task/TaskCardEmoji";
+import { useTaskEmoji } from "../pages/tasks/useTaskEmojis";
 import { useWorksetNameById } from "../context/TaskCatalogContext";
 import {
   SelectableSurface,
   stopSelectableActivation,
 } from "./detail/SelectableSurface";
 import { colorStatusDotStyle } from "../styles/statusDot";
+import { formatAnalysisErrorMessage } from "../domain/analysis/formatAnalysisError";
 import { isAgentCalendarTask } from "../domain/tasks/isAgentCalendarTask";
 import type { AnalysisTask } from "../types/tasks";
 import type { TaskCardStats } from "../types/dashboard";
@@ -30,6 +32,9 @@ export interface TaskCardProps {
   onDelete: (taskId: string) => void;
   onSelect?: () => void;
   isSelected?: boolean;
+  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  emoji?: string;
+  onEmojiChange?: (emoji: string) => void | Promise<void>;
 }
 
 const actionIconBtnClass =
@@ -43,6 +48,8 @@ export const TaskCard = React.memo(function TaskCard({
   onDelete,
   onSelect,
   isSelected = false,
+  emoji: emojiProp,
+  onEmojiChange,
 }: TaskCardProps) {
   const { t } = useTranslation("common");
   const worksetNameById = useWorksetNameById();
@@ -52,7 +59,11 @@ export const TaskCard = React.memo(function TaskCard({
   const hideAnalysisStats = isAgentMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
+  const { emoji: storedEmoji, setEmoji } = useTaskEmoji(task.id);
+  const emoji = emojiProp ?? storedEmoji;
+  const handleEmojiChange = onEmojiChange ?? setEmoji;
   const queuedMessageCount = stats.queuedMessageCount;
+  const attentionErrorText = formatAnalysisErrorMessage(stats.lastErrorMessage, t);
   const worksetName =
     worksetNameById.get(task.worksetId?.trim() || SYSTEM_WORKSET_ID) ?? null;
 
@@ -114,7 +125,13 @@ export const TaskCard = React.memo(function TaskCard({
       >
         <div className="flex items-start justify-between gap-sm">
           <div className="flex min-w-0 flex-1 items-center gap-sm">
-            <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
+            <TaskCardEmoji
+              emoji={emoji}
+              name={task.name}
+              employeeId={employeeId}
+              employeeName={employeeName}
+              onSelect={handleEmojiChange}
+            />
             <span
               className={`min-w-0 flex-1 truncate ${cardTitleClass}`}
               title={task.name}
@@ -213,21 +230,21 @@ export const TaskCard = React.memo(function TaskCard({
         )}
 
         {!hideAnalysisStats &&
-        (stats.lastErrorMessage || (stats.retryCount ?? 0) > 0 || stats.analysisPaused) ? (
+        (attentionErrorText || (stats.retryCount ?? 0) > 0 || stats.analysisPaused) ? (
           <div
             className="flex flex-col gap-0.5 text-[11px] leading-snug"
             data-testid={`task-card-attention-${task.id}`}
           >
-            {stats.lastErrorMessage ? (
+            {attentionErrorText ? (
               <div
                 className="text-error line-clamp-2"
-                title={stats.lastErrorMessage}
+                title={attentionErrorText}
                 data-testid={`task-card-error-${task.id}`}
               >
                 <Badge tone="danger" className="mr-1 align-middle">
                   {t("board:queue.attention")}
                 </Badge>
-                {stats.lastErrorMessage}
+                {attentionErrorText}
               </div>
             ) : null}
             {(stats.retryCount ?? 0) > 0 ? (

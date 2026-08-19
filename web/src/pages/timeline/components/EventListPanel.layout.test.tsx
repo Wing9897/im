@@ -91,8 +91,9 @@ describe("EventListPanel", () => {
 
     expect(container.textContent).toContain("第一行摘要 第二行細節 第三行");
     expect(container.querySelector(".line-clamp-2")).toBeNull();
-    const preview = container.querySelector(".truncate.text-text-secondary") as HTMLElement | null;
-    expect(preview?.getAttribute("title")).toContain("第一行摘要");
+    const preview = container.querySelector('[title*="第一行摘要"]');
+    expect(preview).not.toBeNull();
+    expect(preview?.querySelector(".truncate")).not.toBeNull();
   });
 
   it("keeps event cards in a dedicated scroll container with shrink-0", () => {

@@ -326,6 +326,7 @@
   "notify": {
     "prefLabel": "Notify",
     "prefAria": "Notify for this item",
+    "prefHint": "Follows workset and global switches",
     "prefHelp": "When checked, still follows the workset and global switches; if the workset is off, this row does not fire.",
     "inboxTitle": "Last 24 hours",
     "inboxEmpty": "No notifications in the last day.",

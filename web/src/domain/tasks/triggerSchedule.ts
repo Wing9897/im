@@ -1,10 +1,13 @@
-import type { ScheduleType } from "../../types";
-
 /**
  * FE preset ↔ trigger-purpose RRULE mapping (mirrors server/domain/schedule.py).
  * ScheduleInput still edits presets; the API persists scheduleRrule.
  * Trigger RRULEs must never be sent to calendar expand.
  */
+
+import type { ScheduleType } from "../../types";
+
+/** Display/write fallback when wire RRULE is outside FE presets (e.g. QA MINUTELY). */
+export const LEGACY_UNMAPPED_SCHEDULE_TYPE: ScheduleType = "hourly";
 
 const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 

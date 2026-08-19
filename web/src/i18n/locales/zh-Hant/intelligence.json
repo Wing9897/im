@@ -85,7 +85,8 @@
     "unreadAria": "未讀"
   },
   "card": {
-    "sourcedFrom": "來源於 {time}"
+    "sourcedFrom": "來源於 {time}",
+    "eventAvatarAria": "情報事件與任務標記"
   },
   "sourceMeta": {
     "batchGroups": "批次來源 {count} 個群組",

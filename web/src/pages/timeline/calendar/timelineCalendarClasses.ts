@@ -113,25 +113,25 @@ export const monthEventDotClass =
 export const monthEventPreviewTextClass =
   "min-w-0 truncate text-card-meta leading-none text-text-secondary";
 
-/** Compact span counters in the reserved header band (今天 / 到期 / weather). */
+/** Compact span counters in the reserved header band (今天 / weather). */
 export const monthSpanIndicatorsClass =
   "im-month-span-indicators flex min-w-0 shrink-0 items-center gap-0.5 overflow-hidden";
 
 export const monthSpanIndicatorRowClass =
-  `flex min-w-0 shrink-0 items-center gap-1 ${monthSurfaceChipClass}`;
+  `flex min-w-0 shrink-0 items-center gap-px ${monthSurfaceChipClass}`;
 
-/** 進行中 — uses --calendar-dot-ongoing (default: info). */
-export const monthSpanOngoingDotClass =
-  "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ongoing)] opacity-90";
+/** 進行中 lucide — --calendar-dot-ongoing (info; same token as 已確認 legend). */
+export const monthSpanOngoingIconClass =
+  "shrink-0 text-[var(--calendar-dot-ongoing)] opacity-95";
 
-/** 结束 — uses --calendar-dot-ending (default: warning; not success — accent themes often collide). */
-export const monthSpanEndingDotClass =
-  "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ending)] opacity-90";
+/** 結束 lucide — --calendar-dot-ending (warning; same token as 待確認 legend). */
+export const monthSpanEndingIconClass =
+  "shrink-0 text-[var(--calendar-dot-ending)] opacity-95";
 
-/** Span count text matches normal event preview text; only the dot is chromatic. */
-export const monthSpanOngoingTextClass = monthEventPreviewTextClass;
+/** Span count is numeric only; icon color carries 進行中 / 結束. */
+export const monthSpanOngoingTextClass = `${monthEventPreviewTextClass} tabular-nums`;
 
-export const monthSpanEndingTextClass = monthEventPreviewTextClass;
+export const monthSpanEndingTextClass = `${monthEventPreviewTextClass} tabular-nums`;
 
 export function truncateMonthEventTitle(title: string, maxLength = 9): string {
   const trimmed = title.trim() || String(i18n.t("timeline:gantt.untitled"));

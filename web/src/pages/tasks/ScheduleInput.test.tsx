@@ -122,7 +122,6 @@ describe("ScheduleInput component", () => {
   function renderScheduleInput(props: {
     scheduleType: ScheduleType;
     scheduleValue: string | null;
-    scheduleRrule?: string | null;
     onScheduleTypeChange?: (type: ScheduleType) => void;
     onScheduleValueChange?: (value: string | null) => void;
     validationError?: string | null;
@@ -164,21 +163,17 @@ describe("ScheduleInput component", () => {
       expect(options[4].textContent).toBe("自訂秒數");
     });
 
-    it("shows read-only RRULE when wire value is not a FE preset", () => {
+    it("shows only FE preset schedule types (no custom RRULE option)", () => {
       const container = renderScheduleInput({
         scheduleType: "seconds_10",
         scheduleValue: null,
-        scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
       });
-      const code = container.querySelector(
-        '[data-testid="schedule-unmapped-rrule"]',
-      ) as HTMLElement;
-      expect(code).not.toBeNull();
-      expect(code.textContent).toBe("FREQ=HOURLY;INTERVAL=2");
-      expect(container.textContent).toContain("不在下方預設選項");
+      expect(container.querySelector('[data-testid="schedule-unmapped-rrule"]')).toBeNull();
+      expect(container.textContent).not.toContain("自訂觸發 RRULE");
+      expect(container.textContent).not.toContain("FREQ=");
       const select = container.querySelector('select[aria-label="排程類型"]') as HTMLSelectElement;
-      expect(select.value).toBe("");
-      expect(select.querySelector('option[value=""]')?.textContent).toBe("自訂觸發 RRULE");
+      expect(select.value).toBe("seconds_10");
+      expect(select.querySelectorAll("option")).toHaveLength(5);
     });
 
     it("shows agent wave interval after schedule type when enabled", () => {

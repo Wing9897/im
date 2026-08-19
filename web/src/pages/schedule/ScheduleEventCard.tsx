@@ -9,7 +9,6 @@ import {
   AccentBarCard,
   Badge,
   CardFieldRow,
-  CardTitleIcon,
   cardTitleHeaderClass,
   cardTitleLeadClass,
 } from "../../components/ui";
@@ -17,6 +16,7 @@ import { cardTitleClass } from "../../components/ui/pageTypography";
 import { scheduleCardText } from "../../domain/schedule/scheduleCardFields";
 import { rruleFreqKey } from "../../domain/schedule/rruleSummary";
 import { formatOsDateTime } from "../../utils/time";
+import { ScheduleCardEmoji } from "./ScheduleCardEmoji";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
 
 const actionIconBtnClass =
@@ -65,13 +65,17 @@ function ScheduleCardFields({
 export function ScheduleOneOffCard({
   event,
   worksetName,
+  emoji,
   onEdit,
   onDelete,
+  onEmojiChange,
 }: {
   event: UserEvent;
   worksetName: string | null;
+  emoji: string;
   onEdit: () => void;
   onDelete: () => void;
+  onEmojiChange: (emoji: string) => void | Promise<void>;
 }) {
   const { t } = useTranslation("schedule");
   const empty = t("card.empty");
@@ -119,7 +123,12 @@ export function ScheduleOneOffCard({
     >
       <div className={cardTitleHeaderClass}>
         <span className={cardTitleLeadClass}>
-          <CardTitleIcon icon={CalendarDays} />
+          <ScheduleCardEmoji
+            emoji={emoji}
+            name={event.title}
+            defaultIcon={CalendarDays}
+            onSelect={onEmojiChange}
+          />
           <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={event.title}>
             {event.title}
           </div>
@@ -156,15 +165,19 @@ export function ScheduleOneOffCard({
 export function ScheduleRecurringCard({
   task,
   worksetName,
+  emoji,
   onEdit,
   onDelete,
   onToggleActive,
+  onEmojiChange,
 }: {
   task: ScheduleRecurringItem;
   worksetName: string | null;
+  emoji: string;
   onEdit: () => void;
   onDelete: () => void;
   onToggleActive: () => Promise<void>;
+  onEmojiChange: (emoji: string) => void | Promise<void>;
 }) {
   const { t } = useTranslation("schedule");
   const [toggling, setToggling] = useState(false);
@@ -217,7 +230,12 @@ export function ScheduleRecurringCard({
     >
       <div className={cardTitleHeaderClass}>
         <span className={cardTitleLeadClass}>
-          <CardTitleIcon icon={Repeat} />
+          <ScheduleCardEmoji
+            emoji={emoji}
+            name={task.name}
+            defaultIcon={Repeat}
+            onSelect={onEmojiChange}
+          />
           <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={task.name}>
             {task.name}
           </div>

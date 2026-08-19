@@ -55,7 +55,7 @@ export const MessageListItem = React.memo(function MessageListItem({
       />
       {message.channelName && (
         <span
-          className="max-w-[120px] shrink-0 truncate text-xs text-text-secondary"
+          className="im-monitor-list-source max-w-[120px] shrink-0 truncate text-xs text-text-secondary"
           title={message.channelName ?? undefined}
           role="cell"
         >
@@ -74,7 +74,11 @@ export const MessageListItem = React.memo(function MessageListItem({
       <ListRowMain
         title={message.content}
         role="cell"
-        className={isRead ? "text-text-secondary" : "font-medium text-text-primary"}
+        className={
+          isRead
+            ? "im-monitor-list-body text-text-secondary"
+            : "im-monitor-list-body is-unread font-medium text-text-primary"
+        }
       >
         {message.content}
       </ListRowMain>

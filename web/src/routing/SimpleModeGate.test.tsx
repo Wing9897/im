@@ -110,6 +110,34 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
+    it("redirects the Tasks page", async () => {
+      await renderAt("/tasks");
+
+      expect(home()).toBeTruthy();
+      expect(gated()).toBeNull();
+    });
+
+    it("redirects task-only subroutes", async () => {
+      await renderAt("/tasks/abc/edit");
+
+      expect(home()).toBeTruthy();
+      expect(gated()).toBeNull();
+    });
+
+    it("keeps schedule reachable", async () => {
+      await renderAt("/schedule");
+
+      expect(gated()).toBeTruthy();
+      expect(home()).toBeNull();
+    });
+
+    it("keeps items reachable", async () => {
+      await renderAt("/items");
+
+      expect(gated()).toBeTruthy();
+      expect(home()).toBeNull();
+    });
+
     it("redirects deep links under a hidden prefix", async () => {
       // Prefix matching, not equality — /sources/tg-1 is just as hidden.
       await renderAt("/sources/tg-1");

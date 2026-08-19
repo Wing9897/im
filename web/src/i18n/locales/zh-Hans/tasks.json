@@ -31,7 +31,11 @@
     "analysisPausedHint": "分析已自动或手动暂停",
     "waitingForThreshold": "等待触发阈值：{count}/{threshold}",
     "agent": "项目经理任务",
-    "agentProgressHint": "Agent 调度（游标抽干／阈值／定时）— 非 marker 批处理统计"
+    "agentProgressHint": "Agent 调度（游标抽干／阈值／定时）— 非 marker 批处理统计",
+    "changeEmojiAria": "更改 {name} 的 emoji"
+  },
+  "errors": {
+    "geminiNoCandidates": "Gemini 未返回可用内容（可能被安全过滤或响应格式异常）。请检查模型与提示后重试。"
   },
   "detail": {
     "timeRange": "时间范围：{range}",
@@ -93,7 +97,6 @@
     "presets": "快速预设",
     "updateTask": "更新任务",
     "createTask": "建立任务",
-    "requiredAria": "必填栏位",
     "settingsTitle": "任务设定",
     "optionalAria": "进阶设定",
     "channelsLoadError": "无法加载频道列表",
@@ -106,15 +109,16 @@
     "time30d": "最近 30 天",
     "time7d": "最近 7 天",
     "time1d": "最近 1 天",
-    "includeInTimelineLabel": "显示于时间规划",
+    "includeInTimelineLabel": "时间规划",
     "includeInTimelineAria": "显示于时间规划",
-    "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在情报事件与地图，但不会进入日历／甘特／时间轴。",
-    "outputTitle": "输出",
+    "includeInTimelineHint": "出现在日历／甘特／时间轴",
+    "includeInTimelineHelp": "关闭后，此任务的分析事件仍会出现在情报事件与地图，但不会进入日历／甘特／时间轴。",
     "outputAria": "任务输出",
     "outputAnalysisEventsLabel": "情报页",
     "outputAnalysisEventsAria": "写入情报页",
-    "outputAnalysisEventsHint": "关闭后任务仍会跑完，但不写入情报事件页。排行榜任务固定写入排行榜页，不受此开关影响。",
-    "outputIntelOffTimelineHint": "关闭情报后，新的分析事件也不会出现在时间规划（同一批存储）。历史事件仍遵循「显示于时间规划」。",
+    "outputAnalysisEventsHint": "写入情报事件页",
+    "outputAnalysisEventsHelp": "关闭后任务仍会跑完，但不写入情报事件页。排行榜任务固定写入排行榜页，不受此开关影响。",
+    "outputIntelOffTimelineHint": "关闭情报后，新的分析事件也不会出现在时间规划（同一批存储）。历史事件仍遵循「时间规划」。",
     "rruleHint": "RRULE 仅用于周期任务重复事件，不会触发 AI 分析。",
     "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与 Agent 波次间隔仅本任务有效。",
     "followGlobal": "跟随全局",
@@ -127,8 +131,18 @@
     "evidenceStyleHelp": "留空则跟随全局证据风格。",
     "nameLabel": "任务名称",
     "namePlaceholder": "输入任务名称",
-    "foundationTitle": "基本设置",
-    "foundationHint": "任务建立在可重复／可触发的时间排程之上。",
+    "stepIdentityTitle": "这是什么",
+    "stepIdentityHint": "名称、类型与 AI 设定档",
+    "stepIdentityAria": "这是什么",
+    "stepScopeTitle": "看什么",
+    "stepScopeHint": "来源频道与任务 Prompt",
+    "stepScopeAria": "看什么",
+    "stepWhenTitle": "何时跑",
+    "stepWhenHint": "触发方式与排程",
+    "stepWhenAria": "何时跑",
+    "stepOutputTitle": "产出到哪",
+    "stepOutputHint": "输出、通知与工具权限",
+    "stepOutputAria": "产出到哪",
     "taskTypeLabel": "任务类型",
     "llmProfileLabel": "LLM 配置",
     "llmProfileIncompleteBadge": "未完成",
@@ -138,8 +152,6 @@
     "llmProfileAllIncomplete": "现有设定档尚未完成。请补齐提供商、模型（以及需要时的密钥）后再保存。",
     "llmProfileCreateCta": "建立 AI 设定档",
     "llmProfileHint": "此任务会自动使用所选配置的连接（提供商、模型与 API 密钥）。",
-    "skillsTitle": "设定／技能",
-    "skillsAria": "任务设定与技能",
     "optionalTitle": "进阶设定",
     "descriptionLabel": "描述",
     "descriptionPlaceholder": "任务描述（选填）",
@@ -315,8 +327,6 @@
       "weekly": "每周",
       "custom_seconds": "自定义秒数"
     },
-    "unmappedOption": "自定义触发 RRULE",
-    "unmappedHelp": "此任务的触发 RRULE 不在下方预设选项中。选择预设排程后保存会覆盖它。",
     "weekday": {
       "0": "星期日",
       "1": "星期一",
@@ -413,28 +423,37 @@
   },
   "agent": {
     "presetsLabel": "预设",
-    "presetsHint": "一键填充勾选，之后仍可修改。",
+    "presetsHint": "一键填充，之后仍可修改。",
     "presets": {
       "project_reconcile": "专案调和",
       "web_scout": "网蒐"
     },
-    "triggerLabel": "触发",
+    "triggerLabel": "触发方式",
     "trigger": {
-      "schedule": "纯定时（按排程执行）",
-      "message_cursor": "来源消息积压抽干（有新消息才跑）",
-      "message_threshold": "消息阈值门槛（达数量才跑；无频道则等同纯定时）"
+      "schedule": "纯定时",
+      "scheduleHint": "按排程执行",
+      "message_cursor": "消息积压抽干",
+      "message_cursorHint": "有新消息才跑",
+      "message_threshold": "消息阈值",
+      "message_thresholdHint": "达数量才跑；无频道等同纯定时"
     },
     "capsLabel": "工具权限",
     "caps": {
-      "calendarRead": "读日历（查询既有日程）",
-      "readAnalysisEvents": "读事件（搜索情报／分析事件）",
-      "readItems": "读物品（查询到期／库存物品）",
-      "webSearch": "上网搜索（启用时强制可用）"
+      "calendarRead": "读日历",
+      "calendarReadHint": "查询既有日程",
+      "readAnalysisEvents": "读事件",
+      "readAnalysisEventsHint": "搜索情报／分析事件",
+      "readItems": "读物品",
+      "readItemsHint": "查询到期／库存物品",
+      "webSearch": "上网搜索",
+      "webSearchHint": "启用时强制可用"
     },
     "output": {
-      "calendar": "日历事件（写入即含写日历权限）"
+      "calendar": "日历事件",
+      "calendarHint": "写入我的日程",
+      "calendarHelp": "写入即含写日历权限"
     },
     "outputHint": "写入「我的日程」。情报页在上方「输出」里单独勾选。",
-    "outputHintCursor": "消息积压抽干仅写日历事件；情报事件输出请改用排程或消息门槛触发。"
+    "outputHintCursor": "消息积压抽干仅写日历事件；情报事件请改用排程或消息阈值触发。"
   }
 }

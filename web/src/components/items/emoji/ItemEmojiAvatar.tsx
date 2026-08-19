@@ -5,8 +5,14 @@
 import type { CSSProperties } from "react";
 
 const SIZE_PX = {
+  /** Compact overlay on timeline intel dual-stack (~14px). */
+  xs: 14,
+  /** Card overlay on task / intel dual-stack. Keep in sync with AI staff `badge`. */
+  badge: 18,
   sm: 22,
   md: 28,
+  /** Task-card large mark (logo / picked emoji). Keep in sync with TASK_LOGO_MARK_PX. */
+  task: 38,
   /** Entry-list ID-card avatar. */
   card: 48,
   /** CV / form identity avatar — fills the résumé circle slot. */
@@ -14,8 +20,11 @@ const SIZE_PX = {
 } as const;
 
 const GLYPH_CLASS = {
+  xs: "text-[0.6rem] leading-none",
+  badge: "text-[0.8rem] leading-none",
   sm: "text-[0.95rem] leading-none",
   md: "text-[1.2rem] leading-none",
+  task: "text-[1.55rem] leading-none",
   card: "text-[1.65rem] leading-none",
   lg: "text-[2.25rem] leading-none",
 } as const;

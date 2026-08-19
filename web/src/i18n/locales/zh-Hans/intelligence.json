@@ -85,7 +85,8 @@
     "unreadAria": "未读"
   },
   "card": {
-    "sourcedFrom": "来源于 {time}"
+    "sourcedFrom": "来源于 {time}",
+    "eventAvatarAria": "情报事件与任务标记"
   },
   "sourceMeta": {
     "batchGroups": "批次来源 {count} 个群组",

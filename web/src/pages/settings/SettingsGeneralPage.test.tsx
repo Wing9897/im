@@ -86,7 +86,7 @@ describe("SettingsGeneralPage", () => {
     expect(readout?.textContent).toBe("目前地區：Hong Kong");
   });
 
-  it("exposes a simple-mode toggle for AI calendar UX", async () => {
+  it("exposes a simple-mode toggle for basic calendar UX", async () => {
     await harness.render(SettingsGeneralPageWithProviders);
     const toggle = harness.container.querySelector('[data-testid="simple-mode-toggle"]');
     expect(toggle).toBeTruthy();
@@ -97,7 +97,8 @@ describe("SettingsGeneralPage", () => {
     expect(harness.container.textContent).toContain("簡化模式");
     const row = toggle?.parentElement;
     expect(row?.className).toContain("items-center");
-    expect(row?.textContent).toContain("簡化模式（AI 日曆）");
+    expect(row?.textContent).toContain("簡化模式（基本日曆）");
+    expect(row?.textContent).not.toContain("AI 日曆");
   });
 
   it("shows the interface language switcher near general prefs", async () => {

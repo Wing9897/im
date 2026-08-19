@@ -101,7 +101,7 @@ describe("WorksetCatalogChrome", () => {
     expect(harness.container.querySelector('[data-testid="workset-graph-filter-all"]')).toBeNull();
     expect(filter?.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
     expect(trigger?.getAttribute("aria-haspopup")).toBe("dialog");
-    expect(trigger?.textContent).toContain("全部");
+    expect(trigger?.textContent).toContain("2/2");
 
     await act(async () => {
       trigger?.click();
@@ -132,7 +132,7 @@ describe("WorksetCatalogChrome", () => {
     );
     expect(
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
-    ).toContain("已選 1");
+    ).toContain("1/2");
 
     await act(async () => {
       (
@@ -146,7 +146,7 @@ describe("WorksetCatalogChrome", () => {
     );
     expect(
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
-    ).toContain("全部");
+    ).toContain("2/2");
   });
 
   it("caps the graph checklist at 10 worksets and keeps 一般 optional", async () => {
@@ -194,6 +194,9 @@ describe("WorksetCatalogChrome", () => {
     expect(newest?.checked).toBe(true);
     expect(oldest?.checked).toBe(false);
     expect(oldest?.disabled).toBe(true);
+    expect(
+      harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
+    ).toContain("10/11");
     expect(document.body.querySelector('[data-testid="workset-graph-filter-cap-hint"]')?.textContent).toContain(
       "最多同時顯示 10 個工作集",
     );
@@ -255,7 +258,7 @@ describe("WorksetCatalogChrome", () => {
     ).toBe(true);
     expect(
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
-    ).toContain("全部");
+    ).toContain("11/11");
     expect(harness.container.querySelector('[data-testid="workset-graph-search"]')?.textContent).toContain(
       "worksetId=",
     );
@@ -279,7 +282,7 @@ describe("WorksetCatalogChrome", () => {
     );
     expect(
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
-    ).toContain("已選 0");
+    ).toContain("0/11");
   });
 
   it("keeps catalog selected on a contents page so pills can jump back", async () => {

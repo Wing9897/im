@@ -96,13 +96,48 @@ html[data-theme-bg="focal"] .im-card-hover:not(.im-material-elevated):hover {
 }
 
 .im-data-list-row.is-selected,
-.im-monitor-list-item.is-selected,
 .im-intelligence-list-row.is-selected {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+.im-monitor-list-item {
+  --text-muted: color-mix(in srgb, var(--text-primary) 70%, var(--surface-border));
+  --text-secondary: color-mix(in srgb, var(--text-primary) 82%, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-card) 48%, transparent);
+}
+
 .im-monitor-list-item:hover {
-  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  background: color-mix(in srgb, var(--surface-card) 62%, var(--text-primary) 6%);
+}
+
+.im-monitor-list-item.is-selected {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-card) 68%);
+}
+
+html[data-theme-bg="custom"] .im-monitor-list-item,
+html[data-theme-bg="focal"] .im-monitor-list-item {
+  background: color-mix(in srgb, var(--surface-card) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-theme-bg="custom"] .im-monitor-list-item:hover,
+html[data-theme-bg="focal"] .im-monitor-list-item:hover {
+  background: color-mix(in srgb, var(--surface-card) 90%, var(--text-primary) 5%);
+}
+
+html[data-theme-bg="custom"] .im-monitor-list-item.is-selected,
+html[data-theme-bg="focal"] .im-monitor-list-item.is-selected {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-card) 78%);
+}
+
+.im-monitor-stream-list {
+  border-radius: var(--radius-lg, 12px);
+}
+
+html[data-theme-bg="custom"] .im-monitor-stream-list,
+html[data-theme-bg="focal"] .im-monitor-stream-list {
+  background: color-mix(in srgb, var(--surface-card) 42%, transparent);
 }
 
 .im-intelligence-list-row:hover {

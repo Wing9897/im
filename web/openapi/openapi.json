@@ -6012,6 +6012,128 @@
         }
       }
     },
+    "/api/v1/ui-prefs/schedule/emojis": {
+      "get": {
+        "tags": [
+          "ui-prefs"
+        ],
+        "summary": "Fetch Schedule Emojis",
+        "description": "Per-item emoji glyphs for the manage-area schedule list.",
+        "operationId": "fetch_schedule_emojis_api_v1_ui_prefs_schedule_emojis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleEmojisResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ui-prefs"
+        ],
+        "summary": "Save Schedule Emojis",
+        "operationId": "save_schedule_emojis_api_v1_ui_prefs_schedule_emojis_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleEmojisPutBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleEmojisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ui-prefs/tasks/emojis": {
+      "get": {
+        "tags": [
+          "ui-prefs"
+        ],
+        "summary": "Fetch Task Emojis",
+        "description": "Per-task emoji glyphs for the manage-area task list (ui_prefs ``task_emojis``).",
+        "operationId": "fetch_task_emojis_api_v1_ui_prefs_tasks_emojis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskEmojisResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ui-prefs"
+        ],
+        "summary": "Save Task Emojis",
+        "operationId": "save_task_emojis_api_v1_ui_prefs_tasks_emojis_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskEmojisPutBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskEmojisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/logs": {
       "get": {
         "tags": [
@@ -13895,6 +14017,51 @@
         "type": "object",
         "title": "RssFeedPatchBody"
       },
+      "ScheduleEmojisPutBody": {
+        "properties": {
+          "emojis": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Emojis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "emojis"
+        ],
+        "title": "ScheduleEmojisPutBody"
+      },
+      "ScheduleEmojisResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "emojis": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emojis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "ScheduleEmojisResponse",
+        "description": "Per-schedule-item emoji glyphs stored under ``schedule_emojis``."
+      },
       "SetupOkResponse": {
         "properties": {
           "ok": {
@@ -15348,6 +15515,51 @@
         "type": "object",
         "title": "TaskDraftPayload",
         "description": "Wire shape for agent task-advisor ``currentTask`` / tool ``taskConfig``.\n\nAligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.\nExtra AI keys are ignored so OpenAPI stays a concrete object (not unknown)."
+      },
+      "TaskEmojisPutBody": {
+        "properties": {
+          "emojis": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Emojis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "emojis"
+        ],
+        "title": "TaskEmojisPutBody"
+      },
+      "TaskEmojisResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "emojis": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emojis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "TaskEmojisResponse",
+        "description": "Per-analysis-task emoji glyphs stored under ``task_emojis`` (not a DB column)."
       },
       "TaskResponse": {
         "properties": {

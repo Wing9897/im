@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, CirclePlay, Flag, type LucideIcon } from "lucide-react";
 import type { TimelineItem } from "../../../types";
 import { itemDateKindMarkerClass } from "../../../domain/items/itemCalendarProjection";
+import { lookupScheduleEmoji } from "../../../domain/schedule/scheduleEmoji";
 import {
   monthPreviewTitle,
   resolveCalendarLeadingGlyph,
@@ -28,11 +29,11 @@ import {
   monthEventPreviewTextClass,
   monthEventsPreviewClass,
   monthGridRootClass,
-  monthSpanEndingDotClass,
+  monthSpanEndingIconClass,
   monthSpanEndingTextClass,
   monthSpanIndicatorRowClass,
   monthSpanIndicatorsClass,
-  monthSpanOngoingDotClass,
+  monthSpanOngoingIconClass,
   monthSpanOngoingTextClass,
   monthTodayLabelClass,
   monthDayWeekdayFillerClass,
@@ -43,8 +44,11 @@ import {
 import { holidayNamesForDay, type DailyHoliday } from "../../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";
+import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
-const MONTH_EVENT_PREVIEW_LIMIT = 2;
+const MONTH_EVENT_PREVIEW_LIMIT = 4;
+const MONTH_SPAN_ICON_PROPS = { size: 10, strokeWidth: 2.5 } as const;
 
 type DayContextMenuState = {
   day: Date;
@@ -69,6 +73,7 @@ type TimelineMonthGridProps = {
   onCreateOnDay?: (day: Date) => void;
   /** Toolbar 篩選 hover / 顯示日期: muted dates, hide event rows (header weather stays). */
   datesRevealed?: boolean;
+  emojis: ScheduleEmojiMap;
 };
 
 export function TimelineMonthGrid({
@@ -86,6 +91,7 @@ export function TimelineMonthGrid({
   onFocusDay,
   onCreateOnDay,
   datesRevealed = false,
+  emojis,
 }: TimelineMonthGridProps) {
   const { t, i18n } = useTranslation("timeline");
   const [contextMenu, setContextMenu] = useState<DayContextMenuState | null>(null);
@@ -246,20 +252,24 @@ export function TimelineMonthGrid({
                     {hasSpanIndicators && (
                       <div className={monthSpanIndicatorsClass} data-testid="month-span-indicators">
                         {visibleOngoing > 0 && (
-                          <div className={monthSpanIndicatorRowClass}>
-                            <span className={monthSpanOngoingDotClass} aria-hidden="true" />
-                            <span className={monthSpanOngoingTextClass}>
-                              {t("calendar.ongoing", { count: visibleOngoing })}
-                            </span>
-                          </div>
+                          <MonthSpanCountChip
+                            display={t("calendar.ongoing", { count: visibleOngoing })}
+                            icon={CirclePlay}
+                            iconClass={monthSpanOngoingIconClass}
+                            textClass={monthSpanOngoingTextClass}
+                            label={t("calendar.ongoingAria", { count: visibleOngoing })}
+                            testId="month-span-ongoing"
+                          />
                         )}
                         {visibleEnding > 0 && (
-                          <div className={monthSpanIndicatorRowClass}>
-                            <span className={monthSpanEndingDotClass} aria-hidden="true" />
-                            <span className={monthSpanEndingTextClass}>
-                              {t("calendar.ending", { count: visibleEnding })}
-                            </span>
-                          </div>
+                          <MonthSpanCountChip
+                            display={t("calendar.ending", { count: visibleEnding })}
+                            icon={Flag}
+                            iconClass={monthSpanEndingIconClass}
+                            textClass={monthSpanEndingTextClass}
+                            label={t("calendar.endingAria", { count: visibleEnding })}
+                            testId="month-span-ending"
+                          />
                         )}
                       </div>
                     )}
@@ -316,6 +326,8 @@ export function TimelineMonthGrid({
                           >
                             {leading.emoji}
                           </span>
+                        ) : lookupScheduleEmoji(emojis, event) ? (
+                          <ScheduleEventCompactEmoji event={event} emojis={emojis} />
                         ) : (
                           <span
                             className={monthEventDotClass}
@@ -334,7 +346,7 @@ export function TimelineMonthGrid({
                       );
                     })}
                     {overflowCount > 0 && (
-                      <div className={monthEventPreviewRowClass}>
+                      <div className={monthEventPreviewRowClass} data-testid="month-event-overflow">
                         <span className={monthEventPreviewTextClass}>
                           {t("calendar.more", { count: overflowCount })}
                         </span>
@@ -373,6 +385,39 @@ export function TimelineMonthGrid({
           </button>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function MonthSpanCountChip({
+  display,
+  icon: Icon,
+  iconClass,
+  textClass,
+  label,
+  testId,
+}: {
+  display: string;
+  icon: LucideIcon;
+  iconClass: string;
+  textClass: string;
+  label: string;
+  testId: string;
+}) {
+  return (
+    <div
+      className={monthSpanIndicatorRowClass}
+      data-testid={testId}
+      aria-label={label}
+      title={label}
+    >
+      <Icon
+        size={MONTH_SPAN_ICON_PROPS.size}
+        strokeWidth={MONTH_SPAN_ICON_PROPS.strokeWidth}
+        className={iconClass}
+        aria-hidden="true"
+      />
+      <span className={textClass}>{display}</span>
     </div>
   );
 }

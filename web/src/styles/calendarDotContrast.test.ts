@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   monthEventDotClass,
-  monthSpanEndingDotClass,
-  monthSpanOngoingDotClass,
+  monthSpanEndingIconClass,
+  monthSpanOngoingIconClass,
 } from "../pages/timeline/calendar/timelineCalendarClasses";
 
 const themeCss = [
@@ -84,9 +84,9 @@ function tokenHex(body: string, name: string): string | null {
 describe("month calendar status dots", () => {
   it("bind to dedicated calendar-dot tokens (not raw accent/success)", () => {
     expect(monthEventDotClass).toContain("var(--calendar-dot-event)");
-    expect(monthSpanOngoingDotClass).toContain("var(--calendar-dot-ongoing)");
-    expect(monthSpanEndingDotClass).toContain("var(--calendar-dot-ending)");
-    expect(monthSpanEndingDotClass).not.toContain("bg-success");
+    expect(monthSpanOngoingIconClass).toContain("var(--calendar-dot-ongoing)");
+    expect(monthSpanEndingIconClass).toContain("var(--calendar-dot-ending)");
+    expect(monthSpanEndingIconClass).not.toContain("text-success");
   });
 
   it("keeps 一般 / 進行中 / 完結 dots distinguishable across themes", () => {

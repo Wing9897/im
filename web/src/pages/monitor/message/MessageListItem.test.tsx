@@ -16,6 +16,34 @@ describe("MessageListItem", () => {
     expect(container.textContent).toContain("Test message");
   });
 
+  it("uses list contrast hooks for source, body, and row frost", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(createElement(MessageListItem, { message: msg }));
+    });
+    const row = container.querySelector(".im-monitor-list-item");
+    expect(row).toBeTruthy();
+    const source = container.querySelector(".im-monitor-list-source");
+    expect(source?.textContent).toBe("Test Channel");
+    expect(source?.className).toContain("text-text-secondary");
+    const body = container.querySelector(".im-monitor-list-body");
+    expect(body?.textContent).toBe("Test message");
+    expect(body?.className).not.toContain("is-unread");
+    expect(container.querySelector("time")).toBeTruthy();
+  });
+
+  it("marks unread body as primary ink", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(MessageListItem, { message: msg, isRead: false }),
+      );
+    });
+    const body = container.querySelector(".im-monitor-list-body");
+    expect(body?.className).toContain("is-unread");
+    expect(body?.className).toContain("text-text-primary");
+  });
+
   it("falls back to senderId when senderName is empty", () => {
     const noName = makeMessage({ senderName: "" });
     const container = document.createElement("div");

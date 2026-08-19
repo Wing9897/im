@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlignLeft, CalendarDays, Clock, MapPin, Repeat } from "lucide-react";
+import { AlignLeft, Clock, MapPin } from "lucide-react";
 
-import { Badge, CardFieldIcon, CardFieldRow, CardTitleIcon } from "../../../components/ui";
+import { Badge, CardFieldIcon, CardFieldRow } from "../../../components/ui";
 import {
   itemDateKindLabel,
   itemDateKindMarkerClass,
@@ -39,15 +39,24 @@ import {
   dayEventCardClass,
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
+import { ScheduleEventTitleMark } from "../components/ScheduleEventEmojiMark";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 type DayEventCardProps = {
   event: TimelineItem;
   focusedDay: Date;
   status: TimelineEventStatus;
   onSelect: (event: TimelineItem) => void;
+  emojis: ScheduleEmojiMap;
 };
 
-export function TimelineDayEventCard({ event, focusedDay, status, onSelect }: DayEventCardProps) {
+export function TimelineDayEventCard({
+  event,
+  focusedDay,
+  status,
+  onSelect,
+  emojis,
+}: DayEventCardProps) {
   const { t } = useTranslation("timeline");
   const [hovered, setHovered] = useState(false);
   const dismissed = Boolean(event.dismissed);
@@ -104,7 +113,7 @@ export function TimelineDayEventCard({ event, focusedDay, status, onSelect }: Da
           {leading.emoji}
         </span>
       ) : scheduleCard ? (
-        <CardTitleIcon icon={event.source === "recurring" ? Repeat : CalendarDays} />
+        <ScheduleEventTitleMark event={event} emojis={emojis} />
       ) : null}
       <span className="min-w-0 truncate">{title}</span>
     </div>

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, ListChecks, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge, PillButton, TextField } from "../../../components/ui";
+import { Badge, CardFieldIcon, PillButton, TextField } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import {
   useTaskCatalog,
@@ -12,6 +12,7 @@ import {
   eventListCardTitle,
   eventShowsRemindBadge,
   formatEventListProvenanceLabel,
+  resolveEventListProvenanceKind,
   resolveEventListWorksetName,
   type EventListCardMetaLookups,
 } from "../../../domain/timeline/eventListCardMeta";
@@ -24,10 +25,17 @@ import type { TimelineItem } from "../../../types";
 import { joinList } from "../../../i18n/formatMessage";
 import { formatOsDateTime } from "../../../utils/time";
 import { EventListPanel } from "./EventListPanel";
+import { ScheduleEventCompactEmoji } from "./ScheduleEventEmojiMark";
+import { IntelEventMark } from "../../../components/task/IntelEventAvatarStack";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { dismissedTitleClass } from "../timelineDismissUtils";
 import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
 import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
+import { isUserScheduleTimelineEvent } from "../../../domain/schedule/scheduleCardFields";
+import { useScheduleEmojisMap } from "../../schedule/useScheduleEmojis";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
+import { useTaskEmojisMap } from "../../tasks/useTaskEmojis";
+import type { TaskEmojiMap } from "../../tasks/taskEmojisStore";
 
 const asideClass =
   "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";
@@ -36,12 +44,18 @@ type TimelineSidebarProps = {
   rangeEvents: TimelineItem[];
   focusedDay: Date | null;
   onClose?: () => void;
+  /** Test override; production hydrates `schedule_emojis` from ui-prefs. */
+  scheduleEmojis?: ScheduleEmojiMap;
+  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  taskEmojis?: TaskEmojiMap;
 };
 
 export function TimelineSidebar({
   rangeEvents,
   focusedDay,
   onClose,
+  scheduleEmojis,
+  taskEmojis,
 }: TimelineSidebarProps) {
   const { t } = useTranslation("timeline");
   const {
@@ -66,6 +80,10 @@ export function TimelineSidebar({
   const { tasks } = useTaskCatalog();
   const worksetNameById = useWorksetNameById();
   const generalWorksetLabel = useGeneralWorksetLabel();
+  const hydratedEmojis = useScheduleEmojisMap();
+  const emojis = scheduleEmojis ?? hydratedEmojis;
+  const hydratedTaskEmojis = useTaskEmojisMap();
+  const taskMarks = taskEmojis ?? hydratedTaskEmojis;
   const taskWorksetById = useMemo(() => {
     const map = new Map<string, string>();
     for (const task of tasks) {
@@ -118,11 +136,23 @@ export function TimelineSidebar({
           </PillButton>
 
           <h2
-            className={`m-0 pr-8 ${cardTitleClass} ${
+            className={`m-0 flex min-w-0 items-center gap-sm pr-8 ${cardTitleClass} ${
               isDismissed ? dismissedTitleClass : ""
             }`}
             data-testid="timeline-sidebar-title"
           >
+            {selectedEvent && !isImportant ? (
+              isUserScheduleTimelineEvent(selectedEvent.source) ? (
+                <ScheduleEventCompactEmoji event={selectedEvent} emojis={emojis} />
+              ) : resolveEventListProvenanceKind(selectedEvent) === "task" ? (
+                <IntelEventMark
+                  event={selectedEvent}
+                  emojis={taskMarks}
+                  size="compact"
+                  label={t("eventList.eventAvatarAria")}
+                />
+              ) : null
+            ) : null}
             {detailTitle}
           </h2>
 
@@ -176,7 +206,13 @@ export function TimelineSidebar({
                 value: resolveEventListWorksetName(selectedEvent, metaLookups),
               })}
             </div>
-            <div data-testid="timeline-sidebar-provenance">
+            <div
+              className="flex min-w-0 items-center gap-xs"
+              data-testid="timeline-sidebar-provenance"
+            >
+              {resolveEventListProvenanceKind(selectedEvent) === "task" ? (
+                <CardFieldIcon icon={ListChecks} />
+              ) : null}
               {formatEventListProvenanceLabel(selectedEvent, t)}
             </div>
           </dl>
@@ -291,6 +327,8 @@ export function TimelineSidebar({
           rangeEvents={rangeEvents}
           focusedDay={focusedDay}
           onSelectEvent={onSelectEvent}
+          scheduleEmojis={emojis}
+          taskEmojis={taskMarks}
         />
       )}
     </aside>

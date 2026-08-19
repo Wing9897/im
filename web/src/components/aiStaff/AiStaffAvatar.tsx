@@ -26,6 +26,8 @@ export const AI_STAFF_AVATAR_SIZE_PX = {
   xs: 22,
   sm: 28,
   md: 36,
+  /** Overlay badge on the task-logo / emoji stack (~half of the 38px mark). */
+  badge: 18,
 } as const;
 
 type AiStaffAvatarProps = {

@@ -150,6 +150,7 @@ export function ChatEditorPage() {
             channels={channels}
             onOpenChannelDialog={() => setShowChannelDialog(true)}
             onLlmProfileGateChange={setLlmProfileGate}
+            taskId={taskId}
           />
         </div>
       </div>

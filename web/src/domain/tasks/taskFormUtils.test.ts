@@ -384,14 +384,14 @@ describe("formStateToTaskConfig calendar contract", () => {
     expect(payload).not.toHaveProperty("scheduleValue");
   });
 
-  it("preserves unmappable scheduleRrule on save", () => {
+  it("derives scheduleRrule from presets on save (ignores stale wire RRULE)", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
-      scheduleType: "seconds_10",
+      scheduleType: "hourly",
       scheduleValue: null,
-      scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+      scheduleRrule: "FREQ=MINUTELY;INTERVAL=1",
     });
-    expect(payload.scheduleRrule).toBe("FREQ=HOURLY;INTERVAL=2");
+    expect(payload.scheduleRrule).toBe("FREQ=HOURLY");
     expect(payload).not.toHaveProperty("scheduleType");
     expect(payload).not.toHaveProperty("scheduleValue");
   });
@@ -410,15 +410,15 @@ describe("scheduleFieldsFromTask", () => {
     });
   });
 
-  it("preserves unmappable RRULE instead of defaulting overwrite", () => {
+  it("snaps unmappable RRULE to hourly without exposing raw string", () => {
     expect(
       scheduleFieldsFromTask({
-        scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+        scheduleRrule: "FREQ=MINUTELY;INTERVAL=1",
       }),
     ).toEqual({
-      scheduleType: "seconds_10",
+      scheduleType: "hourly",
       scheduleValue: null,
-      scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+      scheduleRrule: "FREQ=HOURLY",
     });
   });
 

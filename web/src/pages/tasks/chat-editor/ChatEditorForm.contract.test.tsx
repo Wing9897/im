@@ -211,4 +211,118 @@ describe("ChatEditorForm analysis-task contract", () => {
     expect(input.value).toBe("15");
     expect(container.textContent).toContain("儲存在本任務");
   });
+
+  it("keeps description and wave interval under Advanced", async () => {
+    await act(async () => {
+      root.render(
+        wrapWithI18n(createElement(ChatEditorForm, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "agent",
+              triggerMode: "message_cursor",
+              outputCalendar: true,
+              outputAnalysisEvents: false,
+              scheduleType: "hourly",
+              agentWaveIntervalSeconds: 20,
+              channelIds: ["ch-1"],
+              description: "進階描述",
+            },
+            updateField: () => undefined,
+            channels: [],
+            onOpenChannelDialog: () => undefined,
+          })),
+      );
+    });
+    const advanced = container.querySelector('[aria-label="進階設定"]');
+    expect(advanced).not.toBeNull();
+    expect(advanced?.querySelector("#chat-task-description")).not.toBeNull();
+    expect(advanced?.querySelector('[data-testid="schedule-project-wave-interval"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="task-editor-step-when"] #chat-task-description'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="task-editor-step-scope"] #chat-task-description'),
+    ).toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-trigger"]')?.getAttribute("role")).toBe(
+      "radiogroup",
+    );
+  });
+
+  it("shows four numbered sections on one scroll with required asterisks", async () => {
+    await act(async () => {
+      root.render(
+        wrapWithI18n(createElement(ChatEditorForm, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "intel_event",
+              promptTemplate: "",
+              channelIds: [],
+            },
+            updateField: () => undefined,
+            channels: [],
+            onOpenChannelDialog: () => undefined,
+          })),
+      );
+      await Promise.resolve();
+    });
+
+    const identity = container.querySelector('[data-testid="task-editor-step-identity"]');
+    const scope = container.querySelector('[data-testid="task-editor-step-scope"]');
+    const when = container.querySelector('[data-testid="task-editor-step-when"]');
+    const output = container.querySelector('[data-testid="task-editor-step-output"]');
+    expect(identity).not.toBeNull();
+    expect(scope).not.toBeNull();
+    expect(when).not.toBeNull();
+    expect(output).not.toBeNull();
+    expect(identity?.textContent).toContain("這是什麼");
+    expect(scope?.textContent).toContain("看什麼");
+    expect(when?.textContent).toContain("何時跑");
+    expect(output?.textContent).toContain("產出到哪");
+    expect(container.querySelector('[data-testid="setup-step-indicator"]')).toBeNull();
+
+    const nameLabel = container.querySelector('label[for="chat-task-name"]');
+    expect(nameLabel?.textContent).toMatch(/任務名稱\s*\*/);
+    expect(container.querySelector('[data-testid="task-employee-picker"] label')?.textContent).toMatch(
+      /任務類型\s*\*/,
+    );
+    expect(container.querySelector('label[for="chat-llm-profile"]')?.textContent).toMatch(
+      /LLM 設定檔\s*\*/,
+    );
+    expect(scope?.querySelector("label")?.textContent).toMatch(/分析來源頻道\s*\*/);
+    expect(container.querySelector('label[for="chat-prompt-template"]')?.textContent).toMatch(/\*/);
+    expect(container.querySelector('label[for="chat-prompt-template"]')?.textContent).not.toContain(
+      "必填",
+    );
+    expect(when?.querySelector('[aria-label="排程類型"]')).not.toBeNull();
+    expect(scope?.querySelector('[data-testid="task-prompt-template"]')).not.toBeNull();
+    expect(identity?.querySelector('[data-testid="task-prompt-template"]')).toBeNull();
+  });
+
+  it("does not mark optional agent channels as required", async () => {
+    await act(async () => {
+      root.render(
+        wrapWithI18n(createElement(ChatEditorForm, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "agent",
+              triggerMode: "schedule",
+              outputCalendar: false,
+              outputAnalysisEvents: true,
+              scheduleType: "hourly",
+              promptTemplate: "Gather intel",
+              channelIds: [],
+            },
+            updateField: () => undefined,
+            channels: [],
+            onOpenChannelDialog: () => undefined,
+          })),
+      );
+    });
+    const scope = container.querySelector('[data-testid="task-editor-step-scope"]');
+    expect(scope?.textContent).toContain("來源頻道（選填）");
+    expect(scope?.querySelector("label")?.textContent).not.toMatch(/\*/);
+    expect(container.querySelector('[data-testid="task-editor-step-when"] [data-testid="task-agent-trigger"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-editor-step-output"] [data-testid="task-agent-policy"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-editor-step-when"] [data-testid="task-agent-policy"]')).toBeNull();
+  });
 });

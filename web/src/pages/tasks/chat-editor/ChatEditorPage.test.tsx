@@ -204,7 +204,7 @@ describe("ChatEditorPage integration tests", () => {
       });
       const { container, cleanup } = result!;
 
-      expect(container.querySelector('[aria-label="必填欄位"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="這是什麼"]')).not.toBeNull();
 
       cleanup();
     });
@@ -218,12 +218,14 @@ describe("ChatEditorPage integration tests", () => {
       const { container, cleanup } = result!;
 
       expect(container.textContent).toContain("任務名稱");
-      expect(container.textContent).toContain("描述");
+      expect(container.textContent).toContain("進階設定");
       expect(container.textContent).toContain("Task Prompt");
       expect(container.textContent).toContain("排程類型");
       expect(container.textContent).toContain("任務類型");
-      expect(container.textContent).toContain("基本設定");
-      expect(container.textContent).toContain("設定／技能");
+      expect(container.textContent).toContain("這是什麼");
+      expect(container.textContent).toContain("看什麼");
+      expect(container.textContent).toContain("何時跑");
+      expect(container.textContent).toContain("產出到哪");
       expect(container.querySelector('[data-testid="task-prompt-template"]')).not.toBeNull();
 
       cleanup();
@@ -463,9 +465,19 @@ describe("ChatEditorPage integration tests", () => {
       ) as HTMLInputElement;
       expect(nameInput.value).toBe("Existing Task");
 
+      const expandAdvanced = container.querySelector(
+        '[aria-label="進階設定"] button[aria-expanded="false"]',
+      ) as HTMLButtonElement | null;
+      if (expandAdvanced) {
+        await act(async () => {
+          expandAdvanced.click();
+        });
+      }
+
       const descInput = container.querySelector(
         'input[placeholder="任務描述（選填）"]',
       ) as HTMLInputElement;
+      expect(descInput).not.toBeNull();
       expect(descInput.value).toBe("Existing description");
 
       const promptTextarea = container.querySelector(

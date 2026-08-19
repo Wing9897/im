@@ -215,7 +215,7 @@ describe("TimelineCalendarView", () => {
       const container = render(props);
 
       // Month cells show title previews (not a header count badge).
-      expect(container.textContent).not.toContain("1 事件");
+      expect(container.textContent).not.toContain("+1 事件");
       expect(container.textContent).toContain("January 1");
     });
 
@@ -248,10 +248,11 @@ describe("TimelineCalendarView", () => {
       expect(container.textContent).toContain("Afternoon…");
       expect(container.querySelector('[title="Morning Event"]')).toBeTruthy();
       expect(container.querySelector('[title="Afternoon Event"]')).toBeTruthy();
-      expect(container.textContent).not.toContain("+1 更多");
+      expect(container.textContent).not.toContain("+1 事件");
+      expect(container.textContent).not.toContain("更多");
     });
 
-    it("shows two event previews and a clickable overflow hint in month view", () => {
+    it("shows four event previews and a clickable overflow hint from the fifth", () => {
       const events = [
         makeEvent({
           id: "evt-1",
@@ -266,6 +267,16 @@ describe("TimelineCalendarView", () => {
         makeEvent({
           id: "evt-3",
           title: "第三個事件",
+          startTime: "2025-01-15T12:00:00Z",
+        }),
+        makeEvent({
+          id: "evt-4",
+          title: "第四個事件",
+          startTime: "2025-01-15T13:00:00Z",
+        }),
+        makeEvent({
+          id: "evt-5",
+          title: "第五個事件",
           startTime: "2025-01-15T14:00:00Z",
         }),
       ];
@@ -286,12 +297,13 @@ describe("TimelineCalendarView", () => {
       );
       expect(dayCell?.textContent).toContain("第一個事件");
       expect(dayCell?.textContent).toContain("第二個事件");
-      expect(dayCell?.textContent).not.toContain("第三個事件");
-      expect(dayCell?.textContent).toContain("+1 更多");
-
-      const overflowHint = Array.from(dayCell!.querySelectorAll("span")).find(
-        (element) => element.textContent === "+1 更多",
-      );
+      expect(dayCell?.textContent).toContain("第三個事件");
+      expect(dayCell?.textContent).toContain("第四個事件");
+      expect(dayCell?.textContent).not.toContain("第五個事件");
+      expect(dayCell?.textContent).toContain("+1 事件");
+      expect(dayCell?.textContent).not.toContain("更多");
+      const overflowHint = dayCell!.querySelector('[data-testid="month-event-overflow"]');
+      expect(overflowHint?.textContent).toBe("+1 事件");
       act(() => {
         overflowHint!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
@@ -363,22 +375,32 @@ describe("TimelineCalendarView", () => {
 
       const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
       const startCell = dayCells.find((cell) => cell.textContent?.includes("三日行程"));
-      const ongoingCell = dayCells.find((cell) => cell.textContent?.includes("+1 進行中"));
-      const endingCell = dayCells.find((cell) => cell.textContent?.includes("+1 結束"));
+      const ongoingCell = dayCells.find((cell) => cell.querySelector('[data-testid="month-span-ongoing"]'));
+      const endingCell = dayCells.find((cell) => cell.querySelector('[data-testid="month-span-ending"]'));
 
       expect(startCell).toBeTruthy();
-      expect(startCell?.textContent).not.toContain("進行中");
-      expect(startCell?.textContent).not.toContain("結束");
+      expect(startCell?.querySelector('[data-testid="month-span-ongoing"]')).toBeNull();
+      expect(startCell?.querySelector('[data-testid="month-span-ending"]')).toBeNull();
       expect(ongoingCell).toBeTruthy();
       expect(ongoingCell).not.toBe(startCell);
-      expect(ongoingCell?.textContent).not.toContain("結束");
+      expect(ongoingCell?.querySelector('[data-testid="month-span-ending"]')).toBeNull();
+      expect(ongoingCell?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(ongoingCell?.querySelector('[data-testid="month-span-ongoing"]')?.getAttribute("aria-label")).toBe(
+        "1 進行中",
+      );
+      expect(ongoingCell?.textContent).not.toContain("進行中");
       expect(endingCell).toBeTruthy();
       expect(endingCell).not.toBe(startCell);
-      expect(endingCell?.textContent).not.toContain("進行中");
+      expect(endingCell?.querySelector('[data-testid="month-span-ongoing"]')).toBeNull();
+      expect(endingCell?.querySelector('[data-testid="month-span-ending"]')?.textContent).toBe("1");
+      expect(endingCell?.querySelector('[data-testid="month-span-ending"]')?.getAttribute("aria-label")).toBe(
+        "1 結束",
+      );
+      expect(endingCell?.textContent).not.toContain("結束");
       expect(container.querySelectorAll('[data-testid="month-span-indicators"]').length).toBe(2);
     });
 
-    it("shows +N ending / ongoing on a navigated non-current month for prior-month starts", () => {
+    it("shows ending / ongoing icon counts on a navigated non-current month for prior-month starts", () => {
       // Cursor on September (not “today’s” month): overnight ending 9/1 + multi-day middle.
       const events = [
         makeEvent({
@@ -412,10 +434,12 @@ describe("TimelineCalendarView", () => {
         (cell.getAttribute("aria-label") ?? "").includes("2026年9月2日"),
       );
 
-      expect(day1?.textContent).toContain("+1 結束");
-      expect(day1?.textContent).toContain("+1 進行中");
-      expect(day2?.textContent).toContain("+1 進行中");
-      expect(day2?.textContent).not.toContain("結束");
+      expect(day1?.querySelector('[data-testid="month-span-ending"]')?.textContent).toBe("1");
+      expect(day1?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(day1?.textContent).not.toContain("結束");
+      expect(day1?.textContent).not.toContain("進行中");
+      expect(day2?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(day2?.querySelector('[data-testid="month-span-ending"]')).toBeNull();
     });
 
     it("hides ongoing / ending span indicators when toggles are off", () => {
@@ -442,10 +466,12 @@ describe("TimelineCalendarView", () => {
       expect(container.textContent).toContain("三日行程");
       expect(container.textContent).not.toContain("進行中");
       expect(container.textContent).not.toContain("結束");
+      expect(container.querySelector('[data-testid="month-span-ongoing"]')).toBeNull();
+      expect(container.querySelector('[data-testid="month-span-ending"]')).toBeNull();
       expect(container.querySelectorAll('[data-testid="month-span-indicators"]').length).toBe(0);
     });
 
-    it("counts recurring final in +N 結束; remind item still titles in preview", () => {
+    it("counts recurring final in ending icon count; remind item still titles in preview", () => {
       const events = [
         makeEvent({
           id: "item:milk:remind",
@@ -481,7 +507,11 @@ describe("TimelineCalendarView", () => {
         (cell.getAttribute("aria-label") ?? "").includes("2025年1月16日"),
       );
       expect(day16).toBeTruthy();
-      expect(day16?.textContent).toContain("+1 結束");
+      expect(day16?.querySelector('[data-testid="month-span-ending"]')?.textContent).toBe("1");
+      expect(day16?.querySelector('[data-testid="month-span-ending"]')?.getAttribute("aria-label")).toBe(
+        "1 結束",
+      );
+      expect(day16?.textContent).not.toContain("結束");
       // Remind item + recurring final remain normal preview rows (limit 2).
       expect(day16?.textContent).toContain("提醒 · milk");
       expect(day16?.textContent).toContain("最後一次週會");
@@ -866,4 +896,54 @@ describe("TimelineCalendarView", () => {
     });
   });
 
+  describe("schedule emojis from ui-prefs", () => {
+    it("shows the one-off emoji on month titles instead of the default dot", () => {
+      const event = makeEvent({
+        id: "ue-bday",
+        title: "生日派對",
+        source: "user",
+        startTime: "2025-01-15T09:00:00",
+        endTime: "2025-01-15T10:00:00",
+      });
+      const monthCursor = new Date(2025, 0, 1);
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays: buildCalendarDays(monthCursor),
+          monthEvents: [event],
+          timeCursor: new Date(2025, 0, 15),
+          scheduleEmojis: { "oneOff:ue-bday": "🎂" },
+        }),
+      );
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
+      const day15 = dayCells.find((cell) =>
+        (cell.getAttribute("aria-label") ?? "").includes("2025年1月15日"),
+      );
+      expect(day15?.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toBe("🎂");
+      expect(day15?.textContent).toContain("生日派對");
+    });
+
+    it("shows the series emoji on day cards for RRULE occurrences", () => {
+      const event = makeEvent({
+        id: "cal-task-1:20250115T090000Z",
+        seriesId: "cal-task-1",
+        title: "Weekly Standup",
+        source: "recurring",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      });
+      const container = render(
+        makeProps({
+          timeScale: "day",
+          rangeStart: new Date(2025, 0, 15),
+          rangeEvents: [event],
+          scheduleEmojis: { "recurring:cal-task-1": "🔁" },
+        }),
+      );
+      const card = container.querySelector('[data-testid="timeline-day-event-card"]');
+      expect(card?.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain("🔁");
+      expect(card?.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    });
+  });
 });

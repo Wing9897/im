@@ -51,7 +51,7 @@ function emptyStateKey(
  *   stay in `useTimelineNavigation` / `useTimelinePagePrefs` — do not merge into
  *   selection or one mega-store.
  * - `showDismissed` gates soft-dismiss visibility for calendar + gantt; default on.
- * - `showOngoing` / `showEnding` gate month-cell「+N 进行中」／「+N 结束」chips; default on.
+ * - `showOngoing` / `showEnding` gate month-cell ongoing / ending icon+count chips; default on.
  * - Client `eventStatuses` / `eventTimeOverrides` are SQLite ui-prefs (not soft-dismiss).
  * - `?view=` is one-shot deep-link (apply then clear) via fingerprint — do not leave
  *   sticky `?view=` forcing the toggle.

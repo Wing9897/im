@@ -16,6 +16,7 @@ from server.analyzer.llm_providers import (
     complete_openai_responses_web_search,
     complete_openai_style,
     convert_messages_to_gemini,
+    extract_gemini_text,
     extract_openai_responses_text,
     probe_gemini,
     probe_ollama,
@@ -287,6 +288,43 @@ async def test_complete_gemini_raises_on_http_error() -> None:
             temperature=0.2,
             json_mode=False,
         )
+
+
+def test_extract_gemini_text_missing_candidates_is_friendly() -> None:
+    with pytest.raises(LlmClientError, match="no usable candidates") as caught:
+        extract_gemini_text({"usageMetadata": {}})
+    assert "'candidates'" not in str(caught.value)
+    assert caught.value.provider == "gemini"
+
+
+def test_extract_gemini_text_blocked_prompt() -> None:
+    with pytest.raises(LlmClientError, match="blocked") as caught:
+        extract_gemini_text({"promptFeedback": {"blockReason": "SAFETY"}})
+    assert caught.value.provider == "gemini"
+
+
+def test_extract_gemini_text_empty_parts() -> None:
+    with pytest.raises(LlmClientError, match="no usable candidates"):
+        extract_gemini_text(
+            {"candidates": [{"finishReason": "SAFETY", "content": {"parts": []}}]},
+        )
+
+
+async def test_complete_gemini_missing_candidates_raises_llm_error() -> None:
+    session = _FakeSession(
+        lambda *_a, **_k: _FakeResponse(200, json_data={"promptFeedback": {"blockReason": "OTHER"}}),
+    )
+    with pytest.raises(LlmClientError, match="blocked") as caught:
+        await complete_gemini(
+            session,  # type: ignore[arg-type]
+            base_url="https://generativelanguage.googleapis.com/v1beta",
+            api_key="gem-key",
+            model="gemini-test",
+            messages=[{"role": "user", "content": "go"}],
+            temperature=0.2,
+            json_mode=False,
+        )
+    assert "'candidates'" not in str(caught.value)
 
 
 async def test_probe_ollama_ok_and_error() -> None:

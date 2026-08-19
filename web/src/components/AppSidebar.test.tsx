@@ -338,14 +338,13 @@ describe("AppSidebar", () => {
     expect(getLinks()).toHaveLength(0);
   });
 
-  it("hides collect/analyze links in simple mode", () => {
+  it("hides collect/analyze and Tasks links in simple mode", () => {
     window.localStorage.setItem(SIMPLE_MODE_STORAGE_KEY, "true");
     mockPathname = "/timeline";
     renderSidebar();
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
       "/worksets",
-      "/tasks",
       "/schedule",
       "/items",
       "/timeline",
@@ -358,8 +357,10 @@ describe("AppSidebar", () => {
     expect(hrefs).not.toContain("/monitor");
     expect(hrefs).not.toContain("/sources");
     expect(hrefs).not.toContain("/leaderboard");
+    expect(hrefs).not.toContain("/tasks");
     expect(hrefs).toContain("/notify");
     expect(hrefs).toContain("/items");
+    expect(hrefs).toContain("/schedule");
   });
 
   it("persists overlay open/closed via the edge chevron, not a layout rail", () => {

@@ -2,7 +2,6 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { FieldLabel, FormStack, SelectField, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
-import { isUnmappedTriggerSchedule } from "../../domain/tasks/triggerSchedule";
 import i18n from "../../i18n";
 import type { ScheduleType } from "../../types";
 
@@ -73,8 +72,6 @@ export function validateScheduleValue(
 interface ScheduleInputProps {
   scheduleType: ScheduleType;
   scheduleValue: string | null;
-  /** Canonical trigger RRULE; when unmappable to presets, shown read-only. */
-  scheduleRrule?: string | null;
   onScheduleTypeChange: (type: ScheduleType) => void;
   onScheduleValueChange: (value: string | null) => void;
   validationError?: string | null;
@@ -103,7 +100,6 @@ function FieldStack({ children }: { children: React.ReactNode }) {
 export function ScheduleInput({
   scheduleType,
   scheduleValue,
-  scheduleRrule = null,
   onScheduleTypeChange,
   onScheduleValueChange,
   validationError,
@@ -119,8 +115,6 @@ export function ScheduleInput({
       scheduleType === "weekly" ||
       scheduleType === "custom_seconds") &&
     error !== null;
-  const unmappedRrule = isUnmappedTriggerSchedule(scheduleType, scheduleValue, scheduleRrule);
-  const wireRrule = scheduleRrule?.trim() || "";
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value as ScheduleType;
@@ -135,18 +129,12 @@ export function ScheduleInput({
   const typeSelect = (
     <FieldStack>
       <FieldLabel htmlFor="schedule-type">{t("tasks:schedule.typeLabel")}</FieldLabel>
-      {/* Native select: disabled unmapped option is not supported by MenuSelect. */}
       <SelectField
         id="schedule-type"
-        value={unmappedRrule ? "" : scheduleType}
+        value={scheduleType}
         onChange={handleTypeChange}
         aria-label={t("tasks:schedule.typeAria")}
       >
-        {unmappedRrule ? (
-          <option value="" disabled>
-            {t("tasks:schedule.unmappedOption")}
-          </option>
-        ) : null}
         {SCHEDULE_TYPES.map((value) => (
           <option key={value} value={value}>
             {t(`tasks:schedule.types.${value}`)}
@@ -156,98 +144,83 @@ export function ScheduleInput({
     </FieldStack>
   );
 
-  const unmappedBanner = unmappedRrule ? (
-    <FieldStack>
-      <p className={formHelpClass}>{t("tasks:schedule.unmappedHelp")}</p>
-      <code
-        className="im-surface-inset block break-all rounded-md border border-surface-border px-sm py-xs text-caption text-text-primary"
-        data-testid="schedule-unmapped-rrule"
-      >
-        {wireRrule}
-      </code>
-    </FieldStack>
-  ) : null;
-
   let valueField: React.ReactNode = null;
-  if (!unmappedRrule) {
-    switch (scheduleType) {
-      case "daily":
-        valueField = (
-          <FieldStack>
-            <FieldLabel htmlFor="schedule-daily-time">{t("tasks:schedule.dailyTime")}</FieldLabel>
+  switch (scheduleType) {
+    case "daily":
+      valueField = (
+        <FieldStack>
+          <FieldLabel htmlFor="schedule-daily-time">{t("tasks:schedule.dailyTime")}</FieldLabel>
+          <TextField
+            id="schedule-daily-time"
+            type="time"
+            value={scheduleValue ?? ""}
+            onChange={(e) => onScheduleValueChange(e.target.value)}
+            aria-label={t("tasks:schedule.dailyTimeAria")}
+          />
+          {showError && error ? <ScheduleError message={error} /> : null}
+        </FieldStack>
+      );
+      break;
+
+    case "weekly": {
+      const { day, time } = parseWeeklyValue(scheduleValue);
+      valueField = (
+        <FieldStack>
+          <FieldLabel>{t("tasks:schedule.weeklyDateTime")}</FieldLabel>
+          <div className="flex items-start gap-sm">
+            <SelectField
+              className="w-auto shrink-0"
+              value={day}
+              onChange={(e) => {
+                const newDay = e.target.value;
+                onScheduleValueChange(time ? `${newDay}:${time}` : `${newDay}:`);
+              }}
+              aria-label={t("tasks:schedule.weekdayAria")}
+            >
+              {WEEKDAY_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`tasks:schedule.weekday.${value}`)}
+                </option>
+              ))}
+            </SelectField>
             <TextField
-              id="schedule-daily-time"
+              id="schedule-weekly-time"
               type="time"
-              value={scheduleValue ?? ""}
-              onChange={(e) => onScheduleValueChange(e.target.value)}
-              aria-label={t("tasks:schedule.dailyTimeAria")}
+              className="min-w-0 flex-1"
+              value={time}
+              onChange={(e) => onScheduleValueChange(`${day}:${e.target.value}`)}
+              aria-label={t("tasks:schedule.weeklyTimeAria")}
             />
-            {showError && error ? <ScheduleError message={error} /> : null}
-          </FieldStack>
-        );
-        break;
-
-      case "weekly": {
-        const { day, time } = parseWeeklyValue(scheduleValue);
-        valueField = (
-          <FieldStack>
-            <FieldLabel>{t("tasks:schedule.weeklyDateTime")}</FieldLabel>
-            <div className="flex items-start gap-sm">
-              {/* Native select: schedule editor stays on SelectField for native form density. */}
-              <SelectField
-                className="w-auto shrink-0"
-                value={day}
-                onChange={(e) => {
-                  const newDay = e.target.value;
-                  onScheduleValueChange(time ? `${newDay}:${time}` : `${newDay}:`);
-                }}
-                aria-label={t("tasks:schedule.weekdayAria")}
-              >
-                {WEEKDAY_VALUES.map((value) => (
-                  <option key={value} value={value}>
-                    {t(`tasks:schedule.weekday.${value}`)}
-                  </option>
-                ))}
-              </SelectField>
-              <TextField
-                id="schedule-weekly-time"
-                type="time"
-                className="min-w-0 flex-1"
-                value={time}
-                onChange={(e) => onScheduleValueChange(`${day}:${e.target.value}`)}
-                aria-label={t("tasks:schedule.weeklyTimeAria")}
-              />
-            </div>
-            {showError && error ? <ScheduleError message={error} /> : null}
-          </FieldStack>
-        );
-        break;
-      }
-
-      case "custom_seconds":
-        valueField = (
-          <FieldStack>
-            <FieldLabel htmlFor="schedule-custom-seconds">
-              {t("tasks:schedule.customSeconds")}
-            </FieldLabel>
-            <TextField
-              id="schedule-custom-seconds"
-              type="number"
-              placeholder={t("tasks:schedule.customSecondsPlaceholder")}
-              min={1}
-              step={1}
-              value={scheduleValue ?? ""}
-              onChange={(e) => onScheduleValueChange(e.target.value)}
-              aria-label={t("tasks:schedule.customSecondsAria")}
-            />
-            {showError && error ? <ScheduleError message={error} /> : null}
-          </FieldStack>
-        );
-        break;
-
-      default:
-        break;
+          </div>
+          {showError && error ? <ScheduleError message={error} /> : null}
+        </FieldStack>
+      );
+      break;
     }
+
+    case "custom_seconds":
+      valueField = (
+        <FieldStack>
+          <FieldLabel htmlFor="schedule-custom-seconds">
+            {t("tasks:schedule.customSeconds")}
+          </FieldLabel>
+          <TextField
+            id="schedule-custom-seconds"
+            type="number"
+            placeholder={t("tasks:schedule.customSecondsPlaceholder")}
+            min={1}
+            step={1}
+            value={scheduleValue ?? ""}
+            onChange={(e) => onScheduleValueChange(e.target.value)}
+            aria-label={t("tasks:schedule.customSecondsAria")}
+          />
+          {showError && error ? <ScheduleError message={error} /> : null}
+        </FieldStack>
+      );
+      break;
+
+    default:
+      break;
   }
 
   const scheduleFields =
@@ -265,7 +238,6 @@ export function ScheduleInput({
 
   return (
     <FormStack gap="lg">
-      {unmappedBanner}
       {scheduleFields}
       {showAgentWaveInterval ? (
         <FieldStack>
