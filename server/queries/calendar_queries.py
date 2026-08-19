@@ -99,7 +99,7 @@ async def fetch_analysis_event_detail(
 ) -> dict[str, Any] | None:
     join = task_version_join("ae")
     return await db.fetch_one(
-        "SELECT ae.*, at.name AS task_name, "
+        "SELECT ae.*, at.name AS task_name, at.emoji AS emoji, "
         "m.timestamp AS source_message_time, m.platform AS source_platform, "
         "c.channel_name AS source_channel_name "
         f"FROM analysis_events ae {join} "

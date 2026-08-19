@@ -140,5 +140,3 @@ export function filterScheduleEntriesByDate(
       : recurringSeriesInDateRange(entry.series, startDay, endDay),
   );
 }
-
-export { scheduleEmojiStorageKey } from "../../domain/schedule/scheduleEmoji";

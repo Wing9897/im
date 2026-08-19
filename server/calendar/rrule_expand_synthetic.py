@@ -161,6 +161,11 @@ def expand_series_occurrences(
                         "worksetId": workset_id,
                         "itemId": item_id,
                         "notifyPref": _task_notify_pref(series),
+                        "emoji": (
+                            str(series.get("emoji")).strip()
+                            if isinstance(series.get("emoji"), str) and str(series.get("emoji")).strip()
+                            else None
+                        ),
                     },
                 )
             )

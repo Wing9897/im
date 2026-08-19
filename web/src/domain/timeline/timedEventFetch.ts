@@ -1,26 +1,15 @@
-import type { UserEvent } from "../../api/userEvents";
-import { listUserEventsPage } from "../../api/userEvents";
-import { fetchEvents } from "../../api/results";
+import { fetchCalendarWindow } from "../../api/calendarWindow";
+import type { AnalysisEvent } from "../../types";
 import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
-import {
-  fetchSharedCalendarOccurrences,
-  fetchSharedTimedAnalysisPage,
-  fetchSharedTimelineEvents,
-  fetchSharedUserEvents,
-} from "./sharedCalendarFetch";
+import { paddedMonthWindowIso } from "./boardFetchWindows";
 import type { TimelineFilterPlan } from "./timelineFilterPlan";
-import {
-  mergeTimelineFilterSources,
-  mergeWithCalendarOccurrences,
-} from "./timedEventMergeCore";
+import { filterTimelineWindowEvents } from "./timedEventMergeCore";
 import {
   sortEventsByTimeDesc,
-  userEventToBoardEvent,
-  userEventToTimelineItem,
+  windowItemToBoardEvent,
 } from "./timedEventProject";
-import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 
-const EMPTY_EVENTS: TimelineItem[] = [];
+const EMPTY_EVENTS: AnalysisEvent[] = [];
 
 export type UserEventLabelOpts = {
   taskNameById?: ReadonlyMap<string, string>;
@@ -31,32 +20,24 @@ export type UserEventLabelOpts = {
 /**
  * Shared planner+merge core for Timeline and Board timed-event surfaces.
  *
- * Options:
- * - ``filterPlan`` — Timeline source-filter aware fetch + client merge
- * - ``includeRrule`` — pull RRULE / item calendar rows (Board window = true; events list = false)
- * - ``sort`` — optional ``time_desc`` (events-list widget)
+ * Calendar display (timeline month/gantt, board calendar/gantt/events list,
+ * board items remind summary) uses ``GET /api/v1/calendar/window``.
+ * Intelligence pages and the board map keep ``/results/events``.
  */
 export type FetchMergedTimedEventsOpts = {
   startIso?: string;
   endIso?: string;
-  /** Timed analysis page limit (board window) or recent-list limit. */
+  /** Unused by window fetches; kept for board wrapper signatures. */
   limit?: number;
   /**
    * Analysis fetch style:
-   * - ``timed`` — hasTime window page (Board calendar/gantt)
+   * - ``timed`` — board calendar/gantt/events list window
    * - ``timeline`` — timeline task-filtered window (requires filterPlan)
-   * - ``recent`` — analyzed_at list (Events board widget)
-   * - ``none`` — skip analysis
    */
-  analysis?: "timed" | "timeline" | "recent" | "none";
-  includeUserEvents?: boolean | "unbounded";
-  /** When false, skip calendar/occurrences. Object form passes series filter to shared fetch. */
-  includeRrule?:
-    | boolean
-    | {
-        seriesIds?: string[] | null;
-        includeItems?: boolean;
-      };
+  analysis?: "timed" | "timeline";
+  includeUserEvents?: boolean;
+  /** When false, skip recurring + item_remind in the window. */
+  includeRrule?: boolean;
   filterPlan?: {
     selectedSources: SourceFilterSelection;
     plan: TimelineFilterPlan;
@@ -65,12 +46,18 @@ export type FetchMergedTimedEventsOpts = {
   sort?: "time_desc" | "none";
 };
 
-function resolveIncludeRrule(
-  includeRrule: FetchMergedTimedEventsOpts["includeRrule"],
-): false | { seriesIds?: string[] | null; includeItems?: boolean } {
-  if (includeRrule === false || includeRrule === undefined) return false;
-  if (includeRrule === true) return {};
-  return includeRrule;
+function projectWindowItems(
+  items: Awaited<ReturnType<typeof fetchCalendarWindow>>,
+  labels?: UserEventLabelOpts,
+): AnalysisEvent[] {
+  return items.map((item) =>
+    windowItemToBoardEvent(
+      item,
+      labels?.taskNameById,
+      labels?.generalWorksetLabel,
+      labels?.worksetNameById,
+    ),
+  );
 }
 
 /**
@@ -82,8 +69,6 @@ export async function fetchMergedTimedEvents(
   const {
     startIso,
     endIso,
-    limit = 15,
-    analysis = "timed",
     includeUserEvents = true,
     includeRrule = true,
     filterPlan,
@@ -112,100 +97,39 @@ export async function fetchMergedTimedEvents(
       return EMPTY_EVENTS;
     }
 
-    const needCalendar = plan.fetchCalendar || plan.fetchItems;
-    const [analysisEvents, calendarOccurrences, rawUserEvents] = await Promise.all([
-      plan.fetchAnalysis
-        ? fetchSharedTimelineEvents({
-            taskIds: plan.analysisTaskIds,
-            startDate: startIso,
-            endDate: endIso,
-          })
-        : Promise.resolve(EMPTY_EVENTS),
-      needCalendar
-        ? fetchSharedCalendarOccurrences(
-            startIso,
-            endIso,
-            plan.fetchCalendar
-              ? plan.seriesIds === null
-                ? { includeItems: true }
-                : { seriesIds: plan.seriesIds, includeItems: true }
-              : { seriesIds: [], includeItems: true },
-          )
-        : Promise.resolve([] as CalendarOccurrence[]),
-      plan.fetchUserEvents
-        ? fetchSharedUserEvents({ start: startIso, end: endIso })
-        : Promise.resolve([] as UserEvent[]),
-    ]);
-
-    const userEvents = rawUserEvents
-      .map((event) =>
-        userEventToTimelineItem(
-          event,
-          userEventLabels?.taskNameById,
-          userEventLabels?.generalWorksetLabel,
-          userEventLabels?.worksetNameById,
-        ),
-      )
-      .filter((event): event is TimelineItem => event !== null);
-
-    return mergeTimelineFilterSources({
+    const windowItems = await fetchCalendarWindow({
+      start: startIso,
+      end: endIso,
+      includeAnalysis: plan.fetchAnalysis,
+      includeUser: plan.fetchUserEvents,
+      includeRecurring: plan.fetchCalendar,
+      includeItems: plan.fetchItems,
+    });
+    return filterTimelineWindowEvents({
       selectedSources,
       filterPlan: plan,
-      analysisEvents,
-      calendarOccurrences,
-      userEvents,
+      events: projectWindowItems(windowItems, userEventLabels),
     });
   }
 
-  const rruleOpts = resolveIncludeRrule(includeRrule);
-  const wantUser = includeUserEvents !== false;
-  const unboundedUser = includeUserEvents === "unbounded";
+  if (!startIso || !endIso) {
+    return EMPTY_EVENTS;
+  }
 
-  const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
-    analysis === "timed" && startIso && endIso
-      ? fetchSharedTimedAnalysisPage({ startDate: startIso, endDate: endIso, limit })
-      : analysis === "recent"
-        ? fetchEvents({
-            limit,
-            offset: 0,
-            sort: "analyzed_at",
-            includeTotal: false,
-          }).then((page) => page.items)
-        : Promise.resolve([] as AnalysisEvent[]),
-    wantUser
-      ? unboundedUser
-        ? listUserEventsPage().then((page) => page.items)
-        : startIso && endIso
-          ? fetchSharedUserEvents({ start: startIso, end: endIso })
-          : listUserEventsPage().then((page) => page.items)
-      : Promise.resolve([] as UserEvent[]),
-    rruleOpts && startIso && endIso
-      ? fetchSharedCalendarOccurrences(startIso, endIso, {
-          // null means "all series" — the shared fetch expects the filter omitted.
-          seriesIds: rruleOpts.seriesIds ?? undefined,
-          includeItems: rruleOpts.includeItems,
-        })
-      : Promise.resolve([] as CalendarOccurrence[]),
-  ]);
-
-  const projectedUsers = userEvents.map((event) =>
-    userEventToBoardEvent(
-      event,
-      userEventLabels?.taskNameById,
-      userEventLabels?.generalWorksetLabel,
-      userEventLabels?.worksetNameById,
-    ),
-  );
-
-  const merged = rruleOpts
-    ? mergeWithCalendarOccurrences([...analysisEvents, ...projectedUsers], calendarOccurrences)
-    : [...analysisEvents, ...projectedUsers];
-
+  const windowItems = await fetchCalendarWindow({
+    start: startIso,
+    end: endIso,
+    includeAnalysis: true,
+    includeUser: includeUserEvents !== false,
+    includeRecurring: includeRrule !== false,
+    includeItems: includeRrule !== false,
+  });
+  const merged = projectWindowItems(windowItems, userEventLabels);
   return sort === "time_desc" ? sortEventsByTimeDesc(merged) : merged;
 }
 
 /**
- * Board calendar/gantt: timed analysis + user_events + RRULE calendar.
+ * Board calendar/gantt: one ``GET /calendar/window``.
  * User-event task names are left unresolved here — callers apply
  * `withResolvedUserEventTaskNames` with the shared task catalog.
  */
@@ -226,17 +150,21 @@ export async function fetchMergedTimedBoardEvents(opts: {
 }
 
 /**
- * Events-list board widget: recent analysis (analyzed_at) + all user_events.
- * Intentionally omits RRULE / `item_remind` (schedule + items widgets own those).
+ * Events-list board widget: same merged occurrences as the month calendar
+ * (padded month window), newest first. Cap is applied by the widget after
+ * source filter.
  */
 export async function fetchBoardEventsList(opts: {
   limit?: number;
 } = {}): Promise<AnalysisEvent[]> {
+  const { startDate, endDate } = paddedMonthWindowIso();
   return fetchMergedTimedEvents({
+    startIso: startDate,
+    endIso: endDate,
     limit: opts.limit ?? 15,
-    analysis: "recent",
-    includeUserEvents: "unbounded",
-    includeRrule: false,
+    analysis: "timed",
+    includeUserEvents: true,
+    includeRrule: true,
     sort: "time_desc",
   });
 }

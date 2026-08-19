@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     -- Per-task reminder: inherit workset default, or mute this task.
     notify_pref          TEXT NOT NULL DEFAULT 'inherit'
                          {NOTIFY_PREF_CHECK_SQL},
+    -- Optional card glyph; NULL = product task logo (ListChecks).
+    emoji                TEXT DEFAULT NULL,
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL
 );

@@ -1,30 +1,16 @@
 /**
- * Shared lookup for task card emojis (`ui_prefs.task_emojis`).
- *
- * Store shape: `{ emojis: { "<taskId>": "🎯" } }`.
- * Empty / missing key → default product task logo (not the AI head).
- * Timeline analysis / recurring rows look up via `event.taskId`.
+ * Task / intel-event card glyphs live on entity ``emoji`` (stamp 43).
+ * Empty / missing → default product task logo (not the AI head).
  */
 
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-
-export function lookupTaskEmoji(
-  emojis: Readonly<Record<string, string>>,
-  taskId: string | null | undefined,
-): string {
-  const id = (taskId ?? "").trim();
-  if (!id || id === SYSTEM_WORKSET_ID) return "";
-  const glyph = emojis[id];
-  return typeof glyph === "string" ? glyph.trim() : "";
+export function lookupTaskEmoji(emoji: string | null | undefined): string {
+  return typeof emoji === "string" ? emoji.trim() : "";
 }
 
 export type TaskEmojiEventRef = {
-  taskId?: string | null;
+  emoji?: string | null;
 };
 
-export function lookupTaskEmojiForEvent(
-  emojis: Readonly<Record<string, string>>,
-  event: TaskEmojiEventRef,
-): string {
-  return lookupTaskEmoji(emojis, event.taskId);
+export function lookupTaskEmojiForEvent(event: TaskEmojiEventRef): string {
+  return lookupTaskEmoji(event.emoji);
 }

@@ -10,7 +10,7 @@ import { LlmHealthBoardWidget } from "./LlmHealthBoardWidget";
 
 const mockListUserEvents = vi.fn();
 const mockListRecurring = vi.fn();
-const mockFetchCalendar = vi.fn();
+const mockFetchCalendarWindow = vi.fn();
 const mockListProfiles = vi.fn();
 
 vi.mock("../../api/userEvents", () => ({
@@ -21,8 +21,8 @@ vi.mock("../../api/recurringSeries", () => ({
   listRecurringSeries: (...args: unknown[]) => mockListRecurring(...args),
 }));
 
-vi.mock("../../api/results", () => ({
-  fetchCalendarOccurrences: (...args: unknown[]) => mockFetchCalendar(...args),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/llmProfiles", () => ({
@@ -94,34 +94,52 @@ describe("new board widgets (schedule / items / llm-health)", () => {
       totalCount: 1,
       hasMore: false,
     });
-    mockFetchCalendar.mockReset().mockResolvedValue([
+    mockFetchCalendarWindow.mockReset().mockResolvedValue([
       {
         id: "item:i1:remind",
-        seriesId: "",
-        taskName: "",
+        source: "item_remind",
         title: "Milk",
         startTime: "2026-08-15T00:00:00.000Z",
         endTime: "2026-08-15T23:59:59.000Z",
         isAllDay: true,
-        location: null,
-        description: null,
-        rrule: "",
-        source: "item_remind",
+        timezone: null,
+        emoji: null,
+        taskId: null,
+        seriesId: null,
         worksetId: "__general__",
         itemId: "i1",
+        origin: null,
         itemDateKind: "remind",
+        notifyPref: "inherit",
+        dismissed: false,
+        important: false,
+        taskName: null,
+        isLastOccurrence: false,
+        remindBeforeDays: null,
+        body: "",
       },
       {
         id: "rrule:1",
-        seriesId: "ser-1",
+        source: "recurring",
         title: "Meeting",
         startTime: "2026-08-15T10:00:00.000Z",
         endTime: "2026-08-15T11:00:00.000Z",
         isAllDay: false,
-        location: null,
-        description: null,
-        rrule: "FREQ=WEEKLY",
-        source: "recurring",
+        timezone: null,
+        emoji: null,
+        taskId: null,
+        seriesId: "ser-1",
+        worksetId: "__general__",
+        itemId: null,
+        origin: null,
+        itemDateKind: null,
+        notifyPref: "inherit",
+        dismissed: false,
+        important: false,
+        taskName: null,
+        isLastOccurrence: false,
+        remindBeforeDays: null,
+        body: "",
       },
     ]);
     mockListProfiles.mockReset().mockResolvedValue([]);
@@ -179,6 +197,14 @@ describe("new board widgets (schedule / items / llm-health)", () => {
       root.render(wrapBoardProviders(createElement(ItemsBoardWidget)));
     });
     await flush();
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeAnalysis: false,
+        includeUser: false,
+        includeRecurring: false,
+        includeItems: true,
+      }),
+    );
     expect(container.querySelector('[data-testid="board-items-row-item:i1:remind"]')).toBeTruthy();
     expect(container.textContent).toContain("Milk");
     expect(container.textContent).not.toContain("Meeting");

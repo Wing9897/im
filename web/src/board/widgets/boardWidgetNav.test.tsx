@@ -30,6 +30,35 @@ vi.mock("../../context/MonitorModeContext", async (importOriginal) => {
   };
 });
 
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: vi.fn(async () => [
+    {
+      id: "evt-1",
+      source: "analysis",
+      title: "事件一",
+      startTime: new Date().toISOString(),
+      endTime: new Date(Date.now() + 3_600_000).toISOString(),
+      location: null,
+      isAllDay: false,
+      timezone: null,
+      emoji: null,
+      taskId: "t1",
+      seriesId: null,
+      worksetId: "__general__",
+      itemId: null,
+      origin: null,
+      itemDateKind: null,
+      notifyPref: "inherit",
+      dismissed: false,
+      important: false,
+      taskName: "任務",
+      isLastOccurrence: false,
+      remindBeforeDays: null,
+      body: "",
+    },
+  ]),
+}));
+
 vi.mock("../../api/results", () => ({
   fetchEvents: vi.fn(async () => ({
     items: [
@@ -60,21 +89,7 @@ vi.mock("../../api/results", () => ({
     totalCount: 1,
     hasMore: false,
   })),
-  fetchCalendarOccurrences: vi.fn(async () => [
-    {
-      id: "cal-1",
-      taskId: "cal-task-1",
-      title: "會議",
-      taskName: "週期任務",
-      // Distinct from analysis mock startTime so merge dedupe keeps both rows.
-      startTime: new Date(Date.now() + 3_600_000).toISOString(),
-      endTime: new Date(Date.now() + 7_200_000).toISOString(),
-      isAllDay: false,
-      location: null,
-      description: null,
-      rrule: "FREQ=DAILY",
-    },
-  ]),
+  fetchCalendarOccurrences: vi.fn(async () => []),
   fetchQueueStatus: vi.fn(async () => ({
     pendingCount: 0,
     processingBatches: [],

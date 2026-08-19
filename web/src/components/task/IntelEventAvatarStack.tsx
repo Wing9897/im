@@ -1,9 +1,6 @@
 import { Radar } from "lucide-react";
 
-import {
-  lookupTaskEmojiForEvent,
-  type TaskEmojiEventRef,
-} from "../../domain/tasks/taskEmoji";
+import { lookupTaskEmojiForEvent, type TaskEmojiEventRef } from "../../domain/tasks/taskEmoji";
 import {
   TaskLogoMark,
   TASK_EVENT_MARK_PX,
@@ -46,7 +43,7 @@ type StackProps = {
 /**
  * Intel-event identity (not the task-card stack):
  * - large: 情報 Radar chip (never the task emoji / AI head)
- * - small: task-card large mark (ListChecks or `ui_prefs.task_emojis`)
+ * - small: task-card large mark (ListChecks or entity `emoji`)
  */
 export function IntelEventAvatarStack({
   emoji,
@@ -82,23 +79,21 @@ export function IntelEventAvatarStack({
 
 type MarkProps = {
   event: TaskEmojiEventRef;
-  emojis: Readonly<Record<string, string>>;
   size?: IntelEventAvatarSize;
   className?: string;
   label?: string;
 };
 
-/** Timeline analysis rows: look up `task_emojis` via `event.taskId`. */
+/** Timeline analysis rows: read entity `emoji` from the event payload. */
 export function IntelEventMark({
   event,
-  emojis,
   size = "compact",
   className,
   label,
 }: MarkProps) {
   return (
     <IntelEventAvatarStack
-      emoji={lookupTaskEmojiForEvent(emojis, event)}
+      emoji={lookupTaskEmojiForEvent(event)}
       size={size}
       className={className}
       label={label}

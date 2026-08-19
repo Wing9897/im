@@ -15,8 +15,6 @@ import {
   sortActiveThenDismissed,
 } from "../timelineDismissUtils";
 import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
-import { useScheduleEmojisMap } from "../../schedule/useScheduleEmojis";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 import {
   calendarDayEventsGridClass,
   calendarDayGridClass,
@@ -70,8 +68,6 @@ type TimelineCalendarViewProps = {
   onCreateOnDay?: (day: Date) => void;
   /** Page toolbar 顯示日期: muted dates; event rows hide, header weather stays. */
   datesRevealed?: boolean;
-  /** Test override; production hydrates `schedule_emojis` from ui-prefs. */
-  scheduleEmojis?: ScheduleEmojiMap;
 };
 
 export function TimelineCalendarView({
@@ -94,11 +90,8 @@ export function TimelineCalendarView({
   onFocusDay,
   onCreateOnDay,
   datesRevealed = false,
-  scheduleEmojis,
 }: TimelineCalendarViewProps) {
   const { t } = useTranslation("timeline");
-  const hydratedEmojis = useScheduleEmojisMap();
-  const emojis = scheduleEmojis ?? hydratedEmojis;
 
   if (timeScale === "day") {
     return (
@@ -129,7 +122,6 @@ export function TimelineCalendarView({
                   focusedDay={rangeStart}
                   status={eventStatuses[event.id] ?? "pending"}
                   onSelect={onSelectEvent}
-                  emojis={emojis}
                 />
               ))
             )}
@@ -210,7 +202,6 @@ export function TimelineCalendarView({
                           focusedDay={day}
                           status={eventStatuses[event.id] ?? "pending"}
                           onSelect={onSelectEvent}
-                          emojis={emojis}
                         />
                       ))
                     )}
@@ -241,7 +232,6 @@ export function TimelineCalendarView({
         onSelectEvent={onSelectEvent}
         onFocusDay={onFocusDay}
         onCreateOnDay={onCreateOnDay}
-        emojis={emojis}
       />
     </div>
   );

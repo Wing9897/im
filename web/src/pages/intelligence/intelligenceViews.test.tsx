@@ -370,7 +370,7 @@ describe("IntelligenceDetailDialog coordinate display", () => {
 
 describe("IntelligenceCard dual avatar", () => {
   it("keeps Radar large and overlays a picked task emoji, not the AI head", () => {
-    const item = makeAnalysisEvent({ taskId: "task-ops", taskName: "Ops Task" });
+    const item = makeAnalysisEvent({ taskId: "task-ops", taskName: "Ops Task", emoji: "🎯" });
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
@@ -379,7 +379,6 @@ describe("IntelligenceCard dual avatar", () => {
           isRead: false,
           isConsumed: false,
           onAutoRead: vi.fn(),
-          taskEmojis: { "task-ops": "🎯" },
         }),
       );
     });

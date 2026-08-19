@@ -96,6 +96,8 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
         }
         if "notifyPref" in fields_set:
             kwargs["notify_pref"] = body.notifyPref
+        if "emoji" in fields_set:
+            kwargs["emoji"] = body.emoji
         if "worksetId" in fields_set:
             kwargs["workset_id"] = body.worksetId
         item = await create_user_event(db, **kwargs)
@@ -142,6 +144,7 @@ async def patch_event(
         "amount": "amount",
         "direction": "direction",
         "notifyPref": "notify_pref",
+        "emoji": "emoji",
     }
     kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}
 

@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-42 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-43 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -24,8 +24,8 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 42
-    assert SCHEMA_SEMVER == "0.1.0-beta.43"
+    assert CURRENT_SCHEMA_VERSION == 43
+    assert SCHEMA_SEMVER == "0.1.0-beta.44"
 
 
 @pytest.mark.asyncio
@@ -76,6 +76,15 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
             rec_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_pref" in rec_cols
         assert str(rec_cols["notify_pref"][4]).replace("'", "") == "off"
+        assert "emoji" in rec_cols
+        assert int(rec_cols["emoji"][3]) == 0
+        assert str(rec_cols["emoji"][4] or "NULL").replace("'", "").upper() == "NULL"
+        assert "emoji" in ue_cols
+        assert int(ue_cols["emoji"][3]) == 0
+        assert str(ue_cols["emoji"][4] or "NULL").replace("'", "").upper() == "NULL"
+        assert "emoji" in task_cols
+        assert int(task_cols["emoji"][3]) == 0
+        assert str(task_cols["emoji"][4] or "NULL").replace("'", "").upper() == "NULL"
     finally:
         await db.close()
 

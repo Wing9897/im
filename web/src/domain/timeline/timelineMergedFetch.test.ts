@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { CalendarWindowItem } from "../../api/calendarWindow";
 import type { CalendarOccurrence, TimelineItem } from "../../types";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { resolveTimelineFilterPlan } from "./timelineFilterPlan";
@@ -10,20 +11,12 @@ import {
   TIMELINE_CALENDAR_FETCH_PADDING_DAYS,
 } from "./timelineMergedFetch";
 
-const {
-  mockFetchSharedTimelineEvents,
-  mockFetchSharedCalendarOccurrences,
-  mockFetchSharedUserEvents,
-} = vi.hoisted(() => ({
-  mockFetchSharedTimelineEvents: vi.fn(),
-  mockFetchSharedCalendarOccurrences: vi.fn(),
-  mockFetchSharedUserEvents: vi.fn(),
+const { mockFetchCalendarWindow } = vi.hoisted(() => ({
+  mockFetchCalendarWindow: vi.fn(),
 }));
 
-vi.mock("./sharedCalendarFetch", () => ({
-  fetchSharedTimelineEvents: (...args: unknown[]) => mockFetchSharedTimelineEvents(...args),
-  fetchSharedCalendarOccurrences: (...args: unknown[]) => mockFetchSharedCalendarOccurrences(...args),
-  fetchSharedUserEvents: (...args: unknown[]) => mockFetchSharedUserEvents(...args),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 function makeAnalysis(overrides: Partial<TimelineItem> = {}): TimelineItem {
@@ -66,6 +59,33 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
     description: null,
     rrule: "FREQ=WEEKLY",
     source: "recurring",
+    ...overrides,
+  };
+}
+
+function makeWindowItem(
+  overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">,
+): CalendarWindowItem {
+  return {
+    startTime: "2025-01-10T00:00:00Z",
+    endTime: null,
+    location: null,
+    isAllDay: false,
+    timezone: null,
+    emoji: null,
+    taskId: null,
+    seriesId: null,
+    worksetId: SYSTEM_WORKSET_ID,
+    itemId: null,
+    origin: null,
+    itemDateKind: null,
+    notifyPref: "inherit",
+    dismissed: false,
+    important: false,
+    taskName: null,
+    isLastOccurrence: false,
+    remindBeforeDays: null,
+    body: "",
     ...overrides,
   };
 }
@@ -204,31 +224,29 @@ describe("mergeTimelineFilterSources", () => {
 
 describe("fetchMergedTimelineEvents", () => {
   beforeEach(() => {
-    mockFetchSharedTimelineEvents.mockReset().mockResolvedValue([]);
-    mockFetchSharedCalendarOccurrences.mockReset().mockResolvedValue([]);
-    mockFetchSharedUserEvents.mockReset().mockResolvedValue([]);
+    mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
   });
 
-  it("skips sources the filter plan does not need", async () => {
+  it("scopes calendar/window include flags from the filter plan", async () => {
     const catalog = [{ id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" }];
     const selection = { taskIds: ["evt-1"], worksetIds: [] as string[] };
     const plan = resolveTimelineFilterPlan(selection, catalog);
-    mockFetchSharedTimelineEvents.mockResolvedValue([makeAnalysis()]);
-    mockFetchSharedUserEvents.mockResolvedValue([
-      {
-        id: "ue-match",
-        title: "掛到事件任務",
-        body: "",
-        startTime: "2025-01-12T08:00:00Z",
-        endTime: null,
-        location: null,
-        origin: "manual",
-        source: "user",
+    mockFetchCalendarWindow.mockResolvedValue([
+      makeWindowItem({
+        id: "a-1",
+        source: "analysis",
+        title: "分析",
         taskId: "evt-1",
-        worksetId: SYSTEM_WORKSET_ID,
-        createdAt: "2025-01-12T08:00:00Z",
-        updatedAt: "2025-01-12T08:00:00Z",
-      },
+        taskName: "事件任務",
+      }),
+      makeWindowItem({
+        id: "ue-match",
+        source: "user",
+        title: "掛到事件任務",
+        startTime: "2025-01-12T08:00:00Z",
+        origin: "manual",
+        taskId: "evt-1",
+      }),
     ]);
 
     const events = await fetchMergedTimelineEvents({
@@ -238,10 +256,14 @@ describe("fetchMergedTimelineEvents", () => {
       endIso: "2025-02-01T00:00:00.000Z",
     });
 
-    expect(mockFetchSharedTimelineEvents).toHaveBeenCalled();
-    expect(mockFetchSharedUserEvents).toHaveBeenCalled();
-    // No recurring + no workset → fetchItems false → calendar skipped
-    expect(mockFetchSharedCalendarOccurrences).not.toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
+      start: "2025-01-01T00:00:00.000Z",
+      end: "2025-02-01T00:00:00.000Z",
+      includeAnalysis: true,
+      includeUser: true,
+      includeRecurring: false,
+      includeItems: false,
+    });
     expect(events.map((e) => e.id).sort()).toEqual(["a-1", "ue-match"]);
   });
 
@@ -253,8 +275,19 @@ describe("fetchMergedTimelineEvents", () => {
     expect(plan.fetchItems).toBe(true);
     expect(plan.fetchCalendar).toBe(true);
 
-    mockFetchSharedCalendarOccurrences.mockResolvedValue([
-      makeItemOccurrence({ dismissed: true }),
+    mockFetchCalendarWindow.mockResolvedValue([
+      makeWindowItem({
+        id: "item:i1:remind",
+        source: "item_remind",
+        title: "Milk",
+        startTime: "2025-01-20T00:00:00",
+        endTime: "2025-01-20T23:59:59",
+        isAllDay: true,
+        timezone: "floating",
+        itemId: "i1",
+        itemDateKind: "remind",
+        dismissed: true,
+      }),
     ]);
 
     const events = await fetchMergedTimelineEvents({
@@ -264,11 +297,14 @@ describe("fetchMergedTimelineEvents", () => {
       endIso: "2025-02-01T00:00:00.000Z",
     });
 
-    expect(mockFetchSharedCalendarOccurrences).toHaveBeenCalledWith(
-      "2025-01-01T00:00:00.000Z",
-      "2025-02-01T00:00:00.000Z",
-      { includeItems: true },
-    );
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
+      start: "2025-01-01T00:00:00.000Z",
+      end: "2025-02-01T00:00:00.000Z",
+      includeAnalysis: false,
+      includeUser: true,
+      includeRecurring: true,
+      includeItems: true,
+    });
     expect(events).toHaveLength(1);
     expect(events[0].source).toBe("item_remind");
     expect(events[0].dismissed).toBe(true);
@@ -276,7 +312,7 @@ describe("fetchMergedTimelineEvents", () => {
 
   it("propagates calendar fetch failures", async () => {
     const plan = resolveTimelineFilterPlan(null, []);
-    mockFetchSharedCalendarOccurrences.mockRejectedValue(new Error("calendar boom"));
+    mockFetchCalendarWindow.mockRejectedValue(new Error("calendar boom"));
     await expect(
       fetchMergedTimelineEvents({
         selectedSources: null,
@@ -295,16 +331,18 @@ describe("fetchMergedTimelineEvents", () => {
     expect(plan.fetchCalendar).toBe(true);
     expect(plan.seriesIds).toBeNull();
 
-    mockFetchSharedCalendarOccurrences.mockResolvedValue([
-      makeOccurrence({
+    mockFetchCalendarWindow.mockResolvedValue([
+      makeWindowItem({
         id: "rec-new:20260801T010000Z",
+        source: "recurring",
         seriesId: "rec-new",
         worksetId: SYSTEM_WORKSET_ID,
         title: "每日",
         startTime: "2026-08-01T01:00:00Z",
       }),
-      makeOccurrence({
+      makeWindowItem({
         id: "rec-new:20260802T010000Z",
+        source: "recurring",
         seriesId: "rec-new",
         worksetId: SYSTEM_WORKSET_ID,
         title: "每日",
@@ -319,11 +357,14 @@ describe("fetchMergedTimelineEvents", () => {
       endIso: "2026-08-31T23:59:59.000Z",
     });
 
-    expect(mockFetchSharedCalendarOccurrences).toHaveBeenCalledWith(
-      "2026-08-01T00:00:00.000Z",
-      "2026-08-31T23:59:59.000Z",
-      { includeItems: true },
-    );
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
+      start: "2026-08-01T00:00:00.000Z",
+      end: "2026-08-31T23:59:59.000Z",
+      includeAnalysis: false,
+      includeUser: true,
+      includeRecurring: true,
+      includeItems: true,
+    });
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });
 });

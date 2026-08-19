@@ -8,7 +8,6 @@ import {
   normalizeScheduleFilters,
   recurringSeriesInDateRange,
   scheduleDateQueryWindow,
-  scheduleEmojiStorageKey,
   scheduleFiltersAreActive,
 } from "./scheduleFilters";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
@@ -75,8 +74,6 @@ describe("scheduleFilters", () => {
         endDay: "2026-08-31",
       }),
     ).toBe(3);
-    expect(scheduleEmojiStorageKey("oneOff", "ue-1")).toBe("oneOff:ue-1");
-    expect(scheduleEmojiStorageKey("recurring", "rec-1")).toBe("recurring:rec-1");
   });
 
   it("builds an inclusive local ISO window and swaps inverted days", () => {

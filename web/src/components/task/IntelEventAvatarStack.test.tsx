@@ -81,15 +81,14 @@ describe("IntelEventAvatarStack", () => {
 });
 
 describe("IntelEventMark", () => {
-  it("looks up the task emoji from event.taskId", () => {
+  it("looks up the task emoji from event.emoji", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
     const root = createRoot(host);
     act(() => {
       root.render(
         createElement(IntelEventMark, {
-          event: { taskId: "task-ops" },
-          emojis: { "task-ops": "🎯" },
+          event: { emoji: "🎯" },
         }),
       );
     });

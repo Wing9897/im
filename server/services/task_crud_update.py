@@ -27,11 +27,13 @@ from server.queries.tasks_queries import (
     fetch_task_channel_rows,
     replace_task_channels,
     set_task_active,
+    set_task_emoji,
     update_analysis_task,
 )
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     require_task_row_or_lookup,
+    task_emoji_from_body,
     validate_agent_prompt,
     validate_task_config_body,
 )
@@ -139,6 +141,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
                 body.notifyPref,
                 default=normalize_notify_pref(existing.get("notify_pref")),
             ),
+            emoji=task_emoji_from_body(body, existing=existing),
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,
@@ -173,3 +176,22 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         payload=task_response(row, await channel_refs_for(db, task_id), deleted=len(deleted)),
         register=True,
     )
+
+
+async def patch_task_emoji_record(db: Database, task_id: str, emoji: str | None) -> dict[str, Any]:
+    """Update only the card glyph; does not bump analysis version."""
+    from server.api.routes.task_helpers import channel_refs_for, task_response
+    from server.domain.emoji import EmojiValidationError, normalize_optional_emoji
+
+    await require_task_row_or_lookup(db, task_id)
+    try:
+        clean = normalize_optional_emoji(emoji)
+    except EmojiValidationError as exc:
+        raise TaskWriteError(str(exc)) from exc
+    await set_task_emoji(db, task_id, clean, utc_now_iso())
+    row = await require_task_row_or_lookup(db, task_id)
+    return task_response(row, await channel_refs_for(db, task_id), deleted=0)
+
+
+__all__ = ["update_task_record", "patch_task_emoji_record"]
+

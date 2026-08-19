@@ -100,7 +100,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v42** (`SCHEMA_SEMVER` `0.1.0-beta.43`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v43** (`SCHEMA_SEMVER` `0.1.0-beta.44`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -282,7 +282,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-42 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-43 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
@@ -391,7 +391,7 @@ Timeline merge rows use wire `source`; item linkage and `user_events.kind` are o
 
 ### Schema baseline (wipe-only)
 
-Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-42 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
+Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-43 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
 
 ### Unified event analysis pipeline
 
@@ -439,7 +439,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
 | `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `intel_event` / `leaderboard` / `agent` |
-| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/occurrences`, Timeline／Board) | `recurring` only |
+| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/window` for Timeline／Board display; `GET /api/v1/calendar/occurrences` still used by notify) | `recurring` only |
 
 - FE editor presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE **locally** in the client (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). They are **not** on the HTTP wire.
 - **Create/update/read SoT is `scheduleRrule` alone** — clients send and receive the canonical RRULE. Runtime registration reads `analysis_tasks.schedule_rrule` only (`schedule_trigger_from_rrule`).
@@ -512,7 +512,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-42 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-43 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 
@@ -530,7 +530,7 @@ Drift-prone routes use bodies from `server/api/schemas/requests/` and `response_
 
 ### Removed endpoints
 
-Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`); retired `GET /api/v1/channels/with-sources` is 404. Calendar surface: `GET /api/v1/calendar/occurrences`, imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
+Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`); retired `GET /api/v1/channels/with-sources` is 404. Calendar display SoT: `GET /api/v1/calendar/window`; RRULE/item expand also remains on `GET /api/v1/calendar/occurrences` (notify). Imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
 
 ### Startup readiness (perf note)
 

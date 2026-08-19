@@ -896,12 +896,13 @@ describe("TimelineCalendarView", () => {
     });
   });
 
-  describe("schedule emojis from ui-prefs", () => {
+  describe("schedule emojis from entity columns", () => {
     it("shows the one-off emoji on month titles instead of the default dot", () => {
       const event = makeEvent({
         id: "ue-bday",
         title: "生日派對",
         source: "user",
+        emoji: "🎂",
         startTime: "2025-01-15T09:00:00",
         endTime: "2025-01-15T10:00:00",
       });
@@ -913,7 +914,6 @@ describe("TimelineCalendarView", () => {
           monthDays: buildCalendarDays(monthCursor),
           monthEvents: [event],
           timeCursor: new Date(2025, 0, 15),
-          scheduleEmojis: { "oneOff:ue-bday": "🎂" },
         }),
       );
       const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
@@ -930,6 +930,7 @@ describe("TimelineCalendarView", () => {
         seriesId: "cal-task-1",
         title: "Weekly Standup",
         source: "recurring",
+        emoji: "🔁",
         startTime: "2025-01-15T09:00:00Z",
         endTime: "2025-01-15T10:00:00Z",
       });
@@ -938,7 +939,6 @@ describe("TimelineCalendarView", () => {
           timeScale: "day",
           rangeStart: new Date(2025, 0, 15),
           rangeEvents: [event],
-          scheduleEmojis: { "recurring:cal-task-1": "🔁" },
         }),
       );
       const card = container.querySelector('[data-testid="timeline-day-event-card"]');

@@ -69,41 +69,50 @@ async def _fetch_window_sources(
     series_id: str | None,
     workset_id: str | None,
     ascending: bool,
+    include_analysis: bool = True,
+    include_user: bool = True,
+    include_recurring: bool = True,
+    include_items: bool = True,
 ) -> tuple[list[dict[str, Any]], ...]:
     """Fetch the four calendar sources for one time range (shared by window/recent).
 
     Ownership/provenance filters decide which sources contribute at all:
     items are workset-scoped only, so a bare ``task_id`` filter skips them.
+    Include flags are the HTTP/timeline SoT knobs on top of that policy.
     """
     policy = source_policy(task_id=task_id, workset_id=workset_id)
     analysis: list[dict[str, Any]] = []
     rrule_items: list[dict[str, Any]] = []
     if policy.include_analysis_and_recurrence:
-        analysis = await _fetch_analysis_in_range(
+        if include_analysis:
+            analysis = await _fetch_analysis_in_range(
+                db,
+                range_start=range_start,
+                range_end=range_end,
+                task_id=task_id,
+                search=search,
+                fetch_limit=_FETCH_CAP,
+                ascending=ascending,
+            )
+            await _annotate_analysis_dismissed(db, analysis)
+        if include_recurring:
+            rrule_items = await _fetch_rrule_in_range(
+                db,
+                range_start=range_start,
+                range_end=range_end,
+                series_id=series_id,
+            )
+    user_items: list[dict[str, Any]] = []
+    if include_user:
+        user_items = await _fetch_user_in_range(
             db,
             range_start=range_start,
             range_end=range_end,
             task_id=task_id,
-            search=search,
-            fetch_limit=_FETCH_CAP,
-            ascending=ascending,
+            workset_id=workset_id,
         )
-        await _annotate_analysis_dismissed(db, analysis)
-        rrule_items = await _fetch_rrule_in_range(
-            db,
-            range_start=range_start,
-            range_end=range_end,
-            series_id=series_id,
-        )
-    user_items = await _fetch_user_in_range(
-        db,
-        range_start=range_start,
-        range_end=range_end,
-        task_id=task_id,
-        workset_id=workset_id,
-    )
     item_items: list[dict[str, Any]] = []
-    if policy.include_items:
+    if include_items and policy.include_items:
         item_items = await _fetch_items_in_range(
             db,
             range_start=range_start,
@@ -126,6 +135,10 @@ async def query_window(
     workset_id: str | None = None,
     hard_cap: int = 100,
     ascending: bool = True,
+    include_analysis: bool = True,
+    include_user: bool = True,
+    include_recurring: bool = True,
+    include_items: bool = True,
 ) -> dict[str, Any]:
     """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources.
 
@@ -151,6 +164,10 @@ async def query_window(
         series_id=series_id,
         workset_id=workset_id,
         ascending=ascending,
+        include_analysis=include_analysis,
+        include_user=include_user,
+        include_recurring=include_recurring,
+        include_items=include_items,
     )
     items, next_cursor = merge_calendar_items(
         sources,

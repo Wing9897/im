@@ -13,8 +13,6 @@ import { filterVisibleEvents } from "./ganttEventPositioning";
 import { groupRecurringGanttRows } from "../../../domain/gantt/groupRecurringGanttRows";
 import { computeRangeEnd } from "./timelineGanttViewUtils";
 import { sortActiveThenDismissed } from "../timelineDismissUtils";
-import { useScheduleEmojisMap } from "../../schedule/useScheduleEmojis";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 import {
   ganttEmptyStateClass,
   ganttErrorContainerClass,
@@ -36,8 +34,6 @@ type TimelineGanttViewProps = {
   eventStatuses?: TimelineEventStatusMap;
   onRetry: () => void;
   onSelectEvent?: (event: TimelineItem) => void;
-  /** Test override; production hydrates `schedule_emojis` from ui-prefs. */
-  scheduleEmojis?: ScheduleEmojiMap;
 };
 
 export function TimelineGanttView({
@@ -51,12 +47,9 @@ export function TimelineGanttView({
   eventStatuses = {},
   onRetry,
   onSelectEvent,
-  scheduleEmojis,
 }: TimelineGanttViewProps) {
   const { t } = useTranslation(["timeline", "common"]);
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
-  const hydratedEmojis = useScheduleEmojisMap();
-  const emojis = scheduleEmojis ?? hydratedEmojis;
 
   const rangeEnd = useMemo(
     () => computeRangeEnd(timeScale, rangeStart, ganttColumns.length),
@@ -108,7 +101,6 @@ export function TimelineGanttView({
             onSelectEvent={onSelectEvent}
             onHoverStart={setHoveredRowId}
             onHoverEnd={() => setHoveredRowId(null)}
-            emojis={emojis}
           />
           <GanttTimelinePanel
             rows={ganttRows}

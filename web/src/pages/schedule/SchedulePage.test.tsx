@@ -51,13 +51,6 @@ vi.mock("../../components/calendar/UserEventDialog", () => ({
   UserEventDialog: () => null,
 }));
 
-vi.mock("./scheduleEmojisStore", () => ({
-  hydrateScheduleEmojis: vi.fn().mockResolvedValue({}),
-  saveScheduleEmojis: vi.fn().mockResolvedValue(true),
-  loadScheduleEmojis: vi.fn().mockReturnValue({}),
-  resetScheduleEmojisCacheForTests: vi.fn(),
-}));
-
 import { mockShowToast } from "../../test/context-mocks";
 import { SCHEDULE_FILTERS_STORAGE_KEY } from "../../domain/prefs";
 import { SchedulePage } from "./SchedulePage";

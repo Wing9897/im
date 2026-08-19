@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
 from server.worksets_const import SYSTEM_WORKSET_ID
 
@@ -45,6 +46,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "outputAnalysisEvents": bool(row.get("output_analysis_events", 1)),
         "llmProfileId": row.get("llm_profile_id") or "",
         "notifyPref": normalize_notify_pref(row.get("notify_pref")),
+        "emoji": emoji_from_row(row),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

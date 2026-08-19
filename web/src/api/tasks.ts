@@ -50,6 +50,14 @@ export function toggleTaskActive(taskId: string): Promise<Omit<AnalysisTask, "ch
   return apiClient.patch<Omit<AnalysisTask, "channelIds">>(`/api/v1/tasks/${taskId}/active`);
 }
 
+/** Partial task update that does not bump analysis version (card glyph). */
+export function patchTask(
+  taskId: string,
+  body: { emoji?: string | null },
+): Promise<Omit<AnalysisTask, "channelIds">> {
+  return apiClient.patch<Omit<AnalysisTask, "channelIds">>(`/api/v1/tasks/${taskId}`, body);
+}
+
 /** Fetches available task template presets for the task creation wizard. */
 export function listTaskTemplatePresets(): Promise<TaskTemplatePreset[]> {
   return apiClient.get<TaskTemplatePreset[]>("/api/v1/tasks/templates");

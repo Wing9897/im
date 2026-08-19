@@ -88,6 +88,11 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("GET", f"/api/v1/tasks/{task_id}/project-ticks", None),
         # Stamp 32: no make-default; resolve via hard-bound global slots only.
         ("POST", "/api/v1/llm/profiles/dead-endpoint-probe/set-default", {}),
+        # Stamp 43: card glyphs live on entity columns, not ui_prefs maps.
+        ("GET", "/api/v1/ui-prefs/schedule/emojis", None),
+        ("PUT", "/api/v1/ui-prefs/schedule/emojis", {"emojis": {}}),
+        ("GET", "/api/v1/ui-prefs/tasks/emojis", None),
+        ("PUT", "/api/v1/ui-prefs/tasks/emojis", {"emojis": {}}),
     ]
 
 

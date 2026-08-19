@@ -8,10 +8,12 @@ export {
   sortEventsByTimeDesc,
   userEventToBoardEvent,
   userEventToTimelineItem,
+  windowItemToBoardEvent,
   withResolvedUserEventTaskNames,
 } from "./timedEventProject";
 
 export {
+  filterTimelineWindowEvents,
   mergeTimelineFilterSources,
   mergeWithCalendarOccurrences,
 } from "./timedEventMergeCore";

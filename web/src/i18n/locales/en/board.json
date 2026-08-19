@@ -127,7 +127,7 @@
     "empty": "No sources yet"
   },
   "events": {
-    "empty": "No intelligence events yet",
+    "empty": "No events yet",
     "ariaPrefix": "Intelligence events"
   },
   "calendarWidget": {
@@ -222,7 +222,7 @@
     },
     "events": {
       "title": "Intelligence events",
-      "description": "Latest analysis + user events (not RRULE / item reminds)"
+      "description": "This month's merged calendar occurrences"
     },
     "feed": {
       "title": "Live Monitor",

@@ -21,6 +21,7 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import Any, Literal
 
+from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
 from server.util import parse_json_list
 
@@ -40,14 +41,23 @@ _COMPACT_FIELDS = (
     "source",
     "isAllDay",
     "timezone",
+    "emoji",
+    "dismissed",
+    "important",
+)
+#: Analysis compact also carries task label + body for timeline cards.
+_COMPACT_ANALYSIS_FIELDS = _COMPACT_FIELDS + (
+    "taskName",
+    "body",
 )
 #: Compact ``user`` rows additionally carry ownership workset, parent item, dismissal, importance.
 _COMPACT_USER_FIELDS = _COMPACT_FIELDS + (
     "worksetId",
     "itemId",
     "origin",
-    "dismissed",
-    "important",
+    "body",
+    "remindBeforeDays",
+    "notifyPref",
 )
 #: Compact RRULE rows use ``seriesId`` (not analysis ``taskId``) + optional item link.
 _COMPACT_OCCURRENCE_FIELDS = (
@@ -63,6 +73,12 @@ _COMPACT_OCCURRENCE_FIELDS = (
     "worksetId",
     "itemId",
     "notifyPref",
+    "emoji",
+    "dismissed",
+    "important",
+    "isLastOccurrence",
+    "taskName",
+    "body",
 )
 #: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
 #: Empty ``seriesId`` (shared CalendarOccurrence wire; not an RRULE series).
@@ -80,6 +96,7 @@ _COMPACT_ITEM_FIELDS = (
     "itemId",
     "itemDateKind",
     "notifyPref",
+    "emoji",
     "dismissed",
     "important",
 )
@@ -133,8 +150,10 @@ def build_analysis_item(
         "sourceMessageId": row.get("source_message_id"),
         "createdAt": row.get("created_at"),
         "dismissed": bool(dismissed),
+        "important": False,
+        "emoji": emoji_from_row(row),
     }
-    return _project(item, detail, _COMPACT_FIELDS)
+    return _project(item, detail, _COMPACT_ANALYSIS_FIELDS)
 
 
 def build_occurrence_item(
@@ -165,6 +184,9 @@ def build_occurrence_item(
         "itemId": item_id,
         "notifyPref": notify_pref,
         "dismissed": bool(dismissed),
+        "important": bool(occ.get("important")),
+        "emoji": emoji_from_row(occ),
+        "isLastOccurrence": bool(occ.get("isLastOccurrence")),
     }
     return _project(item, detail, _COMPACT_OCCURRENCE_FIELDS)
 

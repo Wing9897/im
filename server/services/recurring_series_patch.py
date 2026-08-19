@@ -6,6 +6,7 @@ from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
+from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.notify_prefs import DEFAULT_NOTIFY_PREF, normalize_notify_pref
 from server.queries.recurring_series_queries import delete_series, fetch_series_row
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
@@ -30,6 +31,7 @@ async def patch_recurring_series(
     require_parent_task_id: str | None = None,
     workset_id: str | None | EllipsisType = ...,
     notify_pref: str | None | EllipsisType = ...,
+    emoji: str | None | EllipsisType = ...,
 ) -> dict[str, Any]:
     sid = (series_id or "").strip()
     row = await fetch_series_row(db, sid)
@@ -97,6 +99,14 @@ async def patch_recurring_series(
         except ValueError as exc:
             raise TaskWriteError(str(exc)) from exc
 
+    if emoji is ...:
+        resolved_emoji = emoji_from_row(row)
+    else:
+        try:
+            resolved_emoji = normalize_optional_emoji(emoji)
+        except EmojiValidationError as exc:
+            raise TaskWriteError(str(exc)) from exc
+
     now = utc_now_iso()
     active_sql = ""
     active_params: tuple[Any, ...] = ()
@@ -108,7 +118,7 @@ async def patch_recurring_series(
         tx = TransactionDb(conn)
         await tx.execute(
             "UPDATE recurring_schedules SET name = ?, description = ?, workset_id = ?, rrule = ?, "
-            f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, "
+            f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, emoji = ?, "
             f"updated_at = ?{active_sql} WHERE id = ?",
             (
                 new_name,
@@ -120,6 +130,7 @@ async def patch_recurring_series(
                 1 if all_day else 0,
                 location,
                 resolved_notify,
+                resolved_emoji,
                 now,
                 *active_params,
                 sid,

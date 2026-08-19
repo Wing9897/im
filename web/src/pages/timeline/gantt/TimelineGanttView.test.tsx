@@ -555,20 +555,20 @@ describe("TimelineGanttView", () => {
     });
   });
 
-  describe("schedule emojis from ui-prefs", () => {
+  describe("schedule emojis from entity columns", () => {
     it("shows the series emoji on the gantt label, keyed by seriesId", () => {
       const calEvent = makeEvent({
         id: "cal-task-1:20250115T090000Z",
         seriesId: "cal-task-1",
         title: "Weekly Standup",
         source: "recurring",
+        emoji: "🔁",
         startTime: "2025-01-15T09:00:00Z",
         endTime: "2025-01-15T12:00:00Z",
       });
       const container = render(
         makeProps({
           events: [calEvent],
-          scheduleEmojis: { "recurring:cal-task-1": "🔁" },
         }),
       );
       expect(

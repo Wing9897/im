@@ -54,6 +54,8 @@ export type AnalysisEvent = Omit<
   remindBeforeDays?: number | null;
   /** Per-row reminder override when source === user or item_remind. */
   notifyPref?: "inherit" | "off" | null;
+  /** Entity card glyph (NULL = product logo). */
+  emoji?: string | null;
 };
 
 /** Generated envelope with domain-enriched item projections. */

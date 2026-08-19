@@ -115,7 +115,7 @@ async def query_analysis_events(
         )
     order = "ASC" if ascending else "DESC"
     rows = await db.fetch_all(
-        f"SELECT {_EVENT_LIST_COLUMNS}, at.name AS task_name, "
+        f"SELECT {_EVENT_LIST_COLUMNS}, at.name AS task_name, at.emoji AS emoji, "
         "at.analysis_time_range AS analysis_time_range, "
         "m.platform AS source_platform, m.timestamp AS source_message_time, "
         "c.channel_name AS source_channel_name "

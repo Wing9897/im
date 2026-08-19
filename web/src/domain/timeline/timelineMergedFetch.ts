@@ -2,11 +2,11 @@
  * Timeline domain fetcher: thin wrapper over {@link fetchMergedTimedEvents}.
  *
  * Board uses the same core via {@link fetchMergedTimedBoardEvents} /
- * {@link fetchBoardEventsList} with ``includeRrule`` / ``sort`` options.
+ * {@link fetchBoardEventsList}.
  *
- * Item DATE rows come from GET /api/v1/calendar/occurrences (source=item_remind) —
- * same server projection as agent query_window (remind only; not item-linked
- * user_events with kind). No FE listItems re-projection.
+ * Timeline month/gantt and board calendar surfaces come from
+ * GET /api/v1/calendar/window (tagged analysis + user + recurring +
+ * item_remind). Intelligence / board map keep /results/events.
  */
 
 import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
@@ -45,7 +45,7 @@ export type FetchMergedTimelineEventsOpts = {
 };
 
 /**
- * Pull analysis / calendar(+items) / user per filter plan, project user rows, then merge.
+ * Pull one calendar window, then client-filter for multi workset/task selection.
  * Delegates to the shared {@link fetchMergedTimedEvents} core.
  */
 export async function fetchMergedTimelineEvents(

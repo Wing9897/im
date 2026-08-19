@@ -36,6 +36,8 @@ interface UserEventWriteParams {
   direction?: "expense" | "income" | null;
   /** Per-row notify override. ``inherit`` | ``off``. */
   notifyPref?: "inherit" | "off";
+  /** Optional card glyph; empty / null clears. */
+  emoji?: string | null;
 }
 
 export type ListUserEventsParams = {
@@ -103,6 +105,9 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
   if (params.notifyPref !== undefined) {
     body.notifyPref = normalizeNotifyPref(params.notifyPref);
   }
+  if (params.emoji !== undefined) {
+    body.emoji = params.emoji?.trim() || null;
+  }
   return apiClient.post<UserEvent>("/api/v1/calendar/user-events", body);
 }
 
@@ -132,6 +137,9 @@ export function updateUserEvent(
   if (params.direction !== undefined) body.direction = params.direction;
   if (params.notifyPref !== undefined) {
     body.notifyPref = normalizeNotifyPref(params.notifyPref);
+  }
+  if (params.emoji !== undefined) {
+    body.emoji = params.emoji?.trim() || null;
   }
   return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
 }

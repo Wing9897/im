@@ -64,8 +64,6 @@ def test_ui_prefs_pydantic_shapes_are_concrete() -> None:
             None,
             ["configured", "eventStatuses", "eventTimeOverrides"],
         ),
-        ("/api/v1/ui-prefs/schedule/emojis", None, ["configured", "emojis"]),
-        ("/api/v1/ui-prefs/tasks/emojis", None, ["configured", "emojis"]),
     ],
 )
 async def test_ui_prefs_get_response_keys(client, path, params, response_keys) -> None:

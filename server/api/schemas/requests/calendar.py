@@ -58,6 +58,8 @@ class UserEventCreateBody(BaseModel):
     direction: Literal["expense", "income"] | None = None
     #: Per-event reminder; omitted → ``off``. No force-on.
     notifyPref: CoercedNotifyPref | None = None
+    #: Optional card glyph; omitted → NULL.
+    emoji: str | None = None
 
 
 class UserEventPatchBody(BaseModel):
@@ -77,6 +79,8 @@ class UserEventPatchBody(BaseModel):
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
     notifyPref: CoercedNotifyPref | None = None
+    #: Optional card glyph; omitted → NULL.
+    emoji: str | None = None
 
 
 class RecurringSeriesCreateBody(BaseModel):
@@ -102,6 +106,8 @@ class RecurringSeriesCreateBody(BaseModel):
     #: Per-series reminder; omitted → ``off``. Recurring create
     #: has no ``remindBeforeDays`` — notifyPref is still persisted.
     notifyPref: CoercedNotifyPref | None = None
+    #: Optional card glyph; omitted → NULL.
+    emoji: str | None = None
 
 
 class RecurringSeriesPatchBody(BaseModel):
@@ -119,3 +125,5 @@ class RecurringSeriesPatchBody(BaseModel):
     worksetId: str | None = None
     itemId: str | None = None
     notifyPref: CoercedNotifyPref | None = None
+    #: Optional card glyph; omitted → NULL.
+    emoji: str | None = None

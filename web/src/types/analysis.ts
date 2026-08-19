@@ -25,6 +25,8 @@ export type CalendarOccurrence = Omit<
   important?: boolean;
   /** Finite RRULE series final occurrence (UNTIL/COUNT) — month「+N 结束」. */
   isLastOccurrence?: boolean;
+  /** Entity card glyph (NULL = product logo). */
+  emoji?: string | null;
 };
 
 /** Queue status from GET `/results/queue`. */
