@@ -80,8 +80,9 @@
 3. 元件用 `useTranslation()`／`t()`；非 React 用 `i18n.t()` 或 helper（如 `platformScopeLabel`、`formatStatusLabel`、`formatMessage`、`joinList`）。
 4. 變更 locale：`setAppLocale(locale)` 或 `setAppLocalePreference(pref)` → 寫入 storage + `applyDocumentLang` + `i18n.changeLanguage` + 同步 server `ui_locale`（具體值）。
 5. 測試：需要可見文案時包 `I18nextProvider` + `setAppLocale("zh-Hant")`（或目標 locale）。新測試優先 `import { … } from "../../i18n"`。
-6. **對齊檢查**：`npm run i18n:check`（`scripts/check-i18n-parity.mjs`）比對三語 leaf key，並拒絕無 `t()`／字面引用且不在 allowlist 的鍵（動態拼 key、FORBIDDEN 對照）；納入 `npm run check`。
-7. **複數鍵（plural family）**：`key`／`key_one`／`key_other`（及其他 CLDR 後綴 `_zero`／`_two`／`_few`／`_many`）視為**同一複數族**，以基鍵歸一比對——中文只有單一複數類別，用裸 `key`；en 可展開 `key_one`／`key_other`（i18next 依 `count` 自動選形）。任一 locale 用了後綴形就**必須含 `_other`**，否則 parity 直接判 fail。範例：`settings:theme.focalRefreshHours`、`common:ui.itemsCount`、`tasks:detail.channelCount`（zh 裸鍵、en `_one`+`_other`）。只在**英文數詞一致性真的會出錯**時展開（`1 items`）；像 `+{count} more`／`Retry {count}` 這種無可數名詞的字串維持單一裸鍵。呼叫端**必須傳數字型 `count`**——傳字串會讓 i18next 跳過複數選形，只查得到裸鍵。
+6. **對齊檢查**：`npm run i18n:check`（`scripts/check-i18n-parity.mjs`）比對三語 leaf key，並拒絕無 `t()`／字面引用且不在 allowlist 的鍵（動態拼 key、`FORBIDDEN_KEYS` 對照）；納入 `npm run check`。
+7. **禁止殘留**：已退役 UI chrome **不得**因補翻譯加回 JSON。機器 SoT 是 `scripts/check-i18n-parity.mjs` 的 `FORBIDDEN_KEYS` — 本 glossary **不**平行列舉鍵名。產品理由（LAN bind 開關、助手頁 per-session LLM 設定檔、物品頁冗餘標題）見 [`KNOWN-SIMPLIFICATIONS.md` Removed / not restored](KNOWN-SIMPLIFICATIONS.md#removed--not-restored)；顯示名替代見下表「標籤單一來源」。
+8. **複數鍵（plural family）**：`key`／`key_one`／`key_other`（及其他 CLDR 後綴 `_zero`／`_two`／`_few`／`_many`）視為**同一複數族**，以基鍵歸一比對——中文只有單一複數類別，用裸 `key`；en 可展開 `key_one`／`key_other`（i18next 依 `count` 自動選形）。任一 locale 用了後綴形就**必須含 `_other`**，否則 parity 直接判 fail。範例：`settings:theme.focalRefreshHours`、`common:ui.itemsCount`、`tasks:detail.channelCount`（zh 裸鍵、en `_one`+`_other`）。只在**英文數詞一致性真的會出錯**時展開（`1 items`）；像 `+{count} more`／`Retry {count}` 這種無可數名詞的字串維持單一裸鍵。呼叫端**必須傳數字型 `count`**——傳字串會讓 i18next 跳過複數選形，只查得到裸鍵。
 
 ## 標籤單一來源（避免平行翻譯）
 

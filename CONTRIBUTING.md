@@ -74,7 +74,7 @@ against:
 `zh-Hant` is the source of truth. Add a key there first, then mirror it into `zh-Hans` and
 `en` — leaf keys must be identical in all three namespaces. Terminology and `error_code`
 vocabulary live in [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md); retired keys that must
-never come back are listed in `scripts/check-i18n-parity.mjs`. Unused keys fail
+never come back are `FORBIDDEN_KEYS` in `scripts/check-i18n-parity.mjs` (glossary points there; do not duplicate the list). Unused keys fail
 `i18n:check` unless they have a `t()` / quoted-literal hit or an allowlist reason
 (dynamic catalogs, FORBIDDEN counterparts).
 
