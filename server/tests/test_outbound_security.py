@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import socket
 
 import pytest
 
@@ -28,6 +30,42 @@ async def test_outbound_policy_rejects_internal_or_unsafe_urls(url):
 async def test_outbound_policy_allows_public_and_explicit_loopback():
     await validate_outbound_url("https://8.8.8.8/path")
     await validate_outbound_url("http://127.0.0.1:11434", allow_loopback=True)
+
+
+def _addrinfo_records(*hosts: str, port: int = 443):
+    records = []
+    for host in hosts:
+        if ":" in host:
+            records.append((socket.AF_INET6, socket.SOCK_STREAM, 6, "", (host, port, 0, 0)))
+        else:
+            records.append((socket.AF_INET, socket.SOCK_STREAM, 6, "", (host, port)))
+    return records
+
+
+async def test_outbound_policy_allows_public_with_loopback_sibling(monkeypatch):
+    async def fake_getaddrinfo(*_args, **_kwargs):
+        return _addrinfo_records("8.8.8.8", "::1")
+
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", fake_getaddrinfo)
+    await validate_outbound_host("mixed.example.test", 443)
+
+
+async def test_outbound_policy_rejects_pure_loopback_without_allow(monkeypatch):
+    async def fake_getaddrinfo(*_args, **_kwargs):
+        return _addrinfo_records("::1")
+
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", fake_getaddrinfo)
+    with pytest.raises(OutboundUrlError):
+        await validate_outbound_host("loopback.example.test", 443)
+
+
+async def test_outbound_policy_rejects_public_mixed_with_private(monkeypatch):
+    async def fake_getaddrinfo(*_args, **_kwargs):
+        return _addrinfo_records("8.8.8.8", "10.0.0.1")
+
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", fake_getaddrinfo)
+    with pytest.raises(OutboundUrlError):
+        await validate_outbound_host("ssrf.example.test", 443)
 
 
 async def test_imap_outbound_policy_rejects_private_hosts():
