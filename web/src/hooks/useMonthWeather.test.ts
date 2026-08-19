@@ -79,6 +79,11 @@ describe("month weather", () => {
     expect(systemLocationFromTimezone("UTC")).toBe("臺北");
   });
 
+  it("maps Hong Kong system timezone for weather and holiday country", () => {
+    expect(systemLocationFromTimezone("Asia/Hong_Kong")).toBe("香港");
+    expect(resolveWeatherLocation("system", "Asia/Hong_Kong")).toBe("香港");
+  });
+
   it("resolves follow-system to the mapped city and keeps an explicit region", () => {
     expect(resolveWeatherLocation("system", "Asia/Tokyo")).toBe("東京");
     expect(resolveWeatherLocation("system", "America/New_York")).toBe("New York");

@@ -146,7 +146,7 @@ describe("SettingsGeneralPage", () => {
     await act(async () => {
       follow.click();
     });
-    const input = harness.container.querySelector<HTMLInputElement>('[aria-label="天氣地區"]')!;
+    const input = harness.container.querySelector<HTMLInputElement>('#weather-location')!;
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
