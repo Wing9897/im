@@ -34,9 +34,14 @@ async def validate_outbound_host(hostname: str, port: int, *, allow_loopback: bo
 
     if not addresses:
         raise OutboundUrlError("Hostname did not resolve to an address")
-    for address in addresses:
-        if allow_loopback and address.is_loopback:
-            continue
+    # Drop loopback siblings (Windows dual-stack DNS often mixes public A/AAAA with ::1).
+    non_loopback = {address for address in addresses if not address.is_loopback}
+    if not non_loopback:
+        if allow_loopback:
+            return
+        sample = next(iter(addresses))
+        raise OutboundUrlError(f"Outbound URL resolves to a non-public address: {sample}")
+    for address in non_loopback:
         if not address.is_global:
             raise OutboundUrlError(f"Outbound URL resolves to a non-public address: {address}")
 
