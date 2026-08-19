@@ -11,7 +11,7 @@ export type WorksetTargetOption = {
 };
 
 /**
- * Presentational workset picker (all worksets including builtin ``__user__``).
+ * Presentational workset picker (all worksets including builtin ``__general__``).
  *
  * Uses `variant="field"` so flex chrome (Assistant「一般」row, settings) can
  * grow with `flex-1` / `w-full`. Pass `menuPortal` (default on) so overflow

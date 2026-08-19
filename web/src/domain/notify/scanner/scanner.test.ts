@@ -149,13 +149,13 @@ describe("notify scanner", () => {
           id: "follow-on",
           kind: "user",
           worksetId: SYSTEM_WORKSET_ID,
-          notifyPref: "follow",
+          notifyPref: "inherit",
         }),
         makeEvent({
           id: "follow-off",
           kind: "user",
           worksetId: "ws-muted",
-          notifyPref: "follow",
+          notifyPref: "inherit",
         }),
         makeEvent({
           id: "entity-off",
@@ -177,7 +177,7 @@ describe("notify scanner", () => {
           id: "follow",
           kind: "user",
           worksetId: SYSTEM_WORKSET_ID,
-          notifyPref: "follow",
+          notifyPref: "inherit",
         }),
       ];
       expect(

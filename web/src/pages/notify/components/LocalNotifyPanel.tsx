@@ -11,7 +11,7 @@ import { QuietHoursSection } from "./localNotify/QuietHoursSection";
 
 /**
  * Local notifications for timed 情報事件、週期任務與手動／助手事件.
- * Full-page tab under `/actions?tab=notify`.
+ * Full-page tab under `/notify?tab=notify`.
  * Agent STT/TTS lives on `/ai/voice` — not this page.
  */
 export function LocalNotifyPanel() {

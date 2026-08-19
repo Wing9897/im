@@ -87,17 +87,20 @@ async def _tool_create_recurring_series(db: Database, args: dict[str, Any]) -> d
     parent_raw = args.get("_parent_task_id")
     parent_task_id = str(parent_raw).strip() if parent_raw not in (None, "") else None
     try:
-        row = await create_recurring_series(
-            db,
-            name=str(name or ""),
-            rrule=str(arg(args, "rrule", "RRule") or ""),
-            event_start_time=arg(args, "eventStartTime", "startTime", "start"),
-            event_end_time=arg(args, "eventEndTime", "endTime", "end"),
-            event_is_all_day=as_bool(arg(args, "eventIsAllDay", "isAllDay"), False),
-            event_location=arg(args, "eventLocation", "location"),
-            event_description=arg(args, "eventDescription", "body", "description"),
-            parent_task_id=parent_task_id,
-        )
+        create_kwargs: dict[str, Any] = {
+            "name": str(name or ""),
+            "rrule": str(arg(args, "rrule", "RRule") or ""),
+            "event_start_time": arg(args, "eventStartTime", "startTime", "start"),
+            "event_end_time": arg(args, "eventEndTime", "endTime", "end"),
+            "event_is_all_day": as_bool(arg(args, "eventIsAllDay", "isAllDay"), False),
+            "event_location": arg(args, "eventLocation", "location"),
+            "event_description": arg(args, "eventDescription", "body", "description"),
+            "parent_task_id": parent_task_id,
+        }
+        workset_id = _tool_workset_id(args)
+        if workset_id is not None:
+            create_kwargs["workset_id"] = workset_id
+        row = await create_recurring_series(db, **create_kwargs)
     except TaskWriteError as exc:
         return {"error": str(exc)}
     return {"series": serialize_recurring_series(row)}
@@ -128,6 +131,8 @@ async def _tool_update_recurring_series(db: Database, args: dict[str, Any]) -> d
         kwargs["event_description"] = arg(args, "eventDescription", "body", "description")
     if "isActive" in args or "is_active" in args:
         kwargs["is_active"] = as_bool(arg(args, "isActive", "is_active"), True)
+    if "worksetId" in args or "workset_id" in args:
+        kwargs["workset_id"] = arg(args, "worksetId", "workset_id")
 
     patch_keys = {
         "name",
@@ -138,6 +143,7 @@ async def _tool_update_recurring_series(db: Database, args: dict[str, Any]) -> d
         "event_location",
         "event_description",
         "is_active",
+        "workset_id",
     }
     if not any(key in kwargs for key in patch_keys):
         return {"error": "at least one field to update is required"}

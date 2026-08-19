@@ -138,7 +138,7 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
     await db.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
-        "VALUES (?, ?, '__user__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
+        "VALUES (?, ?, '__general__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
         ("task-cal-live", "Cal Live", "2026-07-23T10:00:00", now, now),
     )
     await db.execute(
@@ -205,7 +205,7 @@ async def test_cleanup_orphan_timeline_importance(db: Database) -> None:
     await db.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
-        "VALUES (?, ?, '__user__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
+        "VALUES (?, ?, '__general__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
         ("task-cal-live", "Cal Live", "2026-07-23T10:00:00", now, now),
     )
     marks = [

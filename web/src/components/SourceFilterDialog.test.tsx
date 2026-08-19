@@ -14,14 +14,14 @@ const TASKS = [
 ];
 
 const WORKSETS = [
-  { id: "__user__", name: "General" },
+  { id: "__general__", name: "General" },
   { id: "ws-1", name: "Ops" },
 ];
 
 const EXPAND_TASKS = [
   { id: "task-1", name: "First task", worksetId: "ws-1" },
   { id: "task-2", name: "Second task", worksetId: "ws-1" },
-  { id: "task-3", name: "Third task", worksetId: "__user__" },
+  { id: "task-3", name: "Third task", worksetId: "__general__" },
 ];
 
 describe("SourceFilterDialog", () => {
@@ -81,14 +81,14 @@ describe("SourceFilterDialog", () => {
   it("shows workset rows; 一般 members nest under expandable group", () => {
     renderDialog();
     openDialog();
-    expect(document.querySelector('[data-testid="board-workset-filter-__user__"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="board-workset-filter-__general__"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-__unassigned__"]')).toBeNull();
     expect(document.querySelector('[data-testid="board-source-filter-task-3"]')).toBeNull();
     act(() => {
       (
         document.querySelector(
-          '[data-testid="board-workset-expand-__user__"]',
+          '[data-testid="board-workset-expand-__general__"]',
         ) as HTMLButtonElement
       ).click();
     });
@@ -109,7 +109,7 @@ describe("SourceFilterDialog", () => {
     act(() => {
       (
         document.querySelector(
-          '[data-testid="board-workset-expand-__user__"]',
+          '[data-testid="board-workset-expand-__general__"]',
         ) as HTMLButtonElement
       ).click();
     });
@@ -169,7 +169,7 @@ describe("SourceFilterDialog", () => {
     openDialog();
     const dialog = document.querySelector('[data-testid="source-filter-dialog"]')!;
     const expandGeneral = document.querySelector(
-      '[data-testid="board-workset-expand-__user__"]',
+      '[data-testid="board-workset-expand-__general__"]',
     ) as HTMLButtonElement | null;
     expect(expandGeneral).toBeTruthy();
     // Hint uses ▸ (not legacy ▶ / word "chevron"); jsdom may normalize glyph text.
@@ -207,7 +207,7 @@ describe("SourceFilterDialog", () => {
     expect(document.querySelector('[data-testid="board-source-filter-task-1"]')).toBeNull();
     expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeNull();
     expect(
-      document.querySelector('[data-testid="board-workset-filter-__user__"]'),
+      document.querySelector('[data-testid="board-workset-filter-__general__"]'),
     ).toBeTruthy();
   });
 
@@ -225,7 +225,7 @@ describe("SourceFilterDialog", () => {
     expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-source-filter-task-1"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-source-filter-task-2"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-workset-filter-__user__"]')).toBeNull();
+    expect(document.querySelector('[data-testid="board-workset-filter-__general__"]')).toBeNull();
   });
 
   it("task-only coverage of all members leaves workset indeterminate until promoted", () => {

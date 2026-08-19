@@ -134,11 +134,11 @@ describe("agentTaskSelectors", () => {
         lastAgentMessage: null,
         lastToolCalls: [],
         sourceKind: "workset",
-        worksetId: "__user__",
+        worksetId: "__general__",
       },
     ];
-    expect(findActivitySpan(spans, "__user__")?.sourceKind).toBe("workset");
-    expect(findActivitySpan(spans, "__user__")?.worksetId).toBe("__user__");
+    expect(findActivitySpan(spans, "__general__")?.sourceKind).toBe("workset");
+    expect(findActivitySpan(spans, "__general__")?.worksetId).toBe("__general__");
     expect(findActivitySpan(spans, "proj-1")).toBeNull();
   });
 

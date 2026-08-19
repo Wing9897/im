@@ -51,9 +51,9 @@ function expectedCubicPath(
 describe("pipelineEdgeGeometry", () => {
   it("routes L1→L3 item→workset as a single ComfyUI cubic (not around L2)", () => {
     const graph = buildWorksetPipelineGraph({
-      worksets: [{ id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true }],
+      worksets: [{ id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true }],
       tasks: [],
-      items: [{ id: "item-123", title: "123", worksetId: "__user__" }],
+      items: [{ id: "item-123", title: "123", worksetId: "__general__" }],
       sources: [],
       events: [],
       labels,
@@ -69,13 +69,13 @@ describe("pipelineEdgeGeometry", () => {
         : -1;
     const worksetIndex =
       worksets?.type === "worksetBlock"
-        ? worksets.data.block.points.findIndex((point) => point.id === worksetPointId("__user__"))
+        ? worksets.data.block.points.findIndex((point) => point.id === worksetPointId("__general__"))
         : -1;
     expect(itemIndex).toBeGreaterThanOrEqual(0);
     expect(worksetIndex).toBeGreaterThanOrEqual(0);
 
     const edge = flow.edges.find(
-      (row) => row.id === `${itemPointId("item-123")}->${worksetPointId("__user__")}`,
+      (row) => row.id === `${itemPointId("item-123")}->${worksetPointId("__general__")}`,
     );
     expect(edge?.type).toBe("smoothstep");
 

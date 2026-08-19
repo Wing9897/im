@@ -193,16 +193,9 @@
     "save": "儲存",
     "saving": "儲存中…",
     "saveAndReconnect": "儲存並重連",
-    "create": "建立",
     "edit": "編輯",
-    "delete": "刪除",
     "close": "關閉",
-    "optional": "（選填）",
-    "loading": "載入中…",
-    "copy": "複製",
-    "copied": "已複製",
     "reconnect": "重新連線",
-    "reconnecting": "連線中…",
     "reconnectingShort": "重連中…",
     "processing": "處理中…",
     "remove": "移除"
@@ -349,11 +342,6 @@
     "botToken": "Bot Token *",
     "botTokenOptional": "Bot Token"
   },
-  "commonForm": {
-    "processing": "處理中…",
-    "reconnect": "重新連線",
-    "reconnecting": "重連中…"
-  },
   "verify": {
     "codeTitle": "輸入驗證碼",
     "passwordTitle": "兩步驟驗證",
@@ -379,15 +367,15 @@
     "qrExpires": "約於 {time} 過期",
     "qrRenderFailed": "無法產生 QR 碼，請重試。"
   },
-    "card": {
-      "lastSuccess": "最後成功：{time}",
-      "viewDetailAria": "查看詳情：{title}",
-      "pollEveryMinutes": "每 {minutes} 分鐘輪詢",
-      "lastPoll": "最後輪詢：{time}",
-      "neverPolled": "尚未輪詢",
-      "topicsCount": "{count} 個主題",
-      "unknownError": "未知錯誤"
-    },
+  "card": {
+    "lastSuccess": "最後成功：{time}",
+    "viewDetailAria": "查看詳情：{title}",
+    "pollEveryMinutes": "每 {minutes} 分鐘輪詢",
+    "lastPoll": "最後輪詢：{time}",
+    "neverPolled": "尚未輪詢",
+    "topicsCount": "{count} 個主題",
+    "unknownError": "未知錯誤"
+  },
   "rssValidate": {
     "genericRequired": "請輸入 Feed URL",
     "genericHttp": "Feed URL 必須以 http:// 或 https:// 開頭",

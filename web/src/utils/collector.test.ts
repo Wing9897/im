@@ -61,14 +61,14 @@ describe("collector utils", () => {
       expect(
         shouldRefetchCollectorStatus({
           status: "connected",
-          adapter_name: "telegram",
+          adapterName: "telegram",
         }),
       ).toBe(true);
       expect(
         shouldRefetchCollectorStatus({
           status: "error",
-          adapter_name: "telegram",
-          error_summary: "fail",
+          adapterName: "telegram",
+          errorSummary: "fail",
         }),
       ).toBe(false);
     });

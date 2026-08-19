@@ -51,7 +51,7 @@ describe("worksetPipelineGraph", () => {
   it("lists workset and task points and wires a task to its owning workset", () => {
     const graph = buildWorksetPipelineGraph({
       worksets: [
-        { id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true },
+        { id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true },
         { id: "ws-1", name: "Ops", notifyEnabled: true, externalEnabled: true },
       ],
       tasks: [
@@ -73,7 +73,7 @@ describe("worksetPipelineGraph", () => {
 
     const worksets = graph.blocks.find((block) => block.kind === "worksets");
     const tasks = graph.blocks.find((block) => block.kind === "tasks");
-    expect(worksets?.points.map((point) => point.entityId)).toEqual(["__user__", "ws-1"]);
+    expect(worksets?.points.map((point) => point.entityId)).toEqual(["__general__", "ws-1"]);
     expect(tasks?.points.map((point) => point.entityId)).toEqual(["t1"]);
     expect(graph.edges).toContainEqual(
       expect.objectContaining({
@@ -151,7 +151,7 @@ describe("worksetPipelineGraph", () => {
           analysisMode: "leaderboard",
           worksetId: "ws-1",
           outputAnalysisEvents: true,
-          notifyPref: "follow",
+          notifyPref: "inherit",
         },
       ],
       items: [],
@@ -289,7 +289,7 @@ describe("worksetPipelineGraph", () => {
           outputAnalysisEvents: true,
           includeInTimeline: true,
           outputCalendar: true,
-          notifyPref: "follow",
+          notifyPref: "inherit",
         },
       ],
       items: [],
@@ -423,7 +423,7 @@ describe("worksetPipelineGraph", () => {
   it("wires a task with no worksetId onto 一般, not an unassigned node", () => {
     const graph = buildWorksetPipelineGraph({
       worksets: [
-        { id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true },
+        { id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true },
         { id: "ws-1", name: "Ops", notifyEnabled: true, externalEnabled: true },
       ],
       tasks: [{ id: "loose", name: "Loose", worksetId: null, outputAnalysisEvents: false, notifyPref: "off" }],
@@ -435,7 +435,7 @@ describe("worksetPipelineGraph", () => {
     expect(graph.edges).toContainEqual(
       expect.objectContaining({
         sourcePointId: taskPointId("loose"),
-        targetPointId: worksetPointId("__user__"),
+        targetPointId: worksetPointId("__general__"),
       }),
     );
     expect(graph.blocks.find((block) => block.kind === "worksets")?.points.map((point) => point.id)).not.toContain(
@@ -506,9 +506,9 @@ describe("worksetPipelineGraph", () => {
 
   it("keeps a four-column layout: 第一層…第四層", () => {
     const graph = buildWorksetPipelineGraph({
-      worksets: [{ id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true }],
+      worksets: [{ id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true }],
       tasks: [],
-      items: [{ id: "item-123", title: "123", worksetId: "__user__" }],
+      items: [{ id: "item-123", title: "123", worksetId: "__general__" }],
       sources: [],
       events: [],
       labels,
@@ -544,7 +544,7 @@ describe("worksetPipelineGraph", () => {
     expect(
       graph.edges.some(
         (edge) =>
-          edge.sourcePointId === itemPointId("item-123") && edge.targetPointId === worksetPointId("__user__"),
+          edge.sourcePointId === itemPointId("item-123") && edge.targetPointId === worksetPointId("__general__"),
       ),
     ).toBe(true);
     expect(
@@ -556,7 +556,7 @@ describe("worksetPipelineGraph", () => {
     expect(graph.edges).toContainEqual(
       expect.objectContaining({
         sourcePointId: PIPELINE_PAGE.assistant,
-        targetPointId: worksetPointId("__user__"),
+        targetPointId: worksetPointId("__general__"),
       }),
     );
     expect(
@@ -634,7 +634,7 @@ describe("worksetPipelineGraph", () => {
   it("scopes the graph to one workset while keeping feeding sources", () => {
     const input: PipelineGraphInput = {
       worksets: [
-        { id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true },
+        { id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true },
         { id: "ws-1", name: "Ops", notifyEnabled: true, externalEnabled: true },
       ],
       tasks: [
@@ -646,11 +646,11 @@ describe("worksetPipelineGraph", () => {
           notifyPref: "off",
           channelIds: ["telegram:42"],
         },
-        { id: "t2", name: "Inbox", worksetId: "__user__", outputAnalysisEvents: true, notifyPref: "off" },
+        { id: "t2", name: "Inbox", worksetId: "__general__", outputAnalysisEvents: true, notifyPref: "off" },
       ],
       items: [
         { id: "item-ops", title: "Ops item", worksetId: "ws-1" },
-        { id: "item-gen", title: "General item", worksetId: "__user__" },
+        { id: "item-gen", title: "General item", worksetId: "__general__" },
       ],
       sources: [
         { id: "src-1", name: "News" },
@@ -659,7 +659,7 @@ describe("worksetPipelineGraph", () => {
       channels: [{ channelId: "telegram:42", sourceId: "src-1" }],
       events: [
         { id: "ev-ops", title: "Ops cal", worksetId: "ws-1" },
-        { id: "ev-gen", title: "General cal", worksetId: "__user__" },
+        { id: "ev-gen", title: "General cal", worksetId: "__general__" },
       ],
       labels,
     };
@@ -675,7 +675,7 @@ describe("worksetPipelineGraph", () => {
     expect(pointIds).not.toContain("page:calendar");
     expect(pointIds).not.toContain(taskPointId("t2"));
     expect(pointIds).not.toContain(itemPointId("item-gen"));
-    expect(pointIds).not.toContain(worksetPointId("__user__"));
+    expect(pointIds).not.toContain(worksetPointId("__general__"));
     expect(pointIds).not.toContain(sourcePointId("src-2"));
     expect(pointIds).not.toContain("calendar:ev-ops");
     expect(pointIds).not.toContain("calendar:ev-gen");
@@ -688,7 +688,7 @@ describe("worksetPipelineGraph", () => {
     expect(
       graph.edges.some(
         (edge) =>
-          edge.sourcePointId === PIPELINE_PAGE.assistant && edge.targetPointId === worksetPointId("__user__"),
+          edge.sourcePointId === PIPELINE_PAGE.assistant && edge.targetPointId === worksetPointId("__general__"),
       ),
     ).toBe(false);
     expect(
@@ -703,13 +703,13 @@ describe("worksetPipelineGraph", () => {
   it("scopes the household graph to several checked worksets", () => {
     const input = {
       worksets: [
-        { id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true },
+        { id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true },
         { id: "ws-1", name: "Ops", notifyEnabled: true, externalEnabled: true },
         { id: "ws-2", name: "Labs", notifyEnabled: true, externalEnabled: true },
       ],
       tasks: [
         { id: "t1", name: "Scan", worksetId: "ws-1", outputAnalysisEvents: true, notifyPref: "off" },
-        { id: "t2", name: "Inbox", worksetId: "__user__", outputAnalysisEvents: true, notifyPref: "off" },
+        { id: "t2", name: "Inbox", worksetId: "__general__", outputAnalysisEvents: true, notifyPref: "off" },
         { id: "t3", name: "Labs", worksetId: "ws-2", outputAnalysisEvents: true, notifyPref: "off" },
       ],
       items: [],
@@ -717,10 +717,10 @@ describe("worksetPipelineGraph", () => {
       events: [],
       labels,
     };
-    const graph = buildWorksetPipelineGraph(scopePipelineInputToWorkset(input, ["ws-1", "__user__"]));
+    const graph = buildWorksetPipelineGraph(scopePipelineInputToWorkset(input, ["ws-1", "__general__"]));
     const pointIds = graph.blocks.flatMap((block) => block.points.map((point) => point.id));
     expect(pointIds).toContain(worksetPointId("ws-1"));
-    expect(pointIds).toContain(worksetPointId("__user__"));
+    expect(pointIds).toContain(worksetPointId("__general__"));
     expect(pointIds).toContain(taskPointId("t1"));
     expect(pointIds).toContain(taskPointId("t2"));
     expect(pointIds).not.toContain(worksetPointId("ws-2"));
@@ -728,7 +728,7 @@ describe("worksetPipelineGraph", () => {
     expect(graph.edges).toContainEqual(
       expect.objectContaining({
         sourcePointId: PIPELINE_PAGE.assistant,
-        targetPointId: worksetPointId("__user__"),
+        targetPointId: worksetPointId("__general__"),
       }),
     );
     expect(
@@ -776,12 +776,12 @@ describe("worksetPipelineGraph", () => {
 
   it("does not fan worksets to 時間規劃／情報／通知／MCP／A2A page nodes", () => {
     const graph = buildWorksetPipelineGraph({
-      worksets: [{ id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true }],
+      worksets: [{ id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true }],
       tasks: [
         {
           id: "t1",
           name: "Scan",
-          worksetId: "__user__",
+          worksetId: "__general__",
           outputAnalysisEvents: true,
           includeInTimeline: true,
         },
@@ -795,7 +795,7 @@ describe("worksetPipelineGraph", () => {
       expect(
         graph.edges.some(
           (edge) =>
-            edge.sourcePointId === worksetPointId("__user__") && edge.targetPointId === targetId,
+            edge.sourcePointId === worksetPointId("__general__") && edge.targetPointId === targetId,
         ),
       ).toBe(false);
     }
@@ -853,11 +853,11 @@ describe("worksetPipelineGraph", () => {
   it("wires assistant to the voice default workset only", () => {
     const graph = buildWorksetPipelineGraph({
       worksets: [
-        { id: "__user__", name: "一般", notifyEnabled: true, externalEnabled: true },
+        { id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true },
         { id: "ws-1", name: "Ops", notifyEnabled: true, externalEnabled: true },
       ],
       tasks: [{ id: "t1", name: "Scan", worksetId: "ws-1", outputAnalysisEvents: false, notifyPref: "off" }],
-      items: [{ id: "item-1", title: "Milk", worksetId: "__user__" }],
+      items: [{ id: "item-1", title: "Milk", worksetId: "__general__" }],
       sources: [],
       events: [],
       labels,
@@ -874,7 +874,7 @@ describe("worksetPipelineGraph", () => {
         sourceBlockId: PIPELINE_BLOCK.items,
         sourcePointId: itemPointId("item-1"),
         targetBlockId: PIPELINE_BLOCK.worksets,
-        targetPointId: worksetPointId("__user__"),
+        targetPointId: worksetPointId("__general__"),
       }),
     );
     expect(graph.edges).toContainEqual(
@@ -899,7 +899,7 @@ describe("worksetPipelineGraph", () => {
     expect(
       graph.edges.some(
         (edge) =>
-          edge.sourcePointId === PIPELINE_PAGE.assistant && edge.targetPointId === worksetPointId("__user__"),
+          edge.sourcePointId === PIPELINE_PAGE.assistant && edge.targetPointId === worksetPointId("__general__"),
       ),
     ).toBe(false);
   });
@@ -1075,7 +1075,7 @@ describe("worksetPipelineGraph", () => {
       `${sourcePointId("src-1")}->${taskPointId("t1")}`,
       `${itemPointId("item-1")}->${worksetPointId("ws-1")}`,
       `${taskPointId("t1")}->${worksetPointId("ws-1")}`,
-      `${PIPELINE_PAGE.assistant}->${worksetPointId("__user__")}`,
+      `${PIPELINE_PAGE.assistant}->${worksetPointId("__general__")}`,
     ];
     const colors = ids.map((id) => pipelineEdgeStroke(id));
     expect(colors.every((color) => (PIPELINE_EDGE_PALETTE as readonly string[]).includes(color))).toBe(true);

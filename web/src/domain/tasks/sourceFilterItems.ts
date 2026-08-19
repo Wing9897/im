@@ -62,7 +62,7 @@ export function filterItemsBySourceSelection<T extends SourceFilterItem>(
     if (item.source === "user") {
       return userEventMatchesSourceSelection(item, allowWorksets, allowExplicitTasks);
     }
-    // Item remind DATE projections: workset ownership only (default __user__).
+    // Item remind DATE projections: workset ownership only (default __general__).
     if (item.source === "item_remind") {
       const wid = item.worksetId?.trim() || SYSTEM_WORKSET_ID;
       return allowWorksets.has(wid);

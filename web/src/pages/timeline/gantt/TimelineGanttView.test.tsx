@@ -167,6 +167,25 @@ describe("TimelineGanttView", () => {
       expect(rows.length).toBe(3);
     });
 
+    it("renders recurring calendar occurrences as a series row with status-colored bars", () => {
+      const calEvent = makeEvent({
+        id: "cal-evt-1",
+        seriesId: "cal-task-1",
+        title: "Weekly Standup",
+        source: "recurring",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      });
+      const container = render(makeProps({ events: [calEvent] }));
+      const row = container.querySelector('[data-testid="event-row-recurring:cal-task-1"]');
+      expect(row).not.toBeNull();
+      expect(container.textContent).toContain("Weekly Standup");
+      const bars = row!.querySelectorAll('[data-testid^="event-bar-"]');
+      expect(bars.length).toBeGreaterThan(0);
+      expect((bars[0] as HTMLElement).getAttribute("data-status")).toBe("pending");
+      expect((bars[0] as HTMLElement).style.backgroundColor).toBeTruthy();
+    });
+
     it("merges recurring occurrences with the same seriesId into one row with multiple bars", () => {
       const events = [
         makeEvent({

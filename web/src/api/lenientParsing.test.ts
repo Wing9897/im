@@ -92,7 +92,7 @@ describe("Lenient frontend parsing of API responses", () => {
           {
             type: "enum",
             loc: ["body", "notifyPref"],
-            msg: "Input should be 'follow' or 'off'",
+            msg: "Input should be 'inherit' or 'off'",
             input: "on",
           },
         ],
@@ -101,6 +101,6 @@ describe("Lenient frontend parsing of API responses", () => {
     );
     const { parseErrorResponse } = await import("./parseApiError");
     const result = await parseErrorResponse(response);
-    expect(result.apiError.message).toBe("Input should be 'follow' or 'off'");
+    expect(result.apiError.message).toBe("Input should be 'inherit' or 'off'");
   });
 });

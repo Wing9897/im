@@ -51,7 +51,7 @@ const SELECTIONS: Array<{
   { name: "workset A only", selection: { taskIds: [], worksetIds: ["ws-A"] } },
   { name: "workset B only", selection: { taskIds: [], worksetIds: ["ws-B"] } },
   {
-    name: "builtin __user__",
+    name: "builtin __general__",
     selection: { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
   },
   {

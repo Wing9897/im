@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS items (
     title                TEXT NOT NULL,
     category_id          TEXT DEFAULT NULL
                          REFERENCES item_categories(id) ON DELETE SET NULL,
-    workset_id           TEXT NOT NULL DEFAULT '__user__'
+    workset_id           TEXT NOT NULL DEFAULT '__general__'
                          REFERENCES worksets(id),
     notes                TEXT NOT NULL DEFAULT '',
     status               TEXT NOT NULL DEFAULT 'active'

@@ -56,8 +56,8 @@ def main() -> int:
         status == 200
         and isinstance(body, dict)
         and body.get("status") == "ok"
-        and body.get("schemaVersion") == 40
-        and body.get("schemaSemver") == "0.1.0-beta.41",
+        and body.get("schemaVersion") == 42
+        and body.get("schemaSemver") == "0.1.0-beta.43",
     )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)
@@ -132,7 +132,7 @@ def main() -> int:
     )
 
     # 6. Channels reflect the auto-created channel
-    status, channels = api("GET", "/api/v1/channels/with-sources", timeout=15)
+    status, channels = api("GET", "/api/v1/channels", timeout=15)
     check("channels auto-created", any(c["id"] == "telegram:smoke-channel" for c in channels))
 
     # 7. Settings roundtrip (LLM connection keys live on /llm/profiles, not system_config)

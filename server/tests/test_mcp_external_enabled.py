@@ -262,3 +262,48 @@ async def test_assistant_ignores_household_external_enabled(app) -> None:
     )
     summary = " ".join(str(t.get("resultSummary") or "") for t in result.get("toolCalls") or [])
     assert "items.list: 3 items" in summary
+
+
+def _workset_ids(payload: dict) -> set[str]:
+    return {str(row["id"]) for row in payload.get("worksets") or []}
+
+
+@pytest.mark.asyncio
+async def test_mcp_worksets_list_filters_external_enabled(app) -> None:
+    await _partition_seed_worksets(app.state.db)
+    await _set_external_enabled(app.state.db, WS_A)
+
+    listed = await execute_mcp_tool(app.state.db, "worksets.list", {}, broadcaster=app.state.broadcaster)
+    ids = _workset_ids(listed)
+    assert WS_A in ids
+    assert WS_B not in ids
+    assert SYSTEM_WORKSET_ID not in ids
+    row = next(item for item in listed["worksets"] if item["id"] == WS_A)
+    assert row["name"] == "Allow A"
+    assert "notifyEnabled" in row
+    assert "externalEnabled" in row
+    assert row["externalEnabled"] is True
+
+
+@pytest.mark.asyncio
+async def test_mcp_worksets_list_fail_closed_when_all_external_off(app) -> None:
+    await _partition_seed_worksets(app.state.db)
+    await _set_external_enabled(app.state.db)
+
+    listed = await execute_mcp_tool(app.state.db, "worksets.list", {}, broadcaster=app.state.broadcaster)
+    assert listed["worksets"] == []
+    assert listed["count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_assistant_worksets_list_sees_all(app) -> None:
+    from server.agent.tools_registry import execute_tool
+
+    await _partition_seed_worksets(app.state.db)
+    await _set_external_enabled(app.state.db, WS_A)
+
+    listed = await execute_tool(app.state.db, "worksets.list", {})
+    ids = _workset_ids(listed)
+    assert WS_A in ids
+    assert WS_B in ids
+    assert SYSTEM_WORKSET_ID in ids

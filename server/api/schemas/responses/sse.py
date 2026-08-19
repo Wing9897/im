@@ -11,10 +11,10 @@ Publish sites still build plain dicts (scheduler / collector / routes);
 ``server/tests/test_contract_sse.py`` validates representative payloads
 against these models so the schema cannot drift silently.
 
-Deliberate wire quirk: ``collector_status_changed`` carries snake_case
-adapter fields (``adapter_name`` / ``error_summary`` / ``correlation_id``)
-unlike the otherwise camelCase payloads — kept for wire compatibility, do
-not camelize (see ``CollectorManager._publish_aggregate_collector_status``).
+Resource/status payloads are HTTP-style camelCase (``adapterName``,
+``errorSummary``). Error-body fields ``error_code`` / ``correlation_id``
+stay snake_case (i18n / log convention) — including ``correlation_id`` on
+``collector_status_changed``.
 """
 
 from __future__ import annotations
@@ -53,17 +53,17 @@ class SseCollectorStatusChangedPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: Literal["running", "stopped", "error"]
-    adapter_name: str | None = Field(
+    adapterName: str | None = Field(
         default=None,
-        description="Failing adapter name. Deliberately snake_case (wire contract).",
+        description="Failing adapter name.",
     )
-    error_summary: str | None = Field(
+    errorSummary: str | None = Field(
         default=None,
-        description="Error summary when an adapter connection fails. Deliberately snake_case.",
+        description="Error summary when an adapter connection fails.",
     )
     correlation_id: str | None = Field(
         default=None,
-        description="Trace id for error-toast correlation. Deliberately snake_case.",
+        description="Trace id for error-toast correlation. Deliberately snake_case (error-body convention).",
     )
 
 

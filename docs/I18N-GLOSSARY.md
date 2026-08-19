@@ -70,8 +70,8 @@
 | 名稱／路徑 | 實際職責 |
 |------------|----------|
 | `components/channels/SourceChannelPickerContent`（+ `ChannelPickerDialogShell`／`ChannelSelectorDialog`） | **帳號／頻道** picker（選要監聽的來源頻道） |
-| `pages/actions/ActionTypeSelector.tsx` | **ActionType** 瓦片選擇器（通知外發類型：Telegram Bot／Discord／HTTP／MQTT） |
-| `pages/actions/ActionTypeFields.tsx` | 依已選 ActionType 渲染對應表單欄位 |
+| `pages/notify/components/ActionTypeSelector.tsx` | **ActionType** 瓦片選擇器（通知外發類型：Telegram Bot／Discord／HTTP／MQTT） |
+| `pages/notify/components/ActionTypeFields.tsx` | 依已選 ActionType 渲染對應表單欄位 |
 
 ## 翻譯流程
 
@@ -80,7 +80,7 @@
 3. 元件用 `useTranslation()`／`t()`；非 React 用 `i18n.t()` 或 helper（如 `platformScopeLabel`、`formatStatusLabel`、`formatMessage`、`joinList`）。
 4. 變更 locale：`setAppLocale(locale)` 或 `setAppLocalePreference(pref)` → 寫入 storage + `applyDocumentLang` + `i18n.changeLanguage` + 同步 server `ui_locale`（具體值）。
 5. 測試：需要可見文案時包 `I18nextProvider` + `setAppLocale("zh-Hant")`（或目標 locale）。新測試優先 `import { … } from "../../i18n"`。
-6. **對齊檢查**：`npm run i18n:check`（`scripts/check-i18n-parity.mjs`）比對三語 leaf key；納入 `npm run check`。
+6. **對齊檢查**：`npm run i18n:check`（`scripts/check-i18n-parity.mjs`）比對三語 leaf key，並拒絕無 `t()`／字面引用且不在 allowlist 的鍵（動態拼 key、FORBIDDEN 對照）；納入 `npm run check`。
 7. **複數鍵（plural family）**：`key`／`key_one`／`key_other`（及其他 CLDR 後綴 `_zero`／`_two`／`_few`／`_many`）視為**同一複數族**，以基鍵歸一比對——中文只有單一複數類別，用裸 `key`；en 可展開 `key_one`／`key_other`（i18next 依 `count` 自動選形）。任一 locale 用了後綴形就**必須含 `_other`**，否則 parity 直接判 fail。範例：`settings:theme.focalRefreshHours`、`common:ui.itemsCount`、`tasks:detail.channelCount`（zh 裸鍵、en `_one`+`_other`）。只在**英文數詞一致性真的會出錯**時展開（`1 items`）；像 `+{count} more`／`Retry {count}` 這種無可數名詞的字串維持單一裸鍵。呼叫端**必須傳數字型 `count`**——傳字串會讓 i18next 跳過複數選形，只查得到裸鍵。
 
 ## 標籤單一來源（避免平行翻譯）
@@ -90,7 +90,7 @@
 | 側欄「系統設定」／設定麵包屑根 | `nav:systemSettings` | 勿再平行維護 `settings:shell.*RootLabel`（已刪除） |
 | 側欄「AI 設定」／AI 麵包屑根 | `nav:aiSettings` | 同上 |
 | 設定分頁（一般／主題／…） | `settings:tabs.*` | command palette 等請引用同一語意，勿另造近似 key |
-| 設定分頁「外部接口」 | `settings:tabs.integrations` | en **External interfaces**；zh-Hans／zh-Hant 皆 **外部接口**（顯示名勿寫 API／外部介面）。SoT `/settings/integrations` query `tab=webhook` / `a2a` / `deeplink` / `mcp`；legacy `/settings/api` 與 `/settings/mcp` 轉址 |
+| 設定分頁「外部接口」 | `settings:tabs.integrations` | en **External interfaces**；zh-Hans／zh-Hant 皆 **外部接口**（顯示名勿寫 API／外部介面）。SoT `/settings/integrations` query `tab=webhook` / `a2a` / `deeplink` / `mcp`（無 `/settings/api`／`/settings/mcp` 轉址） |
 | 外部接口 pill「日曆連結」 | `settings:integrations.deeplink`／`settings:apiDocs.deepLink.title`／`common:commandPalette.settingsDeeplink` | zh-Hant **日曆連結**；zh-Hans **日历链接**；en **Calendar link**。pill／面板標題／命令面板顯示名皆此短標；URL `tab=deeplink` 勿改。勿在 pill 寫 Deep link／Desktop。舊稱「Desktop 日曆 deep link」僅命令面板 **alias**。面板內文可保留 Desktop／協定說明。timeline `source.url`「日曆連結」是匯入來源類型，與此 pill 共用短標但不是同一 surface |
 | 帳戶存取金鑰 | `account:accessKeys.*` | 只建立／撤銷；新鑰一律 `*`；既有 `read` 僅列表狀態「唯讀」。能力群組在外部接口 → MCP 與 A2A（同一套 `mcp_cap_*`）；工作集「外部接口」在 `/worksets`（`worksets.external_enabled`），不是金鑰 scope。MCP／A2A 各有獨立「啟用」（`mcpDocs.masterSwitch`／`a2aDocs.masterSwitch`） |
 | 側欄「日誌」短標 | `nav:logs` | 與 `settings:tabs.logs`（「系統日誌」）刻意不同長度 |
@@ -124,7 +124,7 @@
 | Agent 預設 `web_scout` | **網蒐** | Web scout | 网蒐 |
 | Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
-| `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
+| `__general__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 |
 | 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出當層名；塊標題（來源／物品／任務／助手／工作集）；L4 為共用輸出圖例（時間規劃／情報頁／通知／外部接口），從工作集**層／區塊**連出而非每張卡片；通知／外部接口閘門仍是卡片 icon；勿加 MCP／A2A 頁節點；**我的日程**不是流程圖塊（日曆疊加全部工作） |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
@@ -169,14 +169,14 @@
 
 ## 系統任務卡標題與工作集顯示名
 
-- **「一般」**（`workset.generalName`）是內建工作集 `SYSTEM_WORKSET_ID`（wire id `__user__`）的 canonical 顯示名。篩選樹、by_workset 分組、語音／助手預設歸屬都用此名；**不要**把工作集顯示成「用戶或助手」。
+- **「一般」**（`workset.generalName`）是內建工作集 `SYSTEM_WORKSET_ID`（wire id `__general__`）的 canonical 顯示名。篩選樹、by_workset 分組、語音／助手預設歸屬都用此名；**不要**把工作集顯示成「用戶或助手」。
 - **「用戶或助手」**僅指 Dashboard 系統虛擬任務卡（id=`user-or-assistant`，功能層：手寫／助手建日程入口）。它**不是**工作集，也不進來源篩選樹當假 `taskId`。
-- 舊表述「unassigned = `__user__`」已廢棄：`__user__` 是 builtin 歸屬工作集，不是「未歸屬任務」哨兵。
+- 舊表述「unassigned = `__user__`」已廢棄；內建 id 現為 `__general__`：那是 builtin 歸屬工作集，不是「未歸屬任務」哨兵。
 
 | id | zh-Hant | en | zh-Hans |
 |----|---------|----|---------|
 | `user-or-assistant`（virtual card） | 用戶或助手 | User or Assistant | 用户或助手 |
-| `__user__` / `SYSTEM_WORKSET_ID`（workset） | 一般 | General | 一般 |
+| `__general__` / `SYSTEM_WORKSET_ID`（workset） | 一般 | General | 一般 |
 | `collector` | 收集器 | Collector | 收集器 |
 | `analysis-batch` | 分析批次 | Analysis batch | 分析批次 |
 | `outbound-notify` | 外發通知 | Outbound notify | 外发通知 |

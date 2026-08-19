@@ -243,15 +243,15 @@ async def test_list_user_events_filters_by_task_id(client, app) -> None:
     ids = {item["id"] for item in listed.json()["items"]}
     assert ids == {owned.json()["id"]}
 
-    # task_id=__user__ is rejected; ownership filter uses workset_id.
-    rejected = await client.get("/api/v1/calendar/user-events", params={"taskId": "__user__"})
+    # task_id=__general__ is rejected; ownership filter uses workset_id.
+    rejected = await client.get("/api/v1/calendar/user-events", params={"taskId": "__general__"})
     assert rejected.status_code == 400
 
-    system_ws = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
+    system_ws = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__general__"})
     assert system_ws.status_code == 200
     system_ids = {item["id"] for item in system_ws.json()["items"]}
     assert other.json()["id"] in system_ids
-    # Owned event may still be on __user__ workset if task had no workset — check provenance filter.
+    # Owned event may still be on __general__ workset if task had no workset — check provenance filter.
     null_provenance = await client.get("/api/v1/calendar/user-events", params={"taskId": ""})
     assert null_provenance.status_code == 200
     null_ids = {item["id"] for item in null_provenance.json()["items"]}
@@ -284,7 +284,7 @@ async def test_user_events_task_id_bind_and_reject(client, app) -> None:
     # Reject sentinel as taskId — ownership is worksetId only.
     rejected = await client.patch(
         f"/api/v1/calendar/user-events/{created.json()['id']}",
-        json={"taskId": "__user__"},
+        json={"taskId": "__general__"},
     )
     assert rejected.status_code == 400
 

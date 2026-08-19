@@ -19,7 +19,7 @@ import { useActionsPage } from "../hooks/useActionsPage";
 
 /**
  * Outbound notification rules (Telegram / Discord / HTTP / MQTT).
- * Mounted as the default tab under `/actions`.
+ * Mounted as the default tab under `/notify`.
  */
 export function ActionTypesTab() {
   const { t } = useTranslation("actions");

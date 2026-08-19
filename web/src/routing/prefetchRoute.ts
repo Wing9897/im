@@ -9,7 +9,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
   "/timeline": () => import("../pages/timeline/TimelinePage"),
   "/items": () => import("../pages/items/ItemsPage"),
-  "/actions": () => import("../pages/actions/ActionsPage"),
+  "/notify": () => import("../pages/notify/NotifyWorkspacePage"),
   "/sources": () => import("../pages/sources/SourceManagementPage"),
   "/assistant": () => import("../pages/ai/assistant/AssistantPage"),
   "/account": () => import("../pages/account/AccountShell"),
@@ -33,7 +33,7 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   if (/\/tasks\/[^/]+\/agent$/.test(path)) {
     return () => import("../pages/tasks/agent/AgentDetailPage");
   }
-  if (/\/tasks\/worksets\//.test(path) || /^\/worksets\/.+/.test(path)) {
+  if (/^\/worksets\/.+/.test(path)) {
     return ROUTE_PREFETCHERS["/worksets/:id"];
   }
   if (path === "/worksets") {

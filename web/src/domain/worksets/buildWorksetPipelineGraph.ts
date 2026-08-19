@@ -1,158 +1,59 @@
-/** Household pipeline graph data: blocks, points, and ownership wires. */
+/** L1–L3 household pipeline: blocks, points, and ownership wires. */
 
 import { normalizeNotifyPref } from "../notify/notifyPref";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import {
-  PIPELINE_BLOCK_COLUMN,
-  PIPELINE_MAX_POINTS,
-  PIPELINE_VISIBLE_POINTS,
-  type PipelineColumn,
-} from "./pipelineConstants";
+import { PIPELINE_BLOCK_COLUMN, PIPELINE_MAX_POINTS, type PipelineColumn } from "./pipelineConstants";
 import {
   PIPELINE_BLOCK,
-  PIPELINE_LAYER_PORT,
   PIPELINE_OUTPUT_DEFS,
   PIPELINE_PAGE,
   isPipelineLayerPortId,
-  isPipelineOutputPageId,
   itemPointId,
   sourcePointId,
   taskPointId,
   worksetPointId,
-  type PipelineOutputKind,
 } from "./pipelineIds";
+import { buildPipelineLegendEdges } from "./pipelineGraphLegend";
+import {
+  pipelineEdge,
+  type PipelineBlock,
+  type PipelineBlockKind,
+  type PipelineChannelRef,
+  type PipelineChannelSourceInput,
+  type PipelineEdge,
+  type PipelineEventInput,
+  type PipelineGate,
+  type PipelineGateKind,
+  type PipelineGraph,
+  type PipelineGraphInput,
+  type PipelineGraphLabels,
+  type PipelineItemInput,
+  type PipelinePoint,
+  type PipelineTaskInput,
+  type PipelineWorksetInput,
+} from "./pipelineGraphTypes";
 
-export type PipelineBlockKind =
-  | "sources"
-  | "items"
-  | "tasks"
-  | "worksets"
-  | "assistant"
-  | PipelineOutputKind;
+export type {
+  PipelineBlock,
+  PipelineBlockKind,
+  PipelineChannelRef,
+  PipelineChannelSourceInput,
+  PipelineEdge,
+  PipelineEventInput,
+  PipelineGate,
+  PipelineGateKind,
+  PipelineGraph,
+  PipelineGraphInput,
+  PipelineGraphLabels,
+  PipelineItemInput,
+  PipelinePoint,
+  PipelinePointKind,
+  PipelineSourceInput,
+  PipelineTaskInput,
+  PipelineWorksetInput,
+} from "./pipelineGraphTypes";
 
-export type PipelinePointKind =
-  | "workset"
-  | "task"
-  | "item"
-  | "source"
-  | "page"
-  | "more";
-
-/** Enable-state shown as a node icon — not a wire. */
-export type PipelineGateKind = "calendar" | "calendarWrite" | "notify" | "intel" | "external";
-
-export type PipelineGate = {
-  kind: PipelineGateKind;
-  on: boolean;
-  /** Click toggles the existing PATCH; status-only icons stay false. */
-  toggleable: boolean;
-};
-
-export type PipelinePoint = {
-  id: string;
-  kind: PipelinePointKind;
-  entityId: string;
-  label: string;
-  href: string;
-  muted?: boolean;
-  legalTarget?: boolean;
-  gates?: PipelineGate[];
-};
-
-export type PipelineBlock = {
-  id: string;
-  kind: PipelineBlockKind;
-  titleKey: string;
-  column: PipelineColumn;
-  points: PipelinePoint[];
-};
-
-export type PipelineEdge = {
-  id: string;
-  sourceBlockId: string;
-  sourcePointId: string;
-  targetBlockId: string;
-  targetPointId: string;
-  muted?: boolean;
-  /** Layer-legend wire: not per-card and not disconnectable. */
-  legend?: boolean;
-};
-
-export type PipelineGraph = {
-  blocks: PipelineBlock[];
-  edges: PipelineEdge[];
-};
-
-export type PipelineWorksetInput = {
-  id: string;
-  name: string;
-  notifyEnabled?: boolean | null;
-  externalEnabled?: boolean | null;
-};
-
-export type PipelineChannelRef = string | { id?: string; platform?: string; platformId?: string };
-
-export type PipelineTaskInput = {
-  id: string;
-  name: string;
-  promptTemplate?: string | null;
-  analysisMode?: string | null;
-  worksetId?: string | null;
-  outputAnalysisEvents?: boolean | null;
-  includeInTimeline?: boolean | null;
-  outputCalendar?: boolean | null;
-  notifyPref?: string | null;
-  channelIds?: readonly PipelineChannelRef[] | null;
-};
-
-export type PipelineItemInput = {
-  id: string;
-  title: string;
-  worksetId: string;
-  status?: string | null;
-};
-
-export type PipelineSourceInput = {
-  id: string;
-  name: string;
-};
-
-export type PipelineChannelSourceInput = {
-  channelId: string;
-  sourceId: string;
-};
-
-export type PipelineEventInput = {
-  id: string;
-  title: string;
-  worksetId: string;
-  itemId?: string | null;
-  kind?: string | null;
-  notifyPref?: string | null;
-};
-
-export type PipelineGraphLabels = {
-  generalName: string;
-  unassigned: string;
-  more: (count: number) => string;
-  assistant: string;
-  timeline: string;
-  intel: string;
-  notify: string;
-  external: string;
-};
-
-export type PipelineGraphInput = {
-  worksets: readonly PipelineWorksetInput[];
-  tasks: readonly PipelineTaskInput[];
-  items: readonly PipelineItemInput[];
-  sources: readonly PipelineSourceInput[];
-  channels?: readonly PipelineChannelSourceInput[];
-  events: readonly PipelineEventInput[];
-  labels: PipelineGraphLabels;
-  /** Voice-page / assistant picker default (`GET/PUT …/assistant/voice-io`). */
-  assistantDefaultWorksetId?: string | null;
-};
+export { isPipelineOutputBlockKind, isPipelineOutputPage } from "./pipelineGraphTypes";
 
 export function taskOwnerWorksetId(task: PipelineTaskInput): string {
   const id = task.worksetId?.trim();
@@ -294,35 +195,8 @@ function capPoints(
   return kept;
 }
 
-function edge(
-  sourceBlockId: string,
-  sourcePointId: string,
-  targetBlockId: string,
-  targetPointId: string,
-  muted = false,
-  legend = false,
-): PipelineEdge {
-  return {
-    id: `${sourcePointId}->${targetPointId}`,
-    sourceBlockId,
-    sourcePointId,
-    targetBlockId,
-    targetPointId,
-    muted,
-    ...(legend ? { legend: true } : {}),
-  };
-}
-
 function pagePoint(id: string, label: string, href: string): PipelinePoint {
   return { id, kind: "page", entityId: id, label, href };
-}
-
-export function isPipelineOutputBlockKind(kind: PipelineBlockKind): boolean {
-  return PIPELINE_OUTPUT_DEFS.some((row) => row.kind === kind);
-}
-
-export function isPipelineOutputPage(point: PipelinePoint): boolean {
-  return point.kind === "page" && isPipelineOutputPageId(point.id);
 }
 
 function singletonBlock(
@@ -464,7 +338,7 @@ export function buildWorksetPipelineGraph(input: PipelineGraphInput): PipelineGr
     ) {
       return;
     }
-    edges.push(edge(sourceBlockId, sourcePointId, targetBlockId, targetPointId, muted));
+    edges.push(pipelineEdge(sourceBlockId, sourcePointId, targetBlockId, targetPointId, muted));
   };
 
   const visibleTaskIds = new Set(
@@ -509,21 +383,7 @@ export function buildWorksetPipelineGraph(input: PipelineGraphInput): PipelineGr
     }
   }
 
-  // L4 is a shared output legend from the 工作集 block — not per-card wires.
-  // notifyEnabled / externalEnabled stay as card icons and do not gate these edges.
-  for (const row of PIPELINE_OUTPUT_DEFS) {
-    if (!pointIds.has(row.pageId)) continue;
-    edges.push(
-      edge(
-        PIPELINE_BLOCK.worksets,
-        PIPELINE_LAYER_PORT.worksets,
-        row.blockId,
-        row.pageId,
-        false,
-        true,
-      ),
-    );
-  }
+  edges.push(...buildPipelineLegendEdges(pointIds));
 
   // Assistant is layer 2 with tasks: one ownership wire to the voice default workset.
   const assistantId = PIPELINE_PAGE.assistant;
@@ -538,65 +398,4 @@ export function buildWorksetPipelineGraph(input: PipelineGraphInput): PipelineGr
   }
 
   return { blocks, edges };
-}
-
-/** Limit the household graph to selected worksets; keep sources that feed their tasks. */
-export function scopePipelineInputToWorkset(
-  input: PipelineGraphInput,
-  worksetId: string | readonly string[] | null,
-): PipelineGraphInput {
-  if (worksetId == null) return input;
-  const allowedIds = typeof worksetId === "string" ? [worksetId] : [...worksetId];
-  if (allowedIds.length === 0) {
-    return { ...input, worksets: [], tasks: [], items: [], events: [], sources: [] };
-  }
-  const allowed = new Set(allowedIds);
-  const channels = input.channels ?? [];
-  const tasks = input.tasks.filter((task) => allowed.has(taskOwnerWorksetId(task)));
-  const items = input.items.filter((item) => allowed.has(item.worksetId));
-  const events = input.events.filter((event) => allowed.has(event.worksetId));
-  const worksets = input.worksets.filter((row) => allowed.has(row.id));
-  const feedingSourceIds = new Set<string>();
-  for (const task of tasks) {
-    for (const sourceId of sourceIdsForTaskChannels(
-      normalizePipelineChannelIds(task.channelIds),
-      channels,
-    )) {
-      feedingSourceIds.add(sourceId);
-    }
-  }
-  return {
-    ...input,
-    worksets,
-    tasks,
-    items,
-    events,
-    sources: input.sources.filter((source) => feedingSourceIds.has(source.id)),
-  };
-}
-
-export function collapsePipelineGraph(
-  graph: PipelineGraph,
-  expandedBlockIds: ReadonlySet<string>,
-  limit = PIPELINE_VISIBLE_POINTS,
-): { graph: PipelineGraph; overflowByBlockId: Record<string, number> } {
-  const overflowByBlockId: Record<string, number> = {};
-  const blocks = graph.blocks.map((block) => {
-    const overflow = Math.max(0, block.points.length - limit);
-    overflowByBlockId[block.id] = overflow;
-    if (overflow === 0 || expandedBlockIds.has(block.id)) return block;
-    return { ...block, points: block.points.slice(0, limit) };
-  });
-  const pointIds = new Set(blocks.flatMap((block) => block.points.map((point) => point.id)));
-  return {
-    graph: {
-      blocks,
-      edges: graph.edges.filter(
-        (row) =>
-          row.legend === true ||
-          (pointIds.has(row.sourcePointId) && pointIds.has(row.targetPointId)),
-      ),
-    },
-    overflowByBlockId,
-  };
 }

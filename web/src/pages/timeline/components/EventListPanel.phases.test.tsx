@@ -33,8 +33,9 @@ describe("EventListPanel", () => {
     vi.useRealTimers();
   });
 
-  it("uses real-now buckets and 跨日进行中 / 结束于当日 when viewing Aug 8 from Aug 6", () => {
-    // Product bug fixture: today Aug 6, selected Aug 8.
+  it("uses real-now buckets and 跨日進行中 / 結束於當日 when viewing Aug 8 from Aug 6", () => {
+    // Regression: today Aug 6, selected Aug 8. Filter chips stay 進行中／未開始
+    // (zh-Hant product copy); card tags use 跨日進行中／結束於當日.
     vi.setSystemTime(new Date(2026, 7, 6, 12, 0, 0));
     const trip = makeTimelineItem({
       id: "trip",
@@ -124,7 +125,7 @@ describe("EventListPanel", () => {
     ).toBe("跨日進行中");
   });
 
-  it("uses 跨日进行中 + 结束于本日 when focused day is real today", () => {
+  it("uses 跨日進行中 + 結束於本日 when focused day is real today", () => {
     vi.setSystemTime(new Date(2026, 7, 8, 12, 0, 0));
     const overnight = makeTimelineItem({
       id: "overnight",

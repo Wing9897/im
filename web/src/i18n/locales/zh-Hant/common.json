@@ -79,8 +79,8 @@
     "keyEventsMap": "情報事件 · 地圖",
     "keyEventsList": "情報事件 · 清單",
     "keyEventsCard": "情報事件 · 卡片",
-    "actionsVoice": "通知 · 本機通知",
-    "actionsHistory": "通知 · 觸發紀錄",
+    "notifyVoice": "通知 · 本機通知",
+    "notifyHistory": "通知 · 觸發紀錄",
     "sourcesRss": "來源 · RSS",
     "sourcesTelegram": "來源 · Telegram",
     "sourcesDiscord": "來源 · Discord",
@@ -366,7 +366,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 40／SemVer 0.1.0-beta.41；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 42／SemVer 0.1.0-beta.43；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

@@ -69,7 +69,7 @@ describe("systemTaskCatalog", () => {
     expect(voice?.staffId).toBeUndefined();
     expect(voice?.shortDescription).toContain("週期任務");
     expect(voice?.shortDescription).toContain("RRULE");
-    expect(voice?.linkTo).toBe("/actions?tab=notify");
+    expect(voice?.linkTo).toBe("/notify?tab=notify");
 
     const geocode = catalog.find((item) => item.id === "startup-geocode");
     expect(geocode?.title).toBe("啟動座標回填");

@@ -1,11 +1,13 @@
 /**
- * Smoke test for ActionsPage rendering.
+ * Smoke test for NotifyWorkspacePage rendering.
  *
  *
  * Verifies that the component renders without throwing exceptions
  * when REST API calls are mocked to return empty/default data.
  * Also verifies error/loading state handling.
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createElement, type ComponentType } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -57,15 +59,15 @@ vi.mock("./components/LocalNotifyPanel", () => ({
   LocalNotifyPanel: () => createElement("div", { "data-testid": "local-notify-panel" }),
 }));
 
-import { ActionsPage } from "./ActionsPage";
+import { NotifyWorkspacePage } from "./NotifyWorkspacePage";
 
-const ActionsPageUnderTest = withRouter(ActionsPage);
+const NotifyWorkspacePageUnderTest = withRouter(NotifyWorkspacePage);
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 
-describe("ActionsPage smoke test", () => {
+describe("NotifyWorkspacePage smoke test", () => {
   let harness: TestHarness;
 
   beforeEach(() => {
@@ -82,7 +84,7 @@ describe("ActionsPage smoke test", () => {
   });
 
   it("renders the empty state without throwing", async () => {
-    await harness.render(ActionsPageUnderTest);
+    await harness.render(NotifyWorkspacePageUnderTest);
 
     // Component should render the heading
     expect(harness.container.textContent).toContain("通知");
@@ -96,22 +98,29 @@ describe("ActionsPage smoke test", () => {
     expect(harness.container.textContent).toContain("觸發紀錄");
   });
 
-  it("redirects legacy ?tab=voice to the notify panel", async () => {
-    function VoiceTabRedirect() {
+  it("does not redirect retired ?tab=voice — unknown tabs stay on types", async () => {
+    function VoiceTabGone() {
       return createElement(
         MemoryRouter,
-        { initialEntries: ["/actions?tab=voice"] },
-        createElement(ActionsPage),
+        { initialEntries: ["/notify?tab=voice"] },
+        createElement(NotifyWorkspacePage),
       );
     }
-    await harness.render(VoiceTabRedirect);
-    expect(harness.container.querySelector('[data-testid="local-notify-panel"]')).not.toBeNull();
+    await harness.render(VoiceTabGone);
+    expect(harness.container.querySelector('[data-testid="local-notify-panel"]')).toBeNull();
+    expect(harness.container.textContent).toContain("外發通知");
+  });
+
+  it("does not keep a ?tab=voice redirect in source", () => {
+    const src = readFileSync(resolve(__dirname, "./NotifyWorkspacePage.tsx"), "utf8");
+    expect(src).not.toContain('tab === "voice"');
+    expect(src).not.toContain("tab=voice");
   });
 
   // Task names come from the shared TaskCatalogContext, so the page itself only
   // owns the actions fetch.
   it("calls listActions on mount", async () => {
-    await harness.render(ActionsPageUnderTest);
+    await harness.render(NotifyWorkspacePageUnderTest);
 
     expect(mockListActions).toHaveBeenCalled();
     expect(mockListTasks).not.toHaveBeenCalled();
@@ -121,7 +130,7 @@ describe("ActionsPage smoke test", () => {
     // Keep the list fetch pending so no late state updates escape act().
     mockListActions.mockReturnValue(new Promise(() => {}));
 
-    harness.renderSync(ActionsPageUnderTest);
+    harness.renderSync(NotifyWorkspacePageUnderTest);
 
     expect(harness.container.querySelector('[role="status"]')).not.toBeNull();
     expect(harness.container.textContent).not.toContain("載入通知中");
@@ -130,7 +139,7 @@ describe("ActionsPage smoke test", () => {
   it("shows an error toast when listActions fails", async () => {
     mockListActions.mockRejectedValue(new Error("Network error"));
 
-    await harness.render(ActionsPageUnderTest);
+    await harness.render(NotifyWorkspacePageUnderTest);
 
     expect(mockShowToast).toHaveBeenCalledWith("Network error", "error");
     expect(harness.container.textContent).not.toContain("Network error");

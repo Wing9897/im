@@ -87,8 +87,8 @@ class NotifyQuietHoursSchema(BaseModel):
 class NotifySettingsSchema(BaseModel):
     """Local-notify settings blob under ``notify_settings``."""
 
-    # ignore unknown keys (legacy ``sourceFilter`` leftover is dropped);
-    # avoid OpenAPI additionalProperties index signature that breaks FE assignability.
+    # ignore unknown keys; avoid OpenAPI additionalProperties index signature
+    # that breaks FE assignability.
     model_config = ConfigDict(extra="ignore")
 
     enabled: bool = False

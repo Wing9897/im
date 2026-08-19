@@ -60,7 +60,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
   const { tasks, worksets } = useTaskCatalog();
   const userEventsLabel = useGeneralWorksetLabel();
 
-  // Builtin workset covers「一般」— do not inject a fake __user__ task row.
+  // Builtin workset covers「一般」— do not inject a fake __general__ task row.
   const filterOptions = useMemo(() => {
     if (tasks.length > 0) {
       return tasks.map((task) => ({

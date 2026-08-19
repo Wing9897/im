@@ -43,7 +43,7 @@ async def _fetch_user_in_range(
     - ``workset_id`` set: events with that ownership workset
     - ``task_id`` empty: only rows with ``task_id IS NULL``
     - real ``task_id``: only events tagged with that task provenance
-    - ``task_id=__user__``: rejected by ``list_user_events``
+    - ``task_id=__general__``: rejected by ``list_user_events``
     """
     items = await list_user_events(
         db,

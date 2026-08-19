@@ -1,10 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_INTEGRATION_TAB,
   isIntegrationTabKey,
-  SETTINGS_API_REDIRECT,
   SETTINGS_INTEGRATIONS_PATH,
-  SETTINGS_MCP_REDIRECT,
   settingsIntegrationsPath,
 } from "./integrationsRoutes";
 
@@ -16,9 +16,12 @@ describe("integrationsRoutes", () => {
     expect(settingsIntegrationsPath("mcp")).toBe("/settings/integrations?tab=mcp");
   });
 
-  it("keeps legacy API and MCP paths as explicit redirects", () => {
-    expect(SETTINGS_API_REDIRECT).toBe("/settings/integrations?tab=webhook");
-    expect(SETTINGS_MCP_REDIRECT).toBe("/settings/integrations?tab=mcp");
+  it("does not export legacy /settings/api or /settings/mcp redirects", () => {
+    const src = readFileSync(resolve(__dirname, "./integrationsRoutes.ts"), "utf8");
+    expect(src).not.toContain("SETTINGS_API_REDIRECT");
+    expect(src).not.toContain("SETTINGS_MCP_REDIRECT");
+    expect(src).not.toContain("/settings/api");
+    expect(src).not.toContain("/settings/mcp");
   });
 
   it("accepts only the four integration tabs", () => {

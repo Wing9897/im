@@ -25,4 +25,9 @@ describe("prefetchRoute", () => {
   it("prefetches External interfaces", () => {
     expect(() => prefetchRoute("/settings/integrations")).not.toThrow();
   });
+
+  it("prefetches the notifications workspace at /notify", () => {
+    expect(() => prefetchRoute("/notify")).not.toThrow();
+    expect(() => prefetchRoute("/notify?tab=notify")).not.toThrow();
+  });
 });

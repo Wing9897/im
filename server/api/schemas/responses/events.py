@@ -28,7 +28,7 @@ class UserEventResponse(BaseModel):
     taskId: str = ""
     #: Optional parent inventory item; null when stand-alone (not an event sub-event).
     itemId: str | None = None
-    #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
+    #: Ownership workset id (builtin ``__general__`` for handwritten / assistant).
     worksetId: str
     #: Special linked-calendar semantics; title presets are UX only.
     kind: Literal["normal", "expires", "purchase_effective"] = "normal"
@@ -36,8 +36,8 @@ class UserEventResponse(BaseModel):
     amount: float | None = None
     #: ``expense`` (default when amount set) or ``income``; null when amount unset.
     direction: Literal["expense", "income"] | None = None
-    #: Per-event reminder (``follow`` / ``off``).
-    notifyPref: CoercedNotifyPref = "follow"
+    #: Per-event reminder (``inherit`` / ``off``).
+    notifyPref: CoercedNotifyPref = "inherit"
     source: Literal["user"]
     dismissed: bool
     important: bool = False
@@ -74,8 +74,8 @@ class RecurringSeriesResponse(BaseModel):
     worksetId: str
     parentTaskId: str | None = None
     itemId: str | None = None
-    #: Per-series reminder (``follow`` / ``off``).
-    notifyPref: CoercedNotifyPref = "follow"
+    #: Per-series reminder (``inherit`` / ``off``).
+    notifyPref: CoercedNotifyPref = "inherit"
     createdAt: str | None = None
     updatedAt: str | None = None
 
@@ -168,7 +168,7 @@ class CalendarOccurrenceResponse(BaseModel):
     itemId: str | None = None
     itemDateKind: Literal["remind"] | None = None
     #: Item remind projections inherit the linked expires calendar override.
-    notifyPref: CoercedNotifyPref = "follow"
+    notifyPref: CoercedNotifyPref = "inherit"
 
 
 class CalendarHolidayItemResponse(BaseModel):

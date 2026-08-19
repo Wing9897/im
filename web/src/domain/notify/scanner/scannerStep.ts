@@ -193,7 +193,7 @@ export function mergeTimedKeyEventsById(
 
 /**
  * Adapt user_events rows for reminder filtering (same ownership as timeline):
- * `taskId` = provenance only; `worksetId` = ownership (defaults to `__user__`).
+ * `taskId` = provenance only; `worksetId` = ownership (defaults to `__general__`).
  */
 export function userEventsToTimedKeyEvents(
   rows: ReadonlyArray<{

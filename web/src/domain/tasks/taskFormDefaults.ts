@@ -111,7 +111,7 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     analysisMode: formState.analysisMode,
     scheduleRrule,
     worksetId: formState.worksetId,
-    notifyPref: formState.notifyPref ?? "follow",
+    notifyPref: formState.notifyPref ?? "inherit",
     outputAnalysisEvents: formState.outputAnalysisEvents,
   } satisfies Pick<
     TaskConfig,

@@ -11,8 +11,8 @@ export type ServerStatusKey = 'Running' | 'Stopped' | 'Error';
  * Must match ``server/db/schema_inspect.py`` (drift-tested by architecture-invariants).
  * Bump these when SCHEMA stamp / SemVer changes — do not hardcode elsewhere in this file.
  */
-export const SHELL_SCHEMA_BASELINE = 40;
-export const SHELL_SCHEMA_SEMVER = '0.1.0-beta.41';
+export const SHELL_SCHEMA_BASELINE = 42;
+export const SHELL_SCHEMA_SEMVER = '0.1.0-beta.43';
 /** Inclusive hard-reject ceiling = baseline - 1 when wipe-floor is current-only. */
 export const SHELL_SCHEMA_HARD_REJECT_CEILING = SHELL_SCHEMA_BASELINE - 1;
 

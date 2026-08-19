@@ -16,7 +16,7 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 describe("sourceFilterSelection", () => {
   it("parses hierarchical shapes; rejects legacy string[]", () => {
     expect(parseSourceFilterValue(null)).toBeNull();
-    expect(parseSourceFilterValue(["t1", "__user__"])).toBeNull();
+    expect(parseSourceFilterValue(["t1", "__general__"])).toBeNull();
     expect(
       parseSourceFilterValue({ taskIds: ["t1", ""], worksetIds: ["ws-a"] }),
     ).toEqual({ taskIds: ["t1"], worksetIds: ["ws-a"] });

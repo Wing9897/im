@@ -211,7 +211,7 @@ describe("useAssistantChat", () => {
     expect(mockStreamAgentChat).toHaveBeenCalledTimes(1);
     expect(mockStreamAgentChat).toHaveBeenCalledWith(
       expect.objectContaining({
-        worksetId: "__user__",
+        worksetId: "__general__",
       }),
       expect.any(Object),
     );

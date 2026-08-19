@@ -60,7 +60,7 @@ export const PIPELINE_OUTPUT_DEFS: readonly PipelineOutputDef[] = [
     blockId: PIPELINE_BLOCK.notify,
     pageId: PIPELINE_PAGE.notify,
     titleKey: "graphOutputNotify",
-    href: "/actions?tab=notify",
+    href: "/notify?tab=notify",
     labelKey: "notify",
   },
   {

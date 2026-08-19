@@ -8,7 +8,7 @@
  * - filtering by a recurring task shows only that task's occurrences
  * - filtering by an event task does not mix in calendar occurrences
  * - timelineTasks includes event, recurring, and agent modes
- * - __user__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
+ * - __general__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
  * - task filters include tagged user_events for that task
  */
 import { act, createElement } from "react";
@@ -99,15 +99,19 @@ describe("useTimelineData calendar refresh and errors", () => {
   function HookHarness({
     selectedSources,
     refOut,
+    rangeStart: start = rangeStart,
+    rangeEnd: end = rangeEnd,
   }: {
     selectedSources: SourceFilterSelection;
     refOut: { current: HookResult | null };
+    rangeStart?: Date;
+    rangeEnd?: Date;
   }) {
     const result = useTimelineData({
       selectedSources,
       viewMode: "calendar",
-      rangeStart,
-      rangeEnd,
+      rangeStart: start,
+      rangeEnd: end,
     });
     refOut.current = result;
     return null;
@@ -368,6 +372,37 @@ describe("useTimelineData calendar refresh and errors", () => {
     });
     expect(resultRef.current!.pageError).toBe("user events boom");
     expect(resultRef.current!.timelineEventsError).toBe("user events boom");
+  });
+
+  it("re-fetches calendar occurrences when the visible range changes", async () => {
+    await renderHook();
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    const firstWindow = mockFetchCalendarOccurrences.mock.calls[0] as [string, string];
+    mockFetchCalendarOccurrences.mockClear();
+
+    await act(async () => {
+      root!.render(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(HookHarness, {
+              selectedSources: null,
+              refOut: resultRef,
+              rangeStart: new Date("2025-02-01T00:00:00Z"),
+              rangeEnd: new Date("2025-03-01T00:00:00Z"),
+            }),
+          ),
+        ),
+      );
+    });
+
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    const nextWindow = mockFetchCalendarOccurrences.mock.calls[0] as [string, string];
+    expect(nextWindow[0]).not.toBe(firstWindow[0]);
+    expect(nextWindow[1]).not.toBe(firstWindow[1]);
   });
 
   it("leaves schedule events untouched when there are no occurrences", async () => {

@@ -129,7 +129,7 @@ async def test_stream_disconnect_releases_subscriber_slot():
 
 
 async def test_collector_status_payload_shape():
-    """Aggregate collector_status_changed uses snake_case optional adapter fields."""
+    """Aggregate collector_status_changed uses camelCase optional adapter fields."""
     broadcaster = SseBroadcaster()
     queue = broadcaster.subscribe()
     try:
@@ -238,7 +238,7 @@ _PUBLISH_SITE_PAYLOADS: tuple[tuple[str, type[BaseModel], dict[str, Any]], ...] 
     (
         "collector_status_changed",
         SseCollectorStatusChangedPayload,
-        {"status": "error", "adapter_name": "rss:feed-1", "error_summary": "boom", "correlation_id": "abc123"},
+        {"status": "error", "adapterName": "rss:feed-1", "errorSummary": "boom", "correlation_id": "abc123"},
     ),
     # collector/base.py _broadcast_status_change (incl. transient reconnect)
     ("source_status_changed", SseSourceStatusChangedPayload, {"sourceId": "source-1", "status": "connected"}),

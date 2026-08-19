@@ -144,7 +144,7 @@ def normalize_user_event_task_id_wire(task_id: Any) -> str | None | object:
     """Map wire ``taskId`` to DB value or ``_UNSET`` when omitted.
 
     ``None`` / ``""`` → store NULL (optional provenance only).
-    ``__user__`` is rejected — ownership uses ``worksetId``, not taskId.
+    ``__general__`` is rejected — ownership uses ``worksetId``, not taskId.
     """
     if task_id is _UNSET:
         return _UNSET
@@ -154,14 +154,14 @@ def normalize_user_event_task_id_wire(task_id: Any) -> str | None | object:
     if not cleaned:
         return None
     if cleaned == SYSTEM_WORKSET_ID:
-        raise UserEventTaskIdError("taskId must not be '__user__'; use worksetId for ownership")
+        raise UserEventTaskIdError("taskId must not be '__general__'; use worksetId for ownership")
     return cleaned
 
 
 def normalize_user_event_workset_id_wire(workset_id: Any) -> str | None | object:
     """Map wire ``worksetId`` to a stored FK or ``_UNSET`` when omitted.
 
-    ``None`` / ``""`` / ``__user__`` → builtin system workset id.
+    ``None`` / ``""`` / ``__general__`` → builtin system workset id.
     """
     if workset_id is _UNSET:
         return _UNSET
@@ -192,7 +192,7 @@ async def resolve_user_event_task_id(db: Database, task_id: Any) -> str | None:
 
 
 async def resolve_user_event_workset_id(db: Database, workset_id: Any) -> str:
-    """Resolve wire worksetId to a stored FK (defaults to builtin ``__user__``)."""
+    """Resolve wire worksetId to a stored FK (defaults to builtin ``__general__``)."""
     normalized = normalize_user_event_workset_id_wire(workset_id)
     assert isinstance(normalized, str)
     row = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (normalized,))
@@ -245,12 +245,12 @@ def build_user_event_list_filters(
     ``task_id``:
     - omitted / ``None``: no provenance filter
     - ``""``: only rows with ``task_id IS NULL``
-    - ``__user__``: rejected (ownership filter is ``workset_id``)
+    - ``__general__``: rejected (ownership filter is ``workset_id``)
     - real id: ``task_id = ?``
 
     ``workset_id``:
     - omitted / ``None`` / empty: no ownership filter
-    - real id (incl. ``__user__``): ``workset_id = ?``
+    - real id (incl. ``__general__``): ``workset_id = ?``
 
     ``search``:
     - omitted / blank: no text filter
@@ -267,7 +267,7 @@ def build_user_event_list_filters(
     if task_id is not None:
         tid = str(task_id).strip()
         if tid == SYSTEM_WORKSET_ID:
-            raise UserEventTaskIdError("task_id must not be '__user__'; use workset_id for ownership filter")
+            raise UserEventTaskIdError("task_id must not be '__general__'; use workset_id for ownership filter")
         if not tid:
             clauses.append("task_id IS NULL")
         else:

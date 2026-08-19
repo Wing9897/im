@@ -113,11 +113,11 @@ describe("sortItemsList", () => {
 });
 
 describe("indexById", () => {
-  it("maps entry pairs including personal workset __user__", () => {
-    const personal = { id: "__user__", name: "Personal" };
+  it("maps entry pairs including personal workset __general__", () => {
+    const personal = { id: "__general__", name: "Personal" };
     const other = { id: "ws-1", name: "Team" };
     const map = indexById([personal, other]);
-    expect(map.get("__user__")).toEqual(personal);
+    expect(map.get("__general__")).toEqual(personal);
     expect(map.get("ws-1")).toEqual(other);
     expect(map.size).toBe(2);
   });

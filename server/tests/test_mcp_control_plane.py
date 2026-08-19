@@ -70,7 +70,7 @@ async def test_mcp_rejects_read_only_key(client, app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_mcp_lists_exactly_base_19_tools(client, app) -> None:
+async def test_mcp_lists_exactly_base_20_tools(client, app) -> None:
     key = await seed_access_key(app.state.db, "mcp-list-secret", scopes=[FULL_SCOPE])
     resp = await _mcp_post(
         client,
@@ -82,8 +82,10 @@ async def test_mcp_lists_exactly_base_19_tools(client, app) -> None:
     payload = resp.json()
     tools = payload["result"]["tools"]
     names = {t["name"] for t in tools}
-    assert len(tools) == 19
+    assert len(MCP_TOOL_ALLOWLIST) == 20
+    assert len(tools) == 20
     assert names == set(MCP_TOOL_ALLOWLIST)
+    assert "worksets.list" in names
     assert "web.search" not in names
     assert "tasks.consult_advisor" not in names
 
@@ -105,9 +107,10 @@ async def test_mcp_filters_list_and_call_when_capability_off(client, app) -> Non
     )
     assert listed.status_code == 200
     names = {t["name"] for t in listed.json()["result"]["tools"]}
-    assert len(names) == 19 - len(CALENDAR_WRITE_TOOL_NAMES)
+    assert len(names) == len(MCP_TOOL_ALLOWLIST) - len(CALENDAR_WRITE_TOOL_NAMES)
     assert names.isdisjoint(CALENDAR_WRITE_TOOL_NAMES)
     assert "calendar.upcoming" in names
+    assert "worksets.list" in names
     assert "calendar.create_event" not in names
 
     denied = await _mcp_post(
@@ -289,7 +292,8 @@ async def test_mcp_status_lists_filtered_tools(client, app) -> None:
     assert payload["toolCount"] == len(names)
     assert names.isdisjoint(CALENDAR_WRITE_TOOL_NAMES)
     assert "calendar.upcoming" in names
-    assert payload["toolCount"] == 19 - len(CALENDAR_WRITE_TOOL_NAMES)
+    assert "worksets.list" in names
+    assert payload["toolCount"] == len(MCP_TOOL_ALLOWLIST) - len(CALENDAR_WRITE_TOOL_NAMES)
 
 
 @pytest.mark.asyncio

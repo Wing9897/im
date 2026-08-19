@@ -123,8 +123,8 @@ class TaskResponse(BaseModel):
         ),
     )
     llmProfileId: str
-    #: Per-task reminder (``follow`` / ``off``).
-    notifyPref: CoercedNotifyPref = "follow"
+    #: Per-task reminder (``inherit`` / ``off``).
+    notifyPref: CoercedNotifyPref = "inherit"
     createdAt: str | None = None
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None

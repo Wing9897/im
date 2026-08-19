@@ -10,7 +10,7 @@ export type SidebarIconKey =
   | "leaderboard"
   | "intelligence"
   | "timeline"
-  | "actions"
+  | "notify"
   | "assistant"
   | "ai"
   | "settings"
@@ -54,7 +54,7 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
   {
     labelKey: "groupInteract",
     items: [
-      { to: "/actions", labelKey: "actions", icon: "actions" },
+      { to: "/notify", labelKey: "notify", icon: "notify" },
       { to: "/assistant", labelKey: "assistant", icon: "assistant" },
     ],
   },
@@ -86,10 +86,7 @@ export function visibleSidebarGroups(simpleMode: boolean): SidebarNavGroupModel[
 
 export function isSidebarItemActive(item: SidebarNavItemModel, pathname: string): boolean {
   if (item.to === "/tasks") {
-    return (
-      pathname === "/tasks" ||
-      (pathname.startsWith("/tasks/") && !pathname.startsWith("/tasks/worksets"))
-    );
+    return pathname === "/tasks" || pathname.startsWith("/tasks/");
   }
   return item.activePrefix
     ? pathname.startsWith(item.activePrefix)

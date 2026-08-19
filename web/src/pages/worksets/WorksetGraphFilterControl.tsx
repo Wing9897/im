@@ -21,6 +21,7 @@ import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
 import { PIPELINE_MAX_VISIBLE_WORKSETS } from "../../domain/worksets/worksetPipelineGraph";
 import {
   defaultGraphWorksetIds,
+  graphWorksetAddCapped,
   graphWorksetIdSetEquals,
   resolveGraphWorksetIds,
   selectAllGraphWorksetIds,
@@ -72,7 +73,7 @@ function worksetFilterLabel(row: WorksetGraphFilterRow, generalName: string): st
   return row.id === SYSTEM_WORKSET_ID ? generalName : row.name;
 }
 
-/** Toolbar checklist: pick ≤10 worksets to render on the household graph. */
+/** Toolbar checklist: default/individual max 10; 全選 may exceed, then uncheck/re-check until ≤10. */
 export function WorksetGraphFilterControl({ worksets }: WorksetGraphFilterControlProps) {
   const { t } = useTranslation("workset");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,7 +91,7 @@ export function WorksetGraphFilterControl({ worksets }: WorksetGraphFilterContro
     [filterParam, worksets],
   );
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const atCap = selectedIds.length >= PIPELINE_MAX_VISIBLE_WORKSETS;
+  const atCap = graphWorksetAddCapped(selectedIds.length);
   const defaultIds = useMemo(() => defaultGraphWorksetIds(worksets), [worksets]);
   const allSelected = worksets.length > 0 && selectedIds.length === worksets.length;
   const triggerLabel = allSelected

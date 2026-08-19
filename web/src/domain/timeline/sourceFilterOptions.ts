@@ -36,7 +36,7 @@ export function resolveSourceFilterTaskLabel(
  * Prefer catalog tasks for the filter checklist; fall back to distinct
  * task ids seen on loaded events when the catalog is empty.
  *
- * Does not inject a virtual `__user__` row — callers pass worksets
+ * Does not inject a virtual `__general__` row — callers pass worksets
  * (incl. the builtin system workset) separately.
  */
 export function catalogOrEventSourceOptions(

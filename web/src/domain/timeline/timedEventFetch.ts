@@ -3,7 +3,7 @@ import { listUserEventsPage } from "../../api/userEvents";
 import { fetchEvents } from "../../api/results";
 import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
 import {
-  fetchSharedCalendarItems,
+  fetchSharedCalendarOccurrences,
   fetchSharedTimedAnalysisPage,
   fetchSharedTimelineEvents,
   fetchSharedUserEvents,
@@ -122,7 +122,7 @@ export async function fetchMergedTimedEvents(
           })
         : Promise.resolve(EMPTY_EVENTS),
       needCalendar
-        ? fetchSharedCalendarItems(
+        ? fetchSharedCalendarOccurrences(
             startIso,
             endIso,
             plan.fetchCalendar
@@ -180,7 +180,7 @@ export async function fetchMergedTimedEvents(
           : listUserEventsPage().then((page) => page.items)
       : Promise.resolve([] as UserEvent[]),
     rruleOpts && startIso && endIso
-      ? fetchSharedCalendarItems(startIso, endIso, {
+      ? fetchSharedCalendarOccurrences(startIso, endIso, {
           // null means "all series" — the shared fetch expects the filter omitted.
           seriesIds: rruleOpts.seriesIds ?? undefined,
           includeItems: rruleOpts.includeItems,

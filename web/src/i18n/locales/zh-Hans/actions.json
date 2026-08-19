@@ -118,8 +118,6 @@
     "quietCaption": "此时段内不播报。",
     "preambleCaption": "朗读前播放的提示音。",
     "enableLabel": "启用通知",
-    "channelVoiceLabel": "语音",
-    "channelFlashLabel": "画面",
     "flashModeLabel": "呈现方式",
     "flashModeTimed": "闪现",
     "flashModePersistent": "持续",
@@ -134,7 +132,6 @@
       "240": "4 小时",
       "1440": "1 天"
     },
-    "leadAria": "提前通知 {label}",
     "chime": {
       "broadcast": "公共广播开场",
       "station": "捷运／车站提示",

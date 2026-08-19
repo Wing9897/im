@@ -26,7 +26,7 @@ import {
   type PipelineBlock,
   type PipelineGraph,
   type PipelinePoint,
-} from "./buildWorksetPipelineGraph";
+} from "./pipelineGraphTypes";
 
 export type PipelineBlockFlowNode = {
   id: string;

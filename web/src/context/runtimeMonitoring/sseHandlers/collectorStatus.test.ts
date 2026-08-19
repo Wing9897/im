@@ -34,8 +34,8 @@ describe("handleCollectorStatusChanged", () => {
     handleCollectorStatusChanged(
       {
         status: "running",
-        adapter_name: "rss",
-        error_summary: "Connection timeout to host https://hnrss.org/newest",
+        adapterName: "rss",
+        errorSummary: "Connection timeout to host https://hnrss.org/newest",
       },
       deps,
     );
@@ -49,8 +49,8 @@ describe("handleCollectorStatusChanged", () => {
     handleCollectorStatusChanged(
       {
         status: "error",
-        adapter_name: "rss",
-        error_summary: "Connection refused",
+        adapterName: "rss",
+        errorSummary: "Connection refused",
       },
       deps,
     );
@@ -64,8 +64,8 @@ describe("handleCollectorStatusChanged", () => {
     handleCollectorStatusChanged(
       {
         status: "error",
-        adapter_name: "rss",
-        error_summary: "Connection timeout to host https://hnrss.org/newest",
+        adapterName: "rss",
+        errorSummary: "Connection timeout to host https://hnrss.org/newest",
       },
       deps,
     );

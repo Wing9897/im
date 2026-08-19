@@ -34,7 +34,7 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
     await db.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
-        "VALUES (?, 'Recurring gate', '__user__', 1, 'FREQ=WEEKLY;BYDAY=MO', "
+        "VALUES (?, 'Recurring gate', '__general__', 1, 'FREQ=WEEKLY;BYDAY=MO', "
         "'2026-07-06T10:00:00', 'floating', ?, ?)",
         (recurring_id, now, now),
     )
@@ -59,7 +59,7 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
     assert all("analysisMode" not in item or not item.get("analysisMode") for item in occurrences)
 
 
-async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) -> None:
+async def test_calendar_occurrences_http_excludes_ai_trigger_schedules(app, client) -> None:
     """GET /calendar/occurrences must not surface AI schedule_rrule as occurrences."""
     db = app.state.db
     now = utc_now_iso()
@@ -78,7 +78,7 @@ async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) ->
     await db.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
-        "VALUES (?, 'HTTP Recurring', '__user__', 1, 'FREQ=DAILY', "
+        "VALUES (?, 'HTTP Recurring', '__general__', 1, 'FREQ=DAILY', "
         "'2026-07-01T09:00:00', 'floating', ?, ?)",
         (recurring_id, now, now),
     )
@@ -91,8 +91,12 @@ async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) ->
         },
     )
     assert response.status_code == 200
-    items = response.json()
-    series_ids = {str(item["seriesId"]) for item in items}
+    occurrences = response.json()
+    series_ids = {str(occ["seriesId"]) for occ in occurrences}
     assert ai_id not in series_ids
     assert recurring_id in series_ids
-    assert all(not item.get("analysisMode") for item in items if item.get("seriesId") == recurring_id)
+    assert all(
+        not occ.get("analysisMode")
+        for occ in occurrences
+        if occ.get("seriesId") == recurring_id
+    )

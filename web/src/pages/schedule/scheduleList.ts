@@ -14,7 +14,7 @@ function entrySortKey(entry: ScheduleListEntry): string {
 
 /**
  * Manage-list one-offs: hide timeline-dismissed rows.
- * Schedule trash is REST hard-delete, but GET /user-events still returns rows
+ * Schedule trash is REST hard-delete, but GET /api/v1/calendar/user-events still returns rows
  * soft-dismissed from Timeline / Agent (`dismissed: true` via timeline_dismissals).
  */
 export function activeScheduleOneOffs(items: readonly UserEvent[]): UserEvent[] {

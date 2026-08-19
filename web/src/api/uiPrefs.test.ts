@@ -174,7 +174,7 @@ describe("uiPrefs assistant sessions + voice IO", () => {
       speechLanguage: "zh-HK",
       spacePttMode: "hold" as const,
       ttsVoiceUri: "",
-      defaultWorksetId: "__user__",
+      defaultWorksetId: "__general__",
     };
     vi.mocked(apiClient.put).mockResolvedValue({ configured: true, settings });
     await putAssistantVoiceIo(settings);

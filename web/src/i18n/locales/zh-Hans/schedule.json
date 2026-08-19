@@ -1,5 +1,4 @@
 {
-  "pageTitle": "我的日程",
   "toolbarAria": "日程工具栏",
   "badge": {
     "oneOff": "一般",
@@ -20,8 +19,7 @@
     "rrule": "重复规则",
     "start": "开始时间",
     "end": "结束时间",
-    "location": "地点",
-    "itemId": "关联物品 ID"
+    "location": "地点"
   },
   "empty": {
     "title": "尚无日程事件",
@@ -59,8 +57,7 @@
     "recurringResumed": "已恢复循环事件",
     "recurringDeleted": "已删除循环事件",
     "saveFailed": "保存失败",
-    "deleteFailed": "删除失败",
-    "loadFailed": "加载失败"
+    "deleteFailed": "删除失败"
   },
   "gridAria": "日程卡片列表",
   "rruleFreq": {

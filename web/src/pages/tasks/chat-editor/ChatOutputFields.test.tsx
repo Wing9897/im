@@ -13,7 +13,7 @@ function renderFields(
     triggerMode: "schedule",
     outputAnalysisEvents: true,
     includeInTimeline: true,
-    notifyPref: "follow",
+    notifyPref: "inherit",
     timelineToggleVisible: true,
     onOutputAnalysisEventsChange: vi.fn(),
     onIncludeInTimelineChange: vi.fn(),

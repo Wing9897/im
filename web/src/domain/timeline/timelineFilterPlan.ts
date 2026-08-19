@@ -48,7 +48,7 @@ export type TimelineFilterPlan = {
    * Used for user_event provenance matching.
    */
   explicitTaskIds: string[];
-  /** Selected workset ids (incl. builtin `__user__`). */
+  /** Selected workset ids (incl. builtin `__general__`). */
   selectedWorksetIds: string[];
   /** True when builtin「一般」workset is in the selection (fetch/filter its user_events). */
   includeGeneralWorksetUserEvents: boolean;
@@ -121,7 +121,7 @@ export function resolveTimelineFilterPlan(
     // leaderboard (and unknown) — not a timeline analysis_events source
   }
 
-  // Workset-only selection (e.g. only __user__) still needs user events.
+  // Workset-only selection (e.g. only __general__) still needs user events.
   const fetchUserEvents =
     includeGeneralWorksetUserEvents ||
     fetchUserForTagged ||

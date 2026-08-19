@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from server.services.location_map import geocode_queries_for_location
 from server.services.weather_http import WeatherProviderError, _get_json
 
 _GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
@@ -12,20 +13,11 @@ _FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 _MET_NO_FORECAST_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
 _WTTR_URL = "https://wttr.in"
 _MET_NO_USER_AGENT = "IntelligenceMonitor/1.0 (local desktop weather client)"
-_LOCATION_ALIASES = {
-    "臺北": "Taipei",
-    "台北": "Taipei",
-    "臺中": "Taichung",
-    "台中": "Taichung",
-    "臺南": "Tainan",
-    "台南": "Tainan",
-    "高雄": "Kaohsiung",
-}
 
 
 async def _geocode_first_result(location: str) -> dict[str, Any] | None:
     """First Open-Meteo geocoding hit (lat/lng + ``country_code``), or None."""
-    for query in dict.fromkeys((location, _LOCATION_ALIASES.get(location, location))):
+    for query in geocode_queries_for_location(location):
         payload = await _get_json(
             "open-meteo-geocoding",
             _GEOCODING_URL,

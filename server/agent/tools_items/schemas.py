@@ -87,7 +87,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "name": "items.create",
         "description": (
             "Create a trackable item (inventory / document / food / card, etc.). "
-            "worksetId defaults to builtin「一般」(__user__) when omitted. "
+            "worksetId defaults to builtin「一般」(__general__) when omitted. "
             "Purchase / expiry dates are not set here — create linked calendar "
             "milestones via the Items form (kind=expires / purchase_effective). "
             "calendar.create_event only creates kind=normal events (no finance / expiry). "
@@ -99,7 +99,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "title": {"type": "string", "minLength": 1},
                 "worksetId": {
                     "type": "string",
-                    "description": "Ownership workset; omit or __user__ for「一般」.",
+                    "description": "Ownership workset; omit or __general__ for「一般」.",
                 },
                 "categoryId": {"type": "string"},
                 "notes": {"type": "string"},

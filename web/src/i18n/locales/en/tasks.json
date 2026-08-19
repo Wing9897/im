@@ -436,7 +436,6 @@
       "readItems": "Read items (list expiring / inventory items)",
       "webSearch": "Web search (force-enabled when on)"
     },
-    "outputLabel": "Output modes",
     "output": {
       "calendar": "Calendar events (implies write-calendar)"
     },

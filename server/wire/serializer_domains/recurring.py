@@ -43,7 +43,7 @@ def serialize_recurring_series(row: Mapping[str, Any]) -> dict[str, Any]:
         "icsUid": row.get("ics_uid"),
         "icsSource": row.get("ics_source"),
         "isActive": bool(row.get("is_active")),
-        "worksetId": row.get("workset_id") or "__user__",
+        "worksetId": row.get("workset_id") or "__general__",
         "parentTaskId": row.get("parent_task_id") or None,
         "itemId": row.get("item_id") or None,
         "notifyPref": normalize_notify_pref(row.get("notify_pref")),

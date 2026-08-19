@@ -55,7 +55,7 @@ const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   leaderboard: Trophy,
   intelligence: MapPin,
   timeline: CalendarDays,
-  actions: BellRing,
+  notify: BellRing,
   assistant: MessageSquare,
   ai: Bot,
   settings: Settings,
@@ -79,10 +79,7 @@ export function AppSidebar() {
   const visibleGroups = visibleSidebarGroups(simpleMode);
 
   useEffect(() => {
-    if (
-      location.pathname.startsWith("/tasks") &&
-      !location.pathname.startsWith("/tasks/worksets")
-    ) {
+    if (location.pathname.startsWith("/tasks")) {
       setLastTasksPath(location.pathname);
     }
   }, [location.pathname]);

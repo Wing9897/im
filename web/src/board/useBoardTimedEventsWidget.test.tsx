@@ -50,7 +50,7 @@ vi.mock("../context/TaskCatalogContext", () => ({
   useTaskCatalog: () => ({
     tasks: [{ id: "task-1", name: "Task one", worksetId: "ws-1" }],
     worksets: [
-      { id: "__user__", name: "General", isSystem: true },
+      { id: "__general__", name: "General", isSystem: true },
       { id: "ws-1", name: "Workspace", isSystem: false },
     ],
   }),
@@ -157,7 +157,7 @@ describe("useBoardTimedEventsWidget", () => {
     expect(filter.props).toMatchObject({
       tasks: [{ id: "catalog-option", name: "Catalog option" }],
       worksets: [
-        { id: "__user__", name: "一般", isSystem: true },
+        { id: "__general__", name: "一般", isSystem: true },
         { id: "ws-1", name: "Workspace", isSystem: false },
       ],
       expandTasks: [{ id: "task-1", name: "Task one", worksetId: "ws-1" }],

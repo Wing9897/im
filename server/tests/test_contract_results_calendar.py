@@ -58,7 +58,7 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
         await app.state.db.execute(
             "INSERT INTO recurring_schedules "
             "(id, name, workset_id, is_active, rrule, dtstart, dtend, timezone, created_at, updated_at) "
-            "VALUES (?, ?, '__user__', ?, ?, '2000-01-01T10:00:00', "
+            "VALUES (?, ?, '__general__', ?, ?, '2000-01-01T10:00:00', "
             "'2000-01-01T11:00:00', 'floating', ?, ?)",
             (series_id, series_id, is_active, rrule, now, now),
         )
@@ -123,7 +123,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
             "INSERT INTO recurring_schedules "
             "(id, name, workset_id, is_active, rrule, dtstart, dtend, location, description, "
             "timezone, created_at, updated_at) "
-            "VALUES (?, ?, '__user__', ?, ?, ?, ?, ?, ?, 'floating', ?, ?)",
+            "VALUES (?, ?, '__general__', ?, ?, ?, ?, ?, ?, 'floating', ?, ?)",
             (
                 series_id,
                 name,
@@ -203,7 +203,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "important": False,
         "isLastOccurrence": False,
         "source": "recurring",
-        "worksetId": "__user__",
+        "worksetId": "__general__",
         "itemId": None,
         "itemDateKind": None,
         "notifyPref": "off",
@@ -224,7 +224,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "important": False,
         "isLastOccurrence": False,
         "source": "recurring",
-        "worksetId": "__user__",
+        "worksetId": "__general__",
         "itemId": None,
         "itemDateKind": None,
         "notifyPref": "off",

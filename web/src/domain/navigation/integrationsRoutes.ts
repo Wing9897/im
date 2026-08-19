@@ -17,6 +17,3 @@ export function settingsIntegrationsPath(
 ): string {
   return `${SETTINGS_INTEGRATIONS_PATH}?tab=${tab}`;
 }
-
-export const SETTINGS_API_REDIRECT = settingsIntegrationsPath("webhook");
-export const SETTINGS_MCP_REDIRECT = settingsIntegrationsPath("mcp");

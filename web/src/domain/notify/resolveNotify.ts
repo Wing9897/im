@@ -2,7 +2,7 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { normalizeNotifyPref, type NotifyPref } from "./notifyPref";
 
 export type ResolveNotifyInput = {
-  /** Per-row override. Blank / omitted → follow. */
+  /** Per-row override. Blank / omitted → inherit. */
   override?: string | null;
   /**
    * Workset default. ``null`` / omitted treats as on (schema default).
@@ -20,8 +20,8 @@ export type ResolveNotifyInput = {
  *
  * - global off or DND: never notify
  * - ``off``: this entity silent
- * - ``follow``: use ``worksetNotifyEnabled`` (missing → on)
- * - HTTP ``"on"`` is 422; read-side coerce treats it as unknown → default
+ * - ``inherit``: use ``worksetNotifyEnabled`` (missing → on)
+ * - HTTP ``"follow"`` / ``"on"`` are 422; read-side coerce treats them as unknown → default
  */
 export function resolveNotify(input: ResolveNotifyInput): boolean {
   if (!input.globalEnabled) return false;

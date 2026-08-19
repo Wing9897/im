@@ -29,7 +29,7 @@ describe("WorksetCatalogChrome", () => {
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -108,7 +108,7 @@ describe("WorksetCatalogChrome", () => {
     });
     const list = document.body.querySelector('[data-testid="workset-graph-filter-list"]');
     const general = document.body.querySelector(
-      '[data-testid="workset-graph-filter-option-__user__"]',
+      '[data-testid="workset-graph-filter-option-__general__"]',
     ) as HTMLInputElement | null;
     const ops = document.body.querySelector(
       '[data-testid="workset-graph-filter-option-ws-1"]',
@@ -128,7 +128,7 @@ describe("WorksetCatalogChrome", () => {
       ops?.click();
     });
     expect(harness.container.querySelector('[data-testid="workset-graph-search"]')?.textContent).toContain(
-      "worksetId=__user__",
+      "worksetId=__general__",
     );
     expect(
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
@@ -152,7 +152,7 @@ describe("WorksetCatalogChrome", () => {
   it("caps the graph checklist at 10 worksets and keeps 一般 optional", async () => {
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -182,7 +182,7 @@ describe("WorksetCatalogChrome", () => {
     });
 
     const general = document.body.querySelector(
-      '[data-testid="workset-graph-filter-option-__user__"]',
+      '[data-testid="workset-graph-filter-option-__general__"]',
     ) as HTMLInputElement | null;
     const oldest = document.body.querySelector(
       '[data-testid="workset-graph-filter-option-ws-1"]',
@@ -203,7 +203,7 @@ describe("WorksetCatalogChrome", () => {
     });
     expect(
       (document.body.querySelector(
-        '[data-testid="workset-graph-filter-option-__user__"]',
+        '[data-testid="workset-graph-filter-option-__general__"]',
       ) as HTMLInputElement | null)?.checked,
     ).toBe(false);
     expect(
@@ -216,7 +216,7 @@ describe("WorksetCatalogChrome", () => {
   it("lets 全選 check every workset past the cap and 清除 check none", async () => {
     taskCatalogState.worksets = [
       {
-        id: "__user__",
+        id: "__general__",
         name: "一般",
         isSystem: true,
         notifyEnabled: true,
@@ -266,7 +266,7 @@ describe("WorksetCatalogChrome", () => {
     });
     expect(
       (document.body.querySelector(
-        '[data-testid="workset-graph-filter-option-__user__"]',
+        '[data-testid="workset-graph-filter-option-__general__"]',
       ) as HTMLInputElement | null)?.checked,
     ).toBe(false);
     expect(

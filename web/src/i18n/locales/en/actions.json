@@ -118,8 +118,6 @@
     "quietCaption": "No notifications during this window.",
     "preambleCaption": "Chime played before speech.",
     "enableLabel": "Enable notifications",
-    "channelVoiceLabel": "Voice",
-    "channelFlashLabel": "On-screen",
     "flashModeLabel": "Presentation",
     "flashModeTimed": "Flash",
     "flashModePersistent": "Persistent",
@@ -134,7 +132,6 @@
       "240": "4 hours",
       "1440": "1 day"
     },
-    "leadAria": "Notify {label} ahead",
     "chime": {
       "broadcast": "Public broadcast open",
       "station": "Transit / station cue",

@@ -35,7 +35,7 @@ export type UserEventFormValues = {
   endTime: string;
   location: string;
   body: string;
-  /** Ownership workset id (``__user__`` = builtin system workset). */
+  /** Ownership workset id (``__general__`` = builtin system workset). */
   worksetId: string;
   isAllDay: boolean;
   /** Optional remind-N-days-before-start; empty string = unset. */

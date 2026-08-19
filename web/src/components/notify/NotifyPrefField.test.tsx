@@ -10,14 +10,14 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("NotifyPrefField", () => {
-  it("renders a labeled switch and reports follow / off", async () => {
+  it("renders a labeled switch and reports inherit / off", async () => {
     const onChange = vi.fn();
     const host = document.createElement("div");
     document.body.appendChild(host);
     let root: Root | null = null;
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyPrefField, { value: "follow", onChange }));
+      root.render(createElement(NotifyPrefField, { value: "inherit", onChange }));
     });
     const toggle = host.querySelector<HTMLElement>('[data-testid="notify-pref-field"]');
     expect(toggle?.getAttribute("role")).toBe("switch");
@@ -41,7 +41,7 @@ describe("NotifyPrefField", () => {
     await act(async () => {
       root = createRoot(host);
       root.render(
-        createElement(NotifyPrefField, { value: "follow", onChange, variant: "tile" }),
+        createElement(NotifyPrefField, { value: "inherit", onChange, variant: "tile" }),
       );
     });
     const tile = host.querySelector<HTMLButtonElement>('[data-testid="notify-pref-field"]');

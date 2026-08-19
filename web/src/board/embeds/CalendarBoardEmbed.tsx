@@ -10,6 +10,8 @@ import {
   startOfDay,
   startOfMonth,
 } from "../../domain/timeline/dateUtils";
+import { holidayNamesForDay, useMonthHolidays } from "../../hooks/useMonthHolidays";
+import { dateKey } from "../../utils/dateFormat";
 
 interface CalendarBoardEmbedProps {
   /** Timed board events (analysis / user / recurring / item_remind). */
@@ -36,6 +38,7 @@ export function CalendarBoardEmbed({
   const todayStart = useMemo(() => startOfDay(now), [now]);
   const monthCursor = useMemo(() => startOfMonth(now), [now]);
   const monthDays = useMemo(() => buildCalendarDays(monthCursor), [monthCursor]);
+  const { holidaysByDate } = useMonthHolidays(mode === "month", monthDays);
 
   const events = useMemo(
     () =>
@@ -82,20 +85,25 @@ export function CalendarBoardEmbed({
               const inMonth = day.getMonth() === monthCursor.getMonth();
               const dayEvents = events.filter((event) => eventStartsOnDay(event, day));
               const today = isToday(day);
+              const holidayNames = inMonth ? holidayNamesForDay(day, holidaysByDate) : [];
+              const hasHoliday = holidayNames.length > 0;
               return (
                 <button
                   key={day.toISOString()}
                   type="button"
+                  data-date={dateKey(day)}
                   className={[
                     "board-calendar-month__day",
                     inMonth ? "" : "board-calendar-month__day--muted",
                     today ? "board-calendar-month__day--today" : "",
+                    hasHoliday ? "board-calendar-month__day--holiday" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                   onClick={() => handleDayClick(day, dayEvents)}
                 >
                   <span className="board-calendar-month__num">{day.getDate()}</span>
+                  {hasHoliday ? <BoardMonthHolidayWatermark names={holidayNames} /> : null}
                   {dayEvents.length > 0 ? (
                     <span
                       className="board-calendar-month__dots"
@@ -140,5 +148,28 @@ export function CalendarBoardEmbed({
         </div>
       )}
     </div>
+  );
+}
+
+/** Compact Nager name under the date number — not Timeline's large month-grid watermark. */
+function BoardMonthHolidayWatermark({ names }: { names: string[] }) {
+  const { t } = useTranslation("timeline");
+  if (names.length === 0) return null;
+  const extra = names.length - 1;
+  const joined = names.join(t("calendar.holidayNameSep"));
+  return (
+    <span
+      className="board-calendar-month__holiday"
+      data-testid="board-calendar-month-holiday"
+      aria-label={t("calendar.holidayAria", { name: joined })}
+      title={t("calendar.holidayTitle", { name: joined })}
+    >
+      <span className="board-calendar-month__holiday-label">{names[0]}</span>
+      {extra > 0 ? (
+        <span className="board-calendar-month__holiday-extra">
+          {t("calendar.holidayOverflow", { count: extra })}
+        </span>
+      ) : null}
+    </span>
   );
 }

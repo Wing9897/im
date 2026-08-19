@@ -130,14 +130,18 @@ class CollectorManager:
         adapter_name: str | None = None,
         error_summary: str | None = None,
     ) -> None:
-        """Broadcast aggregate collector status on ``collector_status_changed``."""
+        """Broadcast aggregate collector status on ``collector_status_changed``.
+
+        Wire keys are camelCase (``adapterName``, ``errorSummary``);
+        ``correlation_id`` stays snake_case (error-body convention).
+        """
         if self._retry_orchestrator.shutting_down:
             return
         payload: dict[str, str] = {"status": await self.get_status()}
         if adapter_name is not None:
-            payload["adapter_name"] = adapter_name
+            payload["adapterName"] = adapter_name
         if error_summary is not None:
-            payload["error_summary"] = error_summary
+            payload["errorSummary"] = error_summary
             payload["correlation_id"] = new_id()
         self._broadcaster.publish("collector_status_changed", payload)
 

@@ -143,7 +143,7 @@ export function buildLinkedCalendarEditInitial(args: {
       event.remindBeforeDays != null ? String(event.remindBeforeDays) : "",
     itemId,
     calendarKind: normalizeUserEventCalendarKind(event.kind),
-    notifyPref: event.notifyPref ?? "follow",
+    notifyPref: event.notifyPref ?? "inherit",
     amountInput: event.amount != null ? String(event.amount) : "",
     direction: event.direction === "income" ? "income" : "expense",
   };

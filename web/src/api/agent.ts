@@ -30,7 +30,7 @@ interface AgentChatRequest {
   locale?: AppLocale;
   /**
    * Default create target workset when calendar tools omit worksetId.
-   * ``__user__`` / empty → builtin system workset.
+   * ``__general__`` / empty → builtin system workset.
    */
   worksetId?: string | null;
   /** Page gate: only task create/edit sends ``task_editor``. */

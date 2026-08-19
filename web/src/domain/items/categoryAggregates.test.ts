@@ -28,7 +28,7 @@ function item(
   partial: Partial<TrackableItem> & { id: string; title: string },
 ): TrackableItem {
   return {
-    worksetId: "__user__",
+    worksetId: "__general__",
     categoryId: null,
     expiresAt: null,
     remindBeforeDays: 7,

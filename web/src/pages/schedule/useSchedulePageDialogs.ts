@@ -36,7 +36,7 @@ function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
     isAllDay: Boolean(event.isAllDay),
     remindBeforeDays:
       event.remindBeforeDays == null ? "" : String(event.remindBeforeDays),
-    notifyPref: event.notifyPref ?? "follow",
+    notifyPref: event.notifyPref ?? "inherit",
     itemId: event.itemId ?? "",
     amountInput: event.amount == null ? "" : String(event.amount),
     direction: event.direction === "income" ? "income" : "expense",

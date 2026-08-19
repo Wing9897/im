@@ -37,7 +37,6 @@
     "purchaseEffective": "Purchase / effective"
   },
   "linkedCalendarGridAria": "Linked calendar icons",
-  "quickLinkedCalendarAddAria": "Quick add {name} calendar",
   "editTitleAria": "Edit name",
   "linkedCalendarCreated": "Linked calendar added",
   "linkedCalendarUpdated": "Linked calendar updated",

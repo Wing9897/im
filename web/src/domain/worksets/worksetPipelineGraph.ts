@@ -60,8 +60,6 @@ export {
 
 export {
   buildWorksetPipelineGraph,
-  scopePipelineInputToWorkset,
-  collapsePipelineGraph,
   taskOwnerWorksetId,
   assistantOwnerWorksetId,
   taskIntelEnabled,
@@ -95,6 +93,8 @@ export {
   type PipelineGraphLabels,
   type PipelineGraphInput,
 } from "./buildWorksetPipelineGraph";
+
+export { scopePipelineInputToWorkset, collapsePipelineGraph } from "./pipelineGraphScope";
 
 export {
   layoutPipelineFlow,

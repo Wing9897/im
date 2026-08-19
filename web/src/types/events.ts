@@ -7,9 +7,8 @@
 // event is `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`);
 // `sseClient.ts` unwraps `payload` before these types apply.
 //
-// `collector_status_changed` deliberately uses snake_case adapter fields
-// (`adapter_name` / `error_summary` / `correlation_id`) — wire contract,
-// documented in the schema; do not camelize.
+// Resource/status payloads are camelCase (`adapterName` / `errorSummary`).
+// Error-body fields `error_code` / `correlation_id` stay snake_case.
 
 import type { components } from "../api/generated/schema";
 

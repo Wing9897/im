@@ -58,7 +58,7 @@ describe("UserEventDialog edit", () => {
     host.remove();
   });
 
-  it("loads saved notifyPref follow as checked", async () => {
+  it("loads saved notifyPref inherit as checked", async () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
 
@@ -72,7 +72,7 @@ describe("UserEventDialog edit", () => {
             title: "既有",
             startTime: "2026-07-20T10:00:00.000Z",
             worksetId: SYSTEM_WORKSET_ID,
-            notifyPref: "follow",
+            notifyPref: "inherit",
           },
           onClose: vi.fn(),
           onSubmit: vi.fn(),

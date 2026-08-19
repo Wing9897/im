@@ -232,7 +232,7 @@ async def test_assistant_voice_io_roundtrip(client, app) -> None:
     assert body["settings"]["ttsEnabled"] is False
     assert body["settings"]["speechLanguage"] == "en-US"
     assert body["settings"]["spacePttMode"] == "hold"
-    assert body["settings"]["defaultWorksetId"] == "__user__"
+    assert body["settings"]["defaultWorksetId"] == "__general__"
     assert "Tracy" in body["settings"]["ttsVoiceUri"]
     stored_voice = await ui_pref_payload(app.state.db, "assistant_voice_io_settings")
     assert stored_voice is not None and "ttsEnabled" in stored_voice

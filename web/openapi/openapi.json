@@ -3453,14 +3453,14 @@
         }
       }
     },
-    "/api/v1/channels/with-sources": {
+    "/api/v1/channels": {
       "get": {
         "tags": [
           "channels"
         ],
-        "summary": "List Channels With Sources",
+        "summary": "List Channels",
         "description": "ChannelWithSource[] — sourceName populated server-side.",
-        "operationId": "list_channels_with_sources_api_v1_channels_with_sources_get",
+        "operationId": "list_channels_api_v1_channels_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3471,7 +3471,7 @@
                     "$ref": "#/components/schemas/ChannelWithSourceResponse"
                   },
                   "type": "array",
-                  "title": "Response List Channels With Sources Api V1 Channels With Sources Get"
+                  "title": "Response List Channels Api V1 Channels Get"
                 }
               }
             }
@@ -6248,7 +6248,7 @@
         "operationId": "events_api_v1_events_get",
         "responses": {
           "200": {
-            "description": "Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{\"type\": <event>, \"payload\": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. `collector_status_changed` deliberately uses snake_case adapter fields (`adapter_name`, `error_summary`, `correlation_id`).",
+            "description": "Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{\"type\": <event>, \"payload\": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. Resource/status payloads are camelCase (`adapterName`, `errorSummary`); error-body fields `error_code` / `correlation_id` stay snake_case.",
             "content": {
               "text/event-stream": {
                 "schema": {
@@ -8642,7 +8642,7 @@
           "defaultWorksetId": {
             "type": "string",
             "title": "Defaultworksetid",
-            "default": "__user__"
+            "default": "__general__"
           }
         },
         "type": "object",
@@ -9428,11 +9428,11 @@
           "notifyPref": {
             "type": "string",
             "enum": [
-              "follow",
+              "inherit",
               "off"
             ],
             "title": "Notifypref",
-            "default": "follow"
+            "default": "inherit"
           }
         },
         "type": "object",
@@ -13058,7 +13058,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -13231,7 +13231,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -13423,11 +13423,11 @@
           "notifyPref": {
             "type": "string",
             "enum": [
-              "follow",
+              "inherit",
               "off"
             ],
             "title": "Notifypref",
-            "default": "follow"
+            "default": "inherit"
           },
           "createdAt": {
             "anyOf": [
@@ -14953,7 +14953,7 @@
               }
             ],
             "title": "Worksetid",
-            "description": "Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`)."
+            "description": "Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__general__`)."
           },
           "triggerMode": {
             "anyOf": [
@@ -15076,7 +15076,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -15334,7 +15334,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -15524,11 +15524,11 @@
           "notifyPref": {
             "type": "string",
             "enum": [
-              "follow",
+              "inherit",
               "off"
             ],
             "title": "Notifypref",
-            "default": "follow"
+            "default": "inherit"
           },
           "createdAt": {
             "anyOf": [
@@ -16261,7 +16261,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -16439,7 +16439,7 @@
               {
                 "type": "string",
                 "enum": [
-                  "follow",
+                  "inherit",
                   "off"
                 ]
               },
@@ -16614,11 +16614,11 @@
           "notifyPref": {
             "type": "string",
             "enum": [
-              "follow",
+              "inherit",
               "off"
             ],
             "title": "Notifypref",
-            "default": "follow"
+            "default": "inherit"
           },
           "source": {
             "type": "string",
@@ -17036,7 +17036,7 @@
             "title": "Status",
             "type": "string"
           },
-          "adapter_name": {
+          "adapterName": {
             "anyOf": [
               {
                 "type": "string"
@@ -17045,10 +17045,10 @@
                 "type": "null"
               }
             ],
-            "description": "Failing adapter name. Deliberately snake_case (wire contract).",
-            "title": "Adapter Name"
+            "description": "Failing adapter name.",
+            "title": "Adaptername"
           },
-          "error_summary": {
+          "errorSummary": {
             "anyOf": [
               {
                 "type": "string"
@@ -17057,8 +17057,8 @@
                 "type": "null"
               }
             ],
-            "description": "Error summary when an adapter connection fails. Deliberately snake_case.",
-            "title": "Error Summary"
+            "description": "Error summary when an adapter connection fails.",
+            "title": "Errorsummary"
           },
           "correlation_id": {
             "anyOf": [
@@ -17069,7 +17069,7 @@
                 "type": "null"
               }
             ],
-            "description": "Trace id for error-toast correlation. Deliberately snake_case.",
+            "description": "Trace id for error-toast correlation. Deliberately snake_case (error-body convention).",
             "title": "Correlation Id"
           }
         },

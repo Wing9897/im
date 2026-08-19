@@ -154,7 +154,7 @@ describe("linkedCalendarQuickCreate", () => {
       remindBeforeDays: "2",
       itemId: "item-42",
       calendarKind: "normal",
-      notifyPref: "follow",
+      notifyPref: "inherit",
       amountInput: "",
       direction: "expense",
     });

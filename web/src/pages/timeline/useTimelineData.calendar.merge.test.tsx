@@ -8,7 +8,7 @@
  * - filtering by a recurring task shows only that task's occurrences
  * - filtering by an event task does not mix in calendar occurrences
  * - timelineTasks includes event, recurring, and agent modes
- * - __user__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
+ * - __general__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
  * - task filters include tagged user_events for that task
  */
 import { act, createElement } from "react";
@@ -251,7 +251,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(resultRef.current!.events.map((e) => e.id)).toEqual(["ue-owned-a"]);
   });
 
-  it("shows all user events owned by the general workset when __user__ is selected", async () => {
+  it("shows all user events owned by the general workset when __general__ is selected", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
     mockListUserEvents.mockResolvedValue(userEventsPage([
       {

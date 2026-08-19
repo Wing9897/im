@@ -39,7 +39,7 @@ failure:
 1. **`npm run lint`** — `ruff check` + `ruff format --check` on `server/` and `scripts/`,
    then ESLint on `web/src/`
 2. **`npm run sync:presets:check`** — task preset artifacts must match `shared/task_presets.json`
-3. **`npm run i18n:check`** — locale key parity across `zh-Hant` / `zh-Hans` / `en`
+3. **`npm run i18n:check`** — locale key parity across `zh-Hant` / `zh-Hans` / `en`, plus unused-key scan
 4. **`npm run openapi:check`** — committed OpenAPI schema and generated TS types must match
    a fresh export from the live FastAPI app
 5. **`npm run typecheck`** — `tsc` for web, desktop, root tests, and desktop tests, plus
@@ -74,7 +74,9 @@ against:
 `zh-Hant` is the source of truth. Add a key there first, then mirror it into `zh-Hans` and
 `en` — leaf keys must be identical in all three namespaces. Terminology and `error_code`
 vocabulary live in [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md); retired keys that must
-never come back are listed in `scripts/check-i18n-parity.mjs`.
+never come back are listed in `scripts/check-i18n-parity.mjs`. Unused keys fail
+`i18n:check` unless they have a `t()` / quoted-literal hit or an allowlist reason
+(dynamic catalogs, FORBIDDEN counterparts).
 
 ## Where tests go
 

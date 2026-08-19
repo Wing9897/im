@@ -12,7 +12,7 @@ import {
 } from "./userEvents";
 
 describe("userEvents helpers", () => {
-  it("treats null/empty/__user__ as missing provenance; normalizes workset ids", () => {
+  it("treats null/empty/__general__ as missing provenance; normalizes workset ids", () => {
     expect(isNullProvenanceTaskId(null)).toBe(true);
     expect(isNullProvenanceTaskId("")).toBe(true);
     expect(isNullProvenanceTaskId(SYSTEM_WORKSET_ID)).toBe(true);

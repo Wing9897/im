@@ -57,12 +57,12 @@ async def list_user_events(
     ``task_id`` filter:
     - omitted / ``None``: no provenance filter
     - ``""``: only rows with ``task_id IS NULL``
-    - ``__user__``: rejected (``UserEventTaskIdError``) — use ``workset_id``
+    - ``__general__``: rejected (``UserEventTaskIdError``) — use ``workset_id``
     - real id: only events tagged with that task provenance
 
     ``workset_id`` filter:
     - omitted / ``None``: no workset filter
-    - real id (incl. ``__user__``): events with that ``workset_id``
+    - real id (incl. ``__general__``): events with that ``workset_id``
 
     ``item_id`` filter:
     - omitted / ``None``: no parent-item filter

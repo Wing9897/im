@@ -2,8 +2,8 @@
 
 The subset check only catches one direction — a frontend call with no route
 behind it. ``test_server_paths_have_an_in_repo_caller`` closes the other
-direction: a route no client calls (``GET /api/v1/channels`` lived that way for
-a while, kept alive only by its own contract test).
+direction: a route no client calls (``GET /api/v1/channels/with-sources`` lived
+that way until the list moved to bare ``GET /api/v1/channels``).
 
 Also guards OpenAPI drift: committed ``web/openapi/openapi.json`` paths must
 be a subset of live FastAPI OpenAPI paths (live ⊇ committed).
@@ -177,7 +177,7 @@ def test_server_paths_have_an_in_repo_caller(app: FastAPI):
     by the suite that covers it is dead code with a green checkmark.
     """
     called = _called_paths()
-    assert "/api/v1/channels/with-sources" in called, "caller scan is broken — it found no known frontend call"
+    assert "/api/v1/channels" in called, "caller scan is broken — it found no known frontend call"
 
     uncalled = sorted(
         path

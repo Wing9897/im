@@ -22,10 +22,7 @@
     "saving": "儲存中…",
     "saveSuccess": "✓ 儲存成功！",
     "restarting": "重啟中…",
-    "resetting": "重置中…",
-    "cleaning": "清理中…",
-    "enabled": "已啟用",
-    "disabled": "已關閉"
+    "cleaning": "清理中…"
   },
   "concurrentBatchesConfirm": {
     "title": "確認增加並行批次數",
@@ -98,7 +95,6 @@
     "removeImage": "移除圖片",
     "bgPreviewAlt": "背景預覽",
     "opacity": "透明度",
-    "customizeHeading": "自訂此主題",
     "personalizationSectionTitle": "個人化",
     "colorsHeading": "顏色與不透明度",
     "colorAccent": "強調色",
@@ -159,12 +155,10 @@
       "appLogs": "日誌",
       "userEvents": "用戶事件",
       "timelineDismissals": "時間軸隱藏",
-      "assistantStores": "助手工作區",
       "deviceAccessTokens": "裝置存取權杖",
       "deviceSessions": "裝置工作階段",
       "separator": "、"
     },
-    "restartApp": "重新啟動應用程式",
     "retentionCleanupDescription": "依目前保留天數設定立即執行一次清理，並回傳各類刪除筆數。不會重啟服務。",
     "runCleanupButton": "立即清理",
     "retentionRunConfirmTitle": "確定要立即清理？",
@@ -182,13 +176,8 @@
     "testSuccess": "AI 測試成功（{latency}ms，{tokens}{preview}）",
     "testPreviewSuffix": "，回覆：{preview}",
     "testFailedDefault": "AI 測試失敗",
-    "loading": "載入 AI 設定檔中…",
-    "loadError": "無法載入 AI 設定檔",
-    "testHint": "「AI 測試」只驗證該設定檔的 LLM 連線（極短請求），不含聯網搜尋。",
-    "testHintUnsaved": "（含未儲存變更）",
     "testing": "測試中…",
-    "testButton": "AI 測試",
-    "saveLabel": "儲存 AI 設定檔"
+    "testButton": "AI 測試"
   },
   "webSearch": {
     "sectionTitle": "聯網搜尋",
@@ -485,17 +474,13 @@
     "docsHint": "完整契約見倉庫 docs/agent/mcp.md。"
   },
   "staff": {
-    "title": "AI 員工介紹",
     "intro": "前線兩位：助手、任務顧問。後勤三位：排行榜分析員、情報任務分析員、專案經理（由分析任務自動召喚）。另有「客戶經理」接待外部系統（A2A，與助手同組，不跟你聊天）。",
     "capabilitiesLabel": "能做什麼",
     "backofficeNote": "後勤員工由分析任務自動召喚，不會出現在對話框。",
     "openAssistant": "開啟助手對話",
     "openTaskEditor": "開啟任務顧問對話",
     "displayNameLabel": "顯示名稱",
-    "displayNameHelp": "留空則使用預設名稱。",
     "editNameAria": "編輯助手顯示名稱",
-    "editLlmAria": "編輯助手對話保留設定",
-    "llmDialogTitle": "助手對話保留",
     "llmDialogCancel": "取消",
     "llmDialogSave": "儲存",
     "uploadAvatar": "上傳",
@@ -504,14 +489,10 @@
     "resetAvatarAria": "將助手頭像重設為預設",
     "avatarTooLarge": "壓縮後圖片仍過大，請換一張更小的圖。",
     "avatarReadFailed": "無法讀取該圖片。",
-    "llmProviderLabel": "LLM 供應商",
-    "llmProviderFollow": "跟隨預設 AI 設定檔",
-    "llmProviderHelp": "LLM 連線請在「AI 設定檔」中配置，並在此綁定員工類別。",
     "historyMaxMessagesLabel": "對話保留則數",
     "historyMaxMessagesHelp": "送入模型時最多保留的近期訊息數（系統提示不計）。超出時省略較早輪次；介面紀錄仍完整保留。預設 40。",
     "historyMaxCharsLabel": "對話字元上限",
     "historyMaxCharsHelp": "送入模型的對話總字元約略上限（含系統提示）。超出時省略較早輪次。預設 48000。",
-    "saveLabel": "儲存",
     "kind": {
       "agent": "Agent 級",
       "oneshot": "單次／專職 AI"
@@ -631,7 +612,6 @@
     "namePlaceholder": "例如：本機 Ollama",
     "nameRequired": "請填寫設定檔名稱。",
     "apiKeyRequired": "此供應商需要 API 金鑰。",
-    "staffClassesLabel": "任務員工類別",
     "staffClassesHelp": "哪些任務模式角色可使用此設定檔。任務仍須在表單挑選 llmProfileId。助手／A2A／任務顧問請用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析員",

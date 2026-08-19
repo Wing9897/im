@@ -25,14 +25,14 @@ function idListKey(ids: string[] | null | undefined): string {
   return [...ids].sort().join(",");
 }
 
-export function fetchSharedCalendarItems(
+export function fetchSharedCalendarOccurrences(
   rangeStart: string,
   rangeEnd: string,
   opts?: { seriesId?: string; seriesIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
   const includeItems = opts?.includeItems !== false;
   const key = [
-    "calendar-items",
+    "calendar-occurrences",
     rangeStart,
     rangeEnd,
     opts?.seriesIds !== undefined

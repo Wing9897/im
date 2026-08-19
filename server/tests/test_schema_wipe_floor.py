@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-40 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-42 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -24,13 +24,13 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 40
-    assert SCHEMA_SEMVER == "0.1.0-beta.41"
+    assert CURRENT_SCHEMA_VERSION == 42
+    assert SCHEMA_SEMVER == "0.1.0-beta.43"
 
 
 @pytest.mark.asyncio
 async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
-    """Empty DB + ensure_supported_schema → current stamp + seeded __user__; zero LLM profiles."""
+    """Empty DB + ensure_supported_schema → current stamp + seeded __general__; zero LLM profiles."""
     path = str(tmp_path / "fresh-wipe-floor.db")
     db = Database(path)
     await db.connect()
@@ -49,19 +49,19 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         workset_col = cols["workset_id"]
         assert int(workset_col[3]) == 1  # notnull
         assert workset_col[4] is not None
-        assert "__user__" in str(workset_col[4])
+        assert "__general__" in str(workset_col[4])
         async with db.conn.execute("PRAGMA table_info(analysis_tasks)") as cursor:
             task_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "llm_profile_id" in task_cols
         assert int(task_cols["llm_profile_id"][3]) == 1
         assert "notify_pref" in task_cols
         assert int(task_cols["notify_pref"][3]) == 1
-        assert str(task_cols["notify_pref"][4]).replace("'", "") == "follow"
+        assert str(task_cols["notify_pref"][4]).replace("'", "") == "inherit"
         assert str(task_cols["output_analysis_events"][4]) == "1"
         task_workset = task_cols["workset_id"]
         assert int(task_workset[3]) == 1  # notnull
         assert task_workset[4] is not None
-        assert "__user__" in str(task_workset[4])
+        assert "__general__" in str(task_workset[4])
         async with db.conn.execute("PRAGMA table_info(worksets)") as cursor:
             workset_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_enabled" in workset_cols

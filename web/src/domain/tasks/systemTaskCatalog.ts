@@ -94,7 +94,7 @@ const SYSTEM_TASK_DEFS: readonly SystemTaskDef[] = [
     kind: "system",
     titleKey: "systemTasks.localNotify.title",
     descriptionKey: "systemTasks.localNotify.shortDescription",
-    linkTo: "/actions?tab=notify",
+    linkTo: "/notify?tab=notify",
     linkLabelKey: "systemTasks.localNotify.linkLabel",
   },
   {

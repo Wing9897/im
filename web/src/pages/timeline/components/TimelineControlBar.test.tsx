@@ -109,6 +109,41 @@ describe("TimelineControlBar", () => {
     ).not.toBeNull();
   });
 
+  it("lists calendar tasks in the multi-select filter and checks them by default", () => {
+    const container = renderControlBar({
+      timelineTasks: [
+        { id: "timeline-task-1", name: "Timeline Analysis" },
+        { id: "cal-task-1", name: "Weekly Standup (Calendar)" },
+      ],
+      worksets: [{ id: SYSTEM_WORKSET_ID, name: "一般" }],
+      expandTasks: [
+        { id: "timeline-task-1", name: "Timeline Analysis", worksetId: SYSTEM_WORKSET_ID },
+        { id: "cal-task-1", name: "Weekly Standup (Calendar)", worksetId: SYSTEM_WORKSET_ID },
+      ],
+    });
+    const filterBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="board-source-filter"]',
+    )!;
+    act(() => {
+      filterBtn.click();
+    });
+    act(() => {
+      document
+        .querySelector<HTMLButtonElement>(
+          `[data-testid="board-workset-expand-${SYSTEM_WORKSET_ID}"]`,
+        )
+        ?.click();
+    });
+    expect(
+      document.querySelector('[data-testid="board-source-filter-timeline-task-1"]'),
+    ).not.toBeNull();
+    const checkbox = document.querySelector<HTMLInputElement>(
+      '[data-testid="board-source-filter-cal-task-1"]',
+    )!;
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.checked).toBe(true);
+  });
+
   it("keeps user/assistant option in the multi-select filter in gantt mode", () => {
     const container = renderControlBar({
       timelineTasks: [{ id: "t1", name: "Task 1" }],
