@@ -1,4 +1,7 @@
-/** Stored weatherLocation value meaning “resolve from the OS timezone”. */
+/**
+ * Stored `weatherLocation` sentinel: resolve a city from the OS timezone.
+ * Single settings SoT for both weather forecast and Nager holiday country.
+ */
 export const SYSTEM_WEATHER_LOCATION = "system";
 
 const SYSTEM_TIMEZONE_LOCATIONS: Record<string, string> = {
@@ -28,7 +31,11 @@ export function systemLocation(): string {
   return systemLocationFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
 }
 
-/** City string actually used for weather: OS mapping when following system, else the saved name. */
+/**
+ * City string used for weather + holidays APIs.
+ * When settings store `system`, map the OS timezone; otherwise use the saved city name.
+ * SPA callers must resolve here — never send the literal `system` to backend `location=`.
+ */
 export function resolveWeatherLocation(
   weatherLocation: string,
   timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone,

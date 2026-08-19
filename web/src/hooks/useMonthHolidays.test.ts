@@ -90,6 +90,33 @@ describe("month holidays", () => {
     act(() => root.unmount());
   });
 
+  it("uses the settings city for Hong Kong holidays (same SoT as weather)", async () => {
+    mockFetchSettings.mockResolvedValue({ weatherLocation: "香港" });
+    mockFetchHolidays.mockResolvedValue({
+      year: 2026,
+      location: "香港",
+      country: "HK",
+      holidays: [
+        {
+          date: "2026-09-26",
+          localName: "中秋節翌日",
+          name: "The day following the Chinese Mid-Autumn Festival",
+          countryCode: "HK",
+          isGlobal: true,
+          types: ["Public"],
+        },
+      ],
+    });
+
+    const { container, root } = renderHolidays(daysFrom(new Date(2026, 8, 1), 30));
+    await settleEffects();
+
+    expect(mockFetchHolidays).toHaveBeenCalledWith(2026, "香港");
+    const probe = container.querySelector('[data-testid="holiday-probe"]');
+    expect(JSON.parse(probe?.textContent ?? "{}")["2026-09-26"][0].localName).toBe("中秋節翌日");
+    act(() => root.unmount());
+  });
+
   it("fails soft to an empty overlay when the holidays request errors", async () => {
     mockFetchSettings.mockResolvedValue({ weatherLocation: "臺北" });
     mockFetchHolidays.mockRejectedValue(new Error("nager down"));
