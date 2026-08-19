@@ -47,9 +47,23 @@ describe("IntelligenceCard meta tags", () => {
     expect(platformTag?.getAttribute("aria-label")).toBe("Telegram");
     expect(platformTag?.querySelector("svg")).toBeTruthy();
     expect(container.textContent).not.toContain("Task A · Telegram");
-    expect(container.querySelector('[data-testid="card-title-icon"]')?.getAttribute("width")).toBe(
-      "20",
-    );
+    const stack = container.querySelector(
+      '[data-testid="intel-event-avatar-stack"]',
+    ) as HTMLElement | null;
+    const intel = container.querySelector(
+      '[data-testid="intel-event-mark"]',
+    ) as HTMLElement | null;
+    const taskMark = container.querySelector(
+      '[data-testid="intel-event-task-badge"] [data-testid="task-logo-mark"]',
+    ) as HTMLElement | null;
+    expect(stack?.getAttribute("aria-label")).toBe("情報事件與任務標記");
+    expect(intel?.style.width).toBe("38px");
+    expect(taskMark?.style.width).toBe("18px");
+    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(taskMark?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(true);
+    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-avatar-stack"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).toBeNull();
   });
 
   it("does not render platform tag when sourcePlatform is null", () => {
@@ -351,5 +365,70 @@ describe("IntelligenceDetailDialog coordinate display", () => {
     const dialog = document.body.querySelector(".im-material-panel");
     expect(dialog?.textContent).toContain("無具體地理位置（不上地圖）");
     expect(dialog?.textContent).not.toContain("0.0000");
+  });
+});
+
+describe("IntelligenceCard dual avatar", () => {
+  it("keeps Radar large and overlays a picked task emoji, not the AI head", () => {
+    const item = makeAnalysisEvent({ taskId: "task-ops", taskName: "Ops Task" });
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(IntelligenceCard, {
+          item,
+          isRead: false,
+          isConsumed: false,
+          onAutoRead: vi.fn(),
+          taskEmojis: { "task-ops": "🎯" },
+        }),
+      );
+    });
+    const intel = container.querySelector('[data-testid="intel-event-mark"]');
+    const badge = container.querySelector('[data-testid="intel-event-task-badge"]');
+    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(intel?.textContent).not.toContain("🎯");
+    expect(badge?.textContent).toContain("🎯");
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).toBeNull();
+  });
+});
+
+describe("IntelligenceDetailDialog dual avatar", () => {
+  let mount: HTMLDivElement;
+  let root: ReturnType<typeof createRoot>;
+
+  beforeEach(() => {
+    mount = document.createElement("div");
+    document.body.appendChild(mount);
+    root = createRoot(mount);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    mount.remove();
+  });
+
+  it("uses intel Radar large + task ListChecks small beside the title", () => {
+    act(() => {
+      root.render(
+        createElement(IntelligenceDetailDialog, {
+          item: makeAnalysisEvent({ title: "詳情標題", taskId: "task-1" }),
+          onClose: vi.fn(),
+        }),
+      );
+    });
+    const dialog = document.body.querySelector(".im-material-panel");
+    const stack = dialog?.querySelector('[data-testid="intel-event-avatar-stack"]') as HTMLElement | null;
+    const intel = dialog?.querySelector('[data-testid="intel-event-mark"]') as HTMLElement | null;
+    const taskMark = dialog?.querySelector(
+      '[data-testid="intel-event-task-badge"] [data-testid="task-logo-mark"]',
+    ) as HTMLElement | null;
+    expect(stack?.getAttribute("aria-label")).toBe("情報事件與任務標記");
+    expect(intel?.style.width).toBe("38px");
+    expect(taskMark?.style.width).toBe("18px");
+    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(taskMark?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(true);
+    expect(dialog?.textContent).toContain("詳情標題");
   });
 });

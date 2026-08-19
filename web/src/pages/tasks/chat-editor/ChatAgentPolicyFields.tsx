@@ -4,7 +4,7 @@
  */
 import { useTranslation } from "react-i18next";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
-import { SelectField, SelectTile, SelectTileGrid } from "../../../components/ui";
+import { Button, SelectTile, SelectTileGrid } from "../../../components/ui";
 import {
   AGENT_PRESET_PROJECT_RECONCILE,
   AGENT_PRESET_WEB_SCOUT,
@@ -49,14 +49,74 @@ export function applyAgentPolicyFields(
   updateField("outputAnalysisEvents", policy.outputAnalysisEvents);
 }
 
-const TRIGGER_OPTIONS: { value: AgentTriggerMode; key: string }[] = [
-  { value: "schedule", key: "tasks:agent.trigger.schedule" },
-  { value: "message_cursor", key: "tasks:agent.trigger.message_cursor" },
-  { value: "message_threshold", key: "tasks:agent.trigger.message_threshold" },
+const TRIGGER_OPTIONS: {
+  value: AgentTriggerMode;
+  labelKey: string;
+  hintKey: string;
+}[] = [
+  {
+    value: "schedule",
+    labelKey: "tasks:agent.trigger.schedule",
+    hintKey: "tasks:agent.trigger.scheduleHint",
+  },
+  {
+    value: "message_cursor",
+    labelKey: "tasks:agent.trigger.message_cursor",
+    hintKey: "tasks:agent.trigger.message_cursorHint",
+  },
+  {
+    value: "message_threshold",
+    labelKey: "tasks:agent.trigger.message_threshold",
+    hintKey: "tasks:agent.trigger.message_thresholdHint",
+  },
 ];
 
-export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolicyFieldsProps) {
-  const { t } = useTranslation("common");
+const CAP_OPTIONS: {
+  testId: string;
+  labelKey: string;
+  hintKey: string;
+  active: (form: TaskFormState) => boolean;
+  patch: (form: TaskFormState) => Partial<AgentTaskPolicy>;
+}[] = [
+  {
+    testId: "task-agent-cap-calendar-read",
+    labelKey: "tasks:agent.caps.calendarRead",
+    hintKey: "tasks:agent.caps.calendarReadHint",
+    active: (form) => form.capCalendarRead ?? true,
+    patch: (form) => ({ capCalendarRead: !(form.capCalendarRead ?? true) }),
+  },
+  {
+    testId: "task-agent-cap-read-analysis-events",
+    labelKey: "tasks:agent.caps.readAnalysisEvents",
+    hintKey: "tasks:agent.caps.readAnalysisEventsHint",
+    active: (form) => form.capReadAnalysisEvents ?? true,
+    patch: (form) => ({
+      capReadAnalysisEvents: !(form.capReadAnalysisEvents ?? true),
+    }),
+  },
+  {
+    testId: "task-agent-cap-read-items",
+    labelKey: "tasks:agent.caps.readItems",
+    hintKey: "tasks:agent.caps.readItemsHint",
+    active: (form) => form.capReadItems ?? true,
+    patch: (form) => ({ capReadItems: !(form.capReadItems ?? true) }),
+  },
+  {
+    testId: "task-agent-cap-web-search",
+    labelKey: "tasks:agent.caps.webSearch",
+    hintKey: "tasks:agent.caps.webSearchHint",
+    active: (form) => form.capWebSearch || form.capForceWebSearch,
+    patch: (form) => {
+      const next = !(form.capWebSearch || form.capForceWebSearch);
+      return { capWebSearch: next, capForceWebSearch: next };
+    },
+  },
+];
+
+function useAgentPolicyActions({
+  formState,
+  updateField,
+}: ChatAgentPolicyFieldsProps) {
   const hasChannels = formState.channelIds.length > 0;
 
   const applyPreset = (preset: AgentPresetId) => {
@@ -104,104 +164,110 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
     applyAgentPolicyFields(updateField, next);
   };
 
+  return { applyPreset, patchPolicy };
+}
+
+export function ChatAgentTriggerFields({
+  formState,
+  updateField,
+}: ChatAgentPolicyFieldsProps) {
+  const { t } = useTranslation("common");
+  const { patchPolicy } = useAgentPolicyActions({ formState, updateField });
+
   return (
-    <div className="md:col-span-2 flex flex-col gap-md" data-testid="task-agent-policy">
+    <div
+      className="md:col-span-2 flex flex-col gap-xs"
+      role="radiogroup"
+      aria-label={t("tasks:agent.triggerLabel")}
+      data-testid="task-agent-trigger"
+    >
+      <span className={formLabelClass}>{t("tasks:agent.triggerLabel")}</span>
+      <SelectTileGrid columns="1fr" className="gap-sm">
+        {TRIGGER_OPTIONS.map(({ value, labelKey, hintKey }) => {
+          const selected = formState.triggerMode === value;
+          return (
+            <SelectTile
+              key={value}
+              compact
+              active={selected}
+              aria-pressed={selected}
+              data-testid={`task-agent-trigger-${value}`}
+              aria-label={t(labelKey)}
+              hint={t(hintKey)}
+              onClick={() => patchPolicy({ triggerMode: value })}
+            >
+              {t(labelKey)}
+            </SelectTile>
+          );
+        })}
+      </SelectTileGrid>
+    </div>
+  );
+}
+
+export function ChatAgentSkillsFields({
+  formState,
+  updateField,
+}: ChatAgentPolicyFieldsProps) {
+  const { t } = useTranslation("common");
+  const { applyPreset, patchPolicy } = useAgentPolicyActions({ formState, updateField });
+
+  return (
+    <div className="flex flex-col gap-md">
       <div className="flex flex-col gap-xs">
         <span className={formLabelClass}>{t("tasks:agent.presetsLabel")}</span>
         <div className="flex flex-wrap gap-sm">
-          <button
+          <Button
             type="button"
-            className="rounded-md border border-border px-sm py-xs text-caption"
+            variant="secondary"
+            size="sm"
             data-testid="task-agent-preset-project"
             onClick={() => applyPreset(AGENT_PRESET_PROJECT_RECONCILE)}
           >
             {t("tasks:agent.presets.project_reconcile")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="rounded-md border border-border px-sm py-xs text-caption"
+            variant="secondary"
+            size="sm"
             data-testid="task-agent-preset-web"
             onClick={() => applyPreset(AGENT_PRESET_WEB_SCOUT)}
           >
             {t("tasks:agent.presets.web_scout")}
-          </button>
+          </Button>
         </div>
         <p className={`m-0 ${formHelpClass}`}>{t("tasks:agent.presetsHint")}</p>
       </div>
 
-      <div className="flex min-w-0 items-center gap-md">
-        <label className={`${formLabelClass} mb-0 min-w-0 flex-1`} htmlFor="task-agent-trigger">
-          {t("tasks:agent.triggerLabel")}
-        </label>
-        {/* Native select: agent policy form keeps SelectField for native dense editor rows. */}
-        <SelectField
-          id="task-agent-trigger"
-          wrapperClassName="w-[16rem] max-w-full shrink-0"
-          value={formState.triggerMode}
-          onChange={(e) => patchPolicy({ triggerMode: e.target.value as AgentTriggerMode })}
-          data-testid="task-agent-trigger"
-        >
-          {TRIGGER_OPTIONS.map(({ value, key }) => (
-            <option key={value} value={value}>
-              {t(key)}
-            </option>
-          ))}
-        </SelectField>
-      </div>
-
       <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
         <legend className={formLabelClass}>{t("tasks:agent.capsLabel")}</legend>
-        <SelectTileGrid columns="repeat(auto-fit, minmax(148px, 1fr))" className="gap-sm">
-          <SelectTile
-            compact
-            variant="toggle"
-            active={formState.capCalendarRead ?? true}
-            data-testid="task-agent-cap-calendar-read"
-            aria-label={t("tasks:agent.caps.calendarRead")}
-            onClick={() => patchPolicy({ capCalendarRead: !(formState.capCalendarRead ?? true) })}
-          >
-            {t("tasks:agent.caps.calendarRead")}
-          </SelectTile>
-          <SelectTile
-            compact
-            variant="toggle"
-            active={formState.capReadAnalysisEvents ?? true}
-            data-testid="task-agent-cap-read-analysis-events"
-            aria-label={t("tasks:agent.caps.readAnalysisEvents")}
-            onClick={() =>
-              patchPolicy({ capReadAnalysisEvents: !(formState.capReadAnalysisEvents ?? true) })
-            }
-          >
-            {t("tasks:agent.caps.readAnalysisEvents")}
-          </SelectTile>
-          <SelectTile
-            compact
-            variant="toggle"
-            active={formState.capReadItems ?? true}
-            data-testid="task-agent-cap-read-items"
-            aria-label={t("tasks:agent.caps.readItems")}
-            onClick={() => patchPolicy({ capReadItems: !(formState.capReadItems ?? true) })}
-          >
-            {t("tasks:agent.caps.readItems")}
-          </SelectTile>
-          <SelectTile
-            compact
-            variant="toggle"
-            active={formState.capWebSearch || formState.capForceWebSearch}
-            data-testid="task-agent-cap-web-search"
-            aria-label={t("tasks:agent.caps.webSearch")}
-            onClick={() => {
-              const next = !(formState.capWebSearch || formState.capForceWebSearch);
-              patchPolicy({
-                capWebSearch: next,
-                capForceWebSearch: next,
-              });
-            }}
-          >
-            {t("tasks:agent.caps.webSearch")}
-          </SelectTile>
+        <SelectTileGrid columns="repeat(2, minmax(0, 1fr))" className="gap-sm">
+          {CAP_OPTIONS.map((cap) => (
+            <SelectTile
+              key={cap.testId}
+              compact
+              variant="toggle"
+              active={cap.active(formState)}
+              data-testid={cap.testId}
+              aria-label={t(cap.labelKey)}
+              hint={t(cap.hintKey)}
+              onClick={() => patchPolicy(cap.patch(formState))}
+            >
+              {t(cap.labelKey)}
+            </SelectTile>
+          ))}
         </SelectTileGrid>
       </fieldset>
+    </div>
+  );
+}
+
+/** Presets + trigger + caps in one block (unit tests). */
+export function ChatAgentPolicyFields(props: ChatAgentPolicyFieldsProps) {
+  return (
+    <div className="md:col-span-2 flex flex-col gap-md" data-testid="task-agent-policy">
+      <ChatAgentSkillsFields {...props} />
+      <ChatAgentTriggerFields {...props} />
     </div>
   );
 }

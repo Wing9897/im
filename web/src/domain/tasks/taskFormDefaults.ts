@@ -5,7 +5,11 @@ import type {
   TaskFormState,
 } from "../../types";
 import { normalizeNotifyPref } from "../notify/notifyPref";
-import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
+import {
+  LEGACY_UNMAPPED_SCHEDULE_TYPE,
+  presetToTriggerRrule,
+  triggerRruleToPreset,
+} from "./triggerSchedule";
 import { safeArray } from "../../utils/nullGuards";
 import {
   scheduleFieldsFromTask,
@@ -42,7 +46,15 @@ export function applyConfigToFormState(
           }),
         );
       } else {
-        updated.scheduleRrule = config.scheduleRrule;
+        // Non-preset RRULE from assistant / draft: snap to hourly preset.
+        Object.assign(
+          updated,
+          withSyncedTriggerSchedule({
+            scheduleType: LEGACY_UNMAPPED_SCHEDULE_TYPE,
+            scheduleValue: null,
+            scheduleRrule: null,
+          }),
+        );
       }
     } else {
       Object.assign(
@@ -100,10 +112,11 @@ export function applyConfigToFormState(
  * Calendar recurring fields are not part of task persistence.
  */
 export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
-  // Write path SoT: only scheduleRrule. Presets stay in form state for UX.
-  const scheduleRrule =
-    formState.scheduleRrule?.trim() ||
-    presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+  // Write path SoT: always derive RRULE from FE presets (no raw/custom RRULE).
+  const scheduleRrule = presetToTriggerRrule(
+    formState.scheduleType,
+    formState.scheduleValue,
+  );
   const llmProfileId = formState.llmProfileId.trim();
   const commonConfig = {
     name: formState.name,
@@ -282,10 +295,11 @@ export function roundTripFormState(formState: TaskFormState): TaskFormState {
 
 /** Payload shape for agent task-advisor ``currentTask`` context. */
 export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayload {
-  // Prefer canonical RRULE; presets stay local to the form editor.
-  const scheduleRrule =
-    formState.scheduleRrule?.trim() ||
-    presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+  // Always derive from FE presets (no raw/custom RRULE path).
+  const scheduleRrule = presetToTriggerRrule(
+    formState.scheduleType,
+    formState.scheduleValue,
+  );
   return {
     name: formState.name,
     description: formState.description,

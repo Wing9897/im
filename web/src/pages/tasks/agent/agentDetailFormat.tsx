@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { formatAnalysisErrorMessage } from "../../../domain/analysis/formatAnalysisError";
 import { formatDateTime } from "../../../utils/dateFormat";
 
 const ERROR_CLAMP_CHARS = 220;
@@ -24,9 +25,10 @@ export function ExpandableErrorText({
 }) {
   const { t } = useTranslation("common");
   const [expanded, setExpanded] = useState(false);
-  const needsClamp = text.length > ERROR_CLAMP_CHARS;
+  const display = formatAnalysisErrorMessage(text, t) ?? text;
+  const needsClamp = display.length > ERROR_CLAMP_CHARS;
   const shown =
-    !needsClamp || expanded ? text : `${text.slice(0, ERROR_CLAMP_CHARS).trimEnd()}…`;
+    !needsClamp || expanded ? display : `${display.slice(0, ERROR_CLAMP_CHARS).trimEnd()}…`;
 
   return (
     <div className="min-w-0" data-testid={testId}>

@@ -8,6 +8,28 @@
   "searchAria": "搜索日程",
   "create": "新增",
   "createAria": "新增日程事件",
+  "filter": {
+    "title": "筛选",
+    "openAria": "开启筛选",
+    "openAriaActive": "筛选（{count} 项已启用）",
+    "dialogTitle": "筛选条件",
+    "dialogCloseAria": "关闭筛选",
+    "done": "完成",
+    "typeAria": "类型",
+    "typeAll": "全部",
+    "typeOneOff": "一般",
+    "typeRecurring": "循环",
+    "worksetAria": "工作集",
+    "worksetAll": "全部工作集",
+    "worksetSearchPlaceholder": "搜索工作集",
+    "worksetSearchAria": "搜索工作集",
+    "worksetEmpty": "没有符合的工作集",
+    "dateRange": "日期",
+    "dateFromAria": "开始日期",
+    "dateToAria": "结束日期",
+    "clear": "清除筛选",
+    "clearAria": "清除日程筛选"
+  },
   "editor": {
     "title": "编辑循环事件",
     "back": "返回日程",
@@ -25,6 +47,10 @@
     "title": "尚无日程事件",
     "hint": "可新增一般或循环事件——与时间规划共用同一对话框。"
   },
+  "emptyFiltered": {
+    "title": "没有符合筛选的日程",
+    "hint": "试试调整类型、工作集或日期范围。"
+  },
   "card": {
     "edit": "编辑",
     "editAria": "编辑 {title}",
@@ -39,7 +65,8 @@
     "notes": "说明",
     "empty": "N/A",
     "locationLine": "地点：{value}",
-    "notesLine": "说明：{value}"
+    "notesLine": "说明：{value}",
+    "changeEmojiAria": "更改 {title} 的 emoji"
   },
   "loadMoreHint": "已显示 {shown} / {total}",
   "loadMoreHintHasMore": "向下滚动加载更多（已显示 {shown}）",

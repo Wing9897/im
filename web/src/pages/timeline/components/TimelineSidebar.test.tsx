@@ -109,16 +109,22 @@ describe("TimelineSidebar detail provenance", () => {
     container.remove();
   });
 
-  function renderSidebar(selectedEvent: TimelineItem | null) {
+  function renderSidebar(
+    selectedEvent: TimelineItem | null,
+    scheduleEmojis?: Record<string, string>,
+  ) {
     act(() => {
       root.render(
-        wrapWithI18n(createElement(TimelinePageProvider, {
+        wrapWithI18n(
+          createElement(TimelinePageProvider, {
             value: makeContext(selectedEvent),
             children: createElement(TimelineSidebar, {
               rangeEvents: [],
               focusedDay: null,
+              scheduleEmojis,
             }),
-          })),
+          }),
+        ),
       );
     });
   }
@@ -185,6 +191,28 @@ describe("TimelineSidebar detail provenance", () => {
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
     ).toBe("任務：Ops Task");
+    const titleStack = container.querySelector(
+      '[data-testid="timeline-sidebar-title"] [data-testid="intel-event-avatar-stack"]',
+    );
+    const intel = container.querySelector(
+      '[data-testid="timeline-sidebar-title"] [data-testid="intel-event-mark"]',
+    ) as HTMLElement | null;
+    const taskOverlay = container.querySelector(
+      '[data-testid="timeline-sidebar-title"] [data-testid="intel-event-task-badge"] [data-testid="task-logo-mark"]',
+    ) as HTMLElement | null;
+    expect(titleStack).not.toBeNull();
+    expect(intel?.style.width).toBe("28px");
+    expect(taskOverlay?.style.width).toBe("14px");
+    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(taskOverlay?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(true);
+    const provenance = container.querySelector('[data-testid="timeline-sidebar-provenance"]');
+    expect(provenance?.querySelector('[data-testid="intel-event-avatar-stack"]')).toBeNull();
+    expect(provenance?.querySelector('[data-testid="intel-event-mark"]')).toBeNull();
+    expect(provenance?.querySelector('[data-testid="task-logo-mark"]')).toBeNull();
+    expect(provenance?.querySelector("svg")?.getAttribute("width")).toBe("14");
+    expect(provenance?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(
+      true,
+    );
   });
 
   it("shows item provenance and strips remind title prefix when badge shown", () => {
@@ -209,5 +237,13 @@ describe("TimelineSidebar detail provenance", () => {
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
     ).toBe("物品");
+  });
+
+  it("shows the shared schedule emoji beside the detail title", () => {
+    renderSidebar(makeUserEvent({ id: "ue-1", title: "生日" }), { "oneOff:ue-1": "🎂" });
+    const title = container.querySelector('[data-testid="timeline-sidebar-title"]');
+    expect(title?.textContent).toContain("🎂");
+    expect(title?.textContent).toContain("生日");
+    expect(title?.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toBe("🎂");
   });
 });

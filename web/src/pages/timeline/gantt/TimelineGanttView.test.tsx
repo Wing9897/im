@@ -131,7 +131,9 @@ describe("TimelineGanttView", () => {
       expect(container.textContent).toContain("Refresh Event");
       // Refresh spinner lives in the page toolbar; gantt keeps the chart mounted.
       expect(container.querySelector('[data-testid="gantt-refresh-indicator"]')).toBeNull();
-      expect(container.querySelector('[data-testid="timeline-gantt-view"]')).not.toBeNull();
+      const gantt = container.querySelector('[data-testid="timeline-gantt-view"]');
+      expect(gantt).not.toBeNull();
+      expect(gantt?.className).toContain("im-timeline-gantt");
     });
 
     it("provides a vertical scroll region for many event rows", () => {
@@ -550,6 +552,29 @@ describe("TimelineGanttView", () => {
       );
       expect(truncated).toBeDefined();
       expect(truncated!.textContent).toBe(longTitle);
+    });
+  });
+
+  describe("schedule emojis from ui-prefs", () => {
+    it("shows the series emoji on the gantt label, keyed by seriesId", () => {
+      const calEvent = makeEvent({
+        id: "cal-task-1:20250115T090000Z",
+        seriesId: "cal-task-1",
+        title: "Weekly Standup",
+        source: "recurring",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      });
+      const container = render(
+        makeProps({
+          events: [calEvent],
+          scheduleEmojis: { "recurring:cal-task-1": "🔁" },
+        }),
+      );
+      expect(
+        container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent,
+      ).toBe("🔁");
+      expect(container.textContent).toContain("Weekly Standup");
     });
   });
 });

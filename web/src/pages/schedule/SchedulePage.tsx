@@ -17,14 +17,25 @@ import {
   CardGrid,
   LoadMoreFooter,
 } from "../../components/ui";
-import { SCHEDULE_SEARCH_STORAGE_KEY } from "../../domain/prefs";
+import { useTaskCatalog } from "../../context/TaskCatalogContext";
+import { SCHEDULE_FILTERS_STORAGE_KEY, SCHEDULE_SEARCH_STORAGE_KEY } from "../../domain/prefs";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import { ScheduleOneOffCard, ScheduleRecurringCard } from "./ScheduleEventCard";
+import {
+  DEFAULT_SCHEDULE_FILTERS,
+  filterScheduleEntriesByDate,
+  normalizeScheduleFilters,
+  scheduleDateQueryWindow,
+  scheduleFiltersAreActive,
+  type ScheduleListFilters,
+} from "./scheduleFilters";
+import { scheduleEmojiStorageKey } from "../../domain/schedule/scheduleEmoji";
 import { mergeScheduleList } from "./scheduleList";
 import { ScheduleToolbar } from "./ScheduleToolbar";
+import { useScheduleEmojis } from "./useScheduleEmojis";
 import { useScheduleOneOffFeed } from "./useScheduleOneOffFeed";
 import { useSchedulePageDialogs } from "./useSchedulePageDialogs";
 import { useScheduleRecurringFeed } from "./useScheduleRecurringFeed";
@@ -32,12 +43,20 @@ import { useScheduleRecurringFeed } from "./useScheduleRecurringFeed";
 export function SchedulePage() {
   const { t } = useTranslation("schedule");
   const { t: tCommon } = useTranslation("common");
+  const { worksets } = useTaskCatalog();
   const [searchQuery, setSearchQuery] = usePersistedState(SCHEDULE_SEARCH_STORAGE_KEY, "", {
     persistDebounceMs: 400,
     storage: "session",
   });
+  const [filters, setFilters] = usePersistedState<ScheduleListFilters>(
+    SCHEDULE_FILTERS_STORAGE_KEY,
+    DEFAULT_SCHEDULE_FILTERS,
+    { storage: "session" },
+  );
+  const normalizedFilters = useMemo(() => normalizeScheduleFilters(filters), [filters]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
+  const { emojis, setItemEmoji } = useScheduleEmojis();
 
   useSlashFocusSearch(true);
 
@@ -46,28 +65,55 @@ export function SchedulePage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const oneOff = useScheduleOneOffFeed({ debouncedSearch });
-  const recurring = useScheduleRecurringFeed({ debouncedSearch });
+  const dateWindow = useMemo(
+    () => scheduleDateQueryWindow(normalizedFilters.startDay, normalizedFilters.endDay),
+    [normalizedFilters.endDay, normalizedFilters.startDay],
+  );
+  const loadOneOff = normalizedFilters.type !== "recurring";
+  const loadRecurring = normalizedFilters.type !== "oneOff";
+
+  const oneOff = useScheduleOneOffFeed({
+    debouncedSearch,
+    worksetId: normalizedFilters.worksetId || undefined,
+    start: dateWindow.start,
+    end: dateWindow.end,
+    enabled: loadOneOff,
+  });
+  const recurring = useScheduleRecurringFeed({
+    debouncedSearch,
+    worksetId: normalizedFilters.worksetId || undefined,
+    enabled: loadRecurring,
+  });
 
   const dialogs = useSchedulePageDialogs({
     reloadOneOff: oneOff.reload,
     reloadRecurring: recurring.reload,
   });
 
-  const entries = useMemo(
-    () => mergeScheduleList(oneOff.items, recurring.items),
-    [oneOff.items, recurring.items],
-  );
+  const entries = useMemo(() => {
+    const merged = mergeScheduleList(oneOff.items, recurring.items);
+    return filterScheduleEntriesByDate(
+      merged,
+      normalizedFilters.startDay,
+      normalizedFilters.endDay,
+    );
+  }, [
+    normalizedFilters.endDay,
+    normalizedFilters.startDay,
+    oneOff.items,
+    recurring.items,
+  ]);
 
   const feedError = oneOff.error || recurring.error;
   useErrorToast(feedError);
 
+  const filtersActive = scheduleFiltersAreActive(normalizedFilters);
   const loading =
     (oneOff.initialLoading || recurring.initialLoading) && entries.length === 0;
   const itemsEmpty = !loading && entries.length === 0;
   const hasMore = oneOff.hasMore || recurring.hasMore;
   const loadingMore = oneOff.loadingMore || recurring.loadingMore;
-  const shownCount = oneOff.items.length + recurring.items.length;
+  const shownCount = entries.length;
   const totalCount = oneOff.totalCount + recurring.totalCount;
 
   const loadMoreOneOff = oneOff.loadMore;
@@ -98,6 +144,9 @@ export function SchedulePage() {
           t={t}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
+          filters={normalizedFilters}
+          onFiltersChange={setFilters}
+          worksets={worksets}
           onCreate={dialogs.openCreate}
         />
 
@@ -106,12 +155,22 @@ export function SchedulePage() {
         {!loading && itemsEmpty ? (
           <EmptyState
             illustration={<EmptyStateGlyph icon={CalendarClock} />}
-            title={t("empty.title")}
-            description={t("empty.hint")}
+            title={filtersActive ? t("emptyFiltered.title") : t("empty.title")}
+            description={filtersActive ? t("emptyFiltered.hint") : t("empty.hint")}
             actions={
-              <Button variant="primary" onClick={dialogs.openCreate} data-testid="schedule-empty-create">
-                {t("create")}
-              </Button>
+              filtersActive ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => setFilters(DEFAULT_SCHEDULE_FILTERS)}
+                  data-testid="schedule-empty-clear-filters"
+                >
+                  {t("filter.clear")}
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={dialogs.openCreate} data-testid="schedule-empty-create">
+                  {t("create")}
+                </Button>
+              )
             }
           />
         ) : null}
@@ -125,6 +184,7 @@ export function SchedulePage() {
                     <ScheduleOneOffCard
                       key={`oneOff:${entry.event.id}`}
                       event={entry.event}
+                      emoji={emojis[scheduleEmojiStorageKey("oneOff", entry.event.id)] ?? ""}
                       worksetName={
                         entry.event.worksetId
                           ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
@@ -132,11 +192,15 @@ export function SchedulePage() {
                       }
                       onEdit={() => dialogs.openEditOneOff(entry.event)}
                       onDelete={() => dialogs.requestDeleteOneOff(entry.event)}
+                      onEmojiChange={(glyph) =>
+                        setItemEmoji(scheduleEmojiStorageKey("oneOff", entry.event.id), glyph)
+                      }
                     />
                   ) : (
                     <ScheduleRecurringCard
                       key={`recurring:${entry.series.id}`}
                       task={entry.series}
+                      emoji={emojis[scheduleEmojiStorageKey("recurring", entry.series.id)] ?? ""}
                       worksetName={
                         entry.series.worksetId
                           ? dialogs.worksetNameById.get(entry.series.worksetId) ?? null
@@ -145,6 +209,9 @@ export function SchedulePage() {
                       onEdit={() => dialogs.openEditRecurring(entry.series)}
                       onDelete={() => dialogs.requestDeleteRecurring(entry.series)}
                       onToggleActive={() => dialogs.toggleRecurringActive(entry.series)}
+                      onEmojiChange={(glyph) =>
+                        setItemEmoji(scheduleEmojiStorageKey("recurring", entry.series.id), glyph)
+                      }
                     />
                   ),
                 )}

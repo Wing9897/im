@@ -1,13 +1,17 @@
-import { Clock, Radar } from "lucide-react";
+import { Clock } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent } from "../../../types";
 import { PlatformTag } from "../../../components/common/PlatformTag";
+import { IntelEventAvatarStack } from "../../../components/task/IntelEventAvatarStack";
 import { taskTagBaseClass, taskTagColorStyle } from "../../../styles/cardTagClasses";
+import { lookupTaskEmoji } from "../../../domain/tasks/taskEmoji";
 import { useAutoRead } from "../../../hooks/useAutoRead";
-import { CardFieldIcon, CardTitleIcon, FeedCard } from "../../../components/ui";
+import { CardFieldIcon, FeedCard } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { formatIntelligenceEventTime } from "../../../domain/intelligence/intelligenceSourceMeta";
+import { useTaskEmojisMap } from "../../tasks/useTaskEmojis";
+import type { TaskEmojiMap } from "../../tasks/taskEmojisStore";
 import {
   AUTO_READ_VISIBILITY_THRESHOLD,
   AUTO_READ_DELAY_MS,
@@ -21,6 +25,8 @@ interface IntelligenceCardProps {
   isConsumed: boolean;
   onAutoRead: (id: string) => void;
   onClick?: (item: AnalysisEvent) => void;
+  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  taskEmojis?: TaskEmojiMap;
 }
 
 export const IntelligenceCard = React.memo(function IntelligenceCard({
@@ -29,8 +35,11 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
   isConsumed,
   onAutoRead,
   onClick,
+  taskEmojis,
 }: IntelligenceCardProps) {
   const { t } = useTranslation("intelligence");
+  const hydratedEmojis = useTaskEmojisMap();
+  const taskGlyph = lookupTaskEmoji(taskEmojis ?? hydratedEmojis, item.taskId);
   const containerRef = useAutoRead<HTMLDivElement>({
     itemId: item.id,
     isRead: isConsumed,
@@ -68,7 +77,11 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
             ) : (
               <span className="mt-1 h-1.5 w-1.5 shrink-0" aria-hidden="true" />
             )}
-            <CardTitleIcon icon={Radar} />
+            <IntelEventAvatarStack
+              emoji={taskGlyph}
+              size="card"
+              label={t("card.eventAvatarAria")}
+            />
             <div
               className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`}
               title={item.title}

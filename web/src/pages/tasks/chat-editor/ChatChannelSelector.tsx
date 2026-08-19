@@ -41,7 +41,11 @@ export function ChatChannelSelector({
   return (
     <div className="flex flex-col gap-sm">
       <div className="flex min-w-0 flex-wrap items-center gap-md">
-        <FieldLabel className="mb-0 shrink-0">
+        <FieldLabel
+          className="mb-0 shrink-0"
+          required={!optional}
+          requiredTitle={optional ? undefined : t("tasks:editor.requiredSuffix")}
+        >
           {optional ? t("tasks:editor.channelsLabelOptional") : t("tasks:editor.channelsLabel")}
         </FieldLabel>
         <FilterTrigger
@@ -56,6 +60,7 @@ export function ChatChannelSelector({
           active={channelIds.length > 0}
           onClick={onOpenChannelDialog}
           aria-label={t("tasks:editor.channelsAria")}
+          aria-required={optional ? undefined : true}
           data-testid="channel-picker-button"
         />
       </div>

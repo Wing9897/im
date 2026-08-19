@@ -51,7 +51,15 @@ vi.mock("../../components/calendar/UserEventDialog", () => ({
   UserEventDialog: () => null,
 }));
 
+vi.mock("./scheduleEmojisStore", () => ({
+  hydrateScheduleEmojis: vi.fn().mockResolvedValue({}),
+  saveScheduleEmojis: vi.fn().mockResolvedValue(true),
+  loadScheduleEmojis: vi.fn().mockReturnValue({}),
+  resetScheduleEmojisCacheForTests: vi.fn(),
+}));
+
 import { mockShowToast } from "../../test/context-mocks";
+import { SCHEDULE_FILTERS_STORAGE_KEY } from "../../domain/prefs";
 import { SchedulePage } from "./SchedulePage";
 
 class MockIntersectionObserver implements IntersectionObserver {
@@ -181,6 +189,7 @@ describe("SchedulePage", () => {
     expect(mockListRecurringSeries).toHaveBeenCalledWith({
       topLevelOnly: true,
       search: undefined,
+      worksetId: undefined,
       limit: 24,
       offset: 0,
     });
@@ -296,5 +305,53 @@ describe("SchedulePage", () => {
     expect(mockDeleteRecurringSeries).toHaveBeenCalledWith("rec-1");
     expect(mockShowToast).toHaveBeenCalledWith("系列刪除失敗", "error");
     expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeTruthy();
+  });
+
+  it("type filter 一般 hides recurring cards without fetching the series feed again", async () => {
+    await renderPage();
+    mockListRecurringSeries.mockClear();
+
+    await act(async () => {
+      (container.querySelector('[data-testid="schedule-filter-trigger"]') as HTMLButtonElement).click();
+    });
+    const oneOffChip = document.body.querySelector(
+      '[data-testid="schedule-type-filter-oneOff"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      oneOffChip.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.querySelector('[data-testid="schedule-one-off-card-ue-1"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeNull();
+    expect(mockListRecurringSeries).not.toHaveBeenCalled();
+  });
+
+  it("forwards workset and date-range query params to the one-off list API", async () => {
+    window.sessionStorage.setItem(
+      SCHEDULE_FILTERS_STORAGE_KEY,
+      JSON.stringify({
+        type: "all",
+        worksetId: "ws-ops",
+        startDay: "2026-08-01",
+        endDay: "2026-08-31",
+      }),
+    );
+    await renderPage();
+
+    expect(mockListUserEventsPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        worksetId: "ws-ops",
+        start: new Date("2026-08-01T00:00:00").toISOString(),
+        end: new Date("2026-08-31T23:59:59.999").toISOString(),
+      }),
+    );
+    expect(mockListRecurringSeries).toHaveBeenCalledWith(
+      expect.objectContaining({
+        worksetId: "ws-ops",
+        topLevelOnly: true,
+      }),
+    );
   });
 });

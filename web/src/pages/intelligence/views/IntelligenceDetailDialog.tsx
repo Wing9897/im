@@ -1,7 +1,11 @@
 import { MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent } from "../../../types";
+import { IntelEventAvatarStack } from "../../../components/task/IntelEventAvatarStack";
+import { lookupTaskEmoji } from "../../../domain/tasks/taskEmoji";
 import { Badge, Button } from "../../../components/ui";
+import { useTaskEmojisMap } from "../../tasks/useTaskEmojis";
+import type { TaskEmojiMap } from "../../tasks/taskEmojisStore";
 import { platformBadgeStyle } from "../../../utils/platform";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { isMappableCoordinate } from "../../../domain/intelligence/mapFilters";
@@ -35,6 +39,8 @@ interface IntelligenceDetailViewProps {
   item: AnalysisEvent;
   onClose: () => void;
   presentation?: DetailPresentation;
+  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  taskEmojis?: TaskEmojiMap;
 }
 
 function isUnspecifiedLocationLabel(location: string | null | undefined): boolean {
@@ -76,8 +82,11 @@ export function IntelligenceDetailView({
   item,
   onClose,
   presentation = "modal",
+  taskEmojis,
 }: IntelligenceDetailViewProps) {
   const { t } = useTranslation("intelligence");
+  const hydratedEmojis = useTaskEmojisMap();
+  const taskGlyph = lookupTaskEmoji(taskEmojis ?? hydratedEmojis, item.taskId);
   const hitSource = buildIntelligenceHitSource(item);
   const sourceSummary = buildIntelligenceSourceMeta(item);
   const timeRange =
@@ -87,7 +96,14 @@ export function IntelligenceDetailView({
   const content = (
     <>
       <header className={detailChromeHeaderClass}>
-        <h2 className={intelligenceDetailTitleClass}>{item.title}</h2>
+        <h2 className={`${intelligenceDetailTitleClass} flex items-start gap-sm`}>
+          <IntelEventAvatarStack
+            emoji={taskGlyph}
+            size="card"
+            label={t("card.eventAvatarAria")}
+          />
+          <span className="min-w-0 flex-1">{item.title}</span>
+        </h2>
         <div className={detailChromeBadgesClass}>
           {item.taskName ? <Badge tone="accent">{item.taskName}</Badge> : null}
           {item.sourcePlatform ? (
@@ -164,10 +180,19 @@ export function IntelligenceDetailDialog({
   item,
   onClose,
   presentation = "modal",
+  taskEmojis,
 }: {
   item: AnalysisEvent;
   onClose: () => void;
   presentation?: DetailPresentation;
+  taskEmojis?: TaskEmojiMap;
 }) {
-  return <IntelligenceDetailView item={item} onClose={onClose} presentation={presentation} />;
+  return (
+    <IntelligenceDetailView
+      item={item}
+      onClose={onClose}
+      presentation={presentation}
+      taskEmojis={taskEmojis}
+    />
+  );
 }

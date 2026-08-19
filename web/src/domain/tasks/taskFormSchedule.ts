@@ -1,5 +1,9 @@
 import type { AnalysisTask, TaskFormState } from "../../types";
-import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
+import {
+  LEGACY_UNMAPPED_SCHEDULE_TYPE,
+  presetToTriggerRrule,
+  triggerRruleToPreset,
+} from "./triggerSchedule";
 
 /** Keep canonical scheduleRrule aligned with FE preset fields. */
 export function withSyncedTriggerSchedule(
@@ -28,11 +32,10 @@ export function scheduleFieldsFromTask(
       scheduleRrule: task.scheduleRrule ?? null,
     });
   }
-  // Unmappable RRULE: preserve wire value so save cannot overwrite with seconds_10.
-  const preserved = task.scheduleRrule?.trim() || null;
-  return {
-    scheduleType: "seconds_10",
+  // Legacy / non-preset RRULE: snap UI + write SoT to hourly (no raw RRULE in UI).
+  return withSyncedTriggerSchedule({
+    scheduleType: LEGACY_UNMAPPED_SCHEDULE_TYPE,
     scheduleValue: null,
-    scheduleRrule: preserved ?? presetToTriggerRrule("seconds_10", null),
-  };
+    scheduleRrule: null,
+  });
 }

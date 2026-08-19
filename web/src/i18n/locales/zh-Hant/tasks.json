@@ -31,7 +31,11 @@
     "analysisPausedHint": "分析已自動或手動暫停",
     "waitingForThreshold": "等待觸發閾值：{count}/{threshold}",
     "agent": "專案經理任務",
-    "agentProgressHint": "Agent 排程（游標抽乾／閾值／定時）— 非 marker 批處理統計"
+    "agentProgressHint": "Agent 排程（游標抽乾／閾值／定時）— 非 marker 批處理統計",
+    "changeEmojiAria": "更改 {name} 的 emoji"
+  },
+  "errors": {
+    "geminiNoCandidates": "Gemini 未回傳可用內容（可能被安全過濾或回應格式異常）。請檢查模型與提示後重試。"
   },
   "detail": {
     "timeRange": "時間範圍：{range}",
@@ -93,7 +97,6 @@
     "presets": "快速預設",
     "updateTask": "更新任務",
     "createTask": "建立任務",
-    "requiredAria": "必填欄位",
     "settingsTitle": "任務設定",
     "optionalAria": "進階設定",
     "channelsLoadError": "無法載入頻道列表",
@@ -106,15 +109,16 @@
     "time30d": "最近 30 天",
     "time7d": "最近 7 天",
     "time1d": "最近 1 天",
-    "includeInTimelineLabel": "顯示於時間規劃",
+    "includeInTimelineLabel": "時間規劃",
     "includeInTimelineAria": "顯示於時間規劃",
-    "includeInTimelineHint": "關閉後，此任務的分析事件仍會出現在情報事件與地圖，但不會進入日曆／甘特／時間軸。",
-    "outputTitle": "輸出",
+    "includeInTimelineHint": "出現在日曆／甘特／時間軸",
+    "includeInTimelineHelp": "關閉後，此任務的分析事件仍會出現在情報事件與地圖，但不會進入日曆／甘特／時間軸。",
     "outputAria": "任務輸出",
     "outputAnalysisEventsLabel": "情報頁",
     "outputAnalysisEventsAria": "寫入情報頁",
-    "outputAnalysisEventsHint": "關閉後任務仍會跑完，但不寫入情報事件頁。排行榜任務固定寫入排行榜頁，不受此開關影響。",
-    "outputIntelOffTimelineHint": "關閉情報後，新的分析事件也不會出現在時間規劃（同一批儲存）。歷史事件仍遵循「顯示於時間規劃」。",
+    "outputAnalysisEventsHint": "寫入情報事件頁",
+    "outputAnalysisEventsHelp": "關閉後任務仍會跑完，但不寫入情報事件頁。排行榜任務固定寫入排行榜頁，不受此開關影響。",
+    "outputIntelOffTimelineHint": "關閉情報後，新的分析事件也不會出現在時間規劃（同一批儲存）。歷史事件仍遵循「時間規劃」。",
     "rruleHint": "RRULE 僅用於週期任務重複事件，不會觸發 AI 分析。",
     "scheduleOverridesHint": "門檻／批上限／證據風格可覆寫；留空跟隨「AI 設定 → 分析調度」。批次重疊與 Agent 波次間隔僅本任務有效。",
     "followGlobal": "跟隨全域",
@@ -127,8 +131,18 @@
     "evidenceStyleHelp": "留空則跟隨全域證據風格。",
     "nameLabel": "任務名稱",
     "namePlaceholder": "輸入任務名稱",
-    "foundationTitle": "基本設定",
-    "foundationHint": "任務建立在可重複／可觸發的時間排程之上。",
+    "stepIdentityTitle": "這是什麼",
+    "stepIdentityHint": "名稱、類型與 AI 設定檔",
+    "stepIdentityAria": "這是什麼",
+    "stepScopeTitle": "看什麼",
+    "stepScopeHint": "來源頻道與任務 Prompt",
+    "stepScopeAria": "看什麼",
+    "stepWhenTitle": "何時跑",
+    "stepWhenHint": "觸發方式與排程",
+    "stepWhenAria": "何時跑",
+    "stepOutputTitle": "產出到哪",
+    "stepOutputHint": "輸出、通知與工具權限",
+    "stepOutputAria": "產出到哪",
     "taskTypeLabel": "任務類型",
     "llmProfileLabel": "LLM 設定檔",
     "llmProfileIncompleteBadge": "未完成",
@@ -138,8 +152,6 @@
     "llmProfileAllIncomplete": "現有設定檔尚未完成。請補齊提供者、模型（以及需要時的金鑰）後再儲存。",
     "llmProfileCreateCta": "建立 AI 設定檔",
     "llmProfileHint": "此任務會自動使用所選設定檔的連線（提供者、模型與 API 金鑰）。",
-    "skillsTitle": "設定／技能",
-    "skillsAria": "任務設定與技能",
     "optionalTitle": "進階設定",
     "descriptionLabel": "描述",
     "descriptionPlaceholder": "任務描述（選填）",
@@ -315,8 +327,6 @@
       "weekly": "每週",
       "custom_seconds": "自訂秒數"
     },
-    "unmappedOption": "自訂觸發 RRULE",
-    "unmappedHelp": "此任務的觸發 RRULE 不在下方預設選項中。選擇預設排程後儲存會覆寫它。",
     "weekday": {
       "0": "星期日",
       "1": "星期一",
@@ -413,28 +423,37 @@
   },
   "agent": {
     "presetsLabel": "預設",
-    "presetsHint": "一鍵填充勾選，之後仍可修改。",
+    "presetsHint": "一鍵填充，之後仍可修改。",
     "presets": {
       "project_reconcile": "專案調和",
       "web_scout": "網蒐"
     },
-    "triggerLabel": "觸發",
+    "triggerLabel": "觸發方式",
     "trigger": {
-      "schedule": "純定時（依排程執行）",
-      "message_cursor": "來源訊息積壓抽乾（有新訊息才跑）",
-      "message_threshold": "訊息閾值門檻（達數量才跑；無頻道則等同純定時）"
+      "schedule": "純定時",
+      "scheduleHint": "依排程執行",
+      "message_cursor": "訊息積壓抽乾",
+      "message_cursorHint": "有新訊息才跑",
+      "message_threshold": "訊息閾值",
+      "message_thresholdHint": "達數量才跑；無頻道等同純定時"
     },
     "capsLabel": "工具權限",
     "caps": {
-      "calendarRead": "讀日曆（查詢既有日程）",
-      "readAnalysisEvents": "讀事件（搜尋情報／分析事件）",
-      "readItems": "讀物品（查詢到期／庫存物品）",
-      "webSearch": "上網搜尋（啟用時強制可用）"
+      "calendarRead": "讀日曆",
+      "calendarReadHint": "查詢既有日程",
+      "readAnalysisEvents": "讀事件",
+      "readAnalysisEventsHint": "搜尋情報／分析事件",
+      "readItems": "讀物品",
+      "readItemsHint": "查詢到期／庫存物品",
+      "webSearch": "上網搜尋",
+      "webSearchHint": "啟用時強制可用"
     },
     "output": {
-      "calendar": "日曆事件（寫入即含寫日曆權限）"
+      "calendar": "日曆事件",
+      "calendarHint": "寫入我的日程",
+      "calendarHelp": "寫入即含寫日曆權限"
     },
     "outputHint": "寫入「我的日程」。情報頁在上方「輸出」裡單獨勾選。",
-    "outputHintCursor": "訊息積壓抽乾僅寫日曆事件；情報事件輸出請改用排程或訊息門檻觸發。"
+    "outputHintCursor": "訊息積壓抽乾僅寫日曆事件；情報事件請改用排程或訊息閾值觸發。"
   }
 }

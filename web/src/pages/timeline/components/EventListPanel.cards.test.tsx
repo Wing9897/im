@@ -132,6 +132,27 @@ describe("EventListPanel", () => {
     expect(titleIcons.length).toBe(3);
     expect(titleIcons[0]?.getAttribute("width")).toBe("20");
 
+    expect(container.querySelectorAll('[data-testid="intel-event-avatar-stack"]').length).toBe(1);
+    const intelMark = container.querySelector(
+      '[data-testid="intel-event-mark"]',
+    ) as HTMLElement | null;
+    const taskOverlay = container.querySelector(
+      '[data-testid="intel-event-task-badge"] [data-testid="task-logo-mark"]',
+    ) as HTMLElement | null;
+    expect(intelMark?.style.width).toBe("28px");
+    expect(taskOverlay?.style.width).toBe("14px");
+    expect(intelMark?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(taskOverlay?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(true);
+    const taskProvenance = Array.from(
+      container.querySelectorAll('[data-testid="timeline-event-list-provenance"]'),
+    ).find((node) => node.textContent?.includes("任務：Ops Task"));
+    expect(taskProvenance?.querySelector('[data-testid="intel-event-avatar-stack"]')).toBeNull();
+    expect(taskProvenance?.querySelector('[data-testid="intel-event-mark"]')).toBeNull();
+    expect(taskProvenance?.querySelector("svg")?.getAttribute("width")).toBe("14");
+    expect(taskProvenance?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(
+      true,
+    );
+
     // Single-day fixtures: ending day-phase tag is not shown (multi-day covered elsewhere).
     expect(
       container.querySelector(
@@ -142,6 +163,41 @@ describe("EventListPanel", () => {
     // Remind badge already conveys 提醒 — title stays bare.
     expect(container.textContent).not.toContain("提醒 · milk");
     expect(container.textContent).toContain("milk");
+  });
+
+  it("shows a user task emoji on the small overlay, not the large intel mark or 任務 row", () => {
+    const analysis = makeTimelineItem({
+      id: "an:emoji",
+      title: "分析事件",
+      source: "analysis",
+      taskId: "task-ops",
+      taskName: "Ops Task",
+      startTime: new Date(2026, 6, 14, 18, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 19, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [analysis],
+      focusedDay: new Date(2026, 6, 14),
+      taskEmojis: { "task-ops": "🎯" },
+    });
+    const stack = container.querySelector('[data-testid="intel-event-avatar-stack"]');
+    const intel = container.querySelector('[data-testid="intel-event-mark"]');
+    const badge = container.querySelector('[data-testid="intel-event-task-badge"]');
+    expect(stack).not.toBeNull();
+    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(intel?.textContent).not.toContain("🎯");
+    expect(badge?.textContent).toContain("🎯");
+    expect(container.querySelector('[data-testid="task-avatar-stack"]')).toBeNull();
+    const provenance = container.querySelector(
+      '[data-testid="timeline-event-list-provenance"]',
+    );
+    expect(provenance?.textContent).toContain("任務：Ops Task");
+    expect(provenance?.textContent).not.toContain("🎯");
+    expect(provenance?.querySelector('[data-testid="intel-event-avatar-stack"]')).toBeNull();
+    expect(provenance?.querySelector("svg")?.getAttribute("width")).toBe("14");
+    expect(provenance?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(
+      true,
+    );
   });
 
   it("shows location placeholder and status on sidebar cards", () => {
@@ -274,5 +330,49 @@ describe("EventListPanel", () => {
       clickButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(picked).toEqual(["click-me"]);
+  });
+
+  it("shows the shared schedule emoji instead of CalendarDays for user events", () => {
+    const event = makeTimelineItem({
+      id: "ue-bday",
+      title: "生日",
+      source: "user",
+      origin: "manual",
+      startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+      scheduleEmojis: { "oneOff:ue-bday": "🎂" },
+    });
+    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
+      "🎂",
+    );
+  });
+
+  it("maps recurring occurrences to recurring:<seriesId>, not occurrence id", () => {
+    const event = makeTimelineItem({
+      id: "rec-1:20260714T020000Z",
+      title: "週會",
+      source: "recurring",
+      seriesId: "rec-1",
+      startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+      scheduleEmojis: {
+        "recurring:rec-1": "🔁",
+        "recurring:rec-1:20260714T020000Z": "❌",
+        "oneOff:rec-1:20260714T020000Z": "❌",
+      },
+    });
+    expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
+      "🔁",
+    );
+    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
   });
 });

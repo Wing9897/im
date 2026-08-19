@@ -104,10 +104,34 @@ describe("ChatOutputFields", () => {
     ) as HTMLButtonElement;
     expect(calendar).not.toBeNull();
     expect(calendar.getAttribute("role")).toBe("switch");
+    expect(calendar.textContent).toContain(String(i18n.t("tasks:agent.output.calendarHint")));
     act(() => {
       calendar.click();
     });
     expect(onCalendar).toHaveBeenCalledWith(true);
+    expect(container.querySelector('[data-testid="task-agent-output-cursor-hint"]')).toBeNull();
+  });
+
+  it("shows cursor drain hint only for message_cursor", () => {
+    const container = document.createElement("div");
+    renderFields(container, {
+      analysisMode: "agent",
+      triggerMode: "message_cursor",
+      outputCalendar: true,
+    });
+    expect(container.querySelector('[data-testid="task-agent-output-cursor-hint"]')?.textContent).toContain(
+      String(i18n.t("tasks:agent.outputHintCursor")),
+    );
+  });
+
+  it("renders output toggles in a two-column grid with short hints", () => {
+    const container = document.createElement("div");
+    renderFields(container);
+    const root = container.querySelector('[data-testid="task-output-fields"]') as HTMLElement;
+    const grid = root.querySelector("div.grid") as HTMLElement;
+    expect(grid.style.gridTemplateColumns).toContain("repeat(2");
+    expect(root.textContent).toContain(String(i18n.t("tasks:editor.outputAnalysisEventsHint")));
+    expect(root.textContent).toContain(String(i18n.t("tasks:editor.includeInTimelineHint")));
   });
 
   it("reports intelligence and timeline toggles", () => {

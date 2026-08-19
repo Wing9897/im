@@ -60,6 +60,8 @@ export function renderPanel(props: {
   focusedDay?: Date | null;
   onSelectEvent?: (event: TimelineItem | null) => void;
   context?: Partial<TimelinePageContextValue>;
+  scheduleEmojis?: Record<string, string>;
+  taskEmojis?: Record<string, string>;
 }) {
   const container = document.createElement("div");
   const root = createRoot(container);
@@ -72,6 +74,8 @@ export function renderPanel(props: {
             rangeEvents: props.rangeEvents,
             focusedDay: props.focusedDay ?? null,
             onSelectEvent: props.onSelectEvent ?? (() => {}),
+            scheduleEmojis: props.scheduleEmojis,
+            taskEmojis: props.taskEmojis,
           }),
         }),
       ),

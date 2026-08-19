@@ -8,6 +8,9 @@ import {
 } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGanttRows";
+import { lookupScheduleEmoji } from "../../../domain/schedule/scheduleEmoji";
+import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 import {
   ganttEventNameClass,
   ganttEventNamesColumnClass,
@@ -24,6 +27,7 @@ interface GanttEventLabelsColumnProps {
   onSelectEvent?: (event: TimelineItem) => void;
   onHoverStart: (rowId: string) => void;
   onHoverEnd: () => void;
+  emojis: ScheduleEmojiMap;
 }
 
 function rowDisplayTitle(row: GanttEventRowModel): string {
@@ -66,6 +70,7 @@ export function GanttEventLabelsColumn({
   onSelectEvent,
   onHoverStart,
   onHoverEnd,
+  emojis,
 }: GanttEventLabelsColumnProps) {
   const { t } = useTranslation("timeline");
   const untitled = t("gantt.untitled");
@@ -113,6 +118,8 @@ export function GanttEventLabelsColumn({
                 >
                   {leading.emoji}
                 </span>
+              ) : first && lookupScheduleEmoji(emojis, first) ? (
+                <ScheduleEventCompactEmoji event={first} emojis={emojis} />
               ) : null}
               <span className={ganttLabelTitleClass}>{title}</span>
             </div>

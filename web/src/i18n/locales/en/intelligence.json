@@ -87,7 +87,8 @@
     "unreadAria": "Unread"
   },
   "card": {
-    "sourcedFrom": "From {time}"
+    "sourcedFrom": "From {time}",
+    "eventAvatarAria": "Intelligence event and task mark"
   },
   "sourceMeta": {
     "batchGroups_one": "Batch source · {count} group",

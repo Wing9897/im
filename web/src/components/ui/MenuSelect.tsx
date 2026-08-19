@@ -36,6 +36,7 @@ type MenuSelectProps = {
    */
   placeholder?: string;
   "aria-label"?: string;
+  "aria-required"?: boolean;
   "data-testid"?: string;
   disabled?: boolean;
 };
@@ -164,6 +165,7 @@ export function MenuSelect({
   placeholder,
   disabled = false,
   "aria-label": ariaLabel,
+  "aria-required": ariaRequired,
   "data-testid": testId,
 }: MenuSelectProps) {
   const isField = variant === "field";
@@ -308,6 +310,7 @@ export function MenuSelect({
         id={id}
         disabled={disabled}
         aria-label={ariaLabel}
+        aria-required={ariaRequired || undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}

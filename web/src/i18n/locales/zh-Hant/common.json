@@ -324,6 +324,7 @@
   "notify": {
     "prefLabel": "通知",
     "prefAria": "此條目是否通知",
+    "prefHint": "跟隨工作集與全局開關",
     "prefHelp": "勾選後仍跟工作集與全局開關；工作集關掉則不響。",
     "inboxTitle": "最近一天",
     "inboxEmpty": "最近一天沒有通知。",

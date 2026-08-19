@@ -8,6 +8,28 @@
   "searchAria": "Search schedule",
   "create": "Add",
   "createAria": "Add calendar event",
+  "filter": {
+    "title": "Filters",
+    "openAria": "Open filters",
+    "openAriaActive": "Filters ({count} active)",
+    "dialogTitle": "Filters",
+    "dialogCloseAria": "Close filters",
+    "done": "Done",
+    "typeAria": "Type",
+    "typeAll": "All",
+    "typeOneOff": "One-off",
+    "typeRecurring": "Recurring",
+    "worksetAria": "Workset",
+    "worksetAll": "All worksets",
+    "worksetSearchPlaceholder": "Search worksets",
+    "worksetSearchAria": "Search worksets",
+    "worksetEmpty": "No matching worksets",
+    "dateRange": "Date",
+    "dateFromAria": "Start date",
+    "dateToAria": "End date",
+    "clear": "Clear filters",
+    "clearAria": "Clear schedule filters"
+  },
   "editor": {
     "title": "Edit recurring event",
     "back": "Back to schedule",
@@ -25,6 +47,10 @@
     "title": "No schedule events yet",
     "hint": "Create a one-off or recurring event — same dialog as Timeline."
   },
+  "emptyFiltered": {
+    "title": "No matching schedule events",
+    "hint": "Try adjusting type, workset, or date range."
+  },
   "card": {
     "edit": "Edit",
     "editAria": "Edit {title}",
@@ -39,7 +65,8 @@
     "notes": "Notes",
     "empty": "N/A",
     "locationLine": "Location: {value}",
-    "notesLine": "Notes: {value}"
+    "notesLine": "Notes: {value}",
+    "changeEmojiAria": "Change emoji for {title}"
   },
   "loadMoreHint": "Showing {shown} / {total}",
   "loadMoreHintHasMore": "Scroll for more (showing {shown})",

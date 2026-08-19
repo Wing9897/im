@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
+import {
+  LEGACY_UNMAPPED_SCHEDULE_TYPE,
+  presetToTriggerRrule,
+  triggerRruleToPreset,
+} from "./triggerSchedule";
 
 describe("triggerSchedule", () => {
   it("maps presets to trigger RRULE", () => {
@@ -26,5 +30,10 @@ describe("triggerSchedule", () => {
         scheduleValue: value,
       });
     }
+  });
+
+  it("does not map minutely / non-preset RRULEs", () => {
+    expect(triggerRruleToPreset("FREQ=MINUTELY;INTERVAL=1")).toBeNull();
+    expect(LEGACY_UNMAPPED_SCHEDULE_TYPE).toBe("hourly");
   });
 });

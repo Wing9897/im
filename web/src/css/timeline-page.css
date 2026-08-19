@@ -249,3 +249,16 @@
   opacity: 0.5;
   user-select: none;
 }
+
+/* Gantt: local ink + denser chart panel over photo BG (do not change app --text-muted). */
+.im-timeline-gantt {
+  --text-muted: color-mix(in srgb, var(--text-primary) 72%, var(--surface-border));
+  --text-secondary: color-mix(in srgb, var(--text-primary) 84%, var(--surface-border));
+}
+
+html[data-theme-bg="custom"] .im-timeline-gantt,
+html[data-theme-bg="focal"] .im-timeline-gantt {
+  background: color-mix(in srgb, var(--surface-card) 86%, transparent);
+  --surface-chrome: color-mix(in srgb, var(--surface-card) 88%, transparent);
+  --surface-panel: color-mix(in srgb, var(--surface-card) 80%, transparent);
+}

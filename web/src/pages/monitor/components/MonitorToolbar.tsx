@@ -60,7 +60,13 @@ export function MonitorToolbar({
       className="!min-h-0 flex-col !items-stretch !flex-nowrap"
     >
       <div className="flex min-h-8 items-center gap-sm">
-        <span className="min-w-0 shrink truncate text-[11px] leading-none text-text-muted">
+        <span
+          className={
+            viewMode === "list"
+              ? "im-monitor-stream-status min-w-0 shrink truncate text-[11px] leading-none text-text-secondary"
+              : "min-w-0 shrink truncate text-[11px] leading-none text-text-muted"
+          }
+        >
           {statusLabel}
         </span>
         {isRefreshing ? <RefreshIndicator label={t("toolbar.refreshing")} /> : null}

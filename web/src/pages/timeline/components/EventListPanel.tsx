@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlignLeft, CalendarDays, Clock, MapPin, Repeat } from "lucide-react";
+import { AlignLeft, Clock, ListChecks, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge, CardFieldRow, CardTitleIcon, FilterChip, SurfaceCard } from "../../../components/ui";
+import { Badge, CardFieldIcon, CardFieldRow, FilterChip, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import {
   useTaskCatalog,
@@ -24,6 +24,7 @@ import {
   formatEventListProvenanceLabel,
   previewEventBody,
   resolveEventCardDisplay,
+  resolveEventListProvenanceKind,
   resolveEventListWorksetName,
   type EventListCardMetaLookups,
 } from "../../../domain/timeline/eventListCardMeta";
@@ -42,17 +43,46 @@ import type { TimelineItem } from "../../../types";
 import { dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
 import { resolveSidebarDay } from "../timelinePageUtils";
 import { useTimelinePageContext } from "../TimelinePageContext";
+import { ScheduleEventTitleMark } from "./ScheduleEventEmojiMark";
+import { IntelEventMark } from "../../../components/task/IntelEventAvatarStack";
+import { useScheduleEmojisMap } from "../../schedule/useScheduleEmojis";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
+import { useTaskEmojisMap } from "../../tasks/useTaskEmojis";
+import type { TaskEmojiMap } from "../../tasks/taskEmojisStore";
+
+function EventProvenanceRow({
+  event,
+  label,
+}: {
+  event: TimelineItem;
+  label: string;
+}) {
+  const isTask = resolveEventListProvenanceKind(event) === "task";
+  return (
+    <span
+      className="inline-flex min-w-0 items-center gap-xs truncate"
+      data-testid="timeline-event-list-provenance"
+    >
+      {isTask ? <CardFieldIcon icon={ListChecks} /> : null}
+      <span className="min-w-0 truncate">{label}</span>
+    </span>
+  );
+}
 
 function EventListItem({
   event,
   focusedDay,
   onSelectEvent,
   metaLookups,
+  emojis,
+  taskEmojis,
 }: {
   event: TimelineItem;
   focusedDay: Date;
   onSelectEvent: (event: TimelineItem | null) => void;
   metaLookups: EventListCardMetaLookups;
+  emojis: ScheduleEmojiMap;
+  taskEmojis: TaskEmojiMap;
 }) {
   const { t } = useTranslation("timeline");
   const { eventStatuses } = useTimelinePageContext();
@@ -103,7 +133,14 @@ function EventListItem({
               {leading.emoji}
             </span>
           ) : scheduleCard ? (
-            <CardTitleIcon icon={event.source === "recurring" ? Repeat : CalendarDays} />
+            <ScheduleEventTitleMark event={event} emojis={emojis} />
+          ) : resolveEventListProvenanceKind(event) === "task" ? (
+            <IntelEventMark
+              event={event}
+              emojis={taskEmojis}
+              size="compact"
+              label={t("eventList.eventAvatarAria")}
+            />
           ) : null}
           <div
             className={`${cardTitleClass} min-w-0 flex-1 truncate ${
@@ -163,9 +200,7 @@ function EventListItem({
               <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
                 {worksetLabel}
               </span>
-              <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
-                {provenanceLabel}
-              </span>
+              <EventProvenanceRow event={event} label={provenanceLabel} />
             </div>
           </div>
         ) : (
@@ -197,9 +232,7 @@ function EventListItem({
               <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
                 {worksetLabel}
               </span>
-              <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
-                {provenanceLabel}
-              </span>
+              <EventProvenanceRow event={event} label={provenanceLabel} />
             </div>
           </>
         )}
@@ -215,6 +248,8 @@ function EventListGroup({
   onSelectEvent,
   testId,
   metaLookups,
+  emojis,
+  taskEmojis,
 }: {
   title: string;
   events: TimelineItem[];
@@ -222,6 +257,8 @@ function EventListGroup({
   onSelectEvent: (event: TimelineItem | null) => void;
   testId: string;
   metaLookups: EventListCardMetaLookups;
+  emojis: ScheduleEmojiMap;
+  taskEmojis: TaskEmojiMap;
 }) {
   if (events.length === 0) return null;
   return (
@@ -243,6 +280,8 @@ function EventListGroup({
           focusedDay={focusedDay}
           onSelectEvent={onSelectEvent}
           metaLookups={metaLookups}
+          emojis={emojis}
+          taskEmojis={taskEmojis}
         />
       ))}
     </section>
@@ -258,13 +297,23 @@ export function EventListPanel({
   rangeEvents,
   focusedDay,
   onSelectEvent,
+  scheduleEmojis,
+  taskEmojis,
 }: {
   /** Day-filtered events for the sidebar (from {@link computeSidebarEvents}). */
   rangeEvents: TimelineItem[];
   focusedDay: Date | null;
   onSelectEvent: (event: TimelineItem | null) => void;
+  /** Test override; production hydrates `schedule_emojis` from ui-prefs. */
+  scheduleEmojis?: ScheduleEmojiMap;
+  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  taskEmojis?: TaskEmojiMap;
 }) {
   const { t } = useTranslation("timeline");
+  const hydratedEmojis = useScheduleEmojisMap();
+  const emojis = scheduleEmojis ?? hydratedEmojis;
+  const hydratedTaskEmojis = useTaskEmojisMap();
+  const taskMarks = taskEmojis ?? hydratedTaskEmojis;
   const { tasks } = useTaskCatalog();
   const worksetNameById = useWorksetNameById();
   const generalWorksetLabel = useGeneralWorksetLabel();
@@ -357,6 +406,8 @@ export function EventListPanel({
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ongoing"
               metaLookups={metaLookups}
+              emojis={emojis}
+              taskEmojis={taskMarks}
             />
             <EventListGroup
               title={t("eventList.filterUpcoming")}
@@ -365,6 +416,8 @@ export function EventListPanel({
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-upcoming"
               metaLookups={metaLookups}
+              emojis={emojis}
+              taskEmojis={taskMarks}
             />
           </>
         )}

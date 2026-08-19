@@ -29,15 +29,24 @@ import {
   weekEventChipTitleClass,
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
+import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
+import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 type WeekEventChipProps = {
   event: TimelineItem;
   focusedDay: Date;
   status: TimelineEventStatus;
   onSelect: (event: TimelineItem) => void;
+  emojis: ScheduleEmojiMap;
 };
 
-export function WeekEventChip({ event, focusedDay, status, onSelect }: WeekEventChipProps) {
+export function WeekEventChip({
+  event,
+  focusedDay,
+  status,
+  onSelect,
+  emojis,
+}: WeekEventChipProps) {
   const { t } = useTranslation("timeline");
   const [hovered, setHovered] = useState(false);
   const dismissed = Boolean(event.dismissed);
@@ -86,7 +95,13 @@ export function WeekEventChip({ event, focusedDay, status, onSelect }: WeekEvent
                 >
                   {leading.emoji}
                 </span>
-              ) : null}
+              ) : (
+                <ScheduleEventCompactEmoji
+                  event={event}
+                  emojis={emojis}
+                  className="mr-0.5"
+                />
+              )}
               {title}
             </div>
             {showRemindBadge ? (

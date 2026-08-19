@@ -1,4 +1,4 @@
-/** UI "simple calendar" product mode — hide collect / analyze surfaces. */
+/** UI basic-calendar product mode — hide collect/analyze surfaces and the Tasks page. */
 
 import { SIMPLE_MODE_STORAGE_KEY } from "../prefs";
 
@@ -10,12 +10,13 @@ export const SIMPLE_MODE_HOME = "/timeline";
 /** Full-product default home (monitor wall). */
 export const FULL_MODE_HOME = "/monitor";
 
-/** Sidebar / deep-link prefixes that disappear in simple mode. */
+/** Sidebar / deep-link prefixes that disappear in simple mode (Tasks stays in full mode). */
 export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/monitor",
   "/leaderboard",
   "/intelligence",
   "/sources",
+  "/tasks",
 ] as const;
 
 /** AI workspace tabs that only matter for analysis pipelines. */

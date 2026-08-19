@@ -271,6 +271,22 @@
   border-color: color-mix(in srgb, var(--text-muted) 32%, transparent);
 }
 
+.im-monitor-list-source {
+  color: var(--text-secondary);
+}
+
+.im-monitor-list-body {
+  color: var(--text-secondary);
+}
+
+.im-monitor-list-body.is-unread {
+  color: var(--text-primary);
+}
+
+.im-monitor-stream-status {
+  color: var(--text-secondary);
+}
+
 /* ── Wall grid ── */
 .im-wall-grid {
   display: grid;

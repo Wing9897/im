@@ -1,14 +1,24 @@
 /**
- * Task form for create/edit — L1 foundation + L2 employee + L3 skills.
+ * Task form for create/edit — numbered sections on one scroll (not a wizard).
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
-import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
+import {
+  CollapsePanel,
+  FormGrid,
+  SettingsRow,
+  SurfaceCard,
+  TextField,
+} from "../../../components/ui";
 import { formHelpClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import type { LlmProfileGate } from "./useChatEditorLlmProfiles";
-import { applyAgentPolicyFields, ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
+import {
+  applyAgentPolicyFields,
+  ChatAgentSkillsFields,
+  ChatAgentTriggerFields,
+} from "./ChatAgentPolicyFields";
 import { ChatOutputFields } from "./ChatOutputFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
@@ -29,6 +39,50 @@ interface ChatEditorFormProps {
   channels: ChannelWithSource[];
   onOpenChannelDialog: () => void;
   onLlmProfileGateChange?: (gate: LlmProfileGate) => void;
+  taskId?: string;
+}
+
+function EditorSection({
+  step,
+  title,
+  subtitle,
+  ariaLabel,
+  testId,
+  children,
+}: {
+  step?: number;
+  title: string;
+  subtitle?: string;
+  ariaLabel: string;
+  testId?: string;
+  children: ReactNode;
+}) {
+  return (
+    <SurfaceCard
+      material="panel"
+      density="compact"
+      className="shrink-0"
+      aria-label={ariaLabel}
+      role="region"
+      data-testid={testId}
+    >
+      <div className="mb-sm flex items-start gap-sm">
+        {step != null ? (
+          <span
+            className="mt-px inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-[10px] font-semibold leading-none tabular-nums text-accent"
+            aria-hidden="true"
+          >
+            {step}
+          </span>
+        ) : null}
+        <div className="min-w-0">
+          <h2 className="m-0 text-xs font-semibold tracking-wide text-text-secondary">{title}</h2>
+          {subtitle ? <p className={`mt-xs mb-0 ${formHelpClass}`}>{subtitle}</p> : null}
+        </div>
+      </div>
+      {children}
+    </SurfaceCard>
+  );
 }
 
 export function ChatEditorForm({
@@ -37,6 +91,7 @@ export function ChatEditorForm({
   channels,
   onOpenChannelDialog,
   onLlmProfileGateChange,
+  taskId,
 }: ChatEditorFormProps) {
   const { t } = useTranslation("common");
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
@@ -56,11 +111,11 @@ export function ChatEditorForm({
     agentPolicy,
     formState.channelIds,
   );
-  const gateOpen = vis.showMessageGateOverrides;
-  const [optionalOpen, setOptionalOpen] = useState(gateOpen);
+  const advancedRelevant = vis.showMessageGateOverrides || vis.showWaveInterval;
+  const [optionalOpen, setOptionalOpen] = useState(advancedRelevant);
   useEffect(() => {
-    if (gateOpen) setOptionalOpen(true);
-  }, [gateOpen]);
+    if (advancedRelevant) setOptionalOpen(true);
+  }, [advancedRelevant]);
 
   const agentWaveIntervalSeconds = String(
     formState.agentWaveIntervalSeconds ?? DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
@@ -92,19 +147,16 @@ export function ChatEditorForm({
 
   return (
     <div className="flex flex-col gap-sm" data-testid="task-editor-form">
-      <SurfaceCard
-        material="panel"
-        density="compact"
-        className="shrink-0"
-        aria-label={t("tasks:editor.requiredAria")}
-        role="region"
+      <EditorSection
+        step={1}
+        title={t("tasks:editor.stepIdentityTitle")}
+        subtitle={t("tasks:editor.stepIdentityHint")}
+        ariaLabel={t("tasks:editor.stepIdentityAria")}
+        testId="task-editor-step-identity"
       >
-        <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
-          {t("tasks:editor.settingsTitle")}
-        </h2>
-
         <FormGrid className="gap-lg">
           <ChatNameModeFields
+            taskId={taskId}
             name={formState.name}
             analysisMode={formState.analysisMode}
             worksetId={formState.worksetId}
@@ -136,20 +188,99 @@ export function ChatEditorForm({
             onLlmProfileIdChange={(v) => updateField("llmProfileId", v)}
             onLlmProfileGateChange={onLlmProfileGateChange}
           />
+          {!vis.promptFieldsVisible ? (
+            <p className="m-0 text-caption text-text-muted md:col-span-2">
+              {modeMeta.modeDescription}
+            </p>
+          ) : null}
         </FormGrid>
-      </SurfaceCard>
+      </EditorSection>
+
+      {vis.promptFieldsVisible ? (
+        <EditorSection
+          step={2}
+          title={t("tasks:editor.stepScopeTitle")}
+          subtitle={t("tasks:editor.stepScopeHint")}
+          ariaLabel={t("tasks:editor.stepScopeAria")}
+          testId="task-editor-step-scope"
+        >
+          <FormGrid className="gap-lg">
+            {vis.channelFieldsVisible ? (
+              <div className="md:col-span-2 flex flex-col gap-xs">
+                <ChatChannelSelector
+                  channelIds={formState.channelIds}
+                  channels={channels}
+                  onOpenChannelDialog={onOpenChannelDialog}
+                  optional={vis.channelsOptional}
+                />
+                {vis.isAgent ? (
+                  <p
+                    className={`m-0 ${formHelpClass}`}
+                    data-testid="task-agent-channel-hint"
+                  >
+                    {formState.triggerMode === "message_cursor"
+                      ? t("tasks:modes.agent.cursorChannelHint")
+                      : formState.channelIds.length > 0
+                        ? t("tasks:modes.agent.messageGateHint")
+                        : t("tasks:modes.agent.timedModeHint")}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            <ChatPromptFields
+              promptTemplate={formState.promptTemplate}
+              onPromptTemplateChange={(v) => updateField("promptTemplate", v)}
+              promptLabel={modeMeta.promptLabel}
+              promptPlaceholder={modeMeta.promptPlaceholder}
+              promptHint={modeMeta.promptHint}
+              promptRequired={vis.promptRequired}
+            />
+          </FormGrid>
+        </EditorSection>
+      ) : null}
+
+      {vis.promptFieldsVisible ? (
+        <EditorSection
+          step={3}
+          title={t("tasks:editor.stepWhenTitle")}
+          subtitle={t("tasks:editor.stepWhenHint")}
+          ariaLabel={t("tasks:editor.stepWhenAria")}
+          testId="task-editor-step-when"
+        >
+          <FormGrid className="gap-lg">
+            {vis.showAgentPolicy ? (
+              <ChatAgentTriggerFields formState={formState} updateField={updateField} />
+            ) : null}
+            <div className="md:col-span-2 flex flex-col gap-xs">
+              <ScheduleInput
+                scheduleType={formState.scheduleType}
+                scheduleValue={formState.scheduleValue}
+                onScheduleTypeChange={(type) => updateField("scheduleType", type)}
+                onScheduleValueChange={(value) => updateField("scheduleValue", value)}
+                showAgentWaveInterval={false}
+              />
+              {vis.isAgent ? (
+                <p
+                  className={`m-0 ${formHelpClass}`}
+                  data-testid="task-agent-schedule-hint"
+                >
+                  {t("tasks:modes.agent.scheduleDefaultHint")}
+                </p>
+              ) : null}
+            </div>
+          </FormGrid>
+        </EditorSection>
+      ) : null}
 
       {vis.outputGroupVisible ? (
-        <SurfaceCard
-          material="panel"
-          density="compact"
-          className="shrink-0"
-          aria-label={t("tasks:editor.outputAria")}
-          role="region"
+        <EditorSection
+          step={4}
+          title={t("tasks:editor.stepOutputTitle")}
+          subtitle={t("tasks:editor.stepOutputHint")}
+          ariaLabel={t("tasks:editor.stepOutputAria")}
+          testId="task-editor-step-output"
         >
-          <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
-            {t("tasks:editor.outputTitle")}
-          </h2>
           <FormGrid className="gap-lg">
             <ChatOutputFields
               analysisMode={formState.analysisMode}
@@ -164,122 +295,14 @@ export function ChatEditorForm({
               onNotifyPrefChange={(v) => updateField("notifyPref", v)}
               onOutputCalendarChange={handleOutputCalendarChange}
             />
+            {vis.showAgentPolicy ? (
+              <div className="md:col-span-2" data-testid="task-agent-policy">
+                <ChatAgentSkillsFields formState={formState} updateField={updateField} />
+              </div>
+            ) : null}
           </FormGrid>
-        </SurfaceCard>
+        </EditorSection>
       ) : null}
-
-      <SurfaceCard
-        material="panel"
-        density="compact"
-        className="shrink-0"
-        aria-label={t("tasks:editor.skillsAria")}
-        role="region"
-        data-testid="task-skills-section"
-      >
-        <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
-          {t("tasks:editor.skillsTitle")}
-        </h2>
-
-        <FormGrid className="gap-lg">
-          {!vis.promptFieldsVisible ? (
-            <p className="m-0 text-caption text-text-muted md:col-span-2">
-              {modeMeta.modeDescription}
-            </p>
-          ) : (
-            <>
-              {vis.showAgentPolicy ? (
-                <ChatAgentPolicyFields formState={formState} updateField={updateField} />
-              ) : null}
-
-              <ChatPromptFields
-                description={formState.description}
-                promptTemplate={formState.promptTemplate}
-                onDescriptionChange={(v) => updateField("description", v)}
-                onPromptTemplateChange={(v) => updateField("promptTemplate", v)}
-                promptLabel={modeMeta.promptLabel}
-                promptPlaceholder={modeMeta.promptPlaceholder}
-                promptHint={modeMeta.promptHint}
-                scheduleSlot={
-                  <div className="flex flex-col gap-xs">
-                    <ScheduleInput
-                      scheduleType={formState.scheduleType}
-                      scheduleValue={formState.scheduleValue}
-                      scheduleRrule={formState.scheduleRrule}
-                      onScheduleTypeChange={(type) => updateField("scheduleType", type)}
-                      onScheduleValueChange={(value) => updateField("scheduleValue", value)}
-                      showAgentWaveInterval={vis.showWaveInterval}
-                      agentWaveIntervalSeconds={agentWaveIntervalSeconds}
-                      onProjectWaveIntervalSecondsChange={(value) => {
-                        const trimmed = value.trim();
-                        if (!trimmed) {
-                          updateField("agentWaveIntervalSeconds", null);
-                          return;
-                        }
-                        const num = Number(trimmed);
-                        updateField(
-                          "agentWaveIntervalSeconds",
-                          Number.isInteger(num) ? num : null,
-                        );
-                      }}
-                      onProjectWaveIntervalSecondsCommit={(value) => {
-                        const trimmed = value.trim();
-                        if (!trimmed) {
-                          updateField(
-                            "agentWaveIntervalSeconds",
-                            DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
-                          );
-                          return;
-                        }
-                        const num = Number(trimmed);
-                        if (!Number.isInteger(num) || num < 0) {
-                          updateField(
-                            "agentWaveIntervalSeconds",
-                            DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
-                          );
-                          return;
-                        }
-                        updateField("agentWaveIntervalSeconds", Math.min(num, 600));
-                      }}
-                    />
-                    {vis.isAgent ? (
-                      <p
-                        className={`m-0 ${formHelpClass}`}
-                        data-testid="task-agent-schedule-hint"
-                      >
-                        {t("tasks:modes.agent.scheduleDefaultHint")}
-                      </p>
-                    ) : null}
-                  </div>
-                }
-                promptRequired={vis.promptRequired}
-              />
-
-              {vis.channelFieldsVisible ? (
-                <div className="md:col-span-2 flex flex-col gap-xs">
-                  <ChatChannelSelector
-                    channelIds={formState.channelIds}
-                    channels={channels}
-                    onOpenChannelDialog={onOpenChannelDialog}
-                    optional={vis.channelsOptional}
-                  />
-                  {vis.isAgent ? (
-                    <p
-                      className={`m-0 ${formHelpClass}`}
-                      data-testid="task-agent-channel-hint"
-                    >
-                      {formState.triggerMode === "message_cursor"
-                        ? t("tasks:modes.agent.cursorChannelHint")
-                        : formState.channelIds.length > 0
-                          ? t("tasks:modes.agent.messageGateHint")
-                          : t("tasks:modes.agent.timedModeHint")}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </>
-          )}
-        </FormGrid>
-      </SurfaceCard>
 
       {vis.promptFieldsVisible && (
         <div role="region" aria-label={t("tasks:editor.optionalAria")}>
@@ -289,6 +312,70 @@ export function ChatEditorForm({
             onToggle={() => setOptionalOpen((v) => !v)}
           >
             <FormGrid className="gap-lg">
+              <SettingsRow
+                label={t("tasks:editor.descriptionLabel")}
+                htmlFor="chat-task-description"
+              >
+                <TextField
+                  id="chat-task-description"
+                  type="text"
+                  placeholder={t("tasks:editor.descriptionPlaceholder")}
+                  value={formState.description}
+                  onChange={(e) => updateField("description", e.target.value)}
+                />
+              </SettingsRow>
+
+              {vis.showWaveInterval ? (
+                <SettingsRow
+                  label={t("tasks:schedule.agentWaveInterval")}
+                  htmlFor="schedule-project-wave-interval"
+                  help={t("tasks:schedule.agentWaveIntervalHelp")}
+                >
+                  <TextField
+                    id="schedule-project-wave-interval"
+                    data-testid="schedule-project-wave-interval"
+                    type="number"
+                    min={0}
+                    max={600}
+                    step={1}
+                    value={agentWaveIntervalSeconds}
+                    onChange={(e) => {
+                      const trimmed = e.target.value.trim();
+                      if (!trimmed) {
+                        updateField("agentWaveIntervalSeconds", null);
+                        return;
+                      }
+                      const num = Number(trimmed);
+                      updateField(
+                        "agentWaveIntervalSeconds",
+                        Number.isInteger(num) ? num : null,
+                      );
+                    }}
+                    onBlur={(e) => {
+                      const trimmed = e.target.value.trim();
+                      if (!trimmed) {
+                        updateField(
+                          "agentWaveIntervalSeconds",
+                          DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
+                        );
+                        return;
+                      }
+                      const num = Number(trimmed);
+                      if (!Number.isInteger(num) || num < 0) {
+                        updateField(
+                          "agentWaveIntervalSeconds",
+                          DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
+                        );
+                        return;
+                      }
+                      updateField("agentWaveIntervalSeconds", Math.min(num, 600));
+                    }}
+                    aria-label={t("tasks:schedule.agentWaveIntervalAria")}
+                    placeholder="20"
+                  />
+                </SettingsRow>
+              ) : null}
+
               {vis.analysisTimeRangeVisible ? (
                 <ChatAnalysisFields
                   analysisTimeRange={formState.analysisTimeRange}

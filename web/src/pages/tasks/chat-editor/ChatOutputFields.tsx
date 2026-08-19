@@ -41,6 +41,7 @@ export function ChatOutputFields({
   const showIntelToggle = analysisMode !== "leaderboard";
   const showIntelOffTimelineHint = timelineToggleVisible && showIntelToggle && !outputAnalysisEvents;
   const showCalendarOutput = analysisMode === "agent";
+  const showCursorOutputHint = showCalendarOutput && triggerMode === "message_cursor";
 
   return (
     <div
@@ -49,7 +50,7 @@ export function ChatOutputFields({
       role="group"
       aria-label={t("tasks:editor.outputAria")}
     >
-      <SelectTileGrid columns="repeat(auto-fit, minmax(140px, 1fr))" className="gap-sm">
+      <SelectTileGrid columns="repeat(2, minmax(0, 1fr))" className="gap-sm">
         {showIntelToggle ? (
           <SelectTile
             compact
@@ -61,8 +62,9 @@ export function ChatOutputFields({
             title={
               intelDisabled
                 ? t("tasks:agent.outputHintCursor")
-                : t("tasks:editor.outputAnalysisEventsHint")
+                : t("tasks:editor.outputAnalysisEventsHelp")
             }
+            hint={t("tasks:editor.outputAnalysisEventsHint")}
             onClick={() => onOutputAnalysisEventsChange(!outputAnalysisEvents)}
           >
             {t("tasks:editor.outputAnalysisEventsLabel")}
@@ -76,7 +78,8 @@ export function ChatOutputFields({
             active={includeInTimeline}
             data-testid="task-include-in-timeline"
             aria-label={t("tasks:editor.includeInTimelineAria")}
-            title={t("tasks:editor.includeInTimelineHint")}
+            title={t("tasks:editor.includeInTimelineHelp")}
+            hint={t("tasks:editor.includeInTimelineHint")}
             onClick={() => onIncludeInTimelineChange(!includeInTimeline)}
           >
             {t("tasks:editor.includeInTimelineLabel")}
@@ -90,6 +93,8 @@ export function ChatOutputFields({
             active={outputCalendar}
             data-testid="task-agent-output-calendar"
             aria-label={t("tasks:agent.output.calendar")}
+            title={t("tasks:agent.output.calendarHelp")}
+            hint={t("tasks:agent.output.calendarHint")}
             onClick={() => onOutputCalendarChange?.(!outputCalendar)}
           >
             {t("tasks:agent.output.calendar")}
@@ -98,17 +103,15 @@ export function ChatOutputFields({
 
         <NotifyPrefField variant="tile" value={notifyPref} onChange={onNotifyPrefChange} />
       </SelectTileGrid>
-      {showCalendarOutput ? (
-        <p className={`m-0 ${formHelpClass}`}>
-          {triggerMode === "message_cursor"
-            ? t("tasks:agent.outputHintCursor")
-            : t("tasks:agent.outputHint")}
+      {showCursorOutputHint ? (
+        <p className={`m-0 ${formHelpClass}`} data-testid="task-agent-output-cursor-hint">
+          {t("tasks:agent.outputHintCursor")}
         </p>
       ) : null}
       {showIntelOffTimelineHint ? (
-        <span className={formHelpClass} data-testid="task-output-intel-off-timeline-hint">
+        <p className={`m-0 ${formHelpClass}`} data-testid="task-output-intel-off-timeline-hint">
           {t("tasks:editor.outputIntelOffTimelineHint")}
-        </span>
+        </p>
       ) : null}
     </div>
   );

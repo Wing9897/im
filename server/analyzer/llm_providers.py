@@ -239,6 +239,46 @@ def convert_messages_to_gemini(messages: list[dict]) -> list[dict]:
     return contents
 
 
+def extract_gemini_text(data: dict[str, Any]) -> str:
+    """Pull reply text from generateContent JSON; never raise raw KeyError repr."""
+    prompt_feedback = data.get("promptFeedback")
+    if isinstance(prompt_feedback, dict):
+        block_reason = prompt_feedback.get("blockReason")
+        if block_reason:
+            raise LlmClientError(
+                f"Gemini blocked the request ({block_reason})",
+                provider="gemini",
+                response_body=str(data)[:LLM_RESPONSE_BODY_CAP],
+            )
+
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list) or not candidates:
+        raise LlmClientError(
+            "Gemini response has no usable candidates",
+            provider="gemini",
+            response_body=str(data)[:LLM_RESPONSE_BODY_CAP],
+        )
+
+    first = candidates[0] if isinstance(candidates[0], dict) else {}
+    finish_reason = first.get("finishReason")
+    content = first.get("content") if isinstance(first.get("content"), dict) else {}
+    parts = content.get("parts") if isinstance(content, dict) else None
+    texts: list[str] = []
+    if isinstance(parts, list):
+        for part in parts:
+            if isinstance(part, dict) and isinstance(part.get("text"), str):
+                texts.append(part["text"])
+    text = "".join(texts)
+    if not text.strip():
+        reason = finish_reason or "empty"
+        raise LlmClientError(
+            f"Gemini response has no usable candidates ({reason})",
+            provider="gemini",
+            response_body=str(data)[:LLM_RESPONSE_BODY_CAP],
+        )
+    return text
+
+
 async def complete_gemini(
     session: aiohttp.ClientSession,
     *,
@@ -267,8 +307,8 @@ async def complete_gemini(
     async with session.post(url, json=payload, allow_redirects=False) as resp:
         await check_response(resp)
         data = await resp.json()
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
-    usage = data.get("usageMetadata", {})
+    text = extract_gemini_text(data if isinstance(data, dict) else {})
+    usage = data.get("usageMetadata", {}) if isinstance(data, dict) else {}
     return {
         "text": text,
         "prompt_tokens": usage.get("promptTokenCount", 0),

@@ -8,6 +8,7 @@ import {
   SelectTile,
   SelectTileGrid,
   Badge,
+  FieldLabel,
 } from "../../../components/ui";
 import { buttonBaseClass, buttonSizeClass } from "../../../components/ui/controlStyles";
 import { formHelpClass } from "../../../components/ui/pageTypography";
@@ -19,6 +20,9 @@ import {
   taskFormAnalysisModeOrder,
 } from "../../../components/task/taskFormAnalysisModeMeta";
 import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
+import { TaskAvatarStack } from "../../../components/task/TaskAvatarStack";
+import { TaskCardEmoji } from "../../../components/task/TaskCardEmoji";
+import { useTaskEmoji } from "../useTaskEmojis";
 import { analysisModeForTaskEmployee } from "../../../domain/tasks/taskEmployee";
 import { WorksetNameDialog } from "../../../components/dialogs/WorksetNameDialog";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
@@ -38,6 +42,8 @@ interface ChatNameModeFieldsProps {
   onWorksetIdChange: (value: string) => void;
   onLlmProfileIdChange: (value: string) => void;
   onLlmProfileGateChange?: (gate: LlmProfileGate) => void;
+  /** Existing task id enables emoji picker; create form is display-only. */
+  taskId?: string;
 }
 
 /** Name + task-type picker + workset + LLM profile as FormGrid cells. */
@@ -51,6 +57,7 @@ export function ChatNameModeFields({
   onWorksetIdChange,
   onLlmProfileIdChange,
   onLlmProfileGateChange,
+  taskId,
 }: ChatNameModeFieldsProps) {
   const { t } = useTranslation("common");
   const { worksets, refreshWorksets } = useTaskCatalog();
@@ -94,44 +101,46 @@ export function ChatNameModeFields({
     }
   };
 
+  const requiredTitle = t("tasks:editor.requiredSuffix");
+  const identityEmployeeId = getTaskEmployeeIdForMode(analysisMode);
+  const identityEmployeeName = getTaskEmployeeDisplayName(identityEmployeeId);
+  const { emoji, setEmoji, canEdit } = useTaskEmoji(taskId);
+
   return (
     <>
-      <div className="flex flex-col gap-xs md:col-span-2">
-        <span className="text-caption font-semibold tracking-wide text-text-secondary">
-          {t("tasks:editor.foundationTitle")}
-        </span>
-        <p className={`m-0 ${formHelpClass}`}>{t("tasks:editor.foundationHint")}</p>
-      </div>
-
-      <SettingsRow label={t("tasks:editor.nameLabel")} htmlFor="chat-task-name">
-        <TextField
-          id="chat-task-name"
-          type="text"
-          placeholder={t("tasks:editor.namePlaceholder")}
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-        />
-      </SettingsRow>
-      <SettingsRow label={t("workset:ownershipLabel")} htmlFor="chat-workset">
-        <div className="flex flex-wrap items-center gap-sm">
-          <MenuSelect
-            id="chat-workset"
-            variant="field"
-            menuPortal
-            value={worksetId || SYSTEM_WORKSET_ID}
-            options={worksetOptions}
-            onChange={(next) => onWorksetIdChange(next || SYSTEM_WORKSET_ID)}
+      <SettingsRow
+        className="md:col-span-2"
+        label={t("tasks:editor.nameLabel")}
+        htmlFor="chat-task-name"
+        required
+        requiredTitle={requiredTitle}
+      >
+        <div className="flex min-w-0 items-center gap-sm">
+          {canEdit ? (
+            <TaskCardEmoji
+              emoji={emoji}
+              name={name || t("tasks:editor.nameLabel")}
+              employeeId={identityEmployeeId}
+              employeeName={identityEmployeeName}
+              onSelect={setEmoji}
+            />
+          ) : (
+            <TaskAvatarStack
+              emoji={emoji}
+              employeeId={identityEmployeeId}
+              employeeName={identityEmployeeName}
+            />
+          )}
+          <TextField
+            id="chat-task-name"
+            type="text"
+            placeholder={t("tasks:editor.namePlaceholder")}
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            required
+            aria-required
             className="min-w-0 flex-1"
-            aria-label={t("workset:ownershipLabel")}
           />
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-          >
-            {t("workset:create")}
-          </Button>
         </div>
       </SettingsRow>
 
@@ -139,11 +148,12 @@ export function ChatNameModeFields({
         className="flex flex-col gap-sm md:col-span-2"
         role="group"
         aria-label={t("tasks:editor.taskTypeLabel")}
+        aria-required
         data-testid="task-employee-picker"
       >
-        <span className="text-caption font-medium text-text-primary">
+        <FieldLabel required requiredTitle={requiredTitle} className="mb-0">
           {t("tasks:editor.taskTypeLabel")}
-        </span>
+        </FieldLabel>
         <SelectTileGrid
           columns="repeat(auto-fit, minmax(148px, 1fr))"
           className="gap-sm"
@@ -179,11 +189,36 @@ export function ChatNameModeFields({
         </SelectTileGrid>
       </div>
 
+      <SettingsRow label={t("workset:ownershipLabel")} htmlFor="chat-workset">
+        <div className="flex flex-wrap items-center gap-sm">
+          <MenuSelect
+            id="chat-workset"
+            variant="field"
+            menuPortal
+            value={worksetId || SYSTEM_WORKSET_ID}
+            options={worksetOptions}
+            onChange={(next) => onWorksetIdChange(next || SYSTEM_WORKSET_ID)}
+            className="min-w-0 flex-1"
+            aria-label={t("workset:ownershipLabel")}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+          >
+            {t("workset:create")}
+          </Button>
+        </div>
+      </SettingsRow>
+
       <div className="md:col-span-2">
         <SettingsRow
           label={t("tasks:editor.llmProfileLabel")}
           htmlFor={profilesEmpty ? undefined : "chat-llm-profile"}
           help={t("tasks:editor.llmProfileHint")}
+          required
+          requiredTitle={requiredTitle}
         >
           {profilesLoading ? (
             <p className={`m-0 ${formHelpClass}`} data-testid="task-llm-profile-loading">
@@ -220,6 +255,7 @@ export function ChatNameModeFields({
                   onChange={onLlmProfileIdChange}
                   className="min-w-0 flex-1"
                   aria-label={t("tasks:editor.llmProfileLabel")}
+                  aria-required
                   data-testid="task-llm-profile"
                   disabled={profilesAllIncomplete}
                 />

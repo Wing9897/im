@@ -15,6 +15,10 @@ interface SettingsRowProps {
    */
   layout?: "stack" | "inline";
   className?: string;
+  /** Show a required asterisk on the label. */
+  required?: boolean;
+  /** Tooltip on the asterisk (e.g. localized “required”). */
+  requiredTitle?: string;
 }
 
 /**
@@ -29,6 +33,8 @@ export function SettingsRow({
   dense = false,
   layout = "stack",
   className,
+  required = false,
+  requiredTitle,
 }: SettingsRowProps) {
   const stackGap = dense ? "gap-xs" : "gap-sm";
   if (layout === "inline") {
@@ -39,7 +45,12 @@ export function SettingsRow({
           .join(" ")}
       >
         <div className="flex min-w-0 items-center gap-md">
-          <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor={htmlFor}>
+          <FieldLabel
+            className="mb-0 min-w-0 flex-1"
+            htmlFor={htmlFor}
+            required={required}
+            requiredTitle={requiredTitle}
+          >
             {label}
           </FieldLabel>
           {children}
@@ -54,7 +65,9 @@ export function SettingsRow({
         .filter(Boolean)
         .join(" ")}
     >
-      <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
+      <FieldLabel htmlFor={htmlFor} required={required} requiredTitle={requiredTitle}>
+        {label}
+      </FieldLabel>
       {children}
       {help ? <p className={formHelpClass}>{help}</p> : null}
     </div>

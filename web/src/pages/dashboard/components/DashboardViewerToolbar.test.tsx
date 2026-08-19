@@ -177,6 +177,6 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="workset-graph-filter-all"]')).toBeNull();
     expect(filter?.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
     expect(trigger?.getAttribute("aria-haspopup")).toBe("dialog");
-    expect(trigger?.textContent).toContain("全部");
+    expect(trigger?.textContent).toContain("2/2");
   });
 });

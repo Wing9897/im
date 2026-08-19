@@ -94,9 +94,10 @@ export function WorksetGraphFilterControl({ worksets }: WorksetGraphFilterContro
   const atCap = graphWorksetAddCapped(selectedIds.length);
   const defaultIds = useMemo(() => defaultGraphWorksetIds(worksets), [worksets]);
   const allSelected = worksets.length > 0 && selectedIds.length === worksets.length;
-  const triggerLabel = allSelected
-    ? t("graphFilterAll")
-    : t("graphFilterSelectedCount", { count: selectedIds.length });
+  const triggerLabel = t("graphFilterSelectedCount", {
+    selected: selectedIds.length,
+    total: worksets.length,
+  });
 
   const { open, toggle, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
     align: "start",

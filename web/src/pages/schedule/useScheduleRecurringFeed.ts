@@ -7,8 +7,12 @@ import { SCHEDULE_PAGE_SIZE } from "./scheduleConfig";
 
 export type ScheduleRecurringItem = RecurringSeries;
 
-export function useScheduleRecurringFeed(opts: { debouncedSearch: string }) {
-  const { debouncedSearch } = opts;
+export function useScheduleRecurringFeed(opts: {
+  debouncedSearch: string;
+  worksetId?: string;
+  enabled?: boolean;
+}) {
+  const { debouncedSearch, worksetId, enabled = true } = opts;
   const [items, setItems] = useState<ScheduleRecurringItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -19,12 +23,20 @@ export function useScheduleRecurringFeed(opts: { debouncedSearch: string }) {
 
   const reload = useCallback(async () => {
     const requestId = ++requestIdRef.current;
-    setInitialLoading(true);
     setError(null);
+    if (!enabled) {
+      setItems([]);
+      setTotalCount(0);
+      setHasMore(false);
+      setInitialLoading(false);
+      return;
+    }
+    setInitialLoading(true);
     try {
       const page = await listRecurringSeries({
         topLevelOnly: true,
         search: debouncedSearch.trim() || undefined,
+        worksetId: worksetId || undefined,
         limit: SCHEDULE_PAGE_SIZE,
         offset: 0,
       });
@@ -41,20 +53,21 @@ export function useScheduleRecurringFeed(opts: { debouncedSearch: string }) {
     } finally {
       if (requestId === requestIdRef.current) setInitialLoading(false);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, enabled, worksetId]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || loadingMore || initialLoading) return;
+    if (!enabled || !hasMore || loadingMore || initialLoading) return;
     const requestId = requestIdRef.current;
     setLoadingMore(true);
     try {
       const page = await listRecurringSeries({
         topLevelOnly: true,
         search: debouncedSearch.trim() || undefined,
+        worksetId: worksetId || undefined,
         limit: SCHEDULE_PAGE_SIZE,
         offset: items.length,
       });
@@ -70,7 +83,7 @@ export function useScheduleRecurringFeed(opts: { debouncedSearch: string }) {
     } finally {
       if (requestId === requestIdRef.current) setLoadingMore(false);
     }
-  }, [debouncedSearch, hasMore, initialLoading, items.length, loadingMore]);
+  }, [debouncedSearch, enabled, hasMore, initialLoading, items.length, loadingMore, worksetId]);
 
   return {
     items,

@@ -80,8 +80,10 @@ describe("ScheduleEventCard", () => {
           createElement(ScheduleOneOffCard, {
             event: makeEvent({ location: null, body: "  " }),
             worksetName: null,
+            emoji: "",
             onEdit: vi.fn(),
             onDelete: vi.fn(),
+            onEmojiChange: vi.fn(),
           }),
         ),
       );
@@ -110,17 +112,20 @@ describe("ScheduleEventCard", () => {
           createElement(ScheduleOneOffCard, {
             event: makeEvent({ title: "到期" }),
             worksetName: null,
+            emoji: "",
             onEdit: vi.fn(),
             onDelete: vi.fn(),
+            onEmojiChange: vi.fn(),
           }),
         ),
       );
     });
 
-    const titleIcon = container.querySelector('[data-testid="card-title-icon"]');
-    expect(titleIcon).toBeTruthy();
-    expect(titleIcon?.getAttribute("width")).toBe("20");
-    expect(titleIcon?.classList.contains("lucide-calendar-days")).toBe(true);
+    const mark = container.querySelector('[data-testid="schedule-logo-mark"]') as HTMLElement | null;
+    expect(mark).toBeTruthy();
+    expect(mark?.style.width).toBe("38px");
+    expect(mark?.querySelector(".lucide-calendar-days")).toBeTruthy();
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).toBeNull();
     expect(container.querySelector('[data-testid="schedule-card-when"] svg')).toBeTruthy();
   });
 
@@ -132,8 +137,10 @@ describe("ScheduleEventCard", () => {
           createElement(ScheduleOneOffCard, {
             event: makeEvent({ location: "台北", body: "帶筆電" }),
             worksetName: "一般",
+            emoji: "",
             onEdit: vi.fn(),
             onDelete: vi.fn(),
+            onEmojiChange: vi.fn(),
           }),
         ),
       );
@@ -158,19 +165,48 @@ describe("ScheduleEventCard", () => {
           createElement(ScheduleRecurringCard, {
             task: makeSeries(),
             worksetName: null,
+            emoji: "",
             onEdit: vi.fn(),
             onDelete: vi.fn(),
             onToggleActive: vi.fn(async () => undefined),
+            onEmojiChange: vi.fn(),
           }),
         ),
       );
     });
 
-    const titleIcon = container.querySelector('[data-testid="card-title-icon"]');
-    expect(titleIcon).toBeTruthy();
-    expect(titleIcon?.getAttribute("width")).toBe("20");
-    expect(titleIcon?.classList.contains("lucide-repeat")).toBe(true);
+    const mark = container.querySelector('[data-testid="schedule-logo-mark"]') as HTMLElement | null;
+    expect(mark).toBeTruthy();
+    expect(mark?.style.width).toBe("38px");
+    expect(mark?.querySelector(".lucide-repeat")).toBeTruthy();
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).toBeNull();
     expect(container.querySelector('[data-testid="schedule-card-rrule"] svg')).toBeTruthy();
+  });
+
+  it("shows a custom emoji instead of the default CalendarDays mark", () => {
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        wrapWithI18n(
+          createElement(ScheduleOneOffCard, {
+            event: makeEvent({ title: "生日" }),
+            worksetName: null,
+            emoji: "🎂",
+            onEdit: vi.fn(),
+            onDelete: vi.fn(),
+            onEmojiChange: vi.fn(),
+          }),
+        ),
+      );
+    });
+
+    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    expect(container.querySelector('[data-testid="schedule-logo-mark"]')).toBeNull();
+    const emoji = container.querySelector('[data-testid="item-emoji-avatar"]') as HTMLElement | null;
+    expect(emoji?.textContent).toContain("🎂");
+    expect(emoji?.style.width).toBe("38px");
+    expect(container.querySelector('[data-testid="task-avatar-ai-badge"]')).toBeNull();
+    expect(container.querySelector('[data-testid="schedule-card-emoji-trigger"]')).toBeTruthy();
   });
 
   it("always shows location and notes on recurring cards", () => {
@@ -181,9 +217,11 @@ describe("ScheduleEventCard", () => {
           createElement(ScheduleRecurringCard, {
             task: makeSeries({ eventLocation: "3F", eventDescription: null }),
             worksetName: null,
+            emoji: "",
             onEdit: vi.fn(),
             onDelete: vi.fn(),
             onToggleActive: vi.fn(async () => undefined),
+            onEmojiChange: vi.fn(),
           }),
         ),
       );

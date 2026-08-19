@@ -34,6 +34,7 @@ export function NotifyPrefField({
         data-testid={testId}
         aria-label={t("notify.prefAria")}
         title={t("notify.prefHelp")}
+        hint={t("notify.prefHint")}
         onClick={() => {
           if (disabled) return;
           onChange(notifyPrefFromChecked(!checked));
