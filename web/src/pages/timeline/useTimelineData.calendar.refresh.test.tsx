@@ -1,7 +1,7 @@
 /**
  * Regression tests for recurring-task occurrence wiring.
  *
- * Recurring tasks are expanded server-side (GET /api/v1/calendar/occurrences).
+ * Recurring tasks are expanded server-side (GET /api/v1/calendar/window).
  * These tests pin hook wiring (adapter unit coverage lives in timedEventMerge.test.ts):
  * - occurrences are fetched for the visible range (padded for the month grid)
  * - "all tasks" merges analysis + calendar occurrences
@@ -20,31 +20,16 @@ import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 
-const emptyUserEventsPage = { items: [] as unknown[], totalCount: 0, hasMore: false };
-
-function userEventsPage(items: unknown[]) {
-  return { items, totalCount: items.length, hasMore: false };
-}
-
 const {
-  mockFetchTimelineEvents,
-  mockFetchCalendarOccurrences,
+  mockFetchCalendarWindow,
   mockFetchTaskActivitySpans,
-  mockListUserEvents,
 } = vi.hoisted(() => ({
-  mockFetchTimelineEvents: vi.fn().mockResolvedValue([]),
-  mockFetchCalendarOccurrences: vi.fn().mockResolvedValue([]),
+  mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
   mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
-  mockListUserEvents: vi.fn().mockResolvedValue({ items: [], totalCount: 0, hasMore: false }),
 }));
 
-vi.mock("../../api/results", () => ({
-  fetchTimelineEvents: (...args: unknown[]) => mockFetchTimelineEvents(...args),
-  fetchCalendarOccurrences: (...args: unknown[]) => mockFetchCalendarOccurrences(...args),
-}));
-
-vi.mock("../../api/userEvents", () => ({
-  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/tasks", () => ({
@@ -138,10 +123,8 @@ describe("useTimelineData calendar refresh and errors", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     container = document.createElement("div");
     document.body.appendChild(container);
-    mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
-    mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
+    mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
-    mockListUserEvents.mockReset().mockResolvedValue(emptyUserEventsPage);
     resetTaskCatalogState();
     resetAnalysisStatusState();
     resultRef = { current: null };
@@ -159,16 +142,14 @@ describe("useTimelineData calendar refresh and errors", () => {
 
   it("refreshEvents fetches standalone recurring rows without a task catalog override", async () => {
     resetTaskCatalogState([]);
-    mockFetchCalendarOccurrences.mockResolvedValue([]);
+    mockFetchCalendarWindow.mockResolvedValue([]);
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
-      { includeItems: true },
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({ includeItems: true }),
     );
 
-    mockFetchCalendarOccurrences.mockClear();
-    mockFetchCalendarOccurrences.mockResolvedValue([
+    mockFetchCalendarWindow.mockClear();
+    mockFetchCalendarWindow.mockResolvedValue([
       makeOccurrence({ id: "rec-new:a", seriesId: "rec-new", title: "每日", worksetId: SYSTEM_WORKSET_ID }),
       makeOccurrence({
         id: "rec-new:b",
@@ -183,10 +164,8 @@ describe("useTimelineData calendar refresh and errors", () => {
       await resultRef.current!.refreshEvents();
     });
 
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
-      { includeItems: true },
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({ includeItems: true }),
     );
     const events = resultRef.current!.events;
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
@@ -215,7 +194,7 @@ describe("useTimelineData calendar refresh and errors", () => {
   });
 
   it("merges source=item_remind calendar rows and refreshes on item SSE", async () => {
-    mockFetchCalendarOccurrences.mockResolvedValue([
+    mockFetchCalendarWindow.mockResolvedValue([
       makeOccurrence({
         id: "item:i1:remind",
         taskId: "",
@@ -236,18 +215,16 @@ describe("useTimelineData calendar refresh and errors", () => {
       await Promise.resolve();
     });
 
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
-      { includeItems: true },
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({ includeItems: true }),
     );
     const itemEvent = resultRef.current!.events.find((e) => e.source === "item_remind");
     expect(itemEvent?.id).toBe("item:i1:remind");
     expect(itemEvent?.itemId).toBe("i1");
     expect(itemEvent?.itemDateKind).toBe("remind");
 
-    mockFetchCalendarOccurrences.mockClear();
-    mockFetchCalendarOccurrences.mockResolvedValue([]);
+    mockFetchCalendarWindow.mockClear();
+    mockFetchCalendarWindow.mockResolvedValue([]);
     await act(async () => {
       emitResourceModified({
         resourceType: "item",
@@ -257,13 +234,14 @@ describe("useTimelineData calendar refresh and errors", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).toHaveBeenCalled();
   });
 
   it("refreshes user events after user_event SSE", async () => {
-    mockListUserEvents.mockResolvedValue(userEventsPage([
+    mockFetchCalendarWindow.mockResolvedValue([
       {
         id: "ue-1",
+        source: "user",
         title: "Standup",
         startTime: "2025-01-20T09:00:00Z",
         endTime: "2025-01-20T10:00:00Z",
@@ -271,17 +249,16 @@ describe("useTimelineData calendar refresh and errors", () => {
         location: "",
         isAllDay: false,
         worksetId: SYSTEM_WORKSET_ID,
-        seriesId: null,
-        origin: "user",
+        origin: "manual",
       },
-    ]));
+    ]);
     await renderHook(null);
     await act(async () => {
       await Promise.resolve();
     });
 
-    mockListUserEvents.mockClear();
-    mockListUserEvents.mockResolvedValue(emptyUserEventsPage);
+    mockFetchCalendarWindow.mockClear();
+    mockFetchCalendarWindow.mockResolvedValue([]);
     await act(async () => {
       emitResourceModified({
         resourceType: "user_event",
@@ -291,12 +268,12 @@ describe("useTimelineData calendar refresh and errors", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(mockListUserEvents).toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).toHaveBeenCalled();
   });
 
   it("refreshes calendar without refreshing tasks after recurring SSE", async () => {
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
-    mockFetchCalendarOccurrences.mockClear();
+    mockFetchCalendarWindow.mockClear();
     taskCatalogState.refreshTasks.mockClear();
 
     await act(async () => {
@@ -309,7 +286,7 @@ describe("useTimelineData calendar refresh and errors", () => {
       await Promise.resolve();
     });
 
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).toHaveBeenCalled();
     expect(taskCatalogState.refreshTasks).not.toHaveBeenCalled();
   });
 
@@ -319,7 +296,7 @@ describe("useTimelineData calendar refresh and errors", () => {
     ];
     taskCatalogState.refreshTasks.mockResolvedValueOnce(refreshedCatalog);
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
-    mockFetchCalendarOccurrences.mockClear();
+    mockFetchCalendarWindow.mockClear();
 
     await act(async () => {
       emitResourceModified({
@@ -332,10 +309,8 @@ describe("useTimelineData calendar refresh and errors", () => {
     });
 
     expect(taskCatalogState.refreshTasks).toHaveBeenCalled();
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
-      { includeItems: true },
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({ includeItems: true }),
     );
   });
 
@@ -355,7 +330,7 @@ describe("useTimelineData calendar refresh and errors", () => {
   });
 
   it("surfaces a calendar occurrence fetch failure instead of an empty calendar", async () => {
-    mockFetchCalendarOccurrences.mockRejectedValue(new Error("calendar boom"));
+    mockFetchCalendarWindow.mockRejectedValue(new Error("calendar boom"));
     await renderHook(null);
     await act(async () => {
       await Promise.resolve();
@@ -365,7 +340,7 @@ describe("useTimelineData calendar refresh and errors", () => {
   });
 
   it("surfaces a user event fetch failure instead of an empty calendar", async () => {
-    mockListUserEvents.mockRejectedValue(new Error("user events boom"));
+    mockFetchCalendarWindow.mockRejectedValue(new Error("user events boom"));
     await renderHook(null);
     await act(async () => {
       await Promise.resolve();
@@ -376,9 +351,9 @@ describe("useTimelineData calendar refresh and errors", () => {
 
   it("re-fetches calendar occurrences when the visible range changes", async () => {
     await renderHook();
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
-    const firstWindow = mockFetchCalendarOccurrences.mock.calls[0] as [string, string];
-    mockFetchCalendarOccurrences.mockClear();
+    expect(mockFetchCalendarWindow).toHaveBeenCalled();
+    const firstWindow = mockFetchCalendarWindow.mock.calls[0][0] as { start: string };
+    mockFetchCalendarWindow.mockClear();
 
     await act(async () => {
       root!.render(
@@ -399,38 +374,25 @@ describe("useTimelineData calendar refresh and errors", () => {
       );
     });
 
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
-    const nextWindow = mockFetchCalendarOccurrences.mock.calls[0] as [string, string];
-    expect(nextWindow[0]).not.toBe(firstWindow[0]);
-    expect(nextWindow[1]).not.toBe(firstWindow[1]);
+    expect(mockFetchCalendarWindow).toHaveBeenCalled();
+    const nextWindow = mockFetchCalendarWindow.mock.calls[0][0] as { start: string };
+    expect(nextWindow.start).not.toBe(firstWindow.start);
   });
 
   it("leaves schedule events untouched when there are no occurrences", async () => {
     const scheduleEvent = {
       id: "evt-1",
+      source: "analysis" as const,
       taskId: "t1",
-      version: 1,
-      batchId: "b1",
       title: "分析事件",
       body: "",
       startTime: "2025-01-10T00:00:00Z",
       endTime: null,
-      location: null,
-      latitude: null,
-      longitude: null,
-      participants: [],
-      sourceMessageId: null,
-      sourcePlatform: null,
-      sourceChannelName: null,
-      sourceMessageTime: null,
-      analysisTimeRange: null,
-      batchSourceChannelNames: [],
       taskName: "任務",
-      createdAt: "2025-01-10T00:00:00Z",
-      updatedAt: "2025-01-10T00:00:00Z",
     };
-    mockFetchTimelineEvents.mockResolvedValue([scheduleEvent]);
+    mockFetchCalendarWindow.mockResolvedValue([scheduleEvent]);
     await renderHook(null);
-    expect(resultRef.current!.events).toEqual([scheduleEvent]);
+    expect(resultRef.current!.events.map((event) => event.id)).toEqual(["evt-1"]);
+    expect(resultRef.current!.events[0].title).toBe("分析事件");
   });
 });

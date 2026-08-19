@@ -24,6 +24,7 @@ from server.queries.tasks_queries import (
 )
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
+    task_emoji_from_body,
     validate_agent_prompt,
     validate_task_config_body,
 )
@@ -81,6 +82,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             workset_id=workset_id,
             llm_profile_id=llm_profile_id,
             notify_pref=normalize_notify_pref(body.notifyPref),
+            emoji=task_emoji_from_body(body, existing=None),
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,

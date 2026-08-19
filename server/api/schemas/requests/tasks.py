@@ -75,3 +75,14 @@ class TaskConfigBody(BaseModel):
     llmProfileId: str | None = None
     #: Per-task reminder; omitted / null → ``inherit`` on create, keep existing on update.
     notifyPref: CoercedNotifyPref | None = None
+    #: Optional card glyph; omitted on create → NULL; omitted on update → keep; ``""`` clears.
+    emoji: str | None = None
+
+
+class TaskPatchBody(BaseModel):
+    """Partial task update that does not bump analysis version (card glyph, etc.)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    emoji: str | None = None
+

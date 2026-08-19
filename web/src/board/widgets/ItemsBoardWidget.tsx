@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchCalendarOccurrences } from "../../api/results";
+import { fetchCalendarWindow } from "../../api/calendarWindow";
 import { formatItemOccurrenceTitle } from "../../domain/items/itemCalendarProjection";
 import { addDays, startOfDay } from "../../domain/timeline/dateUtils";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
@@ -26,15 +26,24 @@ function formatWhen(value: string): string {
 async function fetchItemRemindSummary(): Promise<ItemRemindRow[]> {
   const start = startOfDay(new Date());
   const end = addDays(start, 30);
-  const rows = await fetchCalendarOccurrences(start.toISOString(), end.toISOString());
-  return rows
-    .filter((row) => row.source === "item_remind")
-    .slice(0, 8)
-    .map((row) => ({
-      id: row.id,
-      title: formatItemOccurrenceTitle(row.itemDateKind, row.title || ""),
-      when: formatWhen(row.startTime),
-    }));
+  const rows = await fetchCalendarWindow({
+    start: start.toISOString(),
+    end: end.toISOString(),
+    includeAnalysis: false,
+    includeUser: false,
+    includeRecurring: false,
+    includeItems: true,
+  });
+  return rows.flatMap((row) => {
+    if (row.source !== "item_remind" || !row.startTime) return [];
+    return [
+      {
+        id: row.id,
+        title: formatItemOccurrenceTitle(row.itemDateKind, row.title || ""),
+        when: formatWhen(row.startTime),
+      },
+    ];
+  }).slice(0, 8);
 }
 
 /** Item remind / expiry summary from calendar derive-on-read projections. */

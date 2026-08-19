@@ -30,14 +30,12 @@ import {
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
 import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 type WeekEventChipProps = {
   event: TimelineItem;
   focusedDay: Date;
   status: TimelineEventStatus;
   onSelect: (event: TimelineItem) => void;
-  emojis: ScheduleEmojiMap;
 };
 
 export function WeekEventChip({
@@ -45,7 +43,6 @@ export function WeekEventChip({
   focusedDay,
   status,
   onSelect,
-  emojis,
 }: WeekEventChipProps) {
   const { t } = useTranslation("timeline");
   const [hovered, setHovered] = useState(false);
@@ -98,7 +95,6 @@ export function WeekEventChip({
               ) : (
                 <ScheduleEventCompactEmoji
                   event={event}
-                  emojis={emojis}
                   className="mr-0.5"
                 />
               )}

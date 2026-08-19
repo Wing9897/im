@@ -187,6 +187,11 @@ def _expand_imported_occurrences(
                         "worksetId": workset_id,
                         "itemId": item_id,
                         "notifyPref": notify_pref,
+                        "emoji": (
+                            str(task.get("emoji")).strip()
+                            if isinstance(task.get("emoji"), str) and str(task.get("emoji")).strip()
+                            else None
+                        ),
                     },
                 )
             )

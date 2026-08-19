@@ -32,13 +32,14 @@ import {
   scheduleFiltersAreActive,
   type ScheduleListFilters,
 } from "./scheduleFilters";
-import { scheduleEmojiStorageKey } from "../../domain/schedule/scheduleEmoji";
 import { mergeScheduleList } from "./scheduleList";
 import { ScheduleToolbar } from "./ScheduleToolbar";
-import { useScheduleEmojis } from "./useScheduleEmojis";
 import { useScheduleOneOffFeed } from "./useScheduleOneOffFeed";
 import { useSchedulePageDialogs } from "./useSchedulePageDialogs";
 import { useScheduleRecurringFeed } from "./useScheduleRecurringFeed";
+import { updateUserEvent } from "../../api/userEvents";
+import { patchRecurringSeries } from "../../api/recurringSeries";
+import { lookupScheduleEmoji } from "../../domain/schedule/scheduleEmoji";
 
 export function SchedulePage() {
   const { t } = useTranslation("schedule");
@@ -56,7 +57,6 @@ export function SchedulePage() {
   const normalizedFilters = useMemo(() => normalizeScheduleFilters(filters), [filters]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
-  const { emojis, setItemEmoji } = useScheduleEmojis();
 
   useSlashFocusSearch(true);
 
@@ -184,7 +184,7 @@ export function SchedulePage() {
                     <ScheduleOneOffCard
                       key={`oneOff:${entry.event.id}`}
                       event={entry.event}
-                      emoji={emojis[scheduleEmojiStorageKey("oneOff", entry.event.id)] ?? ""}
+                      emoji={lookupScheduleEmoji({ source: "user", emoji: entry.event.emoji })}
                       worksetName={
                         entry.event.worksetId
                           ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
@@ -192,15 +192,16 @@ export function SchedulePage() {
                       }
                       onEdit={() => dialogs.openEditOneOff(entry.event)}
                       onDelete={() => dialogs.requestDeleteOneOff(entry.event)}
-                      onEmojiChange={(glyph) =>
-                        setItemEmoji(scheduleEmojiStorageKey("oneOff", entry.event.id), glyph)
-                      }
+                      onEmojiChange={async (glyph) => {
+                        await updateUserEvent(entry.event.id, { emoji: glyph.trim() || null });
+                        await oneOff.reload();
+                      }}
                     />
                   ) : (
                     <ScheduleRecurringCard
                       key={`recurring:${entry.series.id}`}
                       task={entry.series}
-                      emoji={emojis[scheduleEmojiStorageKey("recurring", entry.series.id)] ?? ""}
+                      emoji={lookupScheduleEmoji({ source: "recurring", emoji: entry.series.emoji })}
                       worksetName={
                         entry.series.worksetId
                           ? dialogs.worksetNameById.get(entry.series.worksetId) ?? null
@@ -209,9 +210,10 @@ export function SchedulePage() {
                       onEdit={() => dialogs.openEditRecurring(entry.series)}
                       onDelete={() => dialogs.requestDeleteRecurring(entry.series)}
                       onToggleActive={() => dialogs.toggleRecurringActive(entry.series)}
-                      onEmojiChange={(glyph) =>
-                        setItemEmoji(scheduleEmojiStorageKey("recurring", entry.series.id), glyph)
-                      }
+                      onEmojiChange={async (glyph) => {
+                        await patchRecurringSeries(entry.series.id, { emoji: glyph.trim() || null });
+                        await recurring.reload();
+                      }}
                     />
                   ),
                 )}

@@ -18,6 +18,7 @@ TASK_KEYS = [
     "worksetId",
     "llmProfileId",
     "notifyPref",
+    "emoji",
 ]
 
 SCHEDULE_KEYS = [

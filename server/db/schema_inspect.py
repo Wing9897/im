@@ -22,10 +22,10 @@ from server.db.schema_fingerprint import (
     _quoted_identifier,
 )
 
-CURRENT_SCHEMA_VERSION = 42
+CURRENT_SCHEMA_VERSION = 43
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
-SCHEMA_SEMVER = "0.1.0-beta.43"
+SCHEMA_SEMVER = "0.1.0-beta.44"
 
 
 class SchemaEvolutionError(RuntimeError):

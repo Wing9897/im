@@ -15,7 +15,7 @@ from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     require_task_row_or_lookup,
 )
-from server.services.task_crud_update import update_task_record
+from server.services.task_crud_update import patch_task_emoji_record, update_task_record
 from server.util import utc_now_iso
 from server.wire.serializers import serialize_task
 
@@ -58,6 +58,7 @@ __all__ = [
     "TaskMutationResult",
     "create_task_record",
     "delete_task_record",
+    "patch_task_emoji_record",
     "toggle_task_active_record",
     "update_task_record",
 ]

@@ -25,6 +25,10 @@ vi.mock("../api/results", () => ({
   })),
 }));
 
+vi.mock("../api/calendarWindow", () => ({
+  fetchCalendarWindow: vi.fn(async () => []),
+}));
+
 vi.mock("../api/messages", () => ({
   queryMessagesPage: vi.fn(async () => ({
     messages: [],

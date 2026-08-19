@@ -57,6 +57,7 @@ class TaskDraftPayload(BaseModel):
     )
     llmProfileId: str | None = None
     notifyPref: CoercedNotifyPref | None = None
+    emoji: str | None = None
 
 
 class AgentToolCallSummary(BaseModel):
@@ -125,6 +126,7 @@ class TaskResponse(BaseModel):
     llmProfileId: str
     #: Per-task reminder (``inherit`` / ``off``).
     notifyPref: CoercedNotifyPref = "inherit"
+    emoji: str | None = None
     createdAt: str | None = None
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None

@@ -11,8 +11,9 @@ import {
 } from "./task/taskFormAnalysisModeMeta";
 import { MODE_ACCENT_CLASS, MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
 import { TaskCardEmoji } from "./task/TaskCardEmoji";
-import { useTaskEmoji } from "../pages/tasks/useTaskEmojis";
-import { useWorksetNameById } from "../context/TaskCatalogContext";
+import { patchTask } from "../api/tasks";
+import { lookupTaskEmoji } from "../domain/tasks/taskEmoji";
+import { useTaskCatalog, useWorksetNameById } from "../context/TaskCatalogContext";
 import {
   SelectableSurface,
   stopSelectableActivation,
@@ -32,7 +33,7 @@ export interface TaskCardProps {
   onDelete: (taskId: string) => void;
   onSelect?: () => void;
   isSelected?: boolean;
-  /** Test override; production hydrates `task_emojis` from ui-prefs. */
+  /** Test override; production reads ``task.emoji``. */
   emoji?: string;
   onEmojiChange?: (emoji: string) => void | Promise<void>;
 }
@@ -52,6 +53,7 @@ export const TaskCard = React.memo(function TaskCard({
   onEmojiChange,
 }: TaskCardProps) {
   const { t } = useTranslation("common");
+  const { refreshTasks } = useTaskCatalog();
   const worksetNameById = useWorksetNameById();
   const [toggling, setToggling] = useState(false);
   const isAgentMode = task.analysisMode === "agent";
@@ -59,9 +61,13 @@ export const TaskCard = React.memo(function TaskCard({
   const hideAnalysisStats = isAgentMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
-  const { emoji: storedEmoji, setEmoji } = useTaskEmoji(task.id);
-  const emoji = emojiProp ?? storedEmoji;
-  const handleEmojiChange = onEmojiChange ?? setEmoji;
+  const emoji = emojiProp ?? lookupTaskEmoji(task.emoji);
+  const handleEmojiChange =
+    onEmojiChange ??
+    (async (glyph: string) => {
+      await patchTask(task.id, { emoji: glyph.trim() || null });
+      await refreshTasks();
+    });
   const queuedMessageCount = stats.queuedMessageCount;
   const attentionErrorText = formatAnalysisErrorMessage(stats.lastErrorMessage, t);
   const worksetName =

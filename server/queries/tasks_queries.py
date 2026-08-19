@@ -170,6 +170,7 @@ async def insert_analysis_task(
     output_analysis_events: int = 1,
     llm_profile_id: str,
     notify_pref: str = "inherit",
+    emoji: str | None = None,
     now: str,
 ) -> None:
     await tx.execute(
@@ -182,8 +183,8 @@ async def insert_analysis_task(
         "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
         "output_calendar, output_analysis_events, llm_profile_id, notify_pref, "
-        "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "emoji, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -210,6 +211,7 @@ async def insert_analysis_task(
             output_analysis_events,
             llm_profile_id,
             notify_pref,
+            emoji,
             now,
             now,
         ),
@@ -245,6 +247,7 @@ async def update_analysis_task(
     output_analysis_events: int = 1,
     llm_profile_id: str,
     notify_pref: str = "inherit",
+    emoji: str | None = None,
     now: str,
 ) -> None:
     await tx.execute(
@@ -258,7 +261,7 @@ async def update_analysis_task(
         "cap_web_search = ?, cap_force_web_search = ?, "
         "cap_read_analysis_events = ?, cap_read_items = ?, "
         "output_calendar = ?, output_analysis_events = ?, llm_profile_id = ?, "
-        "notify_pref = ?, updated_at = ? WHERE id = ?",
+        "notify_pref = ?, emoji = ?, updated_at = ? WHERE id = ?",
         (
             name,
             description,
@@ -285,9 +288,17 @@ async def update_analysis_task(
             output_analysis_events,
             llm_profile_id,
             notify_pref,
+            emoji,
             now,
             task_id,
         ),
+    )
+
+
+async def set_task_emoji(db: Any, task_id: str, emoji: str | None, now: str) -> None:
+    await db.execute(
+        "UPDATE analysis_tasks SET emoji = ?, updated_at = ? WHERE id = ?",
+        (emoji, now, task_id),
     )
 
 

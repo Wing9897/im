@@ -31,8 +31,6 @@ from server.ui_prefs.common import (
     KEY_NOTIFY_TRIGGER_HISTORY,
     KEY_OPS_BOARD_LAYOUT,
     KEY_OPS_BOARD_WIDGET_STATE,
-    KEY_SCHEDULE_EMOJIS,
-    KEY_TASK_EMOJIS,
     KEY_TIMELINE_ANNOTATIONS,
     MAX_ASSISTANT_MESSAGE_CONTENT_CHARS,
     MAX_ASSISTANT_SESSIONS,
@@ -54,18 +52,6 @@ from server.ui_prefs.notify import (
     sanitize_notify_history,
     sanitize_notify_settings,
 )
-from server.ui_prefs.schedule import (
-    MAX_SCHEDULE_EMOJI_ENTRIES,
-    get_schedule_emojis,
-    put_schedule_emojis,
-    sanitize_schedule_emojis,
-)
-from server.ui_prefs.tasks import (
-    MAX_TASK_EMOJI_ENTRIES,
-    get_task_emojis,
-    put_task_emojis,
-    sanitize_task_emojis,
-)
 from server.ui_prefs.timeline import (
     MAX_TIMELINE_ANNOTATION_ENTRIES,
     get_timeline_annotations,
@@ -79,8 +65,6 @@ __all__ = [
     "KEY_OPS_BOARD_LAYOUT",
     "KEY_OPS_BOARD_WIDGET_STATE",
     "KEY_TIMELINE_ANNOTATIONS",
-    "KEY_SCHEDULE_EMOJIS",
-    "KEY_TASK_EMOJIS",
     "KEY_NOTIFY_FIRED",
     "KEY_NOTIFY_SETTINGS",
     "KEY_NOTIFY_TRIGGER_HISTORY",
@@ -89,8 +73,6 @@ __all__ = [
     "MAX_ASSISTANT_SESSIONS_JSON_CHARS",
     "MAX_PREF_JSON_CHARS",
     "MAX_TIMELINE_ANNOTATION_ENTRIES",
-    "MAX_SCHEDULE_EMOJI_ENTRIES",
-    "MAX_TASK_EMOJI_ENTRIES",
     "MAX_NOTIFY_HISTORY_ENTRIES",
     "UI_PREF_KEYS",
     "UiPrefsValidationError",
@@ -99,8 +81,6 @@ __all__ = [
     "get_assistant_voice_io",
     "get_board_prefs",
     "get_timeline_annotations",
-    "get_schedule_emojis",
-    "get_task_emojis",
     "get_notify_fired",
     "get_notify_history",
     "get_notify_settings",
@@ -108,8 +88,6 @@ __all__ = [
     "put_assistant_voice_io",
     "put_board_prefs",
     "put_timeline_annotations",
-    "put_schedule_emojis",
-    "put_task_emojis",
     "put_notify_fired",
     "put_notify_history",
     "put_notify_settings",
@@ -119,8 +97,6 @@ __all__ = [
     "sanitize_board_widget_state",
     "sanitize_fired_keys",
     "sanitize_timeline_annotations",
-    "sanitize_schedule_emojis",
-    "sanitize_task_emojis",
     "sanitize_notify_history",
     "sanitize_notify_settings",
 ]

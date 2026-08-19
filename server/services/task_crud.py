@@ -15,6 +15,7 @@ from server.services.task_crud_mutate import (
     TaskMutationResult,
     create_task_record,
     delete_task_record,
+    patch_task_emoji_record,
     toggle_task_active_record,
     update_task_record,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "delete_analysis_task",
     "delete_task_record",
     "list_tasks_payload",
+    "patch_task_emoji_record",
     "toggle_task_active_record",
     "update_task_record",
 ]

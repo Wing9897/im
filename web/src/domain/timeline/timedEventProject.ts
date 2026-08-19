@@ -1,4 +1,5 @@
 import type { UserEvent } from "../../api/userEvents";
+import type { CalendarWindowItem } from "../../api/calendarWindow";
 import { formatItemOccurrenceTitle } from "../items/itemCalendarProjection";
 import { getEventTimestamp } from "../intelligence/mapFilters";
 import { resolveUserEventTaskName } from "./userEvents";
@@ -66,6 +67,7 @@ export function userEventToBoardEvent(
     itemId: event.itemId?.trim() || null,
     remindBeforeDays:
       typeof event.remindBeforeDays === "number" ? event.remindBeforeDays : null,
+    emoji: event.emoji ?? null,
   };
 }
 
@@ -153,5 +155,92 @@ export function calendarOccurrenceToBoardEvent(
     itemId: occurrence.itemId?.trim() || null,
     // Server projects remind only.
     itemDateKind: isItem ? "remind" : undefined,
+    emoji: occurrence.emoji ?? null,
   };
 }
+
+function emptyAnalysisFields(): Pick<
+  AnalysisEvent,
+  | "version"
+  | "batchId"
+  | "latitude"
+  | "longitude"
+  | "participants"
+  | "sourceMessageId"
+  | "sourcePlatform"
+  | "sourceChannelName"
+  | "sourceMessageTime"
+  | "analysisTimeRange"
+  | "batchSourceChannelNames"
+> {
+  return {
+    version: 1,
+    batchId: "",
+    latitude: null,
+    longitude: null,
+    participants: [],
+    sourceMessageId: null,
+    sourcePlatform: null,
+    sourceChannelName: null,
+    sourceMessageTime: null,
+    analysisTimeRange: null,
+    batchSourceChannelNames: [],
+  };
+}
+
+/**
+ * Projects a ``GET /calendar/window`` tagged occurrence into the shared
+ * timed-event contract (timeline month/gantt + board calendar).
+ */
+export function windowItemToBoardEvent(
+  item: CalendarWindowItem,
+  taskNameById?: ReadonlyMap<string, string>,
+  generalWorksetLabel?: string,
+  worksetNameById?: ReadonlyMap<string, string>,
+): AnalysisEvent {
+  const source = item.source;
+  const isItem = source === "item_remind";
+  const provenance = typeof item.taskId === "string" ? item.taskId.trim() : "";
+  const worksetId = item.worksetId?.trim() || (source === "user" || isItem ? SYSTEM_WORKSET_ID : undefined);
+  const bareTitle = item.title || "";
+  const created = item.startTime ?? "";
+  return {
+    id: item.id,
+    taskId: provenance || null,
+    seriesId: isItem ? null : item.seriesId || null,
+    ...emptyAnalysisFields(),
+    title: isItem ? formatItemOccurrenceTitle(item.itemDateKind, bareTitle) : bareTitle,
+    body: item.body ?? "",
+    startTime: item.startTime ?? null,
+    endTime: item.endTime ?? null,
+    location: item.location ?? null,
+    taskName:
+      source === "user"
+        ? resolveUserEventTaskName(
+            provenance || null,
+            taskNameById,
+            generalWorksetLabel,
+            worksetId,
+            worksetNameById,
+          )
+        : isItem
+          ? null
+          : item.taskName || null,
+    createdAt: created,
+    updatedAt: created,
+    source,
+    origin: source === "user" ? ((item.origin as UserEvent["origin"] | null) ?? undefined) : undefined,
+    isAllDay: Boolean(item.isAllDay),
+    timezone: item.timezone ?? null,
+    dismissed: Boolean(item.dismissed),
+    important: Boolean(item.important),
+    isLastOccurrence: source === "recurring" ? Boolean(item.isLastOccurrence) : undefined,
+    worksetId,
+    itemId: item.itemId?.trim() || null,
+    itemDateKind: isItem ? "remind" : undefined,
+    remindBeforeDays: typeof item.remindBeforeDays === "number" ? item.remindBeforeDays : null,
+    notifyPref: item.notifyPref ?? null,
+    emoji: item.emoji ?? null,
+  };
+}
+

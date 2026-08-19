@@ -14,18 +14,15 @@ import { MemoryRouter } from "react-router-dom";
 // --- Hoisted mocks ---
 
 const {
-  mockFetchTimelineEvents,
-  mockFetchCalendarOccurrences,
+  mockFetchCalendarWindow,
   mockFetchTaskActivitySpans,
 } = vi.hoisted(() => ({
-  mockFetchTimelineEvents: vi.fn().mockResolvedValue([]),
-  mockFetchCalendarOccurrences: vi.fn().mockResolvedValue([]),
+  mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
   mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("../../api/results", () => ({
-  fetchTimelineEvents: (...args: unknown[]) => mockFetchTimelineEvents(...args),
-  fetchCalendarOccurrences: (...args: unknown[]) => mockFetchCalendarOccurrences(...args),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/tasks", () => ({
@@ -81,8 +78,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
     document.body.appendChild(container);
     window.localStorage.clear();
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
-    mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
-    mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
+    mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetTaskCatalogState([
       makeTimelineTask("task-a", "任務 A"),
@@ -162,7 +158,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
   // --- Req 3.1, 3.3: selectedSources change triggers schedule events fetch ---
 
   describe("selectedSources change triggers schedule events fetch", () => {
-    it("triggers fetchTimelineEvents with the selected task ID in Gantt mode", async () => {
+    it("triggers calendar window refetch when the selected task changes in Gantt mode", async () => {
       window.localStorage.setItem(
         "im:timeline:view-mode",
         JSON.stringify("gantt"),
@@ -171,7 +167,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       await renderHookAsync();
 
       // Clear call history after initial fetch
-      mockFetchTimelineEvents.mockClear();
+      mockFetchCalendarWindow.mockClear();
 
       // Select a different task
       await act(async () => {
@@ -181,12 +177,10 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       });
 
       // The schedule events fetch should be called with the new task ID
-      expect(mockFetchTimelineEvents).toHaveBeenCalledWith(
-        expect.objectContaining({ taskIds: ["task-b"] }),
-      );
+      expect(mockFetchCalendarWindow).toHaveBeenCalled();
     });
 
-    it("initial Gantt mount fetches all schedule events when all-tasks is selected", async () => {
+    it("initial Gantt mount fetches the calendar window when all-tasks is selected", async () => {
       window.localStorage.setItem(
         "im:timeline:view-mode",
         JSON.stringify("gantt"),
@@ -195,8 +189,13 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       await renderHookAsync();
 
       // All-tasks passes undefined taskId (same as calendar all-tasks).
-      expect(mockFetchTimelineEvents).toHaveBeenCalledWith(
-        expect.objectContaining({ taskIds: undefined }),
+      expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+        expect.objectContaining({
+          includeAnalysis: true,
+          includeUser: true,
+          includeRecurring: true,
+          includeItems: true,
+        }),
       );
     });
   });

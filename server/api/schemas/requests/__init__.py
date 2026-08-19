@@ -54,7 +54,7 @@ from server.api.schemas.requests.system import (
     AnalysisPauseBody,
     SystemSettingsUpdateBody,
 )
-from server.api.schemas.requests.tasks import TaskConfigBody
+from server.api.schemas.requests.tasks import TaskConfigBody, TaskPatchBody
 from server.api.schemas.requests.worksets import WorksetCreateBody, WorksetUpdateBody
 
 __all__ = [
@@ -95,6 +95,7 @@ __all__ = [
     "RotateSecretsBody",
     "SystemSettingsUpdateBody",
     "TaskConfigBody",
+    "TaskPatchBody",
     "Telegram2faBody",
     "TelegramCodeBody",
     "TelegramCredentials",

@@ -6,6 +6,7 @@ from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
+from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.notify_prefs import DEFAULT_CALENDAR_NOTIFY_PREF, normalize_notify_pref
 from server.queries.recurring_series_queries import fetch_series_row, insert_series
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
@@ -35,6 +36,7 @@ async def create_recurring_series(
     workset_id: str | None | EllipsisType = ...,
     item_id: str | None = None,
     notify_pref: str | None = None,
+    emoji: str | None = None,
 ) -> dict[str, Any]:
     cleaned_name = (name or "").strip()
     if not cleaned_name:
@@ -74,6 +76,10 @@ async def create_recurring_series(
         )
     except ValueError as exc:
         raise TaskWriteError(str(exc)) from exc
+    try:
+        resolved_emoji = normalize_optional_emoji(emoji)
+    except EmojiValidationError as exc:
+        raise TaskWriteError(str(exc)) from exc
 
     series_id = new_id()
     now = utc_now_iso()
@@ -102,6 +108,7 @@ async def create_recurring_series(
             parent_task_id=parent,
             item_id=str(item_id).strip() if item_id else None,
             notify_pref=resolved_notify,
+            emoji=resolved_emoji,
             now=now,
         )
 

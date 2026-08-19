@@ -45,7 +45,6 @@ import { holidayNamesForDay, type DailyHoliday } from "../../../hooks/useMonthHo
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";
 import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 const MONTH_EVENT_PREVIEW_LIMIT = 4;
 const MONTH_SPAN_ICON_PROPS = { size: 10, strokeWidth: 2.5 } as const;
@@ -73,7 +72,6 @@ type TimelineMonthGridProps = {
   onCreateOnDay?: (day: Date) => void;
   /** Toolbar 篩選 hover / 顯示日期: muted dates, hide event rows (header weather stays). */
   datesRevealed?: boolean;
-  emojis: ScheduleEmojiMap;
 };
 
 export function TimelineMonthGrid({
@@ -91,7 +89,6 @@ export function TimelineMonthGrid({
   onFocusDay,
   onCreateOnDay,
   datesRevealed = false,
-  emojis,
 }: TimelineMonthGridProps) {
   const { t, i18n } = useTranslation("timeline");
   const [contextMenu, setContextMenu] = useState<DayContextMenuState | null>(null);
@@ -326,8 +323,8 @@ export function TimelineMonthGrid({
                           >
                             {leading.emoji}
                           </span>
-                        ) : lookupScheduleEmoji(emojis, event) ? (
-                          <ScheduleEventCompactEmoji event={event} emojis={emojis} />
+                        ) : lookupScheduleEmoji(event) ? (
+                          <ScheduleEventCompactEmoji event={event} />
                         ) : (
                           <span
                             className={monthEventDotClass}

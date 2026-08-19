@@ -109,10 +109,7 @@ describe("TimelineSidebar detail provenance", () => {
     container.remove();
   });
 
-  function renderSidebar(
-    selectedEvent: TimelineItem | null,
-    scheduleEmojis?: Record<string, string>,
-  ) {
+  function renderSidebar(selectedEvent: TimelineItem | null) {
     act(() => {
       root.render(
         wrapWithI18n(
@@ -121,7 +118,6 @@ describe("TimelineSidebar detail provenance", () => {
             children: createElement(TimelineSidebar, {
               rangeEvents: [],
               focusedDay: null,
-              scheduleEmojis,
             }),
           }),
         ),
@@ -240,7 +236,7 @@ describe("TimelineSidebar detail provenance", () => {
   });
 
   it("shows the shared schedule emoji beside the detail title", () => {
-    renderSidebar(makeUserEvent({ id: "ue-1", title: "生日" }), { "oneOff:ue-1": "🎂" });
+    renderSidebar(makeUserEvent({ id: "ue-1", title: "生日", emoji: "🎂" }));
     const title = container.querySelector('[data-testid="timeline-sidebar-title"]');
     expect(title?.textContent).toContain("🎂");
     expect(title?.textContent).toContain("生日");

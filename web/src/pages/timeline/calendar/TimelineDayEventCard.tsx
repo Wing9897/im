@@ -40,14 +40,12 @@ import {
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
 import { ScheduleEventTitleMark } from "../components/ScheduleEventEmojiMark";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 type DayEventCardProps = {
   event: TimelineItem;
   focusedDay: Date;
   status: TimelineEventStatus;
   onSelect: (event: TimelineItem) => void;
-  emojis: ScheduleEmojiMap;
 };
 
 export function TimelineDayEventCard({
@@ -55,7 +53,6 @@ export function TimelineDayEventCard({
   focusedDay,
   status,
   onSelect,
-  emojis,
 }: DayEventCardProps) {
   const { t } = useTranslation("timeline");
   const [hovered, setHovered] = useState(false);
@@ -113,7 +110,7 @@ export function TimelineDayEventCard({
           {leading.emoji}
         </span>
       ) : scheduleCard ? (
-        <ScheduleEventTitleMark event={event} emojis={emojis} />
+        <ScheduleEventTitleMark event={event} />
       ) : null}
       <span className="min-w-0 truncate">{title}</span>
     </div>

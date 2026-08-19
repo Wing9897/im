@@ -172,13 +172,13 @@ describe("EventListPanel", () => {
       source: "analysis",
       taskId: "task-ops",
       taskName: "Ops Task",
+      emoji: "🎯",
       startTime: new Date(2026, 6, 14, 18, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 14, 19, 0, 0).toISOString(),
     });
     const { container } = renderPanel({
       rangeEvents: [analysis],
       focusedDay: new Date(2026, 6, 14),
-      taskEmojis: { "task-ops": "🎯" },
     });
     const stack = container.querySelector('[data-testid="intel-event-avatar-stack"]');
     const intel = container.querySelector('[data-testid="intel-event-mark"]');
@@ -338,13 +338,13 @@ describe("EventListPanel", () => {
       title: "生日",
       source: "user",
       origin: "manual",
+      emoji: "🎂",
       startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
     });
     const { container } = renderPanel({
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
-      scheduleEmojis: { "oneOff:ue-bday": "🎂" },
     });
     expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
     expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
@@ -352,23 +352,19 @@ describe("EventListPanel", () => {
     );
   });
 
-  it("maps recurring occurrences to recurring:<seriesId>, not occurrence id", () => {
+  it("shows the series emoji from the occurrence payload", () => {
     const event = makeTimelineItem({
       id: "rec-1:20260714T020000Z",
       title: "週會",
       source: "recurring",
       seriesId: "rec-1",
+      emoji: "🔁",
       startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
     });
     const { container } = renderPanel({
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
-      scheduleEmojis: {
-        "recurring:rec-1": "🔁",
-        "recurring:rec-1:20260714T020000Z": "❌",
-        "oneOff:rec-1:20260714T020000Z": "❌",
-      },
     });
     expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
       "🔁",

@@ -8,10 +8,12 @@ from server.api.deps import get_db
 from server.api.routes.task_helpers import TaskConfigBody
 from server.api.routes.tasks._common import notify, register_task, unregister_task
 from server.api.routes.tasks._router import router
+from server.api.schemas.requests import TaskPatchBody
 from server.api.schemas.responses import TaskDeleteResponse, TaskResponse
 from server.errors import VALIDATION_ERROR, http_error
 from server.services.task_crud import (
     delete_task_record,
+    patch_task_emoji_record,
     toggle_task_active_record,
     update_task_record,
 )
@@ -37,6 +39,20 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> T
 
     notify(request, task_id, "updated")
     return TaskResponse.model_validate(result.payload)
+
+
+@router.patch("/{task_id}", response_model=TaskResponse)
+async def patch_task(request: Request, task_id: str, body: TaskPatchBody) -> TaskResponse:
+    if "emoji" not in body.model_fields_set:
+        raise http_error(422, "emoji is required", error_code=VALIDATION_ERROR)
+    try:
+        payload = await patch_task_emoji_record(get_db(request), task_id, body.emoji)
+    except LookupError as exc:
+        raise http_error(404, str(exc)) from exc
+    except TaskWriteError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    notify(request, task_id, "updated")
+    return TaskResponse.model_validate(payload)
 
 
 @router.delete("/{task_id}", response_model=TaskDeleteResponse)

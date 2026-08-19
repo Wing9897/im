@@ -10,8 +10,6 @@ import { useAutoRead } from "../../../hooks/useAutoRead";
 import { CardFieldIcon, FeedCard } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { formatIntelligenceEventTime } from "../../../domain/intelligence/intelligenceSourceMeta";
-import { useTaskEmojisMap } from "../../tasks/useTaskEmojis";
-import type { TaskEmojiMap } from "../../tasks/taskEmojisStore";
 import {
   AUTO_READ_VISIBILITY_THRESHOLD,
   AUTO_READ_DELAY_MS,
@@ -25,8 +23,6 @@ interface IntelligenceCardProps {
   isConsumed: boolean;
   onAutoRead: (id: string) => void;
   onClick?: (item: AnalysisEvent) => void;
-  /** Test override; production hydrates `task_emojis` from ui-prefs. */
-  taskEmojis?: TaskEmojiMap;
 }
 
 export const IntelligenceCard = React.memo(function IntelligenceCard({
@@ -35,11 +31,9 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
   isConsumed,
   onAutoRead,
   onClick,
-  taskEmojis,
 }: IntelligenceCardProps) {
   const { t } = useTranslation("intelligence");
-  const hydratedEmojis = useTaskEmojisMap();
-  const taskGlyph = lookupTaskEmoji(taskEmojis ?? hydratedEmojis, item.taskId);
+  const taskGlyph = lookupTaskEmoji(item.emoji);
   const containerRef = useAutoRead<HTMLDivElement>({
     itemId: item.id,
     isRead: isConsumed,

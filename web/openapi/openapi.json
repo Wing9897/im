@@ -602,6 +602,56 @@
           }
         }
       },
+      "patch": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Patch Task",
+        "operationId": "patch_task_api_v1_tasks__task_id__patch",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskPatchBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "tasks"
@@ -4352,6 +4402,224 @@
         }
       }
     },
+    "/api/v1/calendar/window": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Calendar Window",
+        "operationId": "list_calendar_window_api_v1_calendar_window_get",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Starttime"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Endtime"
+            }
+          },
+          {
+            "name": "worksetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Worksetid"
+            }
+          },
+          {
+            "name": "taskId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Taskid"
+            }
+          },
+          {
+            "name": "seriesId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seriesid"
+            }
+          },
+          {
+            "name": "includeAnalysis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Includeanalysis"
+            }
+          },
+          {
+            "name": "includeUser",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Includeuser"
+            }
+          },
+          {
+            "name": "includeRecurring",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Includerecurring"
+            }
+          },
+          {
+            "name": "includeItems",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Includeitems"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarWindowResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/calendar/occurrences": {
       "get": {
         "tags": [
@@ -5995,128 +6263,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TimelineAnnotationsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/ui-prefs/schedule/emojis": {
-      "get": {
-        "tags": [
-          "ui-prefs"
-        ],
-        "summary": "Fetch Schedule Emojis",
-        "description": "Per-item emoji glyphs for the manage-area schedule list.",
-        "operationId": "fetch_schedule_emojis_api_v1_ui_prefs_schedule_emojis_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleEmojisResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "ui-prefs"
-        ],
-        "summary": "Save Schedule Emojis",
-        "operationId": "save_schedule_emojis_api_v1_ui_prefs_schedule_emojis_put",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ScheduleEmojisPutBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleEmojisResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/ui-prefs/tasks/emojis": {
-      "get": {
-        "tags": [
-          "ui-prefs"
-        ],
-        "summary": "Fetch Task Emojis",
-        "description": "Per-task emoji glyphs for the manage-area task list (ui_prefs ``task_emojis``).",
-        "operationId": "fetch_task_emojis_api_v1_ui_prefs_tasks_emojis_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskEmojisResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "ui-prefs"
-        ],
-        "summary": "Save Task Emojis",
-        "operationId": "save_task_emojis_api_v1_ui_prefs_tasks_emojis_put",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskEmojisPutBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskEmojisResponse"
                 }
               }
             }
@@ -8232,6 +8378,17 @@
             "type": "boolean",
             "title": "Important",
             "default": false
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "type": "object",
@@ -9555,6 +9712,17 @@
             ],
             "title": "Notifypref",
             "default": "inherit"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "type": "object",
@@ -9566,6 +9734,269 @@
         ],
         "title": "CalendarOccurrenceResponse",
         "description": "RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``."
+      },
+      "CalendarWindowItemResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "analysis",
+              "user",
+              "recurring",
+              "item_remind"
+            ],
+            "title": "Source"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "startTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starttime"
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endtime"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "isAllDay": {
+            "type": "boolean",
+            "title": "Isallday",
+            "default": false
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskid"
+          },
+          "seriesId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seriesid"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "itemDateKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "remind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemdatekind"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "inherit",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
+          },
+          "dismissed": {
+            "type": "boolean",
+            "title": "Dismissed",
+            "default": false
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important",
+            "default": false
+          },
+          "taskName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskname"
+          },
+          "isLastOccurrence": {
+            "type": "boolean",
+            "title": "Islastoccurrence",
+            "default": false
+          },
+          "remindBeforeDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remindbeforedays"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "title"
+        ],
+        "title": "CalendarWindowItemResponse",
+        "description": "Tagged occurrence from ``GET /calendar/window`` (timeline SoT)."
+      },
+      "CalendarWindowResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarWindowItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursor"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "limit"
+        ],
+        "title": "CalendarWindowResponse"
       },
       "CategoryCreateBody": {
         "properties": {
@@ -13189,6 +13620,17 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "additionalProperties": false,
@@ -13362,6 +13804,17 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "additionalProperties": false,
@@ -13550,6 +14003,17 @@
             ],
             "title": "Notifypref",
             "default": "inherit"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "createdAt": {
             "anyOf": [
@@ -14016,51 +14480,6 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RssFeedPatchBody"
-      },
-      "ScheduleEmojisPutBody": {
-        "properties": {
-          "emojis": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Emojis"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "emojis"
-        ],
-        "title": "ScheduleEmojisPutBody"
-      },
-      "ScheduleEmojisResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "emojis": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Emojis"
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "ScheduleEmojisResponse",
-        "description": "Per-schedule-item emoji glyphs stored under ``schedule_emojis``."
       },
       "SetupOkResponse": {
         "properties": {
@@ -15252,6 +15671,17 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "additionalProperties": false,
@@ -15510,56 +15940,41 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "type": "object",
         "title": "TaskDraftPayload",
         "description": "Wire shape for agent task-advisor ``currentTask`` / tool ``taskConfig``.\n\nAligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.\nExtra AI keys are ignored so OpenAPI stays a concrete object (not unknown)."
       },
-      "TaskEmojisPutBody": {
+      "TaskPatchBody": {
         "properties": {
-          "emojis": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Emojis"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "emojis"
-        ],
-        "title": "TaskEmojisPutBody"
-      },
-      "TaskEmojisResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "emojis": {
+          "emoji": {
             "anyOf": [
               {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Emojis"
+            "title": "Emoji"
           }
         },
+        "additionalProperties": false,
         "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "TaskEmojisResponse",
-        "description": "Per-analysis-task emoji glyphs stored under ``task_emojis`` (not a DB column)."
+        "title": "TaskPatchBody",
+        "description": "Partial task update that does not bump analysis version (card glyph, etc.)."
       },
       "TaskResponse": {
         "properties": {
@@ -15741,6 +16156,17 @@
             ],
             "title": "Notifypref",
             "default": "inherit"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "createdAt": {
             "anyOf": [
@@ -16482,6 +16908,17 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "additionalProperties": false,
@@ -16660,6 +17097,17 @@
               }
             ],
             "title": "Notifypref"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           }
         },
         "additionalProperties": false,
@@ -16831,6 +17279,17 @@
             ],
             "title": "Notifypref",
             "default": "inherit"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "source": {
             "type": "string",

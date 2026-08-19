@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { CalendarWindowItem } from "../../api/calendarWindow";
 import type { AnalysisEvent, CalendarOccurrence } from "../../types";
 import {
   calendarOccurrenceToBoardEvent,
@@ -11,14 +12,36 @@ import {
 import { getGeneralWorksetLabel } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
-vi.mock("../../api/results", () => ({
-  fetchEvents: vi.fn(),
-  fetchCalendarOccurrences: vi.fn(),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: vi.fn(),
 }));
 
-vi.mock("../../api/userEvents", () => ({
-  listUserEventsPage: vi.fn(),
-}));
+function makeWindowItem(
+  overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">,
+): CalendarWindowItem {
+  return {
+    startTime: "2026-07-22T09:00:00.000Z",
+    endTime: null,
+    location: null,
+    isAllDay: false,
+    timezone: null,
+    emoji: null,
+    taskId: null,
+    seriesId: null,
+    worksetId: SYSTEM_WORKSET_ID,
+    itemId: null,
+    origin: null,
+    itemDateKind: null,
+    notifyPref: "inherit",
+    dismissed: false,
+    important: false,
+    taskName: null,
+    isLastOccurrence: false,
+    remindBeforeDays: null,
+    body: "",
+    ...overrides,
+  };
+}
 
 /** Local AnalysisEvent fixture for merge tests (not timelineTestHelpers.makeEvent). */
 function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
@@ -280,53 +303,48 @@ describe("userEventToTimelineItem", () => {
 
 describe("fetchBoardEventsList", () => {
   beforeEach(async () => {
-    const { fetchEvents, fetchCalendarOccurrences } = await import("../../api/results");
-    const { listUserEventsPage } = await import("../../api/userEvents");
-    vi.mocked(fetchEvents).mockReset();
-    vi.mocked(fetchCalendarOccurrences).mockReset();
-    vi.mocked(listUserEventsPage).mockReset();
-    vi.mocked(fetchEvents).mockResolvedValue({
-      items: [
-        makeEvent({
-          id: "a1",
-          createdAt: "2026-07-22T12:00:00.000Z",
-          startTime: null,
-        }),
-      ],
-      total: 1,
-    } as never);
-    vi.mocked(listUserEventsPage).mockResolvedValue({ items: [
-      {
+    const { fetchCalendarWindow } = await import("../../api/calendarWindow");
+    vi.mocked(fetchCalendarWindow).mockReset().mockResolvedValue([
+      makeWindowItem({
+        id: "a1",
+        source: "analysis",
+        title: "分析",
+        startTime: "2026-07-22T12:00:00.000Z",
+      }),
+      makeWindowItem({
         id: "ue-1",
-        title: "手動",
-        body: "",
-        startTime: "2026-07-22T13:00:00Z",
-        endTime: null,
-        location: null,
-        origin: "manual",
         source: "user",
-        taskId: "",
-        worksetId: SYSTEM_WORKSET_ID,
-        createdAt: "2026-07-22T13:00:00Z",
-        updatedAt: "2026-07-22T13:00:00Z",
-      },
-    ], totalCount: 0, hasMore: false });
-    vi.mocked(fetchCalendarOccurrences).mockResolvedValue([makeOccurrence()]);
+        title: "手動",
+        startTime: "2026-07-22T13:00:00Z",
+        origin: "manual",
+      }),
+      makeWindowItem({
+        id: "cal-1",
+        source: "recurring",
+        title: "週會",
+        seriesId: "cal-task",
+        startTime: "2026-07-22T09:00:00.000Z",
+      }),
+    ]);
   });
 
-  it("merges analysis + user events, sorts by time desc, skips calendar", async () => {
-    const { fetchCalendarOccurrences } = await import("../../api/results");
+  it("merges window occurrences and sorts by time desc", async () => {
     const items = await fetchBoardEventsList({ limit: 15 });
-    expect(fetchCalendarOccurrences).not.toHaveBeenCalled();
-    expect(items.map((e) => e.id)).toEqual(["ue-1", "a1"]);
+    expect(items.map((e) => e.id)).toEqual(["ue-1", "a1", "cal-1"]);
     expect(items[0].source).toBe("user");
+    expect(items[2].source).toBe("recurring");
   });
 
-  it("requests analyzed_at sort from fetchEvents", async () => {
-    const { fetchEvents } = await import("../../api/results");
+  it("requests a merged calendar/window (analysis + user + RRULE + items)", async () => {
+    const { fetchCalendarWindow } = await import("../../api/calendarWindow");
     await fetchBoardEventsList({ limit: 15 });
-    expect(fetchEvents).toHaveBeenCalledWith(
-      expect.objectContaining({ sort: "analyzed_at", limit: 15 }),
+    expect(fetchCalendarWindow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeAnalysis: true,
+        includeUser: true,
+        includeRecurring: true,
+        includeItems: true,
+      }),
     );
   });
 });

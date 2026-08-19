@@ -9,6 +9,7 @@ from server.api.schemas.requests import TaskConfigBody
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE, ALL_ANALYSIS_MODES
 from server.domain.analysis_time_ranges import ALLOWED_ANALYSIS_TIME_RANGES
+from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.scheduler.task_schedule_overrides import (
     AGENT_WAVE_INTERVAL_MAX,
@@ -64,6 +65,16 @@ def _validate_optional_int_in_range(
         raise TaskWriteError(f"{label} must be between {minimum} and {maximum}")
 
 
+def task_emoji_from_body(body: TaskConfigBody, *, existing: dict[str, Any] | None) -> str | None:
+    """Create: omitted → NULL. Update: omitted → keep existing. Empty string clears."""
+    if "emoji" not in body.model_fields_set:
+        return emoji_from_row(existing) if existing is not None else None
+    try:
+        return normalize_optional_emoji(body.emoji)
+    except EmojiValidationError as exc:
+        raise TaskWriteError(str(exc)) from exc
+
+
 def validate_task_config_body(body: TaskConfigBody) -> None:
     """HTTP-agnostic TaskConfigBody checks; raises ``TaskWriteError`` (routes map to 422)."""
     if not body.name.strip():
@@ -113,4 +124,5 @@ __all__ = [
     "require_task_row_or_lookup",
     "validate_agent_prompt",
     "validate_task_config_body",
+    "task_emoji_from_body",
 ]

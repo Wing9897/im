@@ -19,6 +19,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
 from server.db.database import Database
+from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
 from server.worksets_const import SYSTEM_WORKSET_ID
@@ -97,6 +98,7 @@ def build_item_occurrence(
         "dismissed": bool(dismissed),
         "important": False,
         "origin": None,
+        "emoji": emoji_from_row(row),
     }
     if detail == "full":
         item["body"] = str(row.get("notes") or "")

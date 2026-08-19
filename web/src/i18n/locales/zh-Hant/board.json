@@ -123,7 +123,7 @@
     "empty": "尚未設定來源"
   },
   "events": {
-    "empty": "尚無情報事件",
+    "empty": "尚無事件",
     "ariaPrefix": "情報事件"
   },
   "calendarWidget": {
@@ -218,7 +218,7 @@
     },
     "events": {
       "title": "情報事件",
-      "description": "最近分析與用戶事件（不含循環/物品提醒）"
+      "description": "本月合併行事曆事件"
     },
     "feed": {
       "title": "實時監控",

@@ -267,7 +267,8 @@ export interface paths {
         delete: operations["delete_task_api_v1_tasks__task_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Patch Task */
+        patch: operations["patch_task_api_v1_tasks__task_id__patch"];
         trace?: never;
     };
     "/api/v1/tasks/{task_id}/active": {
@@ -1459,6 +1460,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar/window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Calendar Window */
+        get: operations["list_calendar_window_api_v1_calendar_window_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar/occurrences": {
         parameters: {
             query?: never;
@@ -1793,48 +1811,6 @@ export interface paths {
         get: operations["fetch_timeline_annotations_api_v1_ui_prefs_timeline_annotations_get"];
         /** Save Timeline Annotations */
         put: operations["save_timeline_annotations_api_v1_ui_prefs_timeline_annotations_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ui-prefs/schedule/emojis": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Fetch Schedule Emojis
-         * @description Per-item emoji glyphs for the manage-area schedule list.
-         */
-        get: operations["fetch_schedule_emojis_api_v1_ui_prefs_schedule_emojis_get"];
-        /** Save Schedule Emojis */
-        put: operations["save_schedule_emojis_api_v1_ui_prefs_schedule_emojis_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ui-prefs/tasks/emojis": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Fetch Task Emojis
-         * @description Per-task emoji glyphs for the manage-area task list (ui_prefs ``task_emojis``).
-         */
-        get: operations["fetch_task_emojis_api_v1_ui_prefs_tasks_emojis_get"];
-        /** Save Task Emojis */
-        put: operations["save_task_emojis_api_v1_ui_prefs_tasks_emojis_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2550,6 +2526,8 @@ export interface components {
              * @default false
              */
             important: boolean;
+            /** Emoji */
+            emoji?: string | null;
         };
         /** AnalysisEventsPageResponse */
         AnalysisEventsPageResponse: {
@@ -3050,6 +3028,84 @@ export interface components {
              * @enum {string}
              */
             notifyPref: "inherit" | "off";
+            /** Emoji */
+            emoji?: string | null;
+        };
+        /**
+         * CalendarWindowItemResponse
+         * @description Tagged occurrence from ``GET /calendar/window`` (timeline SoT).
+         */
+        CalendarWindowItemResponse: {
+            /** Id */
+            id: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "analysis" | "user" | "recurring" | "item_remind";
+            /** Title */
+            title: string;
+            /** Starttime */
+            startTime?: string | null;
+            /** Endtime */
+            endTime?: string | null;
+            /** Location */
+            location?: string | null;
+            /**
+             * Isallday
+             * @default false
+             */
+            isAllDay: boolean;
+            /** Timezone */
+            timezone?: string | null;
+            /** Emoji */
+            emoji?: string | null;
+            /** Taskid */
+            taskId?: string | null;
+            /** Seriesid */
+            seriesId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
+            /** Origin */
+            origin?: string | null;
+            /** Itemdatekind */
+            itemDateKind?: "remind" | null;
+            /** Notifypref */
+            notifyPref?: ("inherit" | "off") | null;
+            /**
+             * Dismissed
+             * @default false
+             */
+            dismissed: boolean;
+            /**
+             * Important
+             * @default false
+             */
+            important: boolean;
+            /** Taskname */
+            taskName?: string | null;
+            /**
+             * Islastoccurrence
+             * @default false
+             */
+            isLastOccurrence: boolean;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
+            /** Body */
+            body?: string | null;
+        };
+        /** CalendarWindowResponse */
+        CalendarWindowResponse: {
+            /** Items */
+            items: components["schemas"]["CalendarWindowItemResponse"][];
+            /** Limit */
+            limit: number;
+            /** Cursor */
+            cursor?: string | null;
+            /** Nextcursor */
+            nextCursor?: string | null;
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -4205,6 +4261,8 @@ export interface components {
             itemId?: string | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
+            /** Emoji */
+            emoji?: string | null;
         };
         /** RecurringSeriesPageResponse */
         RecurringSeriesPageResponse: {
@@ -4241,6 +4299,8 @@ export interface components {
             itemId?: string | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
+            /** Emoji */
+            emoji?: string | null;
         };
         /**
          * RecurringSeriesResponse
@@ -4299,6 +4359,8 @@ export interface components {
              * @enum {string}
              */
             notifyPref: "inherit" | "off";
+            /** Emoji */
+            emoji?: string | null;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -4458,25 +4520,6 @@ export interface components {
             pollIntervalSeconds?: number | null;
             /** Name */
             name?: string | null;
-        };
-        /** ScheduleEmojisPutBody */
-        ScheduleEmojisPutBody: {
-            /** Emojis */
-            emojis: {
-                [key: string]: string;
-            };
-        };
-        /**
-         * ScheduleEmojisResponse
-         * @description Per-schedule-item emoji glyphs stored under ``schedule_emojis``.
-         */
-        ScheduleEmojisResponse: {
-            /** Configured */
-            configured: boolean;
-            /** Emojis */
-            emojis?: {
-                [key: string]: string;
-            } | null;
         };
         /**
          * SetupOkResponse
@@ -4809,6 +4852,8 @@ export interface components {
             llmProfileId?: string | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
+            /** Emoji */
+            emoji?: string | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -4868,25 +4913,16 @@ export interface components {
             llmProfileId?: string | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
-        };
-        /** TaskEmojisPutBody */
-        TaskEmojisPutBody: {
-            /** Emojis */
-            emojis: {
-                [key: string]: string;
-            };
+            /** Emoji */
+            emoji?: string | null;
         };
         /**
-         * TaskEmojisResponse
-         * @description Per-analysis-task emoji glyphs stored under ``task_emojis`` (not a DB column).
+         * TaskPatchBody
+         * @description Partial task update that does not bump analysis version (card glyph, etc.).
          */
-        TaskEmojisResponse: {
-            /** Configured */
-            configured: boolean;
-            /** Emojis */
-            emojis?: {
-                [key: string]: string;
-            } | null;
+        TaskPatchBody: {
+            /** Emoji */
+            emoji?: string | null;
         };
         /** TaskResponse */
         TaskResponse: {
@@ -4985,6 +5021,8 @@ export interface components {
              * @enum {string}
              */
             notifyPref: "inherit" | "off";
+            /** Emoji */
+            emoji?: string | null;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -5221,6 +5259,8 @@ export interface components {
             direction?: ("expense" | "income") | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
+            /** Emoji */
+            emoji?: string | null;
         };
         /** UserEventPatchBody */
         UserEventPatchBody: {
@@ -5252,6 +5292,8 @@ export interface components {
             direction?: ("expense" | "income") | null;
             /** Notifypref */
             notifyPref?: ("inherit" | "off") | null;
+            /** Emoji */
+            emoji?: string | null;
         };
         /** UserEventResponse */
         UserEventResponse: {
@@ -5310,6 +5352,8 @@ export interface components {
              * @enum {string}
              */
             notifyPref: "inherit" | "off";
+            /** Emoji */
+            emoji?: string | null;
             /**
              * Source
              * @constant
@@ -6196,6 +6240,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_task_api_v1_tasks__task_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskPatchBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8752,6 +8831,49 @@ export interface operations {
             };
         };
     };
+    list_calendar_window_api_v1_calendar_window_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+                startTime?: string | null;
+                end?: string | null;
+                endTime?: string | null;
+                worksetId?: string | null;
+                taskId?: string | null;
+                seriesId?: string | null;
+                includeAnalysis?: boolean;
+                includeUser?: boolean;
+                includeRecurring?: boolean;
+                includeItems?: boolean;
+                limit?: number | null;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarWindowResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_calendar_occurrences_api_v1_calendar_occurrences_get: {
         parameters: {
             query?: {
@@ -9809,112 +9931,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimelineAnnotationsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    fetch_schedule_emojis_api_v1_ui_prefs_schedule_emojis_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleEmojisResponse"];
-                };
-            };
-        };
-    };
-    save_schedule_emojis_api_v1_ui_prefs_schedule_emojis_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ScheduleEmojisPutBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleEmojisResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    fetch_task_emojis_api_v1_ui_prefs_tasks_emojis_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskEmojisResponse"];
-                };
-            };
-        };
-    };
-    save_task_emojis_api_v1_ui_prefs_tasks_emojis_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskEmojisPutBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskEmojisResponse"];
                 };
             };
             /** @description Validation Error */

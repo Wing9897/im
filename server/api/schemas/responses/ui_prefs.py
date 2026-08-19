@@ -240,28 +240,3 @@ class TimelineAnnotationsPutBody(BaseModel):
     eventStatuses: dict[str, TimelineEventStatus]
     eventTimeOverrides: dict[str, TimelineEventTimeOverrideSchema]
 
-
-class ScheduleEmojisResponse(BaseModel):
-    """Per-schedule-item emoji glyphs stored under ``schedule_emojis``."""
-
-    configured: bool
-    emojis: dict[str, str] | None = None
-
-
-class ScheduleEmojisPutBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    emojis: dict[str, str]
-
-
-class TaskEmojisResponse(BaseModel):
-    """Per-analysis-task emoji glyphs stored under ``task_emojis`` (not a DB column)."""
-
-    configured: bool
-    emojis: dict[str, str] | None = None
-
-
-class TaskEmojisPutBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    emojis: dict[str, str]

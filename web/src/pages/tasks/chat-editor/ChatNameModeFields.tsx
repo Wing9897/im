@@ -22,7 +22,8 @@ import {
 import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
 import { TaskAvatarStack } from "../../../components/task/TaskAvatarStack";
 import { TaskCardEmoji } from "../../../components/task/TaskCardEmoji";
-import { useTaskEmoji } from "../useTaskEmojis";
+import { patchTask } from "../../../api/tasks";
+import { lookupTaskEmoji } from "../../../domain/tasks/taskEmoji";
 import { analysisModeForTaskEmployee } from "../../../domain/tasks/taskEmployee";
 import { WorksetNameDialog } from "../../../components/dialogs/WorksetNameDialog";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
@@ -60,7 +61,7 @@ export function ChatNameModeFields({
   taskId,
 }: ChatNameModeFieldsProps) {
   const { t } = useTranslation("common");
-  const { worksets, refreshWorksets } = useTaskCatalog();
+  const { worksets, refreshWorksets, refreshTasks, tasks } = useTaskCatalog();
   const { showToast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -104,7 +105,15 @@ export function ChatNameModeFields({
   const requiredTitle = t("tasks:editor.requiredSuffix");
   const identityEmployeeId = getTaskEmployeeIdForMode(analysisMode);
   const identityEmployeeName = getTaskEmployeeDisplayName(identityEmployeeId);
-  const { emoji, setEmoji, canEdit } = useTaskEmoji(taskId);
+  const catalogTask = taskId ? tasks.find((task) => task.id === taskId) : undefined;
+  const emoji = lookupTaskEmoji(catalogTask?.emoji);
+  const canEdit = Boolean((taskId ?? "").trim());
+  const setEmoji = async (glyph: string) => {
+    const id = (taskId ?? "").trim();
+    if (!id) return;
+    await patchTask(id, { emoji: glyph.trim() || null });
+    await refreshTasks();
+  };
 
   return (
     <>

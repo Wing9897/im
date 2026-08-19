@@ -4,18 +4,15 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 
 const {
-  mockFetchTimelineEvents,
-  mockFetchCalendarOccurrences,
+  mockFetchCalendarWindow,
   mockFetchTaskActivitySpans,
 } = vi.hoisted(() => ({
-  mockFetchTimelineEvents: vi.fn().mockResolvedValue([]),
-  mockFetchCalendarOccurrences: vi.fn().mockResolvedValue([]),
+  mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
   mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("../../api/results", () => ({
-  fetchTimelineEvents: (...args: unknown[]) => mockFetchTimelineEvents(...args),
-  fetchCalendarOccurrences: (...args: unknown[]) => mockFetchCalendarOccurrences(...args),
+vi.mock("../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/tasks", () => ({
@@ -60,8 +57,8 @@ describe("useTimelinePageContainer URL view query", () => {
     document.body.appendChild(container);
     window.localStorage.clear();
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
-    mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
-    mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
+    mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
+    mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetTaskCatalogState([
       makeAnalysisTask({ id: "task-a", name: "任務 A", analysisMode: "intel_event" }),

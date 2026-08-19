@@ -6,17 +6,14 @@ import {
   lookupScheduleEmoji,
   type ScheduleEmojiEventRef,
 } from "../../../domain/schedule/scheduleEmoji";
-import type { ScheduleEmojiMap } from "../../schedule/scheduleEmojisStore";
 
 /** Title-row mark for day / sidebar schedule cards. Empty → CalendarDays / Repeat. */
 export function ScheduleEventTitleMark({
   event,
-  emojis,
 }: {
   event: ScheduleEmojiEventRef;
-  emojis: ScheduleEmojiMap;
 }) {
-  const glyph = lookupScheduleEmoji(emojis, event);
+  const glyph = lookupScheduleEmoji(event);
   if (glyph) {
     return (
       <span className="shrink-0" data-testid="schedule-event-emoji">
@@ -32,14 +29,12 @@ export function ScheduleEventTitleMark({
 /** Compact glyph for month / week / gantt chips. Empty → render nothing (caller keeps dots). */
 export function ScheduleEventCompactEmoji({
   event,
-  emojis,
   className = "",
 }: {
   event: ScheduleEmojiEventRef;
-  emojis: ScheduleEmojiMap;
   className?: string;
 }) {
-  const glyph = lookupScheduleEmoji(emojis, event);
+  const glyph = lookupScheduleEmoji(event);
   if (!glyph) return null;
   return (
     <span

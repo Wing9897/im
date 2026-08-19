@@ -38,6 +38,7 @@ class UserEventResponse(BaseModel):
     direction: Literal["expense", "income"] | None = None
     #: Per-event reminder (``inherit`` / ``off``).
     notifyPref: CoercedNotifyPref = "inherit"
+    emoji: str | None = None
     source: Literal["user"]
     dismissed: bool
     important: bool = False
@@ -76,6 +77,7 @@ class RecurringSeriesResponse(BaseModel):
     itemId: str | None = None
     #: Per-series reminder (``inherit`` / ``off``).
     notifyPref: CoercedNotifyPref = "inherit"
+    emoji: str | None = None
     createdAt: str | None = None
     updatedAt: str | None = None
 
@@ -110,6 +112,8 @@ class AnalysisEventResponse(BaseModel):
     updatedAt: str
     dismissed: bool
     important: bool = False
+    #: Parent analysis-task glyph (joined); NULL = product task logo.
+    emoji: str | None = None
 
 
 class AnalysisEventsPageResponse(BaseModel):
@@ -169,6 +173,41 @@ class CalendarOccurrenceResponse(BaseModel):
     itemDateKind: Literal["remind"] | None = None
     #: Item remind projections inherit the linked expires calendar override.
     notifyPref: CoercedNotifyPref = "inherit"
+    emoji: str | None = None
+
+
+class CalendarWindowItemResponse(BaseModel):
+    """Tagged occurrence from ``GET /calendar/window`` (timeline SoT)."""
+
+    id: str
+    source: Literal["analysis", "user", "recurring", "item_remind"]
+    title: str
+    startTime: str | None = None
+    endTime: str | None = None
+    location: str | None = None
+    isAllDay: bool = False
+    timezone: str | None = None
+    emoji: str | None = None
+    taskId: str | None = None
+    seriesId: str | None = None
+    worksetId: str | None = None
+    itemId: str | None = None
+    origin: str | None = None
+    itemDateKind: Literal["remind"] | None = None
+    notifyPref: CoercedNotifyPref | None = None
+    dismissed: bool = False
+    important: bool = False
+    taskName: str | None = None
+    isLastOccurrence: bool = False
+    remindBeforeDays: int | None = None
+    body: str | None = None
+
+
+class CalendarWindowResponse(BaseModel):
+    items: list[CalendarWindowItemResponse]
+    limit: int
+    cursor: str | None = None
+    nextCursor: str | None = None
 
 
 class CalendarHolidayItemResponse(BaseModel):

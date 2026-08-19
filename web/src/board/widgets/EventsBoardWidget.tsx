@@ -26,8 +26,8 @@ function eventBodyPreview(body: string | null | undefined): string {
 }
 
 /**
- * Events list: analysis + user_events only (title + body + time).
- * Does not include RRULE / `item_remind` — schedule + items widgets cover those.
+ * Events list: merged calendar/window occurrences (analysis / user / recurring /
+ * item_remind) for the padded month, newest first.
  */
 export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();

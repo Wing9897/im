@@ -26,6 +26,7 @@ from server.calendar.user_events_normalize import (
 )
 from server.calendar.user_events_read import get_user_event
 from server.db.database import Database, TransactionDb
+from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.notify_prefs import (
     DEFAULT_CALENDAR_NOTIFY_PREF,
     DEFAULT_NOTIFY_PREF,
@@ -60,6 +61,7 @@ async def create_user_event(
     amount: Any = None,
     direction: Any = None,
     notify_pref: Any = None,
+    emoji: Any = None,
 ) -> dict[str, Any]:
     clean_title = _require_nonempty_title(title)
     clean_start = _require_start_time(start_time)
@@ -81,6 +83,10 @@ async def create_user_event(
             notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF
         )
     except ValueError as exc:
+        raise UserEventValidationError(str(exc)) from exc
+    try:
+        clean_emoji = normalize_optional_emoji(emoji)
+    except EmojiValidationError as exc:
         raise UserEventValidationError(str(exc)) from exc
 
     if workset_id is _UNSET:
@@ -106,8 +112,8 @@ async def create_user_event(
         "INSERT INTO user_events "
         "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
         "remind_before_days, task_id, item_id, workset_id, kind, amount, direction, "
-        "notify_pref, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "notify_pref, emoji, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -125,6 +131,7 @@ async def create_user_event(
             clean_amount,
             clean_direction,
             clean_notify,
+            clean_emoji,
             now,
             now,
         ),
@@ -152,6 +159,7 @@ async def update_user_event(
     amount: Any = _UNSET,
     direction: Any = _UNSET,
     notify_pref: Any = _UNSET,
+    emoji: Any = _UNSET,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
     existing = await fetch_user_event(db, event_id)
@@ -235,11 +243,18 @@ async def update_user_event(
             next_notify = normalize_notify_pref(notify_pref)
         except ValueError as exc:
             raise UserEventValidationError(str(exc)) from exc
+    if emoji is _UNSET:
+        next_emoji = emoji_from_row(existing)
+    else:
+        try:
+            next_emoji = normalize_optional_emoji(emoji)
+        except EmojiValidationError as exc:
+            raise UserEventValidationError(str(exc)) from exc
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
         "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
-        "workset_id = ?, kind = ?, amount = ?, direction = ?, notify_pref = ?, updated_at = ? "
+        "workset_id = ?, kind = ?, amount = ?, direction = ?, notify_pref = ?, emoji = ?, updated_at = ? "
         "WHERE id = ?",
         (
             next_title,
@@ -256,6 +271,7 @@ async def update_user_event(
             next_amount,
             next_direction,
             next_notify,
+            next_emoji,
             utc_now_iso(),
             event_id,
         ),

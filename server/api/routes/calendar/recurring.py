@@ -83,6 +83,7 @@ async def create_recurring_series_endpoint(
             parent_task_id=body.parentTaskId,
             item_id=clean_item_id,
             notify_pref=body.notifyPref,
+            emoji=body.emoji if "emoji" in body.model_fields_set else None,
         )
     except (TaskWriteError, UserEventItemIdError) as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
@@ -130,6 +131,8 @@ async def patch_recurring_series_endpoint(
         kwargs["workset_id"] = body.worksetId if body.worksetId else SYSTEM_WORKSET_ID
     if "notifyPref" in fields:
         kwargs["notify_pref"] = body.notifyPref
+    if "emoji" in fields:
+        kwargs["emoji"] = body.emoji
     try:
         if "itemId" in fields:
             await resolve_user_event_item_id(db, body.itemId)

@@ -20,9 +20,6 @@ KEY_NOTIFY_FIRED = "notify_fired"
 KEY_NOTIFY_TRIGGER_HISTORY = "notify_trigger_history"
 KEY_ASSISTANT_VOICE_IO = "assistant_voice_io_settings"
 KEY_TIMELINE_ANNOTATIONS = "timeline_annotations"
-KEY_SCHEDULE_EMOJIS = "schedule_emojis"
-#: Per-analysis-task glyphs. Not ``analysis_tasks.emoji`` (stamp 42 is wipe-only).
-KEY_TASK_EMOJIS = "task_emojis"
 
 UI_PREF_KEYS = frozenset(
     {
@@ -33,8 +30,6 @@ UI_PREF_KEYS = frozenset(
         KEY_NOTIFY_TRIGGER_HISTORY,
         KEY_ASSISTANT_VOICE_IO,
         KEY_TIMELINE_ANNOTATIONS,
-        KEY_SCHEDULE_EMOJIS,
-        KEY_TASK_EMOJIS,
     }
 )
 

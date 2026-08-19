@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
     notify_pref             TEXT NOT NULL DEFAULT 'off'
                             {NOTIFY_PREF_CHECK_SQL},
+    -- Optional card glyph; NULL = product series logo (CalendarDays/Repeat).
+    emoji                   TEXT DEFAULT NULL,
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );
@@ -89,6 +91,8 @@ CREATE TABLE IF NOT EXISTS user_events (
     -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
     notify_pref TEXT NOT NULL DEFAULT 'off'
                 {NOTIFY_PREF_CHECK_SQL},
+    -- Optional card glyph; NULL = product one-off logo (CalendarDays).
+    emoji       TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );
