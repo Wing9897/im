@@ -25,6 +25,19 @@ describe("browserTtsVoices", () => {
     expect(voices[0]?.voiceURI).toBe("b");
   });
 
+  it("keeps every getVoices() entry (no locale filter or cap)", () => {
+    const voices = toBrowserTtsVoiceOptions(
+      [
+        { voiceURI: "de", name: "Hedda", lang: "de-DE", localService: true },
+        { voiceURI: "en", name: "Zira", lang: "en-US", localService: true },
+        { voiceURI: "zh", name: "Tracy", lang: "zh-HK", localService: true },
+        { voiceURI: "ja", name: "Haruka", lang: "ja-JP", localService: false },
+      ] as SpeechSynthesisVoice[],
+      "zh-HK",
+    );
+    expect(voices.map((v) => v.voiceURI)).toEqual(["zh", "de", "en", "ja"]);
+  });
+
   it("truncates voice URI", () => {
     expect(normalizeTtsVoiceUri("  x  ")).toBe("x");
     expect(normalizeTtsVoiceUri("a".repeat(600)).length).toBe(512);

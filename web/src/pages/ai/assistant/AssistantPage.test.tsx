@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
+import { emptyKeyedWebSearchApiKeyFields } from "../../../domain/settings/assistantWebSearchRoute";
 
 const {
   mockStreamAgentChat,
@@ -51,10 +52,7 @@ const defaultProfile = {
   jsonMode: "disabled",
   webSearchEnabled: true,
   webSearchProvider: "auto",
-  braveSearchApiKey: "",
-  tavilySearchApiKey: "",
-  perplexitySearchApiKey: "",
-  serperSearchApiKey: "",
+  ...emptyKeyedWebSearchApiKeyFields(),
   staffClasses: [],
   staffInstances: [],
   createdAt: null,

@@ -1,5 +1,5 @@
 /**
- * Task / intel-event card glyphs live on entity ``emoji`` (stamp 43).
+ * Task / intel-event card glyphs live on entity ``emoji``.
  * Empty / missing → default product task logo (not the AI head).
  */
 

@@ -7,6 +7,7 @@ import { wrapBoardProviders } from "../boardTestHarness";
 import { ScheduleBoardWidget } from "./ScheduleBoardWidget";
 import { ItemsBoardWidget } from "./ItemsBoardWidget";
 import { LlmHealthBoardWidget } from "./LlmHealthBoardWidget";
+import { emptyKeyedWebSearchApiKeyFields } from "../../domain/settings/assistantWebSearchRoute";
 
 const mockListUserEvents = vi.fn();
 const mockListRecurring = vi.fn();
@@ -237,11 +238,8 @@ describe("new board widgets (schedule / items / llm-health)", () => {
         jsonMode: "auto",
         webSearchEnabled: false,
         webSearchProvider: "auto",
-        braveSearchApiKey: "",
-        tavilySearchApiKey: "",
-        perplexitySearchApiKey: "",
-        serperSearchApiKey: "",
-            staffClasses: [],
+        ...emptyKeyedWebSearchApiKeyFields(),
+        staffClasses: [],
         staffInstances: [],
         createdAt: null,
         updatedAt: null,

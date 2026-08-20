@@ -178,22 +178,19 @@ def apply_text_cap(text: str, *, max_chars: int = MAX_CHARS) -> tuple[str, bool]
     return cleaned[:max_chars].rstrip() + OMITTED_MARKER, True
 
 
-def _content_type(headers: Any) -> str:
-    raw = ""
+def _raw_content_type(headers: Any) -> str:
     try:
-        raw = str(headers.get("Content-Type") or "")
+        return str(headers.get("Content-Type") or "")
     except Exception:
-        raw = ""
-    return raw.split(";", 1)[0].strip().lower()
+        return ""
+
+
+def _content_type(headers: Any) -> str:
+    return _raw_content_type(headers).split(";", 1)[0].strip().lower()
 
 
 def _charset(headers: Any) -> str:
-    raw = ""
-    try:
-        raw = str(headers.get("Content-Type") or "")
-    except Exception:
-        raw = ""
-    match = _CHARSET_RE.search(raw)
+    match = _CHARSET_RE.search(_raw_content_type(headers))
     if not match:
         return "utf-8"
     encoding = match.group(1).strip()

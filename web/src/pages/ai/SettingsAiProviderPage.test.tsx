@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 import { ensureZhHantLocale } from "../../test/i18nHarness";
+import { emptyKeyedWebSearchApiKeyFields } from "../../domain/settings/assistantWebSearchRoute";
 import { SettingsAiProviderPage } from "./SettingsAiProviderPage";
 
 const listLlmProfiles = vi.fn();
@@ -41,10 +42,7 @@ function completeProfile(overrides: Record<string, unknown> = {}) {
     jsonMode: "disabled",
     webSearchEnabled: true,
     webSearchProvider: "auto",
-    braveSearchApiKey: "",
-    tavilySearchApiKey: "",
-    perplexitySearchApiKey: "",
-    serperSearchApiKey: "",
+    ...emptyKeyedWebSearchApiKeyFields(),
     staffClasses: ["agent"],
     staffInstances: [],
     createdAt: null,

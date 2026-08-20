@@ -4,7 +4,6 @@ import {
   FormGrid,
   FormStack,
   MenuSelect,
-  SelectField,
   SettingsRow,
   SurfaceCard,
   formHelpClass,
@@ -30,6 +29,7 @@ import {
   type VoiceSettings,
 } from "../../speech";
 import { useBrowserTtsVoiceOptions } from "../../speech/useBrowserTtsVoiceOptions";
+import { TTS_VOICE_PICKER_SEARCH_MIN } from "../../speech/browserTtsVoices";
 import {
   SettingsContentCard,
   SettingsFieldGroup,
@@ -54,6 +54,53 @@ function VoicePrefCard({
     >
       {children}
     </SurfaceCard>
+  );
+}
+
+const VOICE_SELECT_WRAP = "w-[16rem] max-w-full shrink-0";
+
+function VoiceSelectWrap({ children }: { children: ReactNode }) {
+  return <div className={VOICE_SELECT_WRAP}>{children}</div>;
+}
+
+type VoiceChoice = { id: string; label: string; available?: boolean };
+
+function VoiceProviderMenuSelect({
+  id,
+  value,
+  options,
+  onChange,
+  testId,
+  ariaLabel,
+}: {
+  id: string;
+  value: string;
+  options: readonly VoiceChoice[];
+  onChange: (value: string) => void;
+  testId?: string;
+  ariaLabel: string;
+}) {
+  return (
+    <VoiceSelectWrap>
+      <MenuSelect
+        id={id}
+        variant="field"
+        menuPortal
+        value={value}
+        options={options.map((opt) => ({
+          value: opt.id,
+          label: opt.label,
+          disabled: opt.available === false,
+        }))}
+        onChange={(next) => {
+          const opt = options.find((o) => o.id === next);
+          if (opt?.available === false) return;
+          onChange(next);
+        }}
+        data-testid={testId}
+        aria-label={ariaLabel}
+      />
+    </VoiceSelectWrap>
   );
 }
 
@@ -139,24 +186,14 @@ export function SettingsVoicePage() {
                 voicePttSupported ? t("voice.sttHelp") : t("voice.sttHelpDesktopBlocked")
               }
             >
-              {/* Native select: MenuSelect has no disabled-option support for unavailable providers. */}
-              <SelectField
+              <VoiceProviderMenuSelect
                 id="voice-stt-provider"
-                wrapperClassName="w-[16rem] max-w-full shrink-0"
                 value={sttSelectValue}
-                onChange={(e) => {
-                  const id = e.target.value as SttProviderId;
-                  const opt = sttOptions.find((o) => o.id === id);
-                  if (opt && !opt.available) return;
-                  update({ sttProvider: id });
-                }}
-              >
-                {sttOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id} disabled={!opt.available}>
-                    {opt.label}
-                  </option>
-                ))}
-              </SelectField>
+                options={sttOptions}
+                onChange={(next) => update({ sttProvider: next as SttProviderId })}
+                testId="voice-stt-provider"
+                ariaLabel={t("voice.sttLabel")}
+              />
             </SettingsRow>
           </VoicePrefCard>
 
@@ -168,24 +205,14 @@ export function SettingsVoicePage() {
                 htmlFor="voice-tts-provider"
                 help={t("voice.ttsHelp")}
               >
-                {/* Native select: MenuSelect has no disabled-option support for unavailable providers. */}
-                <SelectField
+                <VoiceProviderMenuSelect
                   id="voice-tts-provider"
-                  wrapperClassName="w-[16rem] max-w-full shrink-0"
                   value={ttsSelectValue}
-                  onChange={(e) => {
-                    const id = e.target.value as TtsProviderId;
-                    const opt = ttsOptions.find((o) => o.id === id);
-                    if (opt && !opt.available) return;
-                    update({ ttsProvider: id });
-                  }}
-                >
-                  {ttsOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id} disabled={!opt.available}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </SelectField>
+                  options={ttsOptions}
+                  onChange={(next) => update({ ttsProvider: next as TtsProviderId })}
+                  testId="voice-tts-provider"
+                  ariaLabel={t("voice.ttsLabel")}
+                />
               </SettingsRow>
 
               {settings.ttsProvider === "browser" ? (
@@ -193,26 +220,32 @@ export function SettingsVoicePage() {
                   layout="inline"
                   label={t("voice.ttsVoiceLabel")}
                   htmlFor="voice-tts-voice"
-                  help={t("voice.ttsVoiceHelp")}
+                  help={`${t("voice.ttsVoiceHelp")} ${t("voice.ttsVoicePlatformHelp")}`}
                 >
                   <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-                    <div className="w-[16rem] max-w-full shrink-0">
+                    <VoiceSelectWrap>
                       <MenuSelect
                         id="voice-tts-voice"
                         variant="field"
+                        menuPortal
+                        searchable={voiceOptions.length >= TTS_VOICE_PICKER_SEARCH_MIN}
+                        searchPlaceholder={t("voice.ttsVoiceSearchPlaceholder")}
+                        searchEmptyLabel={t("voice.ttsVoiceSearchEmpty")}
                         value={ttsVoiceSelectValue}
                         options={[
                           { value: "", label: t("voice.ttsVoiceDefault") },
                           ...voiceOptions.map((opt) => ({
                             value: opt.voiceURI,
                             label: opt.label,
+                            group: opt.lang,
+                            title: opt.label,
                           })),
                         ]}
                         onChange={(next) => update({ ttsVoiceUri: next })}
                         data-testid="voice-tts-voice"
                         aria-label={t("voice.ttsVoiceLabel")}
                       />
-                    </div>
+                    </VoiceSelectWrap>
                     <button
                       type="button"
                       className="im-surface-inset inline-flex shrink-0 items-center justify-center rounded-md border border-surface-border px-3 py-1.5 text-[12px] font-medium text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] disabled:opacity-50"
@@ -251,10 +284,11 @@ export function SettingsVoicePage() {
           <FormStack gap="md">
             <FormGrid>
               <SettingsRow layout="inline" label={t("voice.languageLabel")} htmlFor="voice-speech-language">
-                <div className="w-[16rem] max-w-full shrink-0">
+                <VoiceSelectWrap>
                   <MenuSelect
                     id="voice-speech-language"
                     variant="field"
+                    menuPortal
                     value={settings.speechLanguage}
                     options={languageOptions.map((opt) => ({
                       value: opt.id,
@@ -263,7 +297,7 @@ export function SettingsVoicePage() {
                     onChange={(next) => update({ speechLanguage: next })}
                     aria-label={t("voice.languageLabel")}
                   />
-                </div>
+                </VoiceSelectWrap>
               </SettingsRow>
 
               <SettingsRow
@@ -274,10 +308,11 @@ export function SettingsVoicePage() {
                   voicePttSupported ? t("voice.spacePttHelp") : t("voice.spacePttHelpDesktopBlocked")
                 }
               >
-                <div className="w-[16rem] max-w-full shrink-0">
+                <VoiceSelectWrap>
                   <MenuSelect
                     id="voice-space-ptt-mode"
                     variant="field"
+                    menuPortal
                     value={settings.spacePttMode}
                     options={[
                       { value: "hold", label: t("voice.spacePttOptions.hold") },
@@ -287,7 +322,7 @@ export function SettingsVoicePage() {
                     data-testid="voice-space-ptt-mode"
                     aria-label={t("voice.spacePttLabel")}
                   />
-                </div>
+                </VoiceSelectWrap>
               </SettingsRow>
             </FormGrid>
 
@@ -297,7 +332,7 @@ export function SettingsVoicePage() {
               htmlFor="voice-default-calendar-workset"
               help={t("voice.defaultWorksetHelp")}
             >
-              <div className="w-[16rem] max-w-full shrink-0">
+              <VoiceSelectWrap>
                 <WorksetTargetSelect
                   id="voice-default-calendar-workset"
                   value={settings.defaultWorksetId}
@@ -310,7 +345,7 @@ export function SettingsVoicePage() {
                   }}
                   data-testid="voice-default-calendar-workset"
                 />
-              </div>
+              </VoiceSelectWrap>
             </SettingsRow>
           </FormStack>
         </VoicePrefCard>

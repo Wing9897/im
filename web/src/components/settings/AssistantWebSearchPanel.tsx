@@ -20,23 +20,17 @@ import { formHelpClass } from "../ui/pageTypography";
 
 export type WebSearchProvider = WebSearchProviderSetting;
 
-interface AssistantWebSearchPanelProps {
+export type AssistantWebSearchPanelProps = {
   enabled: boolean;
   provider: string;
-  braveApiKey: string;
-  tavilyApiKey: string;
-  perplexityApiKey: string;
-  serperApiKey: string;
+  apiKeys: Record<KeyedWebSearchToolProvider, string>;
   /** Effective assistant LLM (follow / override already resolved by parent). */
   llmProvider: LlmProvider;
   llmBaseUrl: string;
   onEnabledChange: (value: boolean) => void;
   onProviderChange: (value: WebSearchProvider) => void;
-  onBraveApiKeyChange: (value: string) => void;
-  onTavilyApiKeyChange: (value: string) => void;
-  onPerplexityApiKeyChange: (value: string) => void;
-  onSerperApiKeyChange: (value: string) => void;
-}
+  onApiKeyChange: (provider: KeyedWebSearchToolProvider, value: string) => void;
+};
 
 function parseUiMode(value: string): WebSearchUiMode | null {
   if (value === "off" || value === "native" || value === "tool") {
@@ -51,6 +45,14 @@ const PROVIDER_LABEL_KEYS: Record<WebSearchToolProvider, string> = {
   tavily: "webSearch.providerTavily",
   perplexity: "webSearch.providerPerplexity",
   serper: "webSearch.providerSerper",
+};
+
+const TOOL_STATUS_KEYS: Record<WebSearchToolProvider, string> = {
+  duckduckgo: "webSearch.statusToolDuckDuckGo",
+  brave: "webSearch.statusToolBrave",
+  tavily: "webSearch.statusToolTavily",
+  perplexity: "webSearch.statusToolPerplexity",
+  serper: "webSearch.statusToolSerper",
 };
 
 const KEYED_FIELD_META: Record<
@@ -86,18 +88,12 @@ const KEYED_FIELD_META: Record<
 export function AssistantWebSearchPanel({
   enabled,
   provider,
-  braveApiKey,
-  tavilyApiKey,
-  perplexityApiKey,
-  serperApiKey,
+  apiKeys,
   llmProvider,
   llmBaseUrl,
   onEnabledChange,
   onProviderChange,
-  onBraveApiKeyChange,
-  onTavilyApiKeyChange,
-  onPerplexityApiKeyChange,
-  onSerperApiKeyChange,
+  onApiKeyChange,
 }: AssistantWebSearchPanelProps) {
   const { t } = useTranslation("settings");
   const resolvedProvider = normalizeWebSearchProviderSetting(provider);
@@ -123,19 +119,15 @@ export function AssistantWebSearchPanel({
         return t("webSearch.statusOpenaiNative");
       case "gemini_native":
         return t("webSearch.statusGeminiNative");
-      case "tool_brave":
-        return t("webSearch.statusToolBrave");
-      case "tool_tavily":
-        return t("webSearch.statusToolTavily");
-      case "tool_perplexity":
-        return t("webSearch.statusToolPerplexity");
-      case "tool_serper":
-        return t("webSearch.statusToolSerper");
-      case "tool_duckduckgo":
-        return t("webSearch.statusToolDuckDuckGo");
       case "auto_fallback_tool":
         return t("webSearch.statusAutoTool");
       default:
+        if (status.startsWith("tool_")) {
+          const vendor = status.slice("tool_".length);
+          if (isWebSearchToolProvider(vendor)) {
+            return t(TOOL_STATUS_KEYS[vendor]);
+          }
+        }
         return "";
     }
   })();
@@ -145,18 +137,6 @@ export function AssistantWebSearchPanel({
     onProviderChange(nextProvider);
   };
 
-  const keyedValues: Record<KeyedWebSearchToolProvider, string> = {
-    brave: braveApiKey,
-    tavily: tavilyApiKey,
-    perplexity: perplexityApiKey,
-    serper: serperApiKey,
-  };
-  const keyedOnChange: Record<KeyedWebSearchToolProvider, (value: string) => void> = {
-    brave: onBraveApiKeyChange,
-    tavily: onTavilyApiKeyChange,
-    perplexity: onPerplexityApiKeyChange,
-    serper: onSerperApiKeyChange,
-  };
   const keyedProvider = uiMode === "tool" && isKeyedWebSearchToolProvider(toolProvider) ? toolProvider : null;
   const keyedField = keyedProvider ? KEYED_FIELD_META[keyedProvider] : null;
 
@@ -231,9 +211,9 @@ export function AssistantWebSearchPanel({
         >
           <PasswordField
             id={keyedField.id}
-            value={keyedValues[keyedProvider]}
+            value={apiKeys[keyedProvider]}
             placeholder={t(keyedField.placeholderKey)}
-            onChange={(event) => keyedOnChange[keyedProvider](event.target.value)}
+            onChange={(event) => onApiKeyChange(keyedProvider, event.target.value)}
             autoComplete="off"
           />
         </SettingsRow>

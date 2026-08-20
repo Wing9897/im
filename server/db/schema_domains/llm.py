@@ -7,11 +7,18 @@ from server.domain.llm_staff_classes import (
     LLM_STAFF_CLASSES,
     LLM_TASK_STAFF_CLASSES,
 )
-from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_CHECK_SQL
+from server.domain.web_search_providers import (
+    WEB_SEARCH_PROVIDER_CHECK_SQL,
+    WEB_SEARCH_SECRET_COLUMNS,
+)
 
 #: Legacy / test fixture id only — fresh DDL never seeds this row; production
 #: paths must not invent it as a fallback.
 DEFAULT_LLM_PROFILE_ID = "__default__"
+
+_SEARCH_API_KEY_COLUMNS_DDL = "\n".join(
+    f"    {column} TEXT NOT NULL DEFAULT ''," for column in WEB_SEARCH_SECRET_COLUMNS
+)
 
 DDL = f"""
 -- Packaged LLM connection settings (URL / provider / model / key / web search).
@@ -30,10 +37,7 @@ CREATE TABLE IF NOT EXISTS llm_profiles (
     web_search_enabled      INTEGER NOT NULL DEFAULT 1,
     web_search_provider     TEXT NOT NULL DEFAULT 'auto'
                             {WEB_SEARCH_PROVIDER_CHECK_SQL},
-    brave_search_api_key    TEXT NOT NULL DEFAULT '',
-    tavily_search_api_key   TEXT NOT NULL DEFAULT '',
-    perplexity_search_api_key TEXT NOT NULL DEFAULT '',
-    serper_search_api_key   TEXT NOT NULL DEFAULT '',
+{_SEARCH_API_KEY_COLUMNS_DDL}
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );

@@ -5,6 +5,7 @@ import {
 } from "./llmProfileCompleteness";
 import type { LlmProfile } from "../../types/llmProfiles";
 import { MASKED_SECRET } from "../../types/llmProfiles";
+import { emptyKeyedWebSearchApiKeyFields } from "./assistantWebSearchRoute";
 
 function profile(partial: Partial<LlmProfile>): LlmProfile {
   return {
@@ -18,10 +19,7 @@ function profile(partial: Partial<LlmProfile>): LlmProfile {
     jsonMode: "disabled",
     webSearchEnabled: true,
     webSearchProvider: "auto",
-    braveSearchApiKey: "",
-    tavilySearchApiKey: "",
-    perplexitySearchApiKey: "",
-    serperSearchApiKey: "",
+    ...emptyKeyedWebSearchApiKeyFields(),
     staffClasses: [],
     staffInstances: [],
     createdAt: null,

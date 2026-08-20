@@ -80,7 +80,7 @@ export function SettingsAiProviderPage() {
   const providerLabels = useMemo(() => getLlmProviderConfig(t), [t]);
 
   const openCreate = () => {
-    setEditor({ mode: "create", draft: emptyProfileDraft(profiles.length === 0) });
+    setEditor({ mode: "create", draft: emptyProfileDraft() });
   };
 
   const openEdit = (profile: LlmProfile) => {
