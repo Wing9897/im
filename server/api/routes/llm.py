@@ -21,6 +21,7 @@ from server.api.schemas.responses.llm_profiles import (
 )
 from server.db.database import TransactionDb
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES, LLM_TASK_STAFF_CLASSES
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_FIELDS
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.llm_global_slots import (
     LLM_GLOBAL_SLOTS,
@@ -43,6 +44,24 @@ router = APIRouter(prefix="/api/v1/llm", tags=["llm"], dependencies=API_DEPS)
 
 def _notify_profile(request: Request, profile_id: str, action: str) -> None:
     publish_resource_modified(request, "llm_profile", profile_id, action)
+
+
+def _create_secret(value: str | None) -> str:
+    return "" if value in (None, MASKED_SECRET) else str(value)
+
+
+def _patch_secret(value: str | None) -> str | None:
+    if value is None or value == MASKED_SECRET:
+        return None
+    return str(value)
+
+
+def _search_keys_create(body: LlmProfileUpsertBody) -> dict[str, str]:
+    return {column: _create_secret(getattr(body, wire)) for column, wire in WEB_SEARCH_SECRET_WIRE_FIELDS}
+
+
+def _search_keys_patch(body: LlmProfileUpsertBody) -> dict[str, str | None]:
+    return {column: _patch_secret(getattr(body, wire)) for column, wire in WEB_SEARCH_SECRET_WIRE_FIELDS}
 
 
 def _clean_name(name: str) -> str:
@@ -116,8 +135,8 @@ async def create_profile(request: Request, body: LlmProfileUpsertBody) -> LlmPro
     profile_id = new_id()
     now = utc_now_iso()
     db = get_db(request)
-    api_key = "" if body.apiKey in (None, MASKED_SECRET) else str(body.apiKey)
-    brave_key = "" if body.braveSearchApiKey in (None, MASKED_SECRET) else str(body.braveSearchApiKey)
+    api_key = _create_secret(body.apiKey)
+    search_api_keys = _search_keys_create(body)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await q.insert_profile(
@@ -133,7 +152,7 @@ async def create_profile(request: Request, body: LlmProfileUpsertBody) -> LlmPro
             web_search_enabled=1 if body.webSearchEnabled else 0,
             # Literal-typed body: unknown providers already rejected with 422.
             web_search_provider=body.webSearchProvider,
-            brave_search_api_key=brave_key,
+            search_api_keys=search_api_keys,
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=profile_id, staff_classes=staff_classes, now=now)
@@ -155,12 +174,8 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
     name = _clean_name(body.name)
     staff_classes = _normalize_staff_classes(list(body.staffClasses))
     now = utc_now_iso()
-    api_key: str | None = None if body.apiKey is None or body.apiKey == MASKED_SECRET else str(body.apiKey)
-    brave_key: str | None
-    if body.braveSearchApiKey is None or body.braveSearchApiKey == MASKED_SECRET:
-        brave_key = None
-    else:
-        brave_key = str(body.braveSearchApiKey)
+    api_key: str | None = _patch_secret(body.apiKey)
+    search_api_keys = _search_keys_patch(body)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await q.update_profile(
@@ -175,7 +190,7 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
             json_mode=(body.jsonMode or "disabled").strip() or "disabled",
             web_search_enabled=1 if body.webSearchEnabled else 0,
             web_search_provider=body.webSearchProvider,
-            brave_search_api_key=brave_key,
+            search_api_keys=search_api_keys,
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=profile_id, staff_classes=staff_classes, now=now)
@@ -218,7 +233,7 @@ async def copy_profile(
     new_profile_id = new_id()
     now = utc_now_iso()
     name = _clean_name(body.name) if body and body.name else f"{existing['name']} (copy)"
-    api_cipher, brave_cipher = await q.copy_profile_secrets(db, profile_id)
+    secret_ciphers = await q.copy_profile_secrets(db, profile_id)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await q.insert_profile_with_raw_secrets(
@@ -228,12 +243,11 @@ async def copy_profile(
             provider=str(existing["provider"]),
             base_url=str(existing.get("base_url") or ""),
             model=str(existing.get("model") or ""),
-            api_key_cipher=api_cipher,
+            secret_ciphers=secret_ciphers,
             thinking_enabled=int(existing.get("thinking_enabled") or 0),
             json_mode=str(existing.get("json_mode") or "disabled"),
             web_search_enabled=int(existing.get("web_search_enabled") or 0),
             web_search_provider=str(existing.get("web_search_provider") or "auto"),
-            brave_search_api_key_cipher=brave_cipher,
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=new_profile_id, staff_classes=staff_classes, now=now)

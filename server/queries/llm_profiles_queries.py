@@ -2,21 +2,33 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from server.db.database import TransactionDb
 from server.domain.llm_staff_classes import LLM_TASK_STAFF_CLASSES
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_COLUMNS
 from server.secrets import protect_text
 from server.util import new_id
+
+_PROFILE_SECRET_COLUMNS = ("api_key", *WEB_SEARCH_SECRET_COLUMNS)
 
 _INSERT_PROFILE_SQL = (
     "INSERT INTO llm_profiles ("
     "id, name, provider, base_url, model, api_key, "
     "thinking_enabled, json_mode, web_search_enabled, web_search_provider, "
-    "brave_search_api_key, created_at, updated_at"
-    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    f"{', '.join(WEB_SEARCH_SECRET_COLUMNS)}, created_at, updated_at"
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+    f"{', '.join('?' for _ in WEB_SEARCH_SECRET_COLUMNS)}, ?, ?)"
 )
+
+
+def _protect_secret(value: str) -> str:
+    return protect_text(value) if value else ""
+
+
+def _search_key_values(search_api_keys: Mapping[str, str]) -> tuple[str, ...]:
+    return tuple(_protect_secret(str(search_api_keys.get(column) or "")) for column in WEB_SEARCH_SECRET_COLUMNS)
 
 
 async def fetch_all_profile_rows(db: Any) -> list[dict[str, Any]]:
@@ -61,7 +73,7 @@ async def insert_profile(
     json_mode: str,
     web_search_enabled: int,
     web_search_provider: str,
-    brave_search_api_key: str,
+    search_api_keys: Mapping[str, str],
     now: str,
 ) -> None:
     await tx.execute(
@@ -72,12 +84,12 @@ async def insert_profile(
             provider,
             base_url,
             model,
-            protect_text(api_key) if api_key else "",
+            _protect_secret(api_key),
             thinking_enabled,
             json_mode,
             web_search_enabled,
             web_search_provider,
-            protect_text(brave_search_api_key) if brave_search_api_key else "",
+            *_search_key_values(search_api_keys),
             now,
             now,
         ),
@@ -97,87 +109,45 @@ async def update_profile(
     json_mode: str,
     web_search_enabled: int,
     web_search_provider: str,
-    brave_search_api_key: str | None,
+    search_api_keys: Mapping[str, str | None],
     now: str,
 ) -> None:
-    """Update profile fields. ``api_key`` / ``brave_search_api_key`` None = keep existing."""
-    if api_key is None and brave_search_api_key is None:
-        await tx.execute(
-            "UPDATE llm_profiles SET name = ?, provider = ?, base_url = ?, model = ?, "
-            "thinking_enabled = ?, json_mode = ?, web_search_enabled = ?, "
-            "web_search_provider = ?, updated_at = ? WHERE id = ?",
-            (
-                name,
-                provider,
-                base_url,
-                model,
-                thinking_enabled,
-                json_mode,
-                web_search_enabled,
-                web_search_provider,
-                now,
-                profile_id,
-            ),
-        )
-        return
-    if api_key is None:
-        await tx.execute(
-            "UPDATE llm_profiles SET name = ?, provider = ?, base_url = ?, model = ?, "
-            "thinking_enabled = ?, json_mode = ?, web_search_enabled = ?, "
-            "web_search_provider = ?, brave_search_api_key = ?, updated_at = ? WHERE id = ?",
-            (
-                name,
-                provider,
-                base_url,
-                model,
-                thinking_enabled,
-                json_mode,
-                web_search_enabled,
-                web_search_provider,
-                protect_text(brave_search_api_key) if brave_search_api_key else "",
-                now,
-                profile_id,
-            ),
-        )
-        return
-    if brave_search_api_key is None:
-        await tx.execute(
-            "UPDATE llm_profiles SET name = ?, provider = ?, base_url = ?, model = ?, "
-            "api_key = ?, thinking_enabled = ?, json_mode = ?, web_search_enabled = ?, "
-            "web_search_provider = ?, updated_at = ? WHERE id = ?",
-            (
-                name,
-                provider,
-                base_url,
-                model,
-                protect_text(api_key) if api_key else "",
-                thinking_enabled,
-                json_mode,
-                web_search_enabled,
-                web_search_provider,
-                now,
-                profile_id,
-            ),
-        )
-        return
+    """Update profile fields. Secret columns None = keep existing."""
+    sets = [
+        "name = ?",
+        "provider = ?",
+        "base_url = ?",
+        "model = ?",
+        "thinking_enabled = ?",
+        "json_mode = ?",
+        "web_search_enabled = ?",
+        "web_search_provider = ?",
+    ]
+    params: list[Any] = [
+        name,
+        provider,
+        base_url,
+        model,
+        thinking_enabled,
+        json_mode,
+        web_search_enabled,
+        web_search_provider,
+    ]
+
+    def _maybe_secret(column: str, value: str | None) -> None:
+        if value is None:
+            return
+        sets.append(f"{column} = ?")
+        params.append(_protect_secret(value))
+
+    _maybe_secret("api_key", api_key)
+    for column in WEB_SEARCH_SECRET_COLUMNS:
+        _maybe_secret(column, search_api_keys.get(column))
+    sets.append("updated_at = ?")
+    params.extend([now, profile_id])
     await tx.execute(
-        "UPDATE llm_profiles SET name = ?, provider = ?, base_url = ?, model = ?, "
-        "api_key = ?, thinking_enabled = ?, json_mode = ?, web_search_enabled = ?, "
-        "web_search_provider = ?, brave_search_api_key = ?, updated_at = ? WHERE id = ?",
-        (
-            name,
-            provider,
-            base_url,
-            model,
-            protect_text(api_key) if api_key else "",
-            thinking_enabled,
-            json_mode,
-            web_search_enabled,
-            web_search_provider,
-            protect_text(brave_search_api_key) if brave_search_api_key else "",
-            now,
-            profile_id,
-        ),
+        f"UPDATE llm_profiles SET {', '.join(sets)} WHERE id = ?",
+        tuple(params),
     )
 
 
@@ -221,15 +191,16 @@ async def upsert_staff_classes(
         )
 
 
-async def copy_profile_secrets(db: Any, profile_id: str) -> tuple[str, str]:
-    """Return ciphertext api_key and brave_search_api_key for deep-copy (no re-encrypt)."""
+async def copy_profile_secrets(db: Any, profile_id: str) -> dict[str, str]:
+    """Return ciphertext api_key + search keys for deep-copy (no re-encrypt)."""
+    empty = dict.fromkeys(_PROFILE_SECRET_COLUMNS, "")
     row = await db.fetch_one(
-        "SELECT api_key, brave_search_api_key FROM llm_profiles WHERE id = ?",
+        f"SELECT {', '.join(_PROFILE_SECRET_COLUMNS)} FROM llm_profiles WHERE id = ?",
         (profile_id,),
     )
     if row is None:
-        return "", ""
-    return str(row.get("api_key") or ""), str(row.get("brave_search_api_key") or "")
+        return empty
+    return {column: str(row.get(column) or "") for column in _PROFILE_SECRET_COLUMNS}
 
 
 async def insert_profile_with_raw_secrets(
@@ -240,12 +211,11 @@ async def insert_profile_with_raw_secrets(
     provider: str,
     base_url: str,
     model: str,
-    api_key_cipher: str,
+    secret_ciphers: Mapping[str, str],
     thinking_enabled: int,
     json_mode: str,
     web_search_enabled: int,
     web_search_provider: str,
-    brave_search_api_key_cipher: str,
     now: str,
 ) -> None:
     """Insert a profile keeping already-protected secret ciphertext."""
@@ -257,12 +227,12 @@ async def insert_profile_with_raw_secrets(
             provider,
             base_url,
             model,
-            api_key_cipher,
+            secret_ciphers.get("api_key") or "",
             thinking_enabled,
             json_mode,
             web_search_enabled,
             web_search_provider,
-            brave_search_api_key_cipher,
+            *(secret_ciphers.get(column) or "" for column in WEB_SEARCH_SECRET_COLUMNS),
             now,
             now,
         ),

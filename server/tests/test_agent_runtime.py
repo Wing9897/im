@@ -121,6 +121,7 @@ async def test_agent_compacts_long_client_history(app) -> None:
     await runtime.chat([{"role": "user", "content": "hi"}], session_id="sess-no-web")
     system = mock_llm.complete.await_args_list[0].args[0][0]["content"]
     assert '"name": "web.search"' not in system
+    assert '"name": "web.fetch"' not in system
     assert '"name": "messages.search"' in system
     assert "設定已關閉助手聯網" in system
 
@@ -188,6 +189,7 @@ def test_build_system_prompt_includes_injected_clock() -> None:
     assert '"name": "messages.search"' in prompt
     assert '"name": "intelligence.search_events"' in prompt
     assert '"name": "web.search"' in prompt
+    assert '"name": "web.fetch"' in prompt
     assert "timeRange=today" in prompt
     assert "allTime=true" in prompt
     assert "禁止把 7 天窗或全庫結果說成「今日」" in prompt
@@ -202,6 +204,7 @@ def test_build_system_prompt_omits_web_search_when_disabled() -> None:
     )
     assert '"name": "messages.search"' in prompt
     assert '"name": "web.search"' not in prompt
+    assert '"name": "web.fetch"' not in prompt
     assert "設定已關閉助手聯網" in prompt
 
 
@@ -215,6 +218,7 @@ def test_build_system_prompt_omits_web_search_tool_for_openai_native() -> None:
         inject_web_search_tool=False,
     )
     assert '"name": "web.search"' not in prompt
+    assert '"name": "web.fetch"' not in prompt
     assert "OpenAI 原生 web_search" in prompt
 
 

@@ -9,8 +9,10 @@ Scheduled agent ticks with web search use ``AgentRuntime`` + ``build_agent_base_
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, Protocol
 
+from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
 from server.web_search.providers import DEFAULT_COUNT, search_web
 
 #: Assistant ``web.search`` tool default (also ``providers.DEFAULT_COUNT``).
@@ -30,11 +32,25 @@ class SupportsLlmComplete(Protocol):
     ) -> dict[str, Any]: ...
 
 
+def api_keys_from_mapping(row: Mapping[str, Any]) -> dict[str, str]:
+    """Read ``{provider}_search_api_key`` columns / context keys."""
+    return {
+        provider: str(row.get(f"{provider}_search_api_key") or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
+    }
+
+
 class WebSearchExecutionService:
     """Routing-aware provider search + optional native LLM web-search complete."""
 
-    def __init__(self, *, brave_api_key: str = "") -> None:
-        self._brave_api_key = brave_api_key or ""
+    def __init__(self, *, api_keys: Mapping[str, str] | None = None) -> None:
+        self._api_keys = {
+            provider: str((api_keys or {}).get(provider) or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
+        }
+
+    def _api_key_for(self, provider: str, override: str | None) -> str:
+        if override is not None:
+            return override
+        return self._api_keys.get((provider or "").strip().lower(), "")
 
     async def tool_search(
         self,
@@ -65,7 +81,7 @@ class WebSearchExecutionService:
         return await search_web(
             cleaned,
             provider=provider_name,
-            api_key=api_key if api_key is not None else self._brave_api_key,
+            api_key=self._api_key_for(provider_name, api_key),
             count=count,
         )
 
@@ -90,4 +106,5 @@ class WebSearchExecutionService:
 __all__ = [
     "ASSISTANT_TOOL_DEFAULT_COUNT",
     "WebSearchExecutionService",
+    "api_keys_from_mapping",
 ]

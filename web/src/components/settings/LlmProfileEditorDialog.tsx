@@ -12,7 +12,10 @@ import {
   TextField,
 } from "../ui";
 import { formHelpClass } from "../ui/pageTypography";
+import { normalizeWebSearchProviderSetting } from "../../domain/settings/assistantWebSearchRoute";
 import {
+  baseUrlAfterProviderChange,
+  DEFAULT_PROVIDER_BASE_URLS,
   getLlmProviderConfig,
   normalizeLlmProvider,
 } from "../../domain/settings/llmProviderConfig";
@@ -40,6 +43,9 @@ export type LlmProfileDraft = {
   webSearchEnabled: boolean;
   webSearchProvider: LlmWebSearchProvider;
   braveSearchApiKey: string;
+  tavilySearchApiKey: string;
+  perplexitySearchApiKey: string;
+  serperSearchApiKey: string;
   staffClasses: LlmStaffClass[];
 };
 
@@ -47,7 +53,7 @@ export function emptyProfileDraft(_isFirst = false): LlmProfileDraft {
   return {
     name: "",
     provider: "ollama",
-    baseUrl: "http://localhost:11434",
+    baseUrl: DEFAULT_PROVIDER_BASE_URLS.ollama,
     model: "",
     apiKey: "",
     thinkingEnabled: false,
@@ -55,6 +61,9 @@ export function emptyProfileDraft(_isFirst = false): LlmProfileDraft {
     webSearchEnabled: true,
     webSearchProvider: "auto",
     braveSearchApiKey: "",
+    tavilySearchApiKey: "",
+    perplexitySearchApiKey: "",
+    serperSearchApiKey: "",
     staffClasses: [],
   };
 }
@@ -71,11 +80,11 @@ export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
     thinkingEnabled: profile.thinkingEnabled,
     jsonMode: profile.jsonMode || "disabled",
     webSearchEnabled: profile.webSearchEnabled,
-    webSearchProvider:
-      webProvider === "brave" || webProvider === "duckduckgo" || webProvider === "auto"
-        ? webProvider
-        : "auto",
+    webSearchProvider: normalizeWebSearchProviderSetting(webProvider),
     braveSearchApiKey: profile.braveSearchApiKey,
+    tavilySearchApiKey: profile.tavilySearchApiKey,
+    perplexitySearchApiKey: profile.perplexitySearchApiKey,
+    serperSearchApiKey: profile.serperSearchApiKey,
     staffClasses: normalizeTaskStaffClasses(profile.staffClasses),
   };
 }
@@ -96,8 +105,16 @@ export function draftToUpsertBody(draft: LlmProfileDraft): LlmProfileUpsert {
   if (!isMaskedSecret(draft.apiKey)) {
     body.apiKey = draft.apiKey;
   }
-  if (!isMaskedSecret(draft.braveSearchApiKey)) {
-    body.braveSearchApiKey = draft.braveSearchApiKey;
+  const searchSecrets = [
+    ["braveSearchApiKey", draft.braveSearchApiKey],
+    ["tavilySearchApiKey", draft.tavilySearchApiKey],
+    ["perplexitySearchApiKey", draft.perplexitySearchApiKey],
+    ["serperSearchApiKey", draft.serperSearchApiKey],
+  ] as const;
+  for (const [field, value] of searchSecrets) {
+    if (!isMaskedSecret(value)) {
+      body[field] = value;
+    }
   }
   return body;
 }
@@ -189,7 +206,17 @@ export function LlmProfileEditorDialog({
             llmApiKey={draft.apiKey}
             openaiJsonMode={draft.jsonMode}
             ollamaThinkingEnabled={draft.thinkingEnabled}
-            onLlmProviderChange={(v) => setDraft((prev) => ({ ...prev, provider: v }))}
+            onLlmProviderChange={(v) =>
+              setDraft((prev) =>
+                v === prev.provider
+                  ? prev
+                  : {
+                      ...prev,
+                      provider: v,
+                      baseUrl: baseUrlAfterProviderChange(prev.baseUrl, v),
+                    },
+              )
+            }
             onLlmBaseUrlChange={(v) => setDraft((prev) => ({ ...prev, baseUrl: v }))}
             onLlmModelChange={(v) => setDraft((prev) => ({ ...prev, model: v }))}
             onLlmApiKeyChange={(v) => setDraft((prev) => ({ ...prev, apiKey: v }))}
@@ -225,6 +252,9 @@ export function LlmProfileEditorDialog({
             enabled={draft.webSearchEnabled}
             provider={draft.webSearchProvider}
             braveApiKey={draft.braveSearchApiKey}
+            tavilyApiKey={draft.tavilySearchApiKey}
+            perplexityApiKey={draft.perplexitySearchApiKey}
+            serperApiKey={draft.serperSearchApiKey}
             llmProvider={draft.provider}
             llmBaseUrl={draft.baseUrl}
             onEnabledChange={(value) => setDraft((prev) => ({ ...prev, webSearchEnabled: value }))}
@@ -233,6 +263,15 @@ export function LlmProfileEditorDialog({
             }
             onBraveApiKeyChange={(value) =>
               setDraft((prev) => ({ ...prev, braveSearchApiKey: value }))
+            }
+            onTavilyApiKeyChange={(value) =>
+              setDraft((prev) => ({ ...prev, tavilySearchApiKey: value }))
+            }
+            onPerplexityApiKeyChange={(value) =>
+              setDraft((prev) => ({ ...prev, perplexitySearchApiKey: value }))
+            }
+            onSerperApiKeyChange={(value) =>
+              setDraft((prev) => ({ ...prev, serperSearchApiKey: value }))
             }
           />
         </FormDialogSection>

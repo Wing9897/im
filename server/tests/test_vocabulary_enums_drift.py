@@ -30,7 +30,10 @@ from server.domain.json_modes import ALL_JSON_MODES, ALLOWED_JSON_MODES, JSON_MO
 from server.domain.web_search_providers import (
     ALL_WEB_SEARCH_PROVIDERS,
     ALLOWED_WEB_SEARCH_PROVIDERS,
+    KEYED_WEB_SEARCH_PROVIDERS,
     WEB_SEARCH_PROVIDER_CHECK_SQL,
+    WEB_SEARCH_SECRET_COLUMNS,
+    WEB_SEARCH_SECRET_WIRE_FIELDS,
 )
 
 
@@ -113,6 +116,22 @@ def test_web_search_providers_match_ddl_check_and_routing() -> None:
     assert set(ALL_WEB_SEARCH_PROVIDERS) == ALLOWED_WEB_SEARCH_PROVIDERS
     for provider in ALL_WEB_SEARCH_PROVIDERS:
         assert normalize_web_search_setting(provider) == provider
+    assert KEYED_WEB_SEARCH_PROVIDERS == ("brave", "tavily", "perplexity", "serper")
+    assert WEB_SEARCH_SECRET_COLUMNS == (
+        "brave_search_api_key",
+        "tavily_search_api_key",
+        "perplexity_search_api_key",
+        "serper_search_api_key",
+    )
+    assert WEB_SEARCH_SECRET_WIRE_FIELDS == (
+        ("brave_search_api_key", "braveSearchApiKey"),
+        ("tavily_search_api_key", "tavilySearchApiKey"),
+        ("perplexity_search_api_key", "perplexitySearchApiKey"),
+        ("serper_search_api_key", "serperSearchApiKey"),
+    )
+    for column in WEB_SEARCH_SECRET_COLUMNS:
+        assert column in llm_ddl.DDL
+        assert llm_ddl.DDL.count(column) == 1
 
 
 def test_analysis_strategy_modes_match_ddl_check_and_prompts() -> None:

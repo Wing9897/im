@@ -39,6 +39,7 @@ from server.agent.session_clock import resolve_conversation_clock
 from server.agent.web_search_routing import WebSearchRoute
 from server.config import get_config, get_config_int
 from server.db.database import Database
+from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
 from server.prompts.assistant import (
     AGENT_EMPTY_USER_MESSAGE,
     AGENT_HISTORY_OMIT_NOTICE,
@@ -112,13 +113,17 @@ class AgentRuntime:
         override = getattr(self.llm, "profile_id", None)
         profile_id = override.strip() if isinstance(override, str) and override.strip() else None
         llm_cfg = await load_agent_llm_config(self.db, profile_id=profile_id)
-        brave_key = str(llm_cfg.get("brave_search_api_key") or "")
+        search_keys = {
+            f"{provider}_search_api_key": str(llm_cfg.get(f"{provider}_search_api_key") or "")
+            for provider in KEYED_WEB_SEARCH_PROVIDERS
+        }
         return {
             "web_search_enabled": route.enabled and route.inject_web_search_tool,
             "web_search_provider": route.tool_provider,
             "web_search_mode": route.mode,
             "native_web_search": route.native_web_search,
-            "brave_search_api_key": brave_key,
+            **search_keys,
+            "web_fetch_count": 0,
             "user_event_origin": user_event_origin,
             "default_workset_id": workset_id,
             "agent_scope_task_id": agent_scope_task_id,

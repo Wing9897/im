@@ -11,6 +11,9 @@ from server.web_search.providers import (
     MAX_COUNT,
     search_brave,
     search_duckduckgo,
+    search_perplexity,
+    search_serper,
+    search_tavily,
     search_web,
     unwrap_ddg_redirect,
 )
@@ -22,6 +25,9 @@ __all__ = [
     "WebSearchExecutionService",
     "search_brave",
     "search_duckduckgo",
+    "search_perplexity",
+    "search_serper",
+    "search_tavily",
     "search_web",
     "unwrap_ddg_redirect",
 ]

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from server.agent.web_search_routing import (
     is_official_gemini_base,
     is_official_openai_base,
@@ -65,15 +67,16 @@ def test_auto_ollama_falls_back_to_tool() -> None:
     assert route.fallback_reason == "llm_ollama_no_native"
 
 
-def test_manual_brave_forces_tool_even_on_openai() -> None:
+@pytest.mark.parametrize("provider", ["brave", "tavily", "perplexity", "serper"])
+def test_manual_keyed_provider_forces_tool_even_on_openai(provider: str) -> None:
     route = resolve_web_search_route(
         web_search_enabled=True,
-        web_search_provider="brave",
+        web_search_provider=provider,
         llm_provider="openai",
         llm_base_url="https://api.openai.com/v1",
     )
     assert route.mode == "tool"
-    assert route.tool_provider == "brave"
+    assert route.tool_provider == provider
     assert route.inject_web_search_tool is True
     assert route.native_web_search is None
 

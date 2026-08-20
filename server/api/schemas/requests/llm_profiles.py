@@ -27,6 +27,9 @@ class LlmProfileUpsertBody(BaseModel):
     webSearchEnabled: bool = True
     webSearchProvider: WebSearchProviderWire = "auto"
     braveSearchApiKey: str | None = None
+    tavilySearchApiKey: str | None = None
+    perplexitySearchApiKey: str | None = None
+    serperSearchApiKey: str | None = None
     staffClasses: list[StaffClassWire] = Field(default_factory=list)
 
 

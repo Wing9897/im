@@ -32,6 +32,8 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 - 新增可追蹤物品 → items.create（確認標題；workset 預設一般）。
 - 查／解析工作集 id／名稱 → worksets.list。
 - web.search 僅在設定啟用、且問題需要外部／即時資訊、用戶要求核實、或本機結果不足時使用；不要一開始就上網。
+- web.fetch 僅在 web.search 摘要不夠（需要原文引用、數字或細節）時使用；
+  每次對話最多 1–2 個具體 URL，禁止把搜尋結果整批抓下來。
 
 本機搜尋時間窗（messages／intelligence）：
 - 用戶說「今天／今日」→ messages.search 必須傳 timeRange=today；
@@ -89,6 +91,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 - 新增可追蹤物品 → items.create。
 - 查／解析工作集 → worksets.list。
 - web.search 僅在設定啟用且本機不足／需要外部即時資訊時使用。
+- web.fetch 僅在搜尋摘要不夠時讀取 1–2 個具體頁面正文；不要整批抓取搜尋結果。
 
 本機搜尋時間窗（messages／intelligence）：
 - 「今天／今日」→ messages.search 傳 timeRange=today；intelligence 傳當日 startDate／endDate。
@@ -161,17 +164,28 @@ CHAT_ASSISTANT_SYSTEM_PROMPT = (
 )
 
 #: Runtime user-facing / system-assembly snippets (not the main AGENT_SYSTEM_PROMPT).
-AGENT_WEB_SEARCH_DISABLED_NOTE = "\n（設定已關閉助手聯網；本次對話不提供 web.search，也不啟用供應商原生搜尋。）\n"
-AGENT_WEB_SEARCH_BRAVE_HINT = " Brave 需已設定 API key；若 tool 回傳未配置錯誤，請改用 DuckDuckGo 或補上 key。"
-AGENT_WEB_SEARCH_DUCKDUCKGO_HINT = " DuckDuckGo 免 API key；結果品質可能弱於 Brave。"
+AGENT_WEB_SEARCH_DISABLED_NOTE = (
+    "\n（設定已關閉助手聯網；本次對話不提供 web.search／web.fetch，也不啟用供應商原生搜尋。）\n"
+)
+AGENT_WEB_FETCH_HINT = (
+    " 摘要不夠時可用 web.fetch 讀取 1–2 個具體 URL 的正文（有長度上限）；"
+    "不要自動抓取所有搜尋結果。"
+)
+AGENT_WEB_SEARCH_DUCKDUCKGO_HINT = " DuckDuckGo 免 API key；結果品質可能弱於付費搜尋。"
+_KEYED_SEARCH_HINT_LABELS = {
+    "brave": "Brave",
+    "tavily": "Tavily",
+    "perplexity": "Perplexity",
+    "serper": "Serper",
+}
 AGENT_WEB_SEARCH_OPENAI_NATIVE_NOTE = (
     "\n（聯網搜尋已啟用：OpenAI 原生 web_search。"
-    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search tool。"
+    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search／web.fetch tool。"
     "本機資料仍用 messages／intelligence／calendar／items。）\n"
 )
 AGENT_WEB_SEARCH_GEMINI_NATIVE_NOTE = (
     "\n（聯網搜尋已啟用：Gemini Google Search grounding。"
-    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search tool。"
+    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search／web.fetch tool。"
     "本機資料仍用 messages／intelligence／calendar／items。）\n"
 )
 
@@ -202,10 +216,12 @@ def web_search_prompt_note(
         return AGENT_WEB_SEARCH_GEMINI_NATIVE_NOTE
     name = (provider or "duckduckgo").strip().lower() or "duckduckgo"
     note = f"\n（聯網搜尋已啟用；供應商：{name}。"
-    if name == "brave":
-        note += AGENT_WEB_SEARCH_BRAVE_HINT
+    keyed_label = _KEYED_SEARCH_HINT_LABELS.get(name)
+    if keyed_label:
+        note += f" {keyed_label} 需已設定 API key；若 tool 回傳未配置錯誤，請改用 DuckDuckGo 或補上 key。"
     elif name == "duckduckgo":
         note += AGENT_WEB_SEARCH_DUCKDUCKGO_HINT
+    note += AGENT_WEB_FETCH_HINT
     note += "）\n"
     return note
 

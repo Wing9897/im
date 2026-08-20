@@ -43,6 +43,9 @@ class LlmProfileResponse(BaseModel):
     webSearchEnabled: bool = True
     webSearchProvider: WebSearchProviderWire | str = "auto"
     braveSearchApiKey: str = ""
+    tavilySearchApiKey: str = ""
+    perplexitySearchApiKey: str = ""
+    serperSearchApiKey: str = ""
     staffClasses: list[str] = Field(default_factory=list)
     staffInstances: list[LlmStaffInstanceResponse] = Field(default_factory=list)
     createdAt: str | None = None

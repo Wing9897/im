@@ -71,6 +71,13 @@ def extract_final_message(parsed: Any, raw_text: str) -> str | None:
 def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
     if result.get("error"):
         return f"{name}: error={result['error']}"
+    if name == "web.fetch":
+        title = str(result.get("title") or result.get("url") or "")[:60]
+        truncated = " truncated" if result.get("truncated") else ""
+        chars = result.get("chars")
+        if chars is None:
+            chars = len(str(result.get("text") or ""))
+        return f"{name}: {title or 'page'}{truncated} ({chars} chars)"
     if name == CONSULT_ADVISOR_TOOL_NAME:
         if result.get("taskConfig"):
             return f"{name}: taskConfig updated"
