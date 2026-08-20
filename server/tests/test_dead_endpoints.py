@@ -40,7 +40,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("GET", "/api/v1/viewer/results/timeline", None),
         ("POST", "/api/v1/config/api-key/generate", {}),
         ("GET", "/api/v1/config/api-key/status", None),
-        # Retired setup pairing / bootstrap (admin password auth, schema v13).
+        # Retired setup pairing / bootstrap (admin password auth).
         ("POST", "/api/v1/setup/bootstrap", {"label": "Host"}),
         ("POST", "/api/v1/setup/pairing-code", {}),
         ("POST", "/api/v1/setup/pair", {"code": "DEADCODE", "label": "x"}),
@@ -63,7 +63,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("PATCH", "/api/v1/user-events", {}),
         ("PUT", "/api/v1/user-events", {}),
         ("DELETE", "/api/v1/user-events", None),
-        # Schema upgrade gate retired (wipe-only stamp 32).
+        # Schema upgrade gate retired; see docs/RETIRED-API.md.
         ("GET", "/api/v1/system/schema/status", None),
         ("POST", "/api/v1/system/schema/upgrade", {}),
         # Retired collector accounts surface (sources hard-cut; stay 404).
@@ -86,9 +86,9 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("POST", "/api/v1/accounts/dead-endpoint-probe/reconnect", {}),
         # Retired alias of GET /api/v1/tasks/{id}/agent-ticks (project→agent rename).
         ("GET", f"/api/v1/tasks/{task_id}/project-ticks", None),
-        # Stamp 32: no make-default; resolve via hard-bound global slots only.
+        # No make-default; resolve via hard-bound global slots only.
         ("POST", "/api/v1/llm/profiles/dead-endpoint-probe/set-default", {}),
-        # Stamp 43: card glyphs live on entity columns, not ui_prefs maps.
+        # Card glyphs live on entity columns, not ui_prefs maps.
         ("GET", "/api/v1/ui-prefs/schedule/emojis", None),
         ("PUT", "/api/v1/ui-prefs/schedule/emojis", {"emojis": {}}),
         ("GET", "/api/v1/ui-prefs/tasks/emojis", None),

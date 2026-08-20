@@ -1,7 +1,6 @@
 """SQLite DDL for the sources domain."""
 
-from server.db.schema_domains.vocabulary import PLATFORM_CHECK_SQL
-from server.domain.source_statuses import SOURCE_STATUS_CHECK_SQL
+from server.db.schema_domains.vocabulary import PLATFORM_CHECK_SQL, SOURCE_STATUS_CHECK_SQL
 
 DDL = f"""
 CREATE TABLE IF NOT EXISTS sources (

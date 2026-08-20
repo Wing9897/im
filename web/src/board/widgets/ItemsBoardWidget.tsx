@@ -27,8 +27,8 @@ async function fetchItemRemindSummary(): Promise<ItemRemindRow[]> {
   const start = startOfDay(new Date());
   const end = addDays(start, 30);
   const rows = await fetchCalendarWindow({
-    start: start.toISOString(),
-    end: end.toISOString(),
+    startTime: start.toISOString(),
+    endTime: end.toISOString(),
     includeAnalysis: false,
     includeUser: false,
     includeRecurring: false,

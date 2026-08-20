@@ -107,7 +107,6 @@
     "presets": "Quick presets",
     "updateTask": "Update task",
     "createTask": "Create task",
-    "settingsTitle": "Task settings",
     "optionalAria": "Advanced settings",
     "channelsLoadError": "Could not load channels",
     "timeRangeLabel": "Analysis time range",
@@ -495,7 +494,6 @@
       "calendarHint": "Write to My schedule",
       "calendarHelp": "Implies write-calendar permission"
     },
-    "outputHint": "Writes owned events into My schedule. Intelligence page is the separate checkbox in Outputs above.",
     "outputHintCursor": "Message-cursor drain writes calendar events only; intelligence-event output needs schedule or message-threshold."
   }
 }

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from server.services.task_policy import agent_policy_write_fields
 from server.api.schemas.requests.tasks import TaskConfigBody
+from server.services.task_policy import agent_policy_write_fields
 
 _AGENT_POLICY_COLUMNS = {
     "trigger_mode",

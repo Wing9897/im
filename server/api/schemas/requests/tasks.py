@@ -6,10 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.api.schemas.notify_pref import CoercedNotifyPref
 from server.domain.agent_task_spec import TriggerMode
 from server.domain.analysis_modes import AnalysisMode
 from server.domain.analysis_strategy_modes import AnalysisStrategyMode
-from server.api.schemas.notify_pref import CoercedNotifyPref
 from server.scheduler.task_schedule_overrides import (
     AGENT_WAVE_INTERVAL_MAX,
     AGENT_WAVE_INTERVAL_MIN,
@@ -85,4 +85,3 @@ class TaskPatchBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     emoji: str | None = None
-

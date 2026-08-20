@@ -12,8 +12,8 @@ export type CalendarWindowItem = components["schemas"]["CalendarWindowItemRespon
 export type CalendarWindowResponse = components["schemas"]["CalendarWindowResponse"];
 
 export type FetchCalendarWindowParams = {
-  start: string;
-  end: string;
+  startTime: string;
+  endTime: string;
   includeAnalysis?: boolean;
   includeUser?: boolean;
   includeRecurring?: boolean;
@@ -35,8 +35,8 @@ export async function fetchCalendarWindow(
 
   while (true) {
     const query: Record<string, string> = {
-      start: params.start,
-      end: params.end,
+      startTime: params.startTime,
+      endTime: params.endTime,
     };
     const includeAnalysis = flag(params.includeAnalysis);
     const includeUser = flag(params.includeUser);

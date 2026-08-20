@@ -98,11 +98,11 @@ async def _tool_recent(db: Database, args: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _tool_window(db: Database, args: dict[str, Any]) -> dict[str, Any]:
-    # LLM-facing aliases: start/end; Results-shape aliases: startTime/endTime.
-    start = arg(args, "start", "startTime")
-    end = arg(args, "end", "endTime")
+    # Canonical: startTime/endTime (HTTP-aligned). start/end remain accepted aliases.
+    start = arg(args, "startTime", "start")
+    end = arg(args, "endTime", "end")
     if not start or not end:
-        return {"error": "start and end are required (ISO-8601)"}
+        return {"error": "startTime and endTime are required (ISO-8601)"}
     try:
         result = await query_window(
             db,

@@ -11,6 +11,7 @@ from server.agent.tool_limits import (
     MESSAGES_RESULT_HARD_CAP,
 )
 from server.db.database import Database
+from server.domain.message_time_ranges import BOUNDED_MESSAGE_TIME_RANGES
 from server.domain.workset_scope import allowed_workset_ids_from_args
 from server.queries.messages_queries import (
     MAX_SEARCH_LENGTH,
@@ -22,7 +23,6 @@ from server.queries.messages_queries import (
 HARD_CAP = MESSAGES_RESULT_HARD_CAP
 CONTENT_TRUNCATE = 400
 DEFAULT_TIME_RANGE = "7d"
-_BOUNDED_TIME_RANGE_TOKENS = frozenset({"today", "1h", "6h", "12h", "24h", "48h", "1d", "7d", "30d"})
 
 ToolHandler = Callable[[Database, dict[str, Any]], Awaitable[dict[str, Any]]]
 
@@ -53,7 +53,7 @@ def _resolve_time_range(raw: Any) -> tuple[str, str | None]:
     canonical = token.lower()
     if canonical == "all":
         return "all", None
-    if canonical not in _BOUNDED_TIME_RANGE_TOKENS:
+    if canonical not in BOUNDED_MESSAGE_TIME_RANGES:
         raise MessagesQueryError("timeRange must be 'all', 'today', or a supported offset")
     return canonical, canonical
 

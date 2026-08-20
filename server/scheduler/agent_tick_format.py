@@ -10,6 +10,7 @@ from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.domain.agent_task_spec import AgentTaskSpecError, agent_task_spec_from_row
 from server.prompts.agent_task import build_agent_seed_message
 from server.queries.agent_tick_queries import AgentMessageCursor
+from server.wire.serializers import parse_tool_call_entries
 
 #: Fallback when ``agent_max_tool_rounds`` config is missing / non-positive.
 #: Matches ``server.config`` default (28). Assistant chat keeps runtime default 8.
@@ -35,17 +36,12 @@ def truncate_text(value: str, limit: int) -> str:
 
 
 def serialize_tick_tool_calls(tool_calls: Any) -> str:
-    """Compact JSON array for ``analysis_batches.tool_calls_json``."""
+    """DB-string wrapper: compact JSON for ``analysis_batches.tool_calls_json``."""
     if not isinstance(tool_calls, list):
         return "[]"
     entries: list[dict[str, Any]] = []
-    for item in tool_calls:
-        if not isinstance(item, dict):
-            continue
-        name = item.get("name")
-        if not isinstance(name, str) or not name.strip():
-            continue
-        entry: dict[str, Any] = {"name": name.strip()}
+    for item in parse_tool_call_entries(tool_calls):
+        entry: dict[str, Any] = {"name": item["name"]}
         arguments = item.get("arguments")
         if isinstance(arguments, dict):
             raw_args = json.dumps(arguments, ensure_ascii=False, sort_keys=True)

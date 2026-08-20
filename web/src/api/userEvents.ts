@@ -41,8 +41,8 @@ interface UserEventWriteParams {
 }
 
 export type ListUserEventsParams = {
-  start?: string;
-  end?: string;
+  startTime?: string;
+  endTime?: string;
   /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__general__`. */
   taskId?: string;
   /** Ownership workset id (incl. builtin `__general__`). */
@@ -67,8 +67,8 @@ function normalizeWriteTaskId(taskId: string | null | undefined): string | null 
 
 function toListQuery(params?: ListUserEventsParams): Record<string, string> {
   const query: Record<string, string> = {};
-  if (params?.start) query.start = params.start;
-  if (params?.end) query.end = params.end;
+  if (params?.startTime) query.startTime = params.startTime;
+  if (params?.endTime) query.endTime = params.endTime;
   if (params?.taskId !== undefined) query.taskId = params.taskId;
   if (params?.worksetId !== undefined) query.worksetId = params.worksetId;
   if (params?.itemId !== undefined) query.itemId = params.itemId;

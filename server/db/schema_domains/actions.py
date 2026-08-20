@@ -1,7 +1,9 @@
 """SQLite DDL for the actions domain."""
 
-from server.domain.action_statuses import ACTION_TRIGGER_STATUS_CHECK_SQL
-from server.domain.action_types import ACTION_TYPE_CHECK_SQL
+from server.db.schema_domains.vocabulary import (
+    ACTION_TRIGGER_STATUS_CHECK_SQL,
+    ACTION_TYPE_CHECK_SQL,
+)
 
 DDL = f"""
 CREATE TABLE IF NOT EXISTS actions (

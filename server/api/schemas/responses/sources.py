@@ -8,9 +8,9 @@ from pydantic import BaseModel
 
 from server.api.schemas.responses.messages import ChannelResponse
 from server.domain.collector_platforms import CollectorPlatform
+from server.domain.source_statuses import SourceStatus
 
 SourcePlatform = CollectorPlatform
-SourceStatus = Literal["connected", "disconnected", "error"]
 SourceNextStep = Literal["connected", "code_required", "2fa_required", "qr_required", "error"]
 PendingLoginStage = Literal["code_required", "2fa_required", "qr_required"]
 

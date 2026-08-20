@@ -95,8 +95,4 @@ async def test_calendar_occurrences_http_excludes_ai_trigger_schedules(app, clie
     series_ids = {str(occ["seriesId"]) for occ in occurrences}
     assert ai_id not in series_ids
     assert recurring_id in series_ids
-    assert all(
-        not occ.get("analysisMode")
-        for occ in occurrences
-        if occ.get("seriesId") == recurring_id
-    )
+    assert all(not occ.get("analysisMode") for occ in occurrences if occ.get("seriesId") == recurring_id)

@@ -336,8 +336,8 @@ describe("SchedulePage", () => {
     expect(mockListUserEventsPage).toHaveBeenCalledWith(
       expect.objectContaining({
         worksetId: "ws-ops",
-        start: new Date("2026-08-01T00:00:00").toISOString(),
-        end: new Date("2026-08-31T23:59:59.999").toISOString(),
+        startTime: new Date("2026-08-01T00:00:00").toISOString(),
+        endTime: new Date("2026-08-31T23:59:59.999").toISOString(),
       }),
     );
     expect(mockListRecurringSeries).toHaveBeenCalledWith(

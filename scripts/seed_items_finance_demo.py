@@ -19,21 +19,22 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from argparse import ArgumentParser, Namespace
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 from _seed_common import (
-    build_seed_parser,
     builtin_category_id,
     clean_calendar_fixtures,
     create_linked_milestone,
     delete_workset,
     ensure_workset,
-    open_seed_db,
-    resolve_db_path,
-    utf8_stdio,
+    fetch_item_primary_expires,
+    fetch_items_primary_expires_like,
+    run_seed_cli,
 )
 
 from server.calendar.user_event_kinds import (  # noqa: E402
@@ -269,32 +270,7 @@ async def seed(db: Database) -> dict[str, Any]:
             if idx + 1 < len(item_spec.events):
                 await asyncio.sleep(1.05)
 
-        item_row = await db.fetch_one(
-            """
-            SELECT
-              i.id,
-              i.title,
-              CASE
-                WHEN pe.start_time IS NULL THEN NULL
-                ELSE substr(pe.start_time, 1, 10)
-              END AS expires_at,
-              pe.remind_before_days AS remind_before_days
-            FROM items i
-            LEFT JOIN user_events pe ON pe.id = (
-              SELECT ue.id
-              FROM user_events ue
-              LEFT JOIN timeline_dismissals td
-                ON td.source = 'user' AND td.event_id = ue.id
-              WHERE ue.item_id = i.id
-                AND ue.kind = 'expires'
-                AND td.event_id IS NULL
-              ORDER BY ue.created_at ASC, ue.id ASC
-              LIMIT 1
-            )
-            WHERE i.id = ?
-            """,
-            (item_id,),
-        )
+        item_row = await fetch_item_primary_expires(db, item_id)
         assert item_row is not None
         summary_items.append(
             {
@@ -324,33 +300,7 @@ def _expected_finance() -> dict[str, float]:
 async def verify(db: Database) -> dict[str, Any]:
     """Assert kinds, derived primary expiresAt, and finance aggregation."""
     errors: list[str] = []
-    items = await db.fetch_all(
-        """
-        SELECT
-          i.id,
-          i.title,
-          CASE
-            WHEN pe.start_time IS NULL THEN NULL
-            ELSE substr(pe.start_time, 1, 10)
-          END AS expires_at,
-          pe.remind_before_days AS remind_before_days
-        FROM items i
-        LEFT JOIN user_events pe ON pe.id = (
-          SELECT ue.id
-          FROM user_events ue
-          LEFT JOIN timeline_dismissals td
-            ON td.source = 'user' AND td.event_id = ue.id
-          WHERE ue.item_id = i.id
-            AND ue.kind = 'expires'
-            AND td.event_id IS NULL
-          ORDER BY ue.created_at ASC, ue.id ASC
-          LIMIT 1
-        )
-        WHERE i.title LIKE ?
-        ORDER BY i.title
-        """,
-        (f"{PREFIX}%",),
-    )
+    items = await fetch_items_primary_expires_like(db, PREFIX)
     if len(items) != 6:
         errors.append(f"expected 6 demo items, found {len(items)}")
 
@@ -512,48 +462,51 @@ def _print_table(seeded: dict[str, Any]) -> None:
     print("  4. /items/finance — expense 12968 / income 3500 / net 9468 (widen range if needed)")
 
 
-async def main() -> None:
-    # Windows consoles often default to a legacy code page; keep TC titles readable.
-    utf8_stdio()
+async def _cli(db: Database, args: Namespace, _path: Path) -> None:
+    stamp = await db.fetch_one("PRAGMA user_version")
+    stamp_val = list(stamp.values())[0] if stamp else None
+    print(f"Schema stamp: {stamp_val}")
+    if int(stamp_val or 0) != CURRENT_SCHEMA_VERSION:
+        print(
+            f"ERROR: need stamp {CURRENT_SCHEMA_VERSION}. Run:\n"
+            "  uv run python scripts/reset_local_databases.py --apply\n"
+            "then re-run this seed.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
 
-    parser = build_seed_parser(__doc__, prefix=PREFIX)
+    if args.verify_only:
+        result = await verify(db)
+        print("VERIFY OK:", json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
+    if args.clean:
+        await _clean(db)
+        print("Cleaned prior [finance-demo] fixtures")
+
+    seeded = await seed(db)
+    _print_table(seeded)
+    result = await verify(db)
+    print("\nVERIFY OK:", json.dumps(result["finance"], ensure_ascii=False))
+    print(f"Seeded items={len(seeded['items'])} user_events={seeded['user_events']}")
+    print("Filter titles starting with [finance-demo] or workset「Finance Demo 測試組」")
+
+
+def _extra_parser(parser: ArgumentParser) -> None:
     parser.add_argument("--verify-only", action="store_true", help="Only run asserts (no seed)")
-    args = parser.parse_args()
 
-    path = resolve_db_path(args.db)
-    print(f"DB: {path}")
+
+def _before_open(args: Namespace, path: Path) -> None:
     if not path.is_file() and not args.verify_only:
         print(f"Warning: database file missing; schema will be bootstrapped (stamp {CURRENT_SCHEMA_VERSION}).")
 
-    async with open_seed_db(path) as db:
-        stamp = await db.fetch_one("PRAGMA user_version")
-        stamp_val = list(stamp.values())[0] if stamp else None
-        print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != CURRENT_SCHEMA_VERSION:
-            print(
-                f"ERROR: need stamp {CURRENT_SCHEMA_VERSION}. Run:\n"
-                "  uv run python scripts/reset_local_databases.py --apply\n"
-                "then re-run this seed.",
-                file=sys.stderr,
-            )
-            raise SystemExit(2)
-
-        if args.verify_only:
-            result = await verify(db)
-            print("VERIFY OK:", json.dumps(result, ensure_ascii=False, indent=2))
-            return
-
-        if args.clean:
-            await _clean(db)
-            print("Cleaned prior [finance-demo] fixtures")
-
-        seeded = await seed(db)
-        _print_table(seeded)
-        result = await verify(db)
-        print("\nVERIFY OK:", json.dumps(result["finance"], ensure_ascii=False))
-        print(f"Seeded items={len(seeded['items'])} user_events={seeded['user_events']}")
-        print("Filter titles starting with [finance-demo] or workset「Finance Demo 測試組」")
-
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_seed_cli(
+        description=__doc__,
+        prefix=PREFIX,
+        run=_cli,
+        extra_parser=_extra_parser,
+        utf8=True,
+        before_open=_before_open,
+    )

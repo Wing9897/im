@@ -99,8 +99,8 @@ export async function fetchReminderSourceRows(
 ): Promise<CalendarWindowItem[] | null> {
   try {
     return await fetchCalendarWindow({
-      start: rangeStart,
-      end: rangeEnd,
+      startTime: rangeStart,
+      endTime: rangeEnd,
       includeAnalysis: true,
       includeUser: true,
       includeRecurring: true,

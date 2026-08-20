@@ -103,7 +103,6 @@ function WorksetPipelineGraphCanvas() {
       data.sources,
       data.tasks,
       data.worksets,
-      filterKey,
       filterWorksetIds,
     ],
   );

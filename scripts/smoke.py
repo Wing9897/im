@@ -29,7 +29,6 @@ for _path in (_ROOT, _SCRIPT_DIR):
 
 from urllib.parse import quote  # noqa: E402
 
-from server.db.schema_inspect import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER  # noqa: E402
 from _verify_common import (  # noqa: E402
     BASE,
     FAILURES,
@@ -39,6 +38,8 @@ from _verify_common import (  # noqa: E402
     configure_stdout,
     skip,
 )
+
+from server.db.schema_inspect import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER  # noqa: E402
 
 configure_stdout()
 
@@ -169,7 +170,7 @@ def main() -> int:
         status == 200 and restored.get("assistantDisplayName") == original_name,
     )
 
-    # 7b. LLM profiles (stamp 33 — fresh DBs may have zero profiles; no forced __default__)
+    # 7b. LLM profiles (fresh DBs may have zero profiles; no forced __default__)
     status, profiles = api("GET", "/api/v1/llm/profiles", timeout=15)
     check("llm profiles list", status == 200 and isinstance(profiles, list))
     profile_id = None

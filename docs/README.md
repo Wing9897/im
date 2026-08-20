@@ -7,6 +7,7 @@
 | [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema wipe-only contract: stamp/semver, support matrix, explicit reset |
 | [AUTH.md](AUTH.md) | Authentication: device sessions, API keys, setup routes, manual checklist |
 | [DESKTOP-ICS.md](DESKTOP-ICS.md) | Desktop one-shot ICS import: supported subset, limits, remote-URL policy |
+| [RETIRED-API.md](RETIRED-API.md) | Index of retired HTTP paths; lock is `test_dead_endpoints` |
 | [KNOWN-SIMPLIFICATIONS.md](KNOWN-SIMPLIFICATIONS.md) | Intentional deltas／quirks only; contract detail → ARCHITECTURE／`docs/agent/*` |
 | [I18N-GLOSSARY.md](I18N-GLOSSARY.md) | UI locale keys, error_code vocabulary, preset display Sot |
 | [agent/assistant.md](agent/assistant.md) | Built-in Agent + voice assistant contract |

@@ -6,7 +6,7 @@ from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
-from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
+from server.domain.emoji import EmojiValidationError, normalize_optional_emoji
 from server.domain.notify_prefs import DEFAULT_CALENDAR_NOTIFY_PREF, normalize_notify_pref
 from server.queries.recurring_series_queries import fetch_series_row, insert_series
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
@@ -71,9 +71,7 @@ async def create_recurring_series(
         resolved_workset = str(workset_id).strip()
 
     try:
-        resolved_notify = normalize_notify_pref(
-            notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF
-        )
+        resolved_notify = normalize_notify_pref(notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF)
     except ValueError as exc:
         raise TaskWriteError(str(exc)) from exc
     try:

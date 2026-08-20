@@ -65,8 +65,8 @@ export function useWorksetDetailData(worksetId: string) {
     const load = () => {
       setLoadingEvents(true);
       setEventsError(null);
-      const { start, end } = worksetEventsQueryWindow();
-      void listUserEventsPage({ worksetId, start, end })
+      const { startTime, endTime } = worksetEventsQueryWindow();
+      void listUserEventsPage({ worksetId, startTime, endTime })
         .then((page) => {
           if (!cancelled) setEvents(page.items);
         })

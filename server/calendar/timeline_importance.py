@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from typing import Any
 
 from server.db.database import Database
@@ -12,6 +12,7 @@ from server.domain.timeline_sources import (
     TimelineSource,
 )
 from server.util import utc_now_iso
+from server.wire.serializers import serialize_importance
 
 ImportanceSource = TimelineSource
 ALLOWED_SOURCES = ALLOWED_TIMELINE_SOURCES
@@ -44,14 +45,6 @@ def _require_event_id(event_id: str) -> str:
     if not cleaned:
         raise TimelineImportanceValidationError("eventId is required")
     return cleaned
-
-
-def serialize_importance(row: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        "source": str(row["source"]),
-        "eventId": str(row["event_id"]),
-        "markedAt": row.get("marked_at"),
-    }
 
 
 async def mark_timeline_important(

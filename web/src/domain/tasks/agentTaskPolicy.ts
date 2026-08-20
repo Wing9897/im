@@ -2,7 +2,9 @@
  * Agent task policy — FE mirror of `server/domain/agent_task_spec.py`.
  */
 
-export type AgentTriggerMode = "schedule" | "message_cursor" | "message_threshold";
+export const AGENT_TRIGGER_MODES = ["schedule", "message_cursor", "message_threshold"] as const;
+
+export type AgentTriggerMode = (typeof AGENT_TRIGGER_MODES)[number];
 
 export type AgentPresetId = "project_reconcile" | "web_scout" | "pure_web_search";
 

@@ -75,8 +75,8 @@ export function SchedulePage() {
   const oneOff = useScheduleOneOffFeed({
     debouncedSearch,
     worksetId: normalizedFilters.worksetId || undefined,
-    start: dateWindow.start,
-    end: dateWindow.end,
+    startTime: dateWindow.startTime,
+    endTime: dateWindow.endTime,
     enabled: loadOneOff,
   });
   const recurring = useScheduleRecurringFeed({

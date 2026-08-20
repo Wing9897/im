@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from server.api.channel_refs import parse_channel_refs
 from server.api.routes.task_helpers import (
     TaskConfigBody,
     channel_refs_for,
     resolve_llm_profile_id,
     task_response,
-)
-from server.services.task_policy import (
-    agent_policy_write_fields,
-    resolve_workset_id,
-    schedule_override_write_fields,
 )
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import (
@@ -36,6 +33,11 @@ from server.services.task_crud_mutate_common import (
     task_emoji_from_body,
     validate_agent_prompt,
     validate_task_config_body,
+)
+from server.services.task_policy import (
+    agent_policy_write_fields,
+    resolve_workset_id,
+    schedule_override_write_fields,
 )
 from server.services.task_writes import (
     TaskWriteError,
@@ -194,4 +196,3 @@ async def patch_task_emoji_record(db: Database, task_id: str, emoji: str | None)
 
 
 __all__ = ["update_task_record", "patch_task_emoji_record"]
-

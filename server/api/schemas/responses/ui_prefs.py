@@ -239,4 +239,3 @@ class TimelineAnnotationsPutBody(BaseModel):
 
     eventStatuses: dict[str, TimelineEventStatus]
     eventTimeOverrides: dict[str, TimelineEventTimeOverrideSchema]
-

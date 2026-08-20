@@ -60,6 +60,22 @@ def serialize_analysis_event(
     }
 
 
+def serialize_dismissal(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "source": str(row["source"]),
+        "eventId": str(row["event_id"]),
+        "dismissedAt": row.get("dismissed_at"),
+    }
+
+
+def serialize_importance(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "source": str(row["source"]),
+        "eventId": str(row["event_id"]),
+        "markedAt": row.get("marked_at"),
+    }
+
+
 def serialize_user_event(
     row: Mapping[str, Any],
     *,

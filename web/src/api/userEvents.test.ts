@@ -27,13 +27,13 @@ describe("user events API contract", () => {
     vi.mocked(apiClient.get).mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
 
     await listUserEventsPage({
-      start: "2026-07-01T00:00:00Z",
-      end: "2026-08-01T00:00:00Z",
+      startTime: "2026-07-01T00:00:00Z",
+      endTime: "2026-08-01T00:00:00Z",
     });
 
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
-      start: "2026-07-01T00:00:00Z",
-      end: "2026-08-01T00:00:00Z",
+      startTime: "2026-07-01T00:00:00Z",
+      endTime: "2026-08-01T00:00:00Z",
     });
   });
 

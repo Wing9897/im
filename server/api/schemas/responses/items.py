@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from server.domain.item_statuses import ITEM_STATUS_ACTIVE, ItemStatus
+
 
 class ItemCategoryResponse(BaseModel):
     id: str
@@ -25,7 +27,7 @@ class ItemResponse(BaseModel):
     expiresAt: str | None = None
     remindBeforeDays: int | None = None
     notes: str = ""
-    status: str = "active"
+    status: ItemStatus = ITEM_STATUS_ACTIVE
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None

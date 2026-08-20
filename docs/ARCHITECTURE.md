@@ -283,11 +283,12 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
 | `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-1 start |
+| `live_eval_pipeline.py` | — | **Dev-only:** live Telegram + Gemini + Serper pipeline eval against a running local server. Implementation lives in `scripts/live_eval/` (`pipeline.py`). Not a product path — not used by CI, packaging, or runtime. Writes `scripts/.live_eval_state.json`. |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
 | `seed_trace_correct_demo.py` | — | **Dev-only:** seed Intelligence source-quote / 「不是情報」/ Timeline dismiss / Agent 「收回最近一次調和」 fixtures (`[demo]` prefix); not used by CI or product runtime |
-| `_seed_common.py` | — | Shared scaffolding for the dev-only `seed_*.py` fixtures (CLI/db boilerplate, cleanup, workset + linked-calendar helpers) |
+| `_seed_common.py` | — | Shared scaffolding for the dev-only `seed_*.py` fixtures (`run_seed_cli` + cleanup, workset + linked-calendar helpers) |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
 | `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
@@ -469,11 +470,11 @@ Two intentional shapes share the settings domain; do not force a single type:
 
 | Shape | Where | Role |
 |-------|-------|------|
-| `SystemSettingsSnapshot` | `web/src/types/settings.ts` | API/persistence wire for non-LLM settings: retention TTLs, runtime `analysisPaused`, identity fields (LLM slots retired in stamp 29) |
+| `SystemSettingsSnapshot` | `web/src/types/settings.ts` | API/persistence wire for non-LLM settings: retention TTLs, runtime `analysisPaused`, identity fields (LLM slots retired; see [RETIRED-API](./RETIRED-API.md)) |
 | `LlmProfile` / staff instances | `web/src/types/llmProfiles.ts` | OpenAPI-aligned aliases of `LlmProfileResponse` / upsert／staff-instance schemas for `/api/v1/llm/profiles` (replaces dual-path global／`assistant_llm_*`) |
 | `SettingsObject` | `web/src/types/settings.ts` + `systemSettingsHelpers` | Analysis-runtime settings form slice (batch limits, strategy, retries…) — **not** LLM connection drafts |
 
-LLM connection mapping lives under profile APIs; non-LLM settings form helpers in `web/src/domain/settings/systemSettingsHelpers.ts`. **Global singleton slots** (assistant／A2A `liaison`／task advisor `taskEditor`) bind exactly one profile each via `system_config` keys `llm_global_slot_*` and `GET/PUT /api/v1/llm/global-slots` (profile-id pointers only; unbound slots hard-fail). **Task-mode staff** (`leaderboard`／`intel_event`／`agent`) remain multi-bind checkboxes on profiles; tasks pick `llmProfileId` explicitly. `llm_staff_instances` holds those task-mode classes only — no assistant staff row (stamp 33).
+LLM connection mapping lives under profile APIs; non-LLM settings form helpers in `web/src/domain/settings/systemSettingsHelpers.ts`. **Global singleton slots** (assistant／A2A `liaison`／task advisor `taskEditor`) bind exactly one profile each via `system_config` keys `llm_global_slot_*` and `GET/PUT /api/v1/llm/global-slots` (profile-id pointers only; unbound slots hard-fail). **Task-mode staff** (`leaderboard`／`intel_event`／`agent`) remain multi-bind checkboxes on profiles; tasks pick `llmProfileId` explicitly. `llm_staff_instances` holds those task-mode classes only — no assistant staff row (see [RETIRED-API](./RETIRED-API.md)).
 
 ## Authentication
 

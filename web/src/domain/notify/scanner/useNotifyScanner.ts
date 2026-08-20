@@ -120,7 +120,7 @@ export function useNotifyScanner(): void {
           seriesById,
         });
 
-        let firedKeys = pruneFiredKeys(loadFiredKeys(), nowMs);
+        const firedKeys = pruneFiredKeys(loadFiredKeys(), nowMs);
         const due = collectDueReminders({
           events,
           leadOffsetsMinutes: settings.leadOffsetsMinutes,

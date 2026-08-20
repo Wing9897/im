@@ -64,8 +64,8 @@ describe("notify scannerFetch", () => {
       "2026-07-20T10:05:00.000Z",
     );
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
-      start: "2026-07-20T08:59:00.000Z",
-      end: "2026-07-20T10:05:00.000Z",
+      startTime: "2026-07-20T08:59:00.000Z",
+      endTime: "2026-07-20T10:05:00.000Z",
       includeAnalysis: true,
       includeUser: true,
       includeRecurring: true,

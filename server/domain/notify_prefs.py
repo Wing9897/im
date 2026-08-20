@@ -30,9 +30,7 @@ DEFAULT_NOTIFY_PREF: Final[NotifyPref] = NOTIFY_PREF_INHERIT
 # Calendar / item-linked event create-omit (unchecked 通知). Analysis tasks stay inherit.
 DEFAULT_CALENDAR_NOTIFY_PREF: Final[NotifyPref] = NOTIFY_PREF_OFF
 
-NOTIFY_PREF_CHECK_SQL = "CHECK (notify_pref IN ({}))".format(
-    ",".join(f"'{value}'" for value in ALL_NOTIFY_PREFS)
-)
+NOTIFY_PREF_CHECK_SQL = "CHECK (notify_pref IN ({}))".format(",".join(f"'{value}'" for value in ALL_NOTIFY_PREFS))
 
 NOTIFY_PREF_ERROR = "notifyPref must be 'inherit' or 'off'"
 

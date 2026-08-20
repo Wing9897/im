@@ -134,6 +134,14 @@ vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
 }));
 
+vi.mock("../../hooks/usePipelineReadiness", () => ({
+  usePipelineReadiness: () => ({
+    state: "complete",
+    showChecklist: false,
+    loading: false,
+  }),
+}));
+
 import {
   makeAnalysisTask,
   resetTaskCatalogState,
@@ -318,6 +326,7 @@ describe("Empty state rendering for list components", () => {
       );
 
       mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+      mockListSources.mockResolvedValue([]);
 
       const { IntelligencePage } = await import("../intelligence/IntelligencePage");
 
@@ -348,6 +357,7 @@ describe("Empty state rendering for list components", () => {
       ];
 
       mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+      mockListSources.mockResolvedValue([]);
 
       const { IntelligencePage } = await import("../intelligence/IntelligencePage");
 

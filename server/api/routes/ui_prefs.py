@@ -4,8 +4,8 @@ Board resource combines layout + widgetState in one GET/PUT (fewer roundtrips
 on hydrate). Local notify is split into three resources so the scanner can
 rewrite fired/history without touching settings.
 
-Stamp 37: SoT paths are ``/api/v1/ui-prefs/notify/{settings,fired,history}``.
-Retired ``/api/v1/ui-prefs/voice-reminder/*`` is absent (404).
+SoT paths are ``/api/v1/ui-prefs/notify/{settings,fired,history}``.
+Retired ``/api/v1/ui-prefs/voice-reminder/*`` is 404 — see docs/RETIRED-API.md.
 """
 
 from __future__ import annotations
@@ -215,4 +215,3 @@ async def save_timeline_annotations(
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
     return TimelineAnnotationsResponse.model_validate(saved)
-

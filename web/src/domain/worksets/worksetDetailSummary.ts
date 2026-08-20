@@ -28,12 +28,12 @@ function addLocalDays(d: Date, delta: number): Date {
   return next;
 }
 
-/** ISO window for `listUserEventsPage({ start, end, worksetId })`. */
-export function worksetEventsQueryWindow(now = new Date()): { start: string; end: string } {
+/** ISO window for `listUserEventsPage({ startTime, endTime, worksetId })`. */
+export function worksetEventsQueryWindow(now = new Date()): { startTime: string; endTime: string } {
   const today = startOfLocalDay(now);
   const start = addLocalDays(today, -WORKSET_EVENTS_LOOKBACK_DAYS);
   const end = addLocalDays(today, WORKSET_EVENTS_AHEAD_DAYS + 1);
-  return { start: start.toISOString(), end: end.toISOString() };
+  return { startTime: start.toISOString(), endTime: end.toISOString() };
 }
 
 /**
@@ -65,9 +65,9 @@ export function selectSummaryUserEvents(
 ): UserEvent[] {
   const limit = opts?.limit ?? WORKSET_SUMMARY_LIMIT;
   const now = opts?.now ?? new Date();
-  const { start, end } = worksetEventsQueryWindow(now);
-  const startMs = Date.parse(start);
-  const endMs = Date.parse(end);
+  const { startTime, endTime } = worksetEventsQueryWindow(now);
+  const startMs = Date.parse(startTime);
+  const endMs = Date.parse(endTime);
 
   const inWindow = events.filter((row) => {
     if (row.dismissed) return false;

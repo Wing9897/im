@@ -301,6 +301,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
         "amount": None,
         "direction": None,
         "notifyPref": "off",
+        "emoji": None,
         "body": "詳情內容",
         "createdAt": created["createdAt"],
         "updatedAt": created["updatedAt"],
@@ -342,3 +343,36 @@ async def test_query_window_filters_by_workset_id(app) -> None:
     assert len(user_items) == 1
     assert user_items[0]["title"] == "In workset"
     assert user_items[0]["worksetId"] == "ws-cal"
+
+
+def test_calendar_window_openapi_range_is_camelcase_only(app) -> None:
+    schema = app.openapi()
+    params = schema["paths"]["/api/v1/calendar/window"]["get"]["parameters"]
+    names = {item["name"] for item in params}
+    assert "startTime" in names
+    assert "endTime" in names
+    assert "start" not in names
+    assert "end" not in names
+
+
+async def test_calendar_window_rejects_short_start_end_aliases(client) -> None:
+    short = await client.get(
+        "/api/v1/calendar/window",
+        params={"start": "2026-08-19T00:00:00Z", "end": "2026-08-19T23:59:59Z"},
+    )
+    assert short.status_code == 422
+    camel = await client.get(
+        "/api/v1/calendar/window",
+        params={"startTime": "2026-08-19T00:00:00Z", "endTime": "2026-08-19T23:59:59Z"},
+    )
+    assert camel.status_code == 200
+
+
+def test_calendar_user_events_openapi_range_is_camelcase_only(app) -> None:
+    schema = app.openapi()
+    params = schema["paths"]["/api/v1/calendar/user-events"]["get"]["parameters"]
+    names = {item["name"] for item in params}
+    assert "startTime" in names
+    assert "endTime" in names
+    assert "start" not in names
+    assert "end" not in names

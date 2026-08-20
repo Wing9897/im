@@ -42,6 +42,7 @@ CALENDAR_OCCURRENCE_KEYS = frozenset(
         "itemId",
         "isLastOccurrence",
         "notifyPref",
+        "emoji",
     }
 )
 
@@ -180,6 +181,11 @@ def _full_reference_task_sequence(
                 "itemId": item_id,
                 "isLastOccurrence": recurrence.after(candidate) is None,
                 "notifyPref": str(task.get("notify_pref") or "inherit").strip() or "inherit",
+                "emoji": (
+                    str(task.get("emoji")).strip()
+                    if isinstance(task.get("emoji"), str) and str(task.get("emoji")).strip()
+                    else None
+                ),
             }
         )
     return result

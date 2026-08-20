@@ -1,6 +1,6 @@
 # Known Simplifications
 
-Intentional product／ops **deltas** vs naive “full platform” expectations. Live shapes: `server/tests/test_contract_*.py` and `server/tests/test_dead_endpoints.py`. **Do not** recreate removed historical integrations unless a user-visible bug requires it.
+Intentional product／ops **deltas** vs naive “full platform” expectations. Live shapes: `server/tests/test_contract_*.py` and `server/tests/test_dead_endpoints.py`. Retired HTTP index: [`RETIRED-API.md`](./RETIRED-API.md). **Do not** recreate removed historical integrations unless a user-visible bug requires it.
 
 SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent: [`agent/assistant.md`](./agent/assistant.md)、[`agent/a2a.md`](./agent/a2a.md)、[`agent/mcp.md`](./agent/mcp.md)。
 
@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-37 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (wipe-only schema): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -68,7 +68,7 @@ Still update sources routes／OpenAPI／pipeline／UI when adding — registry i
 
 Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
 
-## Stamp 33 LLM simplifications (intentional)
+## LLM simplifications (intentional)
 
 Still in force under wipe-floor **1** / `SCHEMA_SEMVER` `1.0.0`. Do **not** restore without a new contract:
 
@@ -83,7 +83,7 @@ Still in force under wipe-floor **1** / `SCHEMA_SEMVER` `1.0.0`. Do **not** rest
 
 **Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns).
 
-### Debt purge notes (post stamp 33)
+### Debt purge notes
 
 Removed without stamp bump (no leftover DDL / API columns); do not revive:
 

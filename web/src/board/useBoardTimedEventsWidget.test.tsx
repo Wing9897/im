@@ -36,6 +36,8 @@ vi.mock("../components/SourceFilterDialog", () => ({
 
 vi.mock("../domain/timeline/sourceFilterOptions", () => ({
   catalogOrEventSourceOptions: mocks.catalogOptions,
+  resolveSourceFilterTaskLabel: (name: string | null | undefined, id: string) =>
+    (name ?? "").trim() || id,
 }));
 
 vi.mock("../domain/timeline/timedEventMerge", () => ({

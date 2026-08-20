@@ -46,9 +46,7 @@ def _window_item_wire(row: dict[str, Any]) -> dict[str, Any]:
 @router.get("/window", response_model=CalendarWindowResponse)
 async def list_calendar_window(
     request: Request,
-    start: str | None = qalias("start", default=None),
     start_time: str | None = qalias("startTime", default=None),
-    end: str | None = qalias("end", default=None),
     end_time: str | None = qalias("endTime", default=None),
     workset_id: str | None = qalias("worksetId", default=None),
     task_id: str | None = qalias("taskId", default=None),
@@ -60,22 +58,20 @@ async def list_calendar_window(
     limit: int | None = qalias("limit", default=None),
     cursor: str | None = qalias("cursor", default=None),
 ) -> CalendarWindowResponse:
-    range_start = start or start_time
-    range_end = end or end_time
-    if not range_start or not range_end:
+    if not start_time or not end_time:
         raise http_error(
             422,
-            "start and end are required (ISO-8601)",
+            "startTime and endTime are required (ISO-8601)",
             error_code=VALIDATION_ERROR,
         )
-    _parse_range_param(str(range_start), "start")
-    _parse_range_param(str(range_end), "end", end_of_day=True)
+    _parse_range_param(str(start_time), "startTime")
+    _parse_range_param(str(end_time), "endTime", end_of_day=True)
     resolved_limit = _WINDOW_DEFAULT_LIMIT if limit is None else int(limit)
     try:
         result = await query_window(
             get_db(request),
-            start=str(range_start),
-            end=str(range_end),
+            start=str(start_time),
+            end=str(end_time),
             limit=resolved_limit,
             cursor=cursor,
             task_id=task_id,

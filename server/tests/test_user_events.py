@@ -26,6 +26,7 @@ USER_EVENT_KEYS = {
     "amount",
     "direction",
     "notifyPref",
+    "emoji",
     "source",
     "dismissed",
     "important",
@@ -62,7 +63,7 @@ async def test_user_events_crud_roundtrip(client) -> None:
 
     listed = await client.get(
         "/api/v1/calendar/user-events",
-        params={"start": "2026-07-21T00:00:00Z", "end": "2026-07-22T00:00:00Z"},
+        params={"startTime": "2026-07-21T00:00:00Z", "endTime": "2026-07-22T00:00:00Z"},
     )
     assert listed.status_code == 200
     assert any(item["id"] == event_id for item in listed.json()["items"])

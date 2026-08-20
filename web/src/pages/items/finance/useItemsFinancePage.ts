@@ -51,7 +51,7 @@ export function useItemsFinancePage() {
       const window = financeEventsQueryWindow(range);
       const [items, events] = await Promise.all([
         listItems(),
-        listUserEventsPage({ start: window.start, end: window.end }).then(
+        listUserEventsPage({ startTime: window.startTime, endTime: window.endTime }).then(
           (page) => page.items,
         ),
       ]);

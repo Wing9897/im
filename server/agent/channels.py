@@ -99,8 +99,7 @@ def apply_household_tool_caps(channel: AgentChannel, caps: object) -> AgentChann
         channel,
         calendar_read_enabled=channel.calendar_read_enabled and bool(getattr(caps, "calendar_read", True)),
         calendar_writes_enabled=channel.calendar_writes_enabled and bool(getattr(caps, "calendar_write", True)),
-        messages_search_enabled=channel.messages_search_enabled
-        and bool(getattr(caps, "messages_search", True)),
+        messages_search_enabled=channel.messages_search_enabled and bool(getattr(caps, "messages_search", True)),
         analysis_events_read_enabled=channel.analysis_events_read_enabled
         and bool(getattr(caps, "intelligence_search", True)),
         items_read_enabled=channel.items_read_enabled and bool(getattr(caps, "items_read", True)),

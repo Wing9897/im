@@ -9,23 +9,22 @@ No analysis tasks, recurring tasks, or analysis_events — calendar + items only
 
 from __future__ import annotations
 
-import asyncio
 import json
+from argparse import Namespace
+from pathlib import Path
 
 from _seed_common import (
-    build_seed_parser,
     builtin_category_id,
     clean_calendar_fixtures,
     create_linked_milestone,
+    create_user_events_from_specs,
     delete_workset,
     ensure_workset,
-    open_seed_db,
-    resolve_db_path,
+    run_seed_cli,
 )
 
 from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.timeline_importance import mark_timeline_important
-from server.calendar.user_events_write import create_user_event
 from server.db.database import Database
 from server.items.service import create_category, create_item, patch_item
 from server.queries.items_queries import fetch_category_by_slug
@@ -294,24 +293,9 @@ async def seed(db: Database) -> dict[str, int]:
         },
     ]
 
-    created_user_ids: list[str] = []
-    for spec in user_specs:
-        kwargs: dict = {
-            "title": spec["title"],
-            "start_time": spec["start_time"],
-            "end_time": spec.get("end_time"),
-            "body": spec.get("body", ""),
-            "location": spec.get("location", ""),
-            "origin": spec.get("origin", "manual"),
-            "is_all_day": bool(spec.get("is_all_day", False)),
-            "remind_before_days": spec.get("remind_before_days"),
-        }
-        if "workset_id" in spec:
-            kwargs["workset_id"] = spec["workset_id"]
-        item = await create_user_event(db, **kwargs)
-        event_id = str(item["id"])
-        created_user_ids.append(event_id)
-        counts["user_events"] += 1
+    created_user_ids = await create_user_events_from_specs(db, user_specs)
+    counts["user_events"] += len(created_user_ids)
+    for spec, event_id in zip(user_specs, created_user_ids, strict=True):
         if spec.get("important"):
             await mark_timeline_important(db, source="user", event_id=event_id)
             counts["important"] += 1
@@ -327,22 +311,19 @@ async def seed(db: Database) -> dict[str, int]:
     return counts
 
 
-async def main() -> None:
-    args = build_seed_parser(__doc__, prefix=PREFIX).parse_args()
-
-    path = resolve_db_path(args.db)
-    print(f"DB: {path}")
-    if not path.is_file():
-        print("Warning: database file does not exist yet; schema will be bootstrapped.")
-
-    async with open_seed_db(path) as db:
-        if args.clean:
-            await _clean(db)
-            print("Cleaned prior [dev-seed] fixtures")
-        counts = await seed(db)
-        print("Seeded:", json.dumps(counts, ensure_ascii=False))
-        print("Open /timeline or /items — filter titles starting with [dev-seed] or workset「Dev Seed 測試組」")
+async def _cli(db: Database, args: Namespace, _path: Path) -> None:
+    if args.clean:
+        await _clean(db)
+        print("Cleaned prior [dev-seed] fixtures")
+    counts = await seed(db)
+    print("Seeded:", json.dumps(counts, ensure_ascii=False))
+    print("Open /timeline or /items — filter titles starting with [dev-seed] or workset「Dev Seed 測試組」")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_seed_cli(
+        description=__doc__,
+        prefix=PREFIX,
+        run=_cli,
+        warn_missing_db=True,
+    )

@@ -33,7 +33,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         # Schema v9: household keys live in access_api_keys table (hash-only).
         "ingestion_api_key",
         "access_api_keys",
-        # Stamp 5: device-scoped assistant sessions live in ui_prefs.
+        # Device-scoped assistant sessions live in ui_prefs.
         "assistant_sessions",
         # Board / notify / timeline / assistant voice-io live in ui_prefs (wipe-only).
         "ops_board_layout",
@@ -51,7 +51,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "agent_project_wave_interval_seconds",
         # Prompt revision tag removed — correlate via git / prompt files, not system_config.
         "intelligence_rules_version",
-        # Stamp 29: LLM connection slots moved to llm_profiles.
+        # LLM connection slots live on llm_profiles (see docs/SCHEMA-BASELINE.md).
         "llm_provider",
         "ollama_base_url",
         "ollama_model",

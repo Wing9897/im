@@ -1,23 +1,24 @@
 """Calendar import, dismissal, and user-event request models."""
 
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.schemas.notify_pref import CoercedNotifyPref
+from server.domain.timeline_sources import TimelineSource
+from server.domain.user_event_directions import UserEventDirection
+from server.domain.user_event_kinds import UserEventKind
 
 
 class TimelineDismissalBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    source: str
+    source: TimelineSource
     eventId: str
 
 
 class TimelineImportanceBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    source: str
+    source: TimelineSource
     eventId: str
 
 
@@ -53,9 +54,9 @@ class UserEventCreateBody(BaseModel):
     itemId: str | None = None
     worksetId: str | None = None
     #: ``normal`` (default) | ``expires`` | ``purchase_effective``.
-    kind: Literal["normal", "expires", "purchase_effective"] = "normal"
+    kind: UserEventKind = "normal"
     amount: float | None = None
-    direction: Literal["expense", "income"] | None = None
+    direction: UserEventDirection | None = None
     #: Per-event reminder; omitted → ``off``. No force-on.
     notifyPref: CoercedNotifyPref | None = None
     #: Optional card glyph; omitted → NULL.
@@ -75,9 +76,9 @@ class UserEventPatchBody(BaseModel):
     taskId: str | None = None
     itemId: str | None = None
     worksetId: str | None = None
-    kind: Literal["normal", "expires", "purchase_effective"] | None = None
+    kind: UserEventKind | None = None
     amount: float | None = None
-    direction: Literal["expense", "income"] | None = None
+    direction: UserEventDirection | None = None
     notifyPref: CoercedNotifyPref | None = None
     #: Optional card glyph; omitted → NULL.
     emoji: str | None = None

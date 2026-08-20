@@ -139,6 +139,4 @@ async def test_nager_fetch_validates_outbound_before_http(monkeypatch):
 
 
 def test_nager_url_uses_public_api_host():
-    assert holidays._nager_holidays_url(2026, "TW") == (
-        "https://date.nager.at/api/v3/PublicHolidays/2026/TW"
-    )
+    assert holidays._nager_holidays_url(2026, "TW") == ("https://date.nager.at/api/v3/PublicHolidays/2026/TW")

@@ -7,6 +7,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from server.api.schemas.notify_pref import CoercedNotifyPref
+from server.domain.timeline_sources import SOURCE_RECURRING, TimelineSource
+from server.domain.user_event_directions import UserEventDirection
+from server.domain.user_event_kinds import UserEventKind
 from server.domain.user_event_origins import UserEventOrigin
 
 
@@ -31,11 +34,11 @@ class UserEventResponse(BaseModel):
     #: Ownership workset id (builtin ``__general__`` for handwritten / assistant).
     worksetId: str
     #: Special linked-calendar semantics; title presets are UX only.
-    kind: Literal["normal", "expires", "purchase_effective"] = "normal"
+    kind: UserEventKind = "normal"
     #: Optional transaction amount for ``kind=purchase_effective`` only.
     amount: float | None = None
     #: ``expense`` (default when amount set) or ``income``; null when amount unset.
-    direction: Literal["expense", "income"] | None = None
+    direction: UserEventDirection | None = None
     #: Per-event reminder (``inherit`` / ``off``).
     notifyPref: CoercedNotifyPref = "inherit"
     emoji: str | None = None
@@ -137,13 +140,13 @@ class TrendingTopicResponse(BaseModel):
 
 
 class TimelineDismissalResponse(BaseModel):
-    source: Literal["analysis", "user", "recurring", "item_remind"]
+    source: TimelineSource
     eventId: str
     dismissedAt: str
 
 
 class TimelineImportanceResponse(BaseModel):
-    source: Literal["analysis", "user", "recurring", "item_remind"]
+    source: TimelineSource
     eventId: str
     markedAt: str
 
@@ -167,7 +170,7 @@ class CalendarOccurrenceResponse(BaseModel):
     important: bool = False
     # True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
     isLastOccurrence: bool = False
-    source: Literal["recurring", "item_remind"] = "recurring"
+    source: Literal["recurring", "item_remind"] = SOURCE_RECURRING
     worksetId: str | None = None
     itemId: str | None = None
     itemDateKind: Literal["remind"] | None = None
@@ -180,7 +183,7 @@ class CalendarWindowItemResponse(BaseModel):
     """Tagged occurrence from ``GET /calendar/window`` (timeline SoT)."""
 
     id: str
-    source: Literal["analysis", "user", "recurring", "item_remind"]
+    source: TimelineSource
     title: str
     startTime: str | None = None
     endTime: str | None = None

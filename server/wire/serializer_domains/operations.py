@@ -9,6 +9,33 @@ from server.action_config import masked_action_configuration
 from server.util import parse_json_list
 
 
+def parse_tool_call_entries(raw: Any) -> list[dict[str, Any]]:
+    """Shared parse of agent-tick tool-call JSON (DB string or in-memory list).
+
+    Each entry has ``name`` and optionally ``arguments`` (dict) and
+    ``resultSummary`` (str). Invalid items are skipped. Wrappers add
+    storage vs HTTP defaults: :func:`serialize_tick_tool_calls` (DB string)
+    and :func:`serialize_batch_tool_calls` (HTTP list).
+    """
+    parsed = raw if isinstance(raw, list) else parse_json_list(raw)
+    entries: list[dict[str, Any]] = []
+    for item in parsed:
+        if not isinstance(item, Mapping):
+            continue
+        name = item.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+        entry: dict[str, Any] = {"name": name.strip()}
+        arguments = item.get("arguments")
+        if isinstance(arguments, dict):
+            entry["arguments"] = arguments
+        summary = item.get("resultSummary")
+        if isinstance(summary, str):
+            entry["resultSummary"] = summary
+        entries.append(entry)
+    return entries
+
+
 def serialize_action(row: Mapping[str, Any]) -> dict[str, Any]:
     action_type = str(row.get("action_type") or "")
     return {
@@ -66,31 +93,18 @@ def serialize_queue_batch(row: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def serialize_batch_tool_calls(raw: Any) -> list[dict[str, Any]]:
-    if raw is None:
-        return []
-    if isinstance(raw, str):
-        parsed = parse_json_list(raw)
-    elif isinstance(raw, list):
-        parsed = raw
-    else:
-        return []
+    """HTTP list wrapper: missing arguments/summary become ``{}`` / ``""``."""
     calls: list[dict[str, Any]] = []
-    for item in parsed:
-        if not isinstance(item, Mapping):
-            continue
-        name = item.get("name")
-        if not isinstance(name, str) or not name.strip():
-            continue
+    for item in parse_tool_call_entries(raw):
         arguments = item.get("arguments")
-        entry: dict[str, Any] = {
-            "name": name.strip(),
-            "arguments": arguments if isinstance(arguments, dict) else {},
-            "resultSummary": "",
-        }
         summary = item.get("resultSummary")
-        if isinstance(summary, str):
-            entry["resultSummary"] = summary
-        calls.append(entry)
+        calls.append(
+            {
+                "name": item["name"],
+                "arguments": arguments if isinstance(arguments, dict) else {},
+                "resultSummary": summary if isinstance(summary, str) else "",
+            }
+        )
     return calls
 
 

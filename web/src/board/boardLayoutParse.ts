@@ -88,7 +88,7 @@ export function readLayoutWidget(raw: unknown, index: number): BoardWidgetItem |
     typeof item.i === "string" && item.i.length > 0 ? item.i : `widget-${index}-${item.type}`;
   const rawSize = typeof item.sizeId === "string" ? item.sizeId : undefined;
   const fallback = getWidgetDefaultSizeId(item.type);
-  const sizeId = (isPresetId(rawSize) ? rawSize : fallback) as BoardSizePresetId;
+  const sizeId = isPresetId(rawSize) ? rawSize : fallback;
 
   return {
     i,

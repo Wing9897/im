@@ -132,7 +132,7 @@ describe("App smoke", () => {
     });
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: "1.0.0",
       runtimeReady: true,
       secretsReady: true,
     });
@@ -166,7 +166,7 @@ describe("App smoke", () => {
       order.push("health");
       return {
         status: "ok",
-        version: "0.1.0-beta.6",
+        version: "1.0.0",
         runtimeReady: true,
         secretsReady: true,
       };
@@ -209,7 +209,7 @@ describe("App smoke", () => {
     isElectronDesktop.mockReturnValue(true);
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: "1.0.0",
       runtimeReady: true,
       secretsReady: true,
     });
@@ -249,7 +249,7 @@ describe("App smoke", () => {
     });
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: "1.0.0",
       runtimeReady: true,
       secretsReady: true,
     });
@@ -301,7 +301,7 @@ describe("App smoke", () => {
     });
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: "1.0.0",
       runtimeReady: true,
       secretsReady: true,
     });
@@ -349,7 +349,7 @@ describe("App smoke", () => {
     });
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: "1.0.0",
       runtimeReady: true,
       secretsReady: false,
       secretsError: "Stored secret cannot be decrypted",

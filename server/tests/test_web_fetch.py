@@ -166,7 +166,13 @@ async def test_tool_fetch_page_disabled_and_turn_cap() -> None:
 
 async def test_tool_fetch_page_increments_only_on_success() -> None:
     ctx: dict = {"web_fetch_count": 0}
-    failed = {"error": "page fetch failed: HTTP 503", "text": "", "title": "", "truncated": False, "url": "https://example.com"}
+    failed = {
+        "error": "page fetch failed: HTTP 503",
+        "text": "",
+        "title": "",
+        "truncated": False,
+        "url": "https://example.com",
+    }
     with patch("server.web_search.page_fetch.fetch_public_page", AsyncMock(return_value=failed)):
         await tool_fetch_page("https://example.com", enabled=True, context=ctx)
     assert ctx["web_fetch_count"] == 0

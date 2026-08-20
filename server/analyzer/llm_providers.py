@@ -265,9 +265,7 @@ def extract_gemini_text(data: dict[str, Any]) -> str:
     parts = content.get("parts") if isinstance(content, dict) else None
     texts: list[str] = []
     if isinstance(parts, list):
-        for part in parts:
-            if isinstance(part, dict) and isinstance(part.get("text"), str):
-                texts.append(part["text"])
+        texts.extend(part["text"] for part in parts if isinstance(part, dict) and isinstance(part.get("text"), str))
     text = "".join(texts)
     if not text.strip():
         reason = finish_reason or "empty"

@@ -118,7 +118,7 @@ export function useSourceFilterDialogState({
   const treeRows = useMemo(
     () =>
       buildFilterTreeRows(displayWorksets, memberTasks),
-    [displayWorksets, memberTasks, t],
+    [displayWorksets, memberTasks],
   );
 
   const unnamedLabel = t("board:common.unnamedTask");
