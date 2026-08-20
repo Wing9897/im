@@ -53,7 +53,7 @@ Scheduler／stamp-37 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler)
 
 ## Sources
 
-Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`; retired `/channels/with-sources` → 404). Still active: `GET /api/v1/calendar/occurrences`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
+Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`; retired `/channels/with-sources` → 404). Calendar time-window SoT: `GET /api/v1/calendar/window` (display + notify); `GET /api/v1/calendar/occurrences` remains for MCP／assistant／tests. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
 
 **FE board kit:** shared list/card/layout hooks live under `web/src/pages/sources/board/` (`SourceCard*`, `SourceTabLayout`, `useSourceListTab*`, …). Platform folders (`rss/`／`telegram/`／…) stay in place — not a whole-tree Sources rewrite.
 

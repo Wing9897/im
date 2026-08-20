@@ -14,7 +14,6 @@ import { resetBoardPrefsCacheForTests } from "./boardPrefsStore";
 
 vi.mock("../api/results", () => ({
   fetchEvents: vi.fn(async () => ({ items: [], totalCount: 0, hasMore: false })),
-  fetchCalendarOccurrences: vi.fn(async () => []),
   fetchTrendingTopics: vi.fn(async () => []),
   fetchTaskAnalysisStats: vi.fn(async () => []),
   fetchQueueStatus: vi.fn(async () => ({

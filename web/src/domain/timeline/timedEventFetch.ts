@@ -20,9 +20,9 @@ export type UserEventLabelOpts = {
 /**
  * Shared planner+merge core for Timeline and Board timed-event surfaces.
  *
- * Calendar display (timeline month/gantt, board calendar/gantt/events list,
- * board items remind summary) uses ``GET /api/v1/calendar/window``.
- * Intelligence pages and the board map keep ``/results/events``.
+ * Calendar time-window reads (timeline, board, notify scan) use
+ * ``GET /api/v1/calendar/window``. Intelligence pages and the board map keep
+ * ``/results/events``.
  */
 export type FetchMergedTimedEventsOpts = {
   startIso?: string;

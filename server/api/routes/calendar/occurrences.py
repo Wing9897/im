@@ -1,8 +1,8 @@
-"""Unified calendar occurrence expansion (shared by Timeline / Board / Gantt).
+"""RRULE + item DATE expansion for MCP / assistant / tests.
 
-Returns RRULE expansions plus optional trackable-item DATE projections
-(``source=item_remind``) from the same ``item_projection`` path used by agent
-``query_window`` — one server projection, no FE dual-track.
+SPA time-window reads (timeline, board, notify scan) use ``GET /calendar/window``.
+This route stays for internal expand and contract tests; the window query
+reuses the same RRULE / ``item_projection`` helpers.
 
 Wire shape is ``CalendarOccurrenceResponse`` (Pydantic defaults fill optional
 fields). Expansion / item_projection rows are coerced directly — no private

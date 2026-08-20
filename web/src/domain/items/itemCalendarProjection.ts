@@ -2,9 +2,8 @@
  * Trackable-item display helpers for calendar rows and Items / workset UI.
  *
  * Occurrence projection lives on the server (`item_projection` →
- * `GET /calendar/window` for display; `GET /calendar/occurrences` still used
- * by notify).
- * and emits remind floating all-day markers when remind_before_days is set.
+ * `GET /calendar/window` for display and notify scan) and emits remind
+ * floating all-day markers when remind_before_days is set.
  * expiresAt is derived on read from linked ``kind=expires`` calendars
  * (see ``server/queries/items_queries.py``) for list badges / filters / agent windows.
  * This module formats titles (i18n) and calendar kind glyphs (tiny emoji

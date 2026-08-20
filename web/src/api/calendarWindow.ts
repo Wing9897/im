@@ -1,6 +1,8 @@
 /**
- * Timeline / board calendar SoT: one GET merges analysis, user, recurring, items.
- * Intelligence pages and the board map keep ``GET /results/events``.
+ * Official time-window calendar read (display + notify scan): one GET merges
+ * analysis, user, recurring, and item_remind. Intelligence pages and the board
+ * map keep ``GET /results/events``. User-events / recurring CRUD stay on their
+ * own routes for 我的日程 editors.
  */
 
 import { apiClient } from "./client";

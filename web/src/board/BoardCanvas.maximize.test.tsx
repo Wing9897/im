@@ -8,7 +8,6 @@ import type { BoardConfig } from "./types";
 
 vi.mock("../api/results", () => ({
   fetchEvents: vi.fn(async () => ({ items: [], totalCount: 0, hasMore: false })),
-  fetchCalendarOccurrences: vi.fn(async () => []),
   fetchQueueStatus: vi.fn(async () => ({
     pendingCount: 0,
     processingBatches: [],

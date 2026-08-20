@@ -89,7 +89,6 @@ vi.mock("../../api/results", () => ({
     totalCount: 1,
     hasMore: false,
   })),
-  fetchCalendarOccurrences: vi.fn(async () => []),
   fetchQueueStatus: vi.fn(async () => ({
     pendingCount: 0,
     processingBatches: [],

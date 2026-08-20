@@ -1,15 +1,41 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CalendarWindowItem } from "../../../api/calendarWindow";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { mockShowToast, resetTaskCatalogState, taskCatalogState } from "../../../test/context-mocks";
 import { loadRecentInbox, resetRecentInboxForTests } from "../recentInbox";
 
+function windowRow(
+  overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">,
+): CalendarWindowItem {
+  return {
+    startTime: "2026-07-20T10:00:00.000Z",
+    endTime: null,
+    location: null,
+    isAllDay: false,
+    timezone: null,
+    emoji: null,
+    taskId: null,
+    seriesId: null,
+    worksetId: SYSTEM_WORKSET_ID,
+    itemId: null,
+    origin: null,
+    itemDateKind: null,
+    notifyPref: "inherit",
+    dismissed: false,
+    important: false,
+    taskName: null,
+    isLastOccurrence: false,
+    remindBeforeDays: null,
+    body: "",
+    ...overrides,
+  };
+}
+
 const {
   mockAnnounce,
-  mockFetchTimelineEvents,
-  mockFetchCalendarOccurrences,
-  mockListUserEvents,
+  mockFetchCalendarWindow,
   mockListRecurringSeries,
   mockLoadSettings,
   mockAppendTrigger,
@@ -18,9 +44,7 @@ const {
   mockShowFlash,
 } = vi.hoisted(() => ({
   mockAnnounce: vi.fn().mockResolvedValue(undefined),
-  mockFetchTimelineEvents: vi.fn(),
-  mockFetchCalendarOccurrences: vi.fn(),
-  mockListUserEvents: vi.fn(),
+  mockFetchCalendarWindow: vi.fn(),
   mockListRecurringSeries: vi.fn(),
   mockLoadSettings: vi.fn(),
   mockAppendTrigger: vi.fn().mockResolvedValue({ entry: {}, persisted: true }),
@@ -29,18 +53,8 @@ const {
   mockShowFlash: vi.fn(),
 }));
 
-vi.mock("../../../api/results", () => ({
-  fetchTimelineEvents: (...args: unknown[]) => mockFetchTimelineEvents(...args),
-  fetchCalendarOccurrences: (...args: unknown[]) =>
-    mockFetchCalendarOccurrences(...args),
-}));
-
-vi.mock("../../../api/userEvents", () => ({
-  listUserEventsPage: (...args: unknown[]) =>
-    Promise.resolve(mockListUserEvents(...args)).then((items) => ({
-      items: items ?? [],
-      nextCursor: null,
-    })),
+vi.mock("../../../api/calendarWindow", () => ({
+  fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../../api/recurringSeries", () => ({
@@ -153,25 +167,20 @@ describe("useNotifyScanner notify resolve", () => {
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
-    mockFetchTimelineEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "page-1",
+        source: "analysis",
         taskId: "task-1",
         taskName: "Tracked task",
         title: "First paged event",
-        startTime: "2026-07-20T10:00:00.000Z",
-      },
-    ]);
-    mockListUserEvents.mockResolvedValue([
-      {
+      }),
+      windowRow({
         id: "manual-1",
+        source: "user",
         title: "Manual event included",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
-    mockFetchCalendarOccurrences.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -191,14 +200,14 @@ describe("useNotifyScanner notify resolve", () => {
       await flushScan();
     });
 
-    expect(mockFetchTimelineEvents).toHaveBeenCalledWith({
-      startDate: "2026-07-20T08:59:00.000Z",
-      endDate: "2026-07-20T10:05:00.000Z",
+    expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
+      start: "2026-07-20T08:59:00.000Z",
+      end: "2026-07-20T10:05:00.000Z",
+      includeAnalysis: true,
+      includeUser: true,
+      includeRecurring: true,
+      includeItems: true,
     });
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
-      "2026-07-20T08:59:00.000Z",
-      "2026-07-20T10:05:00.000Z",
-    );
     expect(mockAnnounce).toHaveBeenCalledTimes(2);
     expect(mockShowFlash).toHaveBeenCalled();
     expect(mockShowToast).not.toHaveBeenCalled();
@@ -225,9 +234,7 @@ describe("useNotifyScanner notify resolve", () => {
       await Promise.resolve();
     });
 
-    expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
-    expect(mockListUserEvents).not.toHaveBeenCalled();
-    expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).not.toHaveBeenCalled();
   });
 
   it("mutes a workset follow-default", async () => {
@@ -241,15 +248,12 @@ describe("useNotifyScanner notify resolve", () => {
         updatedAt: null,
       },
     ];
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "muted-1",
+        source: "user",
         title: "Follow muted workset",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -264,8 +268,7 @@ describe("useNotifyScanner notify resolve", () => {
   it("skips scanning until workset and task catalogs have loaded", async () => {
     taskCatalogState.worksetsLoading = true;
     taskCatalogState.tasksLoading = true;
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([]);
+    mockFetchCalendarWindow.mockResolvedValue([]);
 
     await act(async () => {
       root = createRoot(container);
@@ -273,23 +276,18 @@ describe("useNotifyScanner notify resolve", () => {
       await flushScan();
     });
 
-    expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).not.toHaveBeenCalled();
     expect(mockAnnounce).not.toHaveBeenCalled();
   });
 
   it("includes item_remind calendar rows when includeItems is open", async () => {
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([]);
-    mockFetchCalendarOccurrences.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "item:i1:remind",
-        seriesId: "",
-        title: "Passport remind",
-        startTime: "2026-07-20T10:00:00.000Z",
         source: "item_remind",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+        title: "Passport remind",
+        itemDateKind: "remind",
+      }),
     ]);
 
     await act(async () => {
@@ -303,18 +301,14 @@ describe("useNotifyScanner notify resolve", () => {
   });
 
   it("mutes item_remind rows that inherit force-off from the linked calendar", async () => {
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([]);
-    mockFetchCalendarOccurrences.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "item:i2:remind",
-        seriesId: "",
-        title: "Muted passport remind",
-        startTime: "2026-07-20T10:00:00.000Z",
         source: "item_remind",
-        worksetId: SYSTEM_WORKSET_ID,
+        title: "Muted passport remind",
+        itemDateKind: "remind",
         notifyPref: "off",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -335,15 +329,12 @@ describe("useNotifyScanner notify resolve", () => {
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "voice-only",
+        source: "user",
         title: "Voice only",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -366,15 +357,12 @@ describe("useNotifyScanner notify resolve", () => {
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "flash-only",
+        source: "user",
         title: "Flash only",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -400,15 +388,12 @@ describe("useNotifyScanner notify resolve", () => {
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "flash-persist",
+        source: "user",
         title: "Persistent flash",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -430,15 +415,12 @@ describe("useNotifyScanner notify resolve", () => {
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
-    mockFetchTimelineEvents.mockResolvedValue([]);
-    mockListUserEvents.mockResolvedValue([
-      {
+    mockFetchCalendarWindow.mockResolvedValue([
+      windowRow({
         id: "inbox-only",
+        source: "user",
         title: "Inbox only",
-        startTime: "2026-07-20T10:00:00.000Z",
-        worksetId: SYSTEM_WORKSET_ID,
-        notifyPref: "inherit",
-      },
+      }),
     ]);
 
     await act(async () => {
@@ -468,7 +450,7 @@ describe("useNotifyScanner notify resolve", () => {
       await flushScan();
     });
 
-    expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
+    expect(mockFetchCalendarWindow).not.toHaveBeenCalled();
     expect(mockAnnounce).not.toHaveBeenCalled();
     expect(mockShowFlash).not.toHaveBeenCalled();
     expect(loadRecentInbox()).toEqual([]);
