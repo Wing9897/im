@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
 import aiohttp
 
+from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
 from server.outbound import OutboundUrlError, validate_outbound_url
 
 logger = logging.getLogger(__name__)
@@ -363,6 +364,8 @@ _KEYED_SEARCHERS = {
     "perplexity": search_perplexity,
     "serper": search_serper,
 }
+if frozenset(_KEYED_SEARCHERS) != frozenset(KEYED_WEB_SEARCH_PROVIDERS):
+    raise RuntimeError("keyed searchers drifted from KEYED_WEB_SEARCH_PROVIDERS")
 
 
 async def search_web(

@@ -25,7 +25,7 @@ describe("LlmProfileEditorDialog", () => {
     await harness.render(LlmProfileEditorDialog, {
       open: true,
       mode: "create",
-      initial: emptyProfileDraft(true),
+      initial: emptyProfileDraft(),
       saving: false,
       onClose: vi.fn(),
       onSave: vi.fn(),

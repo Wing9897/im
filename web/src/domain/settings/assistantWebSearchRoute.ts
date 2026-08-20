@@ -26,6 +26,39 @@ export const KEYED_WEB_SEARCH_TOOL_PROVIDERS = [
 
 export type KeyedWebSearchToolProvider = (typeof KEYED_WEB_SEARCH_TOOL_PROVIDERS)[number];
 
+/** Wire field on ``LlmProfile`` / draft: ``brave`` → ``braveSearchApiKey``. */
+export type KeyedWebSearchApiKeyField = `${KeyedWebSearchToolProvider}SearchApiKey`;
+
+export function keyedWebSearchApiKeyField(
+  provider: KeyedWebSearchToolProvider,
+): KeyedWebSearchApiKeyField {
+  return `${provider}SearchApiKey`;
+}
+
+export function emptyKeyedWebSearchApiKeys(): Record<KeyedWebSearchToolProvider, string> {
+  return Object.fromEntries(KEYED_WEB_SEARCH_TOOL_PROVIDERS.map((provider) => [provider, ""])) as Record<
+    KeyedWebSearchToolProvider,
+    string
+  >;
+}
+
+export function emptyKeyedWebSearchApiKeyFields(): Record<KeyedWebSearchApiKeyField, string> {
+  return Object.fromEntries(
+    KEYED_WEB_SEARCH_TOOL_PROVIDERS.map((provider) => [keyedWebSearchApiKeyField(provider), ""]),
+  ) as Record<KeyedWebSearchApiKeyField, string>;
+}
+
+export function keyedWebSearchApiKeysFromFields(
+  fields: Record<KeyedWebSearchApiKeyField, string>,
+): Record<KeyedWebSearchToolProvider, string> {
+  return Object.fromEntries(
+    KEYED_WEB_SEARCH_TOOL_PROVIDERS.map((provider) => [
+      provider,
+      fields[keyedWebSearchApiKeyField(provider)] ?? "",
+    ]),
+  ) as Record<KeyedWebSearchToolProvider, string>;
+}
+
 export type AssistantWebSearchStatusKind =
   | "disabled"
   | "openai_native"

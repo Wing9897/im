@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  emptyKeyedWebSearchApiKeyFields,
+  emptyKeyedWebSearchApiKeys,
   isOfficialGeminiBase,
   isOfficialOpenaiBase,
+  keyedWebSearchApiKeyField,
+  keyedWebSearchApiKeysFromFields,
   llmHasNativeWebSearch,
   normalizeWebSearchProviderSetting,
   resolveAssistantWebSearchStatus,
@@ -213,5 +217,19 @@ describe("assistantWebSearchRoute", () => {
       enabled: true,
       provider: "serper",
     });
+  });
+
+  it("maps keyed vendors onto wire api-key fields", () => {
+    expect(keyedWebSearchApiKeyField("brave")).toBe("braveSearchApiKey");
+    expect(keyedWebSearchApiKeyField("serper")).toBe("serperSearchApiKey");
+    expect(emptyKeyedWebSearchApiKeyFields()).toEqual({
+      braveSearchApiKey: "",
+      tavilySearchApiKey: "",
+      perplexitySearchApiKey: "",
+      serperSearchApiKey: "",
+    });
+    expect(keyedWebSearchApiKeysFromFields(emptyKeyedWebSearchApiKeyFields())).toEqual(
+      emptyKeyedWebSearchApiKeys(),
+    );
   });
 });

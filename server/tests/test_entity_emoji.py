@@ -1,4 +1,4 @@
-"""Entity emoji columns (stamp 43) — tasks / user_events / recurring."""
+"""Entity emoji columns — tasks / user_events / recurring."""
 
 from __future__ import annotations
 

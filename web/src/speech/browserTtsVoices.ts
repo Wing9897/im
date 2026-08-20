@@ -48,6 +48,13 @@ export function formatBrowserTtsVoiceLabel(
   return `${voice.name} · ${voice.lang} · ${kind}`;
 }
 
+/** In-menu search once Chromium returns enough voices to make a flat list hard to scan. */
+export const TTS_VOICE_PICKER_SEARCH_MIN = 8;
+
+/**
+ * Map every `speechSynthesis.getVoices()` entry for the picker.
+ * Matching `speechLanguage` is sorted first; nothing is locale-filtered or capped.
+ */
 export function toBrowserTtsVoiceOptions(
   voices: readonly SpeechSynthesisVoice[],
   speechLanguage: string,
@@ -66,6 +73,8 @@ export function toBrowserTtsVoiceOptions(
     const aMatch = speechLangMatchesVoice(lang, a.lang) ? 0 : 1;
     const bMatch = speechLangMatchesVoice(lang, b.lang) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
+    const langCmp = a.lang.localeCompare(b.lang, undefined, { sensitivity: "base" });
+    if (langCmp !== 0) return langCmp;
     if (a.localService !== b.localService) return a.localService ? -1 : 1;
     return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
   });

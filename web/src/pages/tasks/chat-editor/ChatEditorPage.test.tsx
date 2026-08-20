@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { emptyKeyedWebSearchApiKeyFields } from "../../../domain/settings/assistantWebSearchRoute";
 
 const { listTaskTemplatePresetsMock, mockUseChatEditor } = vi.hoisted(() => ({
   listTaskTemplatePresetsMock: vi.fn(),
@@ -35,11 +36,8 @@ vi.mock("../../../api/llmProfiles", () => ({
       jsonMode: "disabled",
       webSearchEnabled: true,
       webSearchProvider: "auto",
-      braveSearchApiKey: "",
-      tavilySearchApiKey: "",
-      perplexitySearchApiKey: "",
-      serperSearchApiKey: "",
-        staffClasses: [],
+      ...emptyKeyedWebSearchApiKeyFields(),
+      staffClasses: [],
       staffInstances: [],
       createdAt: null,
       updatedAt: null,

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskEditorState";
 import { ChatEditorForm } from "./ChatEditorForm";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
+import { emptyKeyedWebSearchApiKeyFields } from "../../../domain/settings/assistantWebSearchRoute";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock());
@@ -27,11 +28,8 @@ vi.mock("../../../api/llmProfiles", () => ({
       jsonMode: "disabled",
       webSearchEnabled: true,
       webSearchProvider: "auto",
-      braveSearchApiKey: "",
-      tavilySearchApiKey: "",
-      perplexitySearchApiKey: "",
-      serperSearchApiKey: "",
-        staffClasses: [],
+      ...emptyKeyedWebSearchApiKeyFields(),
+      staffClasses: [],
       staffInstances: [],
       createdAt: null,
       updatedAt: null,

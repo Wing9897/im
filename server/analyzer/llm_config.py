@@ -88,10 +88,7 @@ def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
         "json_mode": str(row.get("json_mode") or "disabled"),
         "web_search_enabled": bool(int(row.get("web_search_enabled") or 0)),
         "web_search_provider": str(row.get("web_search_provider") or "auto"),
-        "brave_search_api_key": search_keys["brave_search_api_key"],
-        "tavily_search_api_key": search_keys["tavily_search_api_key"],
-        "perplexity_search_api_key": search_keys["perplexity_search_api_key"],
-        "serper_search_api_key": search_keys["serper_search_api_key"],
+        **search_keys,
         "profile_id": str(row["id"]),
     }
 

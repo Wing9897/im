@@ -1,5 +1,5 @@
-import type { CSSProperties, KeyboardEvent, RefObject } from "react";
-import { useId, useMemo } from "react";
+import type { CSSProperties, KeyboardEvent, ReactElement, RefObject } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
@@ -10,6 +10,10 @@ export type MenuSelectOption = {
   label: string;
   /** Shown in the list but not selectable. */
   disabled?: boolean;
+  /** Consecutive options with the same group render a section header. */
+  group?: string;
+  /** Tooltip / title; defaults to `label` (full text when the row ellipsizes). */
+  title?: string;
 };
 
 type MenuSelectVariant = "default" | "field" | "toolbar";
@@ -35,6 +39,10 @@ type MenuSelectProps = {
    * silently falling back to ``options[0]`` (avoids fake “selected” chrome).
    */
   placeholder?: string;
+  /** Filter options by label/group when the menu is open. */
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  searchEmptyLabel?: string;
   "aria-label"?: string;
   "aria-required"?: boolean;
   "data-testid"?: string;
@@ -115,21 +123,32 @@ const labelStyle: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
+/** Opaque elevated panel so options stay `--text-primary` on a readable surface. */
+const listSurfaceStyle: CSSProperties = {
+  background: "var(--surface-raised, var(--surface-card))",
+  color: "var(--text-primary)",
+};
+
+const listBoxChromeStyle: CSSProperties = {
+  margin: 0,
+  padding: 4,
+  listStyle: "none",
+  maxHeight: 280,
+  overflowY: "auto",
+  boxSizing: "border-box",
+  ...listSurfaceStyle,
+};
+
 const listStyle: CSSProperties = {
   position: "absolute",
   left: 0,
   right: 0,
   top: "calc(100% + 4px)",
   zIndex: 30,
-  margin: 0,
-  padding: 4,
-  listStyle: "none",
   width: "100%",
   minWidth: 280,
   maxWidth: "100%",
-  maxHeight: 280,
-  overflowY: "auto",
-  boxSizing: "border-box",
+  ...listBoxChromeStyle,
 };
 
 const optionStyle: CSSProperties = {
@@ -147,11 +166,9 @@ const optionStyle: CSSProperties = {
  * Custom button + listbox select for **toolbar / chrome / ops bars**, and for dense
  * form rows that are a plain options list (prefer `variant="field"`).
  *
- * Prefer {@link SelectField} only when native `<select>` is required (optgroup,
- * disabled options, form-submit quirks). Use `menuPortal` to escape overflow
- * clipping. Shared placement lives in `useAnchoredMenu`.
- *
- * Progressive: do not big-bang rewrite SelectField forms that still need native semantics.
+ * Disabled options, group headers, and in-menu search are supported here.
+ * Prefer {@link SelectField} only when native `<select>` form-submit quirks are required.
+ * Use `menuPortal` to escape overflow clipping. Shared placement lives in `useAnchoredMenu`.
  */
 export function MenuSelect({
   id,
@@ -163,6 +180,9 @@ export function MenuSelect({
   variant = "default",
   menuPortal = false,
   placeholder,
+  searchable = false,
+  searchPlaceholder,
+  searchEmptyLabel,
   disabled = false,
   "aria-label": ariaLabel,
   "aria-required": ariaRequired,
@@ -173,14 +193,28 @@ export function MenuSelect({
   const usesFormChrome = isField || isToolbar;
   const autoId = useId();
   const listId = `${id ?? autoId}-list`;
+  const [query, setQuery] = useState("");
   const { open, setOpen, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
     enabled: !disabled,
     align: "start",
     gap: 4,
     edge: 8,
-    contentKey: options.length,
+    contentKey: searchable ? `${options.length}:${query}` : options.length,
     dismissPointerEvent: "mousedown",
   });
+
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
+  const filteredOptions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((opt) => {
+      if (opt.label.toLowerCase().includes(q)) return true;
+      return Boolean(opt.group?.toLowerCase().includes(q));
+    });
+  }, [options, query]);
 
   const selected = useMemo(() => {
     const match = options.find((opt) => opt.value === value);
@@ -226,13 +260,8 @@ export function MenuSelect({
         width: menuPos?.width ?? undefined,
         minWidth: menuPos?.width ?? undefined,
         zIndex: 3000,
-        margin: 0,
-        padding: 4,
-        listStyle: "none",
-        maxHeight: 280,
-        overflowY: "auto",
-        boxSizing: "border-box",
         visibility: menuPos ? "visible" : "hidden",
+        ...listBoxChromeStyle,
       }
     : usesFormChrome
       ? {
@@ -241,15 +270,10 @@ export function MenuSelect({
           right: 0,
           top: "calc(100% + 4px)",
           zIndex: 30,
-          margin: 0,
-          padding: 4,
-          listStyle: "none",
           width: "100%",
           minWidth: isToolbar ? "max-content" : 0,
           maxWidth: isToolbar ? "none" : "100%",
-          maxHeight: 280,
-          overflowY: "auto",
-          boxSizing: "border-box",
+          ...listBoxChromeStyle,
         }
       : listStyle;
 
@@ -265,35 +289,76 @@ export function MenuSelect({
       style={listBoxStyle}
       data-testid={testId ? `${testId}-list` : undefined}
     >
-      {options.map((opt) => {
-        const isActive = opt.value === selected.value && Boolean(value);
-        const optionDisabled = Boolean(opt.disabled);
-        return (
-          <li key={opt.value} role="presentation">
-            <button
-              type="button"
-              role="option"
-              aria-selected={isActive}
-              aria-disabled={optionDisabled || undefined}
-              disabled={optionDisabled}
-              title={opt.label}
-              data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
-              className={[
-                "rounded-sm border-none px-sm py-1.5 text-caption leading-snug",
-                optionDisabled
-                  ? "cursor-not-allowed bg-transparent text-text-muted opacity-70"
-                  : isActive
-                    ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-medium text-accent"
-                    : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]",
-              ].join(" ")}
-              style={optionStyle}
-              onClick={() => closeAndSelect(opt.value, optionDisabled)}
-            >
-              {opt.label}
-            </button>
-          </li>
-        );
-      })}
+      {searchable ? (
+        <li
+          role="presentation"
+          className="sticky top-0 z-[1] mb-0.5"
+          style={listSurfaceStyle}
+        >
+          <input
+            type="search"
+            value={query}
+            autoComplete="off"
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+            data-testid={testId ? `${testId}-search` : undefined}
+            className={`${controlBaseClass} ${controlSizeClass.sm}`}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => event.stopPropagation()}
+          />
+        </li>
+      ) : null}
+      {filteredOptions.length === 0 ? (
+        <li role="presentation">
+          <div className="px-sm py-1.5 text-caption text-text-muted">
+            {searchEmptyLabel || "—"}
+          </div>
+        </li>
+      ) : (
+        filteredOptions.flatMap((opt, index) => {
+          const isActive = opt.value === selected.value && Boolean(value);
+          const optionDisabled = Boolean(opt.disabled);
+          const prev = filteredOptions[index - 1];
+          const showGroup = Boolean(opt.group) && opt.group !== prev?.group;
+          const optionTitle = opt.title?.trim() || opt.label;
+          const nodes: ReactElement[] = [];
+          if (showGroup && opt.group) {
+            nodes.push(
+              <li key={`group:${opt.group}:${index}`} role="presentation">
+                <div className="px-sm pb-0.5 pt-1.5 text-[11px] font-medium text-text-muted">
+                  {opt.group}
+                </div>
+              </li>,
+            );
+          }
+          nodes.push(
+            <li key={opt.value || `__empty-${index}`} role="presentation">
+              <button
+                type="button"
+                role="option"
+                aria-selected={isActive}
+                aria-disabled={optionDisabled || undefined}
+                disabled={optionDisabled}
+                title={optionTitle}
+                data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
+                className={[
+                  "rounded-sm border-none px-sm py-1.5 text-caption leading-snug",
+                  optionDisabled
+                    ? "cursor-not-allowed bg-transparent text-text-muted opacity-70"
+                    : isActive
+                      ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-medium text-text-primary"
+                      : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_10%,var(--surface-card))]",
+                ].join(" ")}
+                style={optionStyle}
+                onClick={() => closeAndSelect(opt.value, optionDisabled)}
+              >
+                {opt.label}
+              </button>
+            </li>,
+          );
+          return nodes;
+        })
+      )}
     </ul>
   ) : null;
 

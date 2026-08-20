@@ -15,10 +15,8 @@ from typing import Any, Protocol
 from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
 from server.web_search.providers import DEFAULT_COUNT, search_web
 
-#: Assistant ``web.search`` tool default (also ``providers.DEFAULT_COUNT``).
+#: Assistant ``web.search`` tool default (alias of ``providers.DEFAULT_COUNT``).
 ASSISTANT_TOOL_DEFAULT_COUNT = DEFAULT_COUNT
-
-assert ASSISTANT_TOOL_DEFAULT_COUNT == DEFAULT_COUNT
 
 
 class SupportsLlmComplete(Protocol):
