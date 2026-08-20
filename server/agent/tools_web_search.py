@@ -6,6 +6,10 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from server.db.database import Database
+from server.domain.web_search_providers import (
+    KEYED_WEB_SEARCH_PROVIDER_LIST_TEXT,
+    WEB_SEARCH_PROVIDER_DUCKDUCKGO,
+)
 from server.web_search.execution import ASSISTANT_TOOL_DEFAULT_COUNT, WebSearchExecutionService, api_keys_from_mapping
 from server.web_search.page_fetch import MAX_CHARS, MAX_FETCHES_PER_TURN, tool_fetch_page
 from server.web_search.providers import MAX_COUNT
@@ -68,7 +72,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Use only when local messages/calendar are insufficient, the user asks to verify "
             "online, or the question needs current external facts. Cite that results are from "
             "the network, not local intelligence. Default count 5, max 8. "
-            "Provider is chosen in settings (duckduckgo default; brave / tavily / perplexity / serper need an API key)."
+            "Provider is chosen in settings "
+            f"({WEB_SEARCH_PROVIDER_DUCKDUCKGO} default; {KEYED_WEB_SEARCH_PROVIDER_LIST_TEXT} need an API key)."
         ),
         "parameters": {
             "type": "object",

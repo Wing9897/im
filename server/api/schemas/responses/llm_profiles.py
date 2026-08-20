@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from server.api.schemas.web_search_fields import web_search_secret_field_definitions
 from server.domain.json_modes import JsonModeWire
 from server.domain.llm_providers import LlmProviderWire
+from server.domain.llm_staff_classes import LlmStaffClass
 from server.domain.web_search_providers import WebSearchProviderWire
 from server.llm_global_slots import LlmGlobalSlotId
 
-StaffClassWire = Literal["leaderboard", "intel_event", "agent"]
+StaffClassWire = LlmStaffClass
 
 
 class LlmStaffInstanceResponse(BaseModel):
@@ -29,7 +29,7 @@ class LlmStaffInstanceResponse(BaseModel):
     profileModel: str | None = None
 
 
-class LlmProfileResponse(BaseModel):
+class _LlmProfileResponseCore(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
@@ -42,14 +42,18 @@ class LlmProfileResponse(BaseModel):
     jsonMode: JsonModeWire | str = "disabled"
     webSearchEnabled: bool = True
     webSearchProvider: WebSearchProviderWire | str = "auto"
-    braveSearchApiKey: str = ""
-    tavilySearchApiKey: str = ""
-    perplexitySearchApiKey: str = ""
-    serperSearchApiKey: str = ""
-    staffClasses: list[str] = Field(default_factory=list)
-    staffInstances: list[LlmStaffInstanceResponse] = Field(default_factory=list)
-    createdAt: str | None = None
-    updatedAt: str | None = None
+
+
+LlmProfileResponse = create_model(
+    "LlmProfileResponse",
+    __base__=_LlmProfileResponseCore,
+    __module__=__name__,
+    **web_search_secret_field_definitions(optional=False),
+    staffClasses=(list[str], Field(default_factory=list)),
+    staffInstances=(list[LlmStaffInstanceResponse], Field(default_factory=list)),
+    createdAt=(str | None, None),
+    updatedAt=(str | None, None),
+)
 
 
 class LlmProfileDeleteResponse(BaseModel):

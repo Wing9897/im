@@ -1,20 +1,26 @@
 import type { LlmProvider } from "../../types";
 
-export type WebSearchProviderSetting = "auto" | "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper";
-
-/** UI search method — orthogonal to the tool vendor. */
-export type WebSearchUiMode = "off" | "native" | "tool";
-
-/** Vendor for the ``web.search`` tool path only (never ``auto``). */
-export type WebSearchToolProvider = "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper";
-
-export const WEB_SEARCH_TOOL_PROVIDERS: readonly WebSearchToolProvider[] = [
+export const ALL_WEB_SEARCH_PROVIDERS = [
+  "auto",
   "duckduckgo",
   "brave",
   "tavily",
   "perplexity",
   "serper",
 ] as const;
+
+export type WebSearchProviderSetting = (typeof ALL_WEB_SEARCH_PROVIDERS)[number];
+
+/** UI search method — orthogonal to the tool vendor. */
+export type WebSearchUiMode = "off" | "native" | "tool";
+
+/** Vendor for the ``web.search`` tool path only (never ``auto``). */
+export type WebSearchToolProvider = Exclude<WebSearchProviderSetting, "auto">;
+
+export const WEB_SEARCH_TOOL_PROVIDERS: readonly WebSearchToolProvider[] =
+  ALL_WEB_SEARCH_PROVIDERS.filter(
+    (value): value is WebSearchToolProvider => value !== "auto",
+  );
 
 /** Tool vendors that require a stored API key (fail closed when empty). */
 export const KEYED_WEB_SEARCH_TOOL_PROVIDERS = [
@@ -57,6 +63,28 @@ export function keyedWebSearchApiKeysFromFields(
       fields[keyedWebSearchApiKeyField(provider)] ?? "",
     ]),
   ) as Record<KeyedWebSearchToolProvider, string>;
+}
+
+export function webSearchProviderLabelKey(provider: WebSearchToolProvider): string {
+  return `webSearch.providers.${provider}`;
+}
+
+export function webSearchToolStatusKey(provider: WebSearchToolProvider): string {
+  return `webSearch.statusTool.${provider}`;
+}
+
+export function keyedWebSearchFieldMeta(provider: KeyedWebSearchToolProvider): {
+  id: string;
+  labelKey: string;
+  helpKey: string;
+  placeholderKey: string;
+} {
+  return {
+    id: `${provider}-search-api-key`,
+    labelKey: `webSearch.keys.${provider}.label`,
+    helpKey: `webSearch.keys.${provider}.help`,
+    placeholderKey: `webSearch.keys.${provider}.placeholder`,
+  };
 }
 
 export type AssistantWebSearchStatusKind =

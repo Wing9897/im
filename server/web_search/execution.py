@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol
 
-from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
+from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS, empty_web_search_api_keys
 from server.web_search.providers import DEFAULT_COUNT, search_web
 
 #: Assistant ``web.search`` tool default (alias of ``providers.DEFAULT_COUNT``).
@@ -31,10 +31,11 @@ class SupportsLlmComplete(Protocol):
 
 
 def api_keys_from_mapping(row: Mapping[str, Any]) -> dict[str, str]:
-    """Read ``{provider}_search_api_key`` columns / context keys."""
-    return {
-        provider: str(row.get(f"{provider}_search_api_key") or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
-    }
+    """Read nested ``web_search_api_keys`` (provider → plaintext key)."""
+    nested = row.get("web_search_api_keys")
+    if not isinstance(nested, Mapping):
+        return empty_web_search_api_keys()
+    return {provider: str(nested.get(provider) or "") for provider in KEYED_WEB_SEARCH_PROVIDERS}
 
 
 class WebSearchExecutionService:

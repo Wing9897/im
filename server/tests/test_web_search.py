@@ -438,7 +438,7 @@ async def test_execute_web_search_uses_provider(app) -> None:
             context={
                 "web_search_enabled": True,
                 "web_search_provider": "duckduckgo",
-                "brave_search_api_key": "",
+                "web_search_api_keys": {},
             },
         )
     assert result["count"] == 1

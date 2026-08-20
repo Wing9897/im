@@ -113,16 +113,15 @@ class AgentRuntime:
         override = getattr(self.llm, "profile_id", None)
         profile_id = override.strip() if isinstance(override, str) and override.strip() else None
         llm_cfg = await load_agent_llm_config(self.db, profile_id=profile_id)
-        search_keys = {
-            f"{provider}_search_api_key": str(llm_cfg.get(f"{provider}_search_api_key") or "")
-            for provider in KEYED_WEB_SEARCH_PROVIDERS
-        }
+        stored_keys = llm_cfg.get("web_search_api_keys") or {}
         return {
             "web_search_enabled": route.enabled and route.inject_web_search_tool,
             "web_search_provider": route.tool_provider,
             "web_search_mode": route.mode,
             "native_web_search": route.native_web_search,
-            **search_keys,
+            "web_search_api_keys": {
+                provider: str(stored_keys.get(provider) or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
+            },
             "web_fetch_count": 0,
             "user_event_origin": user_event_origin,
             "default_workset_id": workset_id,

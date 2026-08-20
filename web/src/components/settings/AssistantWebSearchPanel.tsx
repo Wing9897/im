@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   isWebSearchToolProvider,
+  keyedWebSearchFieldMeta,
   llmHasNativeWebSearch,
   normalizeWebSearchProviderSetting,
   resolveAssistantWebSearchStatus,
@@ -9,9 +10,10 @@ import {
   settingsFromWebSearchUiMode,
   WEB_SEARCH_TOOL_PROVIDERS,
   isKeyedWebSearchToolProvider,
+  webSearchProviderLabelKey,
+  webSearchToolStatusKey,
   type KeyedWebSearchToolProvider,
   type WebSearchProviderSetting,
-  type WebSearchToolProvider,
   type WebSearchUiMode,
 } from "../../domain/settings/assistantWebSearchRoute";
 import type { LlmProvider } from "../../types";
@@ -38,52 +40,6 @@ function parseUiMode(value: string): WebSearchUiMode | null {
   }
   return null;
 }
-
-const PROVIDER_LABEL_KEYS: Record<WebSearchToolProvider, string> = {
-  duckduckgo: "webSearch.providerDuckDuckGo",
-  brave: "webSearch.providerBrave",
-  tavily: "webSearch.providerTavily",
-  perplexity: "webSearch.providerPerplexity",
-  serper: "webSearch.providerSerper",
-};
-
-const TOOL_STATUS_KEYS: Record<WebSearchToolProvider, string> = {
-  duckduckgo: "webSearch.statusToolDuckDuckGo",
-  brave: "webSearch.statusToolBrave",
-  tavily: "webSearch.statusToolTavily",
-  perplexity: "webSearch.statusToolPerplexity",
-  serper: "webSearch.statusToolSerper",
-};
-
-const KEYED_FIELD_META: Record<
-  KeyedWebSearchToolProvider,
-  { id: string; labelKey: string; helpKey: string; placeholderKey: string }
-> = {
-  brave: {
-    id: "brave-search-api-key",
-    labelKey: "webSearch.braveKeyLabel",
-    helpKey: "webSearch.braveKeyHelp",
-    placeholderKey: "webSearch.braveKeyPlaceholder",
-  },
-  tavily: {
-    id: "tavily-search-api-key",
-    labelKey: "webSearch.tavilyKeyLabel",
-    helpKey: "webSearch.tavilyKeyHelp",
-    placeholderKey: "webSearch.tavilyKeyPlaceholder",
-  },
-  perplexity: {
-    id: "perplexity-search-api-key",
-    labelKey: "webSearch.perplexityKeyLabel",
-    helpKey: "webSearch.perplexityKeyHelp",
-    placeholderKey: "webSearch.perplexityKeyPlaceholder",
-  },
-  serper: {
-    id: "serper-search-api-key",
-    labelKey: "webSearch.serperKeyLabel",
-    helpKey: "webSearch.serperKeyHelp",
-    placeholderKey: "webSearch.serperKeyPlaceholder",
-  },
-};
 
 export function AssistantWebSearchPanel({
   enabled,
@@ -125,7 +81,7 @@ export function AssistantWebSearchPanel({
         if (status.startsWith("tool_")) {
           const vendor = status.slice("tool_".length);
           if (isWebSearchToolProvider(vendor)) {
-            return t(TOOL_STATUS_KEYS[vendor]);
+            return t(webSearchToolStatusKey(vendor));
           }
         }
         return "";
@@ -138,7 +94,7 @@ export function AssistantWebSearchPanel({
   };
 
   const keyedProvider = uiMode === "tool" && isKeyedWebSearchToolProvider(toolProvider) ? toolProvider : null;
-  const keyedField = keyedProvider ? KEYED_FIELD_META[keyedProvider] : null;
+  const keyedField = keyedProvider ? keyedWebSearchFieldMeta(keyedProvider) : null;
 
   return (
     <FormStack gap="lg">
@@ -179,7 +135,7 @@ export function AssistantWebSearchPanel({
             value={toolProvider}
             options={WEB_SEARCH_TOOL_PROVIDERS.map((value) => ({
               value,
-              label: t(PROVIDER_LABEL_KEYS[value]),
+              label: t(webSearchProviderLabelKey(value)),
             }))}
             onChange={(value) => {
               const next = normalizeWebSearchProviderSetting(value);

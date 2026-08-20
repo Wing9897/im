@@ -189,33 +189,47 @@
     "modeNative": "模型内建",
     "modeTool": "工具（web.search）",
     "providerLabel": "搜索供应商",
-    "providerHelp": "仅工具路径需要供应商。Brave／Tavily／Perplexity／Serper 需 API key。摘要不够时，助手可另外读取少量页面正文（有长度上限）。",
-    "providerDuckDuckGo": "DuckDuckGo",
-    "providerBrave": "Brave Search",
-    "providerTavily": "Tavily",
-    "providerPerplexity": "Perplexity",
-    "providerSerper": "Serper",
+    "providerHelp": "仅工具路径需要供应商。需 API key 的供应商未填则搜索失败。摘要不够时，助手可另外读取少量页面正文（有长度上限）。",
+    "providers": {
+      "duckduckgo": "DuckDuckGo",
+      "brave": "Brave Search",
+      "tavily": "Tavily",
+      "perplexity": "Perplexity",
+      "serper": "Serper"
+    },
     "statusDisabled": "此设定档已关闭联网搜索。",
     "statusOpenaiNative": "将使用 OpenAI 原生搜索。",
     "statusGeminiNative": "将使用 Gemini Google Search。",
-    "statusToolDuckDuckGo": "将使用 DuckDuckGo 工具。",
-    "statusToolBrave": "将使用 Brave Search 工具（需 API key）。",
-    "statusToolTavily": "将使用 Tavily 工具（需 API key）。",
-    "statusToolPerplexity": "将使用 Perplexity 工具（需 API key）。",
-    "statusToolSerper": "将使用 Serper 工具（需 API key）。",
-    "statusAutoTool": "将使用 DuckDuckGo／Brave／Tavily／Perplexity／Serper 工具（当前 LLM 无原生搜索）。",
-    "braveKeyLabel": "Brave Search API Key",
-    "braveKeyHelp": "于 Brave 后台申请；未填则搜索失败。",
-    "braveKeyPlaceholder": "输入 Brave API key",
-    "tavilyKeyLabel": "Tavily API Key",
-    "tavilyKeyHelp": "于 Tavily 后台申请；未填则搜索失败。",
-    "tavilyKeyPlaceholder": "输入 Tavily API key",
-    "perplexityKeyLabel": "Perplexity API Key",
-    "perplexityKeyHelp": "于 Perplexity 后台申请；未填则搜索失败。",
-    "perplexityKeyPlaceholder": "输入 Perplexity API key",
-    "serperKeyLabel": "Serper API Key",
-    "serperKeyHelp": "于 Serper 后台申请；未填则搜索失败。",
-    "serperKeyPlaceholder": "输入 Serper API key",
+    "statusTool": {
+      "duckduckgo": "将使用 DuckDuckGo 工具。",
+      "brave": "将使用 Brave Search 工具（需 API key）。",
+      "tavily": "将使用 Tavily 工具（需 API key）。",
+      "perplexity": "将使用 Perplexity 工具（需 API key）。",
+      "serper": "将使用 Serper 工具（需 API key）。"
+    },
+    "statusAutoTool": "将使用工具搜索（当前 LLM 无原生搜索）。",
+    "keys": {
+      "brave": {
+        "label": "Brave Search API Key",
+        "help": "于 Brave 后台申请；未填则搜索失败。",
+        "placeholder": "输入 Brave API key"
+      },
+      "tavily": {
+        "label": "Tavily API Key",
+        "help": "于 Tavily 后台申请；未填则搜索失败。",
+        "placeholder": "输入 Tavily API key"
+      },
+      "perplexity": {
+        "label": "Perplexity API Key",
+        "help": "于 Perplexity 后台申请；未填则搜索失败。",
+        "placeholder": "输入 Perplexity API key"
+      },
+      "serper": {
+        "label": "Serper API Key",
+        "help": "于 Serper 后台申请；未填则搜索失败。",
+        "placeholder": "输入 Serper API key"
+      }
+    },
     "fetchHint": "工具模式下，助手可在搜索摘要不够时读取少量页面正文（每次最多 1–2 页，有长度上限）。"
   },
   "llm": {

@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from server.api.schemas.web_search_fields import web_search_secret_field_definitions
 from server.domain.json_modes import JsonModeWire
 from server.domain.llm_providers import LlmProviderWire
+from server.domain.llm_staff_classes import LlmStaffClass
 from server.domain.web_search_providers import WebSearchProviderWire
 
 #: Task-mode classes only on profile upsert (global slots are separate).
-StaffClassWire = Literal["leaderboard", "intel_event", "agent"]
+StaffClassWire = LlmStaffClass
 
 
-class LlmProfileUpsertBody(BaseModel):
+class _LlmProfileUpsertCore(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=1, max_length=120)
@@ -26,11 +26,15 @@ class LlmProfileUpsertBody(BaseModel):
     jsonMode: JsonModeWire = "disabled"
     webSearchEnabled: bool = True
     webSearchProvider: WebSearchProviderWire = "auto"
-    braveSearchApiKey: str | None = None
-    tavilySearchApiKey: str | None = None
-    perplexitySearchApiKey: str | None = None
-    serperSearchApiKey: str | None = None
-    staffClasses: list[StaffClassWire] = Field(default_factory=list)
+
+
+LlmProfileUpsertBody = create_model(
+    "LlmProfileUpsertBody",
+    __base__=_LlmProfileUpsertCore,
+    __module__=__name__,
+    **web_search_secret_field_definitions(optional=True),
+    staffClasses=(list[StaffClassWire], Field(default_factory=list)),
+)
 
 
 class LlmProfileCopyBody(BaseModel):

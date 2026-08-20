@@ -254,33 +254,47 @@
     "modeNative": "Model built-in",
     "modeTool": "Tool (web.search)",
     "providerLabel": "Search provider",
-    "providerHelp": "Shown for the tool path only. Brave, Tavily, Perplexity, and Serper need an API key. When snippets are not enough, the assistant can fetch a little page text (length-capped).",
-    "providerDuckDuckGo": "DuckDuckGo",
-    "providerBrave": "Brave Search",
-    "providerTavily": "Tavily",
-    "providerPerplexity": "Perplexity",
-    "providerSerper": "Serper",
+    "providerHelp": "Shown for the tool path only. Keyed vendors fail closed without an API key. When snippets are not enough, the assistant can fetch a little page text (length-capped).",
+    "providers": {
+      "duckduckgo": "DuckDuckGo",
+      "brave": "Brave Search",
+      "tavily": "Tavily",
+      "perplexity": "Perplexity",
+      "serper": "Serper"
+    },
     "statusDisabled": "Web search is off for this profile.",
     "statusOpenaiNative": "Using OpenAI native search.",
     "statusGeminiNative": "Using Gemini Google Search.",
-    "statusToolDuckDuckGo": "Using DuckDuckGo tool.",
-    "statusToolBrave": "Using Brave Search tool (API key required).",
-    "statusToolTavily": "Using Tavily tool (API key required).",
-    "statusToolPerplexity": "Using Perplexity tool (API key required).",
-    "statusToolSerper": "Using Serper tool (API key required).",
-    "statusAutoTool": "Using DuckDuckGo/Brave/Tavily/Perplexity/Serper tools (no native search for this LLM).",
-    "braveKeyLabel": "Brave Search API key",
-    "braveKeyHelp": "From the Brave console; search fails if empty.",
-    "braveKeyPlaceholder": "Enter Brave API key",
-    "tavilyKeyLabel": "Tavily API key",
-    "tavilyKeyHelp": "From the Tavily console; search fails if empty.",
-    "tavilyKeyPlaceholder": "Enter Tavily API key",
-    "perplexityKeyLabel": "Perplexity API key",
-    "perplexityKeyHelp": "From the Perplexity console; search fails if empty.",
-    "perplexityKeyPlaceholder": "Enter Perplexity API key",
-    "serperKeyLabel": "Serper API key",
-    "serperKeyHelp": "From the Serper console; search fails if empty.",
-    "serperKeyPlaceholder": "Enter Serper API key",
+    "statusTool": {
+      "duckduckgo": "Using DuckDuckGo tool.",
+      "brave": "Using Brave Search tool (API key required).",
+      "tavily": "Using Tavily tool (API key required).",
+      "perplexity": "Using Perplexity tool (API key required).",
+      "serper": "Using Serper tool (API key required)."
+    },
+    "statusAutoTool": "Using tool search (no native search for this LLM).",
+    "keys": {
+      "brave": {
+        "label": "Brave Search API key",
+        "help": "From the Brave console; search fails if empty.",
+        "placeholder": "Enter Brave API key"
+      },
+      "tavily": {
+        "label": "Tavily API key",
+        "help": "From the Tavily console; search fails if empty.",
+        "placeholder": "Enter Tavily API key"
+      },
+      "perplexity": {
+        "label": "Perplexity API key",
+        "help": "From the Perplexity console; search fails if empty.",
+        "placeholder": "Enter Perplexity API key"
+      },
+      "serper": {
+        "label": "Serper API key",
+        "help": "From the Serper console; search fails if empty.",
+        "placeholder": "Enter Serper API key"
+      }
+    },
     "fetchHint": "In tool mode, the assistant can fetch a little page text when search snippets are not enough (max 1–2 pages per turn, length-capped)."
   },
   "llm": {

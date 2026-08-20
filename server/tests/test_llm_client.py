@@ -18,8 +18,10 @@ from server.analyzer.llm_config import (
 from server.analyzer.llm_json import extract_json_from_markdown, normalize_items, parse_json_response
 from server.analyzer.llm_providers import LlmClientError
 from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
+from server.domain.web_search_providers import empty_web_search_api_keys
 from server.llm_global_slots import set_global_slot
 from server.secrets import protect_text
+from server.tests.seed import LLM_PROFILE_INSERT_SQL
 from server.util import utc_now_iso
 
 
@@ -138,11 +140,7 @@ async def test_load_agent_llm_config_follows_assistant_slot_elsewhere(app) -> No
     now = utc_now_iso()
     profile_id = "profile-assistant-elsewhere"
     await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
+        LLM_PROFILE_INSERT_SQL,
         (
             profile_id,
             "Assistant elsewhere",
@@ -150,6 +148,10 @@ async def test_load_agent_llm_config_follows_assistant_slot_elsewhere(app) -> No
             "https://api.openai.com/v1",
             "gpt-assistant",
             protect_text("assistant-secret"),
+            0,
+            "disabled",
+            1,
+            "auto",
             now,
             now,
         ),
@@ -176,11 +178,7 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
     now = utc_now_iso()
     override_id = "profile-session-override"
     await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
+        LLM_PROFILE_INSERT_SQL,
         (
             override_id,
             "Session override",
@@ -188,6 +186,10 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
             "https://openrouter.ai/api/v1",
             "openrouter/auto",
             protect_text("or-secret"),
+            0,
+            "disabled",
+            1,
+            "auto",
             now,
             now,
         ),
@@ -217,13 +219,21 @@ async def test_global_slots_resolve_assistant_liaison_task_editor_separately(app
 
     async def _insert(profile_id: str, model: str) -> None:
         await db.execute(
-            "INSERT INTO llm_profiles ("
-            "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-            "web_search_enabled, web_search_provider, brave_search_api_key, "
-            "created_at, updated_at"
-            ") VALUES (?, ?, 'ollama', 'http://localhost:11434', ?, '', 0, 'disabled', "
-            "1, 'auto', '', ?, ?)",
-            (profile_id, profile_id, model, now, now),
+            LLM_PROFILE_INSERT_SQL,
+            (
+                profile_id,
+                profile_id,
+                "ollama",
+                "http://localhost:11434",
+                model,
+                "",
+                0,
+                "disabled",
+                1,
+                "auto",
+                now,
+                now,
+            ),
         )
 
     await _insert("slot-assistant", "model-assistant")
@@ -254,11 +264,7 @@ async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:
     now = utc_now_iso()
     profile_id = "profile-openai-test"
     await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
+        LLM_PROFILE_INSERT_SQL,
         (
             profile_id,
             "OpenAI test",
@@ -266,6 +272,10 @@ async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:
             "https://api.openai.com/v1",
             "gpt-test",
             protect_text("openai-secret"),
+            0,
+            "disabled",
+            1,
+            "auto",
             now,
             now,
         ),
@@ -291,10 +301,7 @@ def test_config_from_draft_fields_merges_over_fallback() -> None:
         "json_mode": "disabled",
         "web_search_enabled": True,
         "web_search_provider": "auto",
-        "brave_search_api_key": "",
-        "tavily_search_api_key": "",
-        "perplexity_search_api_key": "",
-        "serper_search_api_key": "",
+        "web_search_api_keys": empty_web_search_api_keys(),
         "profile_id": DEFAULT_LLM_PROFILE_ID,
     }
     config = config_from_draft_fields(

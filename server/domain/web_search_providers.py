@@ -68,3 +68,23 @@ WEB_SEARCH_SECRET_COLUMNS: Final[tuple[str, ...]] = tuple(
 WEB_SEARCH_SECRET_WIRE_FIELDS: Final[tuple[tuple[str, str], ...]] = tuple(
     (column, _snake_to_camel(column)) for column in WEB_SEARCH_SECRET_COLUMNS
 )
+
+WEB_SEARCH_SECRET_WIRE_NAMES: Final[tuple[str, ...]] = tuple(wire for _, wire in WEB_SEARCH_SECRET_WIRE_FIELDS)
+
+#: Prompt / tool-schema vendor list (Brave → Tavily → Perplexity → Serper).
+KEYED_WEB_SEARCH_PROVIDER_LIST_TEXT: Final = " / ".join(KEYED_WEB_SEARCH_PROVIDERS)
+
+
+def secret_column_for(provider: str) -> str:
+    return f"{provider}_search_api_key"
+
+
+def secret_provider_from_column(column: str) -> str:
+    suffix = "_search_api_key"
+    if not column.endswith(suffix):
+        raise ValueError(f"not a web-search secret column: {column}")
+    return column[: -len(suffix)]
+
+
+def empty_web_search_api_keys() -> dict[str, str]:
+    return dict.fromkeys(KEYED_WEB_SEARCH_PROVIDERS, "")
