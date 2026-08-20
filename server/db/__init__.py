@@ -1,4 +1,4 @@
-"""Database layer: aiosqlite connection wrapper + wipe-only stamp-45 DDL.
+"""Database layer: aiosqlite connection wrapper + wipe-only stamp-1 DDL.
 
 Authoritative schema: domain fragments under ``schema_domains/`` aggregated by
 ``schema.py`` (``PRAGMA user_version`` = current stamp).

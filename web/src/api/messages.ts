@@ -3,7 +3,12 @@
  */
 
 import { apiClient } from "./client";
-import type { MessageCursor, MessageFilters, MessagePage } from "../types";
+import type { Message, MessageCursor, MessageFilters, MessagePage } from "../types";
+
+/** Fetch one collected message by id (intel provenance). */
+export function fetchMessage(messageId: string): Promise<Message> {
+  return apiClient.get<Message>(`/api/v1/messages/${messageId}`);
+}
 
 /** Fetches a page of messages using cursor-based pagination with filters. */
 export function queryMessagesPage(query: {

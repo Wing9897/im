@@ -232,6 +232,8 @@ async def run_schedule_or_threshold(
 
         channel_names = await batch_channel_names(db, batch_id) if claimed_messages else []
         done = utc_now_iso()
+        message = truncate_text(final_text, _AGENT_MESSAGE_LIMIT) if final_text else "agent tick completed"
+        tools_json = serialize_tick_tool_calls(tool_calls)
         async with db.transaction() as conn:
             findings_count = await store_results(
                 conn,
@@ -243,8 +245,8 @@ async def run_schedule_or_threshold(
             await conn.execute(
                 "UPDATE analysis_batches SET status = 'completed', prompt_tokens = ?, "
                 "completion_tokens = ?, error_message = NULL, message_count = ?, "
-                "updated_at = ?, completed_at = ? WHERE id = ?",
-                (0, 0, len(claimed_messages), done, done, batch_id),
+                "agent_message = ?, tool_calls_json = ?, updated_at = ?, completed_at = ? WHERE id = ?",
+                (0, 0, len(claimed_messages), message, tools_json, done, done, batch_id),
             )
         broadcaster.publish(
             "analysis_completed",

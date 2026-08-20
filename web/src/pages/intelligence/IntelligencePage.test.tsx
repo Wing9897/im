@@ -45,8 +45,12 @@ vi.mock("../../context/TaskCatalogContext", async () =>
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 
-vi.mock("./map/MapView", () => ({
-  MapView: () => null,
+vi.mock("../../hooks/usePipelineReadiness", () => ({
+  usePipelineReadiness: () => ({
+    state: "complete",
+    showChecklist: false,
+    loading: false,
+  }),
 }));
 
 vi.mock("react-router-dom", () => ({

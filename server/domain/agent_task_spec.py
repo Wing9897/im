@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any, Final, Literal
 
 TriggerMode = Literal["schedule", "message_cursor", "message_threshold"]
-AgentPresetId = Literal["project_reconcile", "web_scout"]
+AgentPresetId = Literal["project_reconcile", "web_scout", "pure_web_search"]
 
 TRIGGER_SCHEDULE: Final = "schedule"
 TRIGGER_MESSAGE_CURSOR: Final = "message_cursor"
@@ -28,6 +28,7 @@ TRIGGER_MODE_CHECK_SQL = "CHECK (trigger_mode IN ({}))".format(",".join(f"'{valu
 
 PRESET_PROJECT_RECONCILE: Final = "project_reconcile"
 PRESET_WEB_SCOUT: Final = "web_scout"
+PRESET_PURE_WEB_SEARCH: Final = "pure_web_search"
 
 
 class AgentTaskSpecError(ValueError):
@@ -148,6 +149,19 @@ def agent_preset_spec(preset: AgentPresetId | str, *, has_channels: bool = False
             output_calendar=False,
             output_analysis_events=True,
             has_channels=has_channels,
+        )
+    if preset == PRESET_PURE_WEB_SEARCH:
+        return normalize_agent_task_spec(
+            trigger_mode=TRIGGER_SCHEDULE,
+            cap_calendar_read=True,
+            cap_calendar_writes=False,
+            cap_web_search=True,
+            cap_force_web_search=True,
+            cap_read_analysis_events=True,
+            cap_read_items=True,
+            output_calendar=False,
+            output_analysis_events=True,
+            has_channels=False,
         )
     raise AgentTaskSpecError(f"Unknown agent preset: {preset!r}")
 

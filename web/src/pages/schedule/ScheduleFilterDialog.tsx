@@ -114,20 +114,23 @@ export function ScheduleFilterDialog({
         onClose={() => setOpen(false)}
         testId="schedule-filter-dialog"
         size="wide"
-        footerJustify={hasActiveFilters ? "space-between" : "flex-end"}
+        bodyClassName="flex min-h-0 flex-col overflow-hidden"
+        footerJustify="space-between"
         footer={
           <>
-            {hasActiveFilters ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onFiltersChange({ ...DEFAULT_SCHEDULE_FILTERS })}
-                aria-label={t("filter.clearAria")}
-                data-testid="schedule-filters-clear"
-              >
-                {t("filter.clear")}
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onFiltersChange({ ...DEFAULT_SCHEDULE_FILTERS })}
+              disabled={!hasActiveFilters}
+              className={!hasActiveFilters ? "invisible" : undefined}
+              aria-hidden={!hasActiveFilters ? true : undefined}
+              tabIndex={!hasActiveFilters ? -1 : undefined}
+              aria-label={t("filter.clearAria")}
+              data-testid="schedule-filters-clear"
+            >
+              {t("filter.clear")}
+            </Button>
             <Button type="button" variant="primary" onClick={() => setOpen(false)}>
               {t("filter.done")}
             </Button>
@@ -171,7 +174,7 @@ export function ScheduleFilterDialog({
               data-testid="schedule-workset-search"
             />
             <ul
-              className="mt-2 m-0 flex max-h-52 list-none flex-col gap-0.5 overflow-auto p-0"
+              className="im-auto-scrollbar mt-2 m-0 flex max-h-52 list-none flex-col gap-0.5 overflow-auto p-0 [scrollbar-gutter:stable]"
               role="listbox"
               aria-label={t("filter.worksetAria")}
               data-testid="schedule-workset-filter"

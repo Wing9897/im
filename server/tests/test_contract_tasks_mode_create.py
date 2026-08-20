@@ -216,8 +216,16 @@ async def test_task_templates_include_agent_presets(client):
         "policy-regulation",
         "finance-markets",
     }
-    assert set(by_mode.get("agent", [])) == {"agent-date-crud", "agent-work-shift"}
-    assert by_mode.get("leaderboard", []) == []
+    assert set(by_mode.get("agent", [])) == {
+        "agent-work-shift",
+        "agent-project-schedule",
+        "agent-source-verify",
+        "agent-pure-web-search",
+    }
+    assert set(by_mode.get("leaderboard", [])) == {
+        "leaderboard-hot-topics",
+        "leaderboard-discussion-heat",
+    }
     for preset in body:
         assert preset.get("promptTemplate")
 

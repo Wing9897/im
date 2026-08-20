@@ -1,12 +1,13 @@
 """Wipe-only schema bootstrap and validation (no migration registry).
 
-The current stamp (``CURRENT_SCHEMA_VERSION``) is the sole supported floor. There is
-no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
-upgrade route. Empty databases are created from the authoritative domain DDL
-aggregated by ``schema.py``. Exact unstamped current fingerprints are stamped
-(``PRAGMA user_version`` = current stamp). Every other non-empty schema is rejected without
-mutation → ``python scripts/reset_local_databases.py --apply`` (does **not**
-auto-seed).
+Stamp **1** is the first database version. The current stamp
+(``CURRENT_SCHEMA_VERSION``) is the sole supported floor. There is no
+``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
+upgrade route — including from retired pre-cut stamps (2–45). Empty databases
+are created from the authoritative domain DDL aggregated by ``schema.py``.
+Exact unstamped current fingerprints are stamped (``PRAGMA user_version`` =
+current stamp). Every other non-empty schema is rejected without mutation →
+``python scripts/reset_local_databases.py --apply`` (does **not** auto-seed).
 
 Product SemVer / git tags are decoupled from ``SCHEMA_SEMVER`` / ``user_version``.
 """
@@ -80,10 +81,14 @@ async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
 
     if version > CURRENT_SCHEMA_VERSION:
         raise _reset_required(
-            f"Database schema version {version} is newer than supported version {CURRENT_SCHEMA_VERSION}"
+            f"Unsupported database schema version {version}; "
+            f"stamp {CURRENT_SCHEMA_VERSION} is the first database (wipe-only)"
         )
     if version == 0:
         categories = _fingerprint_mismatch_categories(fingerprint)
         detail = ", ".join(categories) if categories else "unknown structure"
         raise _reset_required(f"Unstamped database fingerprint mismatch: {detail}")
-    raise _reset_required(f"Unsupported database schema version {version}; stamp {CURRENT_SCHEMA_VERSION} is wipe-only")
+    raise _reset_required(
+        f"Unsupported database schema version {version}; "
+        f"stamp {CURRENT_SCHEMA_VERSION} is the first database (wipe-only)"
+    )

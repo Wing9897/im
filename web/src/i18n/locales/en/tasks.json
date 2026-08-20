@@ -87,7 +87,13 @@
     "showMore": "Show more",
     "showLess": "Show less",
     "showTickExtras": "Show agent message and tools",
-    "hideTickExtras": "Hide agent message and tools"
+    "hideTickExtras": "Hide agent message and tools",
+    "retractLastWave": "Retract last reconcile",
+    "retractConfirm": "Take schedule entries from this task’s last completed reconcile off the timeline? You can restore them.",
+    "retractNone": "The last reconcile has nothing to retract.",
+    "retractNoBatch": "No completed reconcile to retract yet.",
+    "retractDone": "Retracted {count} schedule entries",
+    "retractFailed": "Failed to retract the last reconcile"
   },
   "toast": {
     "loadFailedBlank": "Could not load task data; the form will be blank",
@@ -225,11 +231,12 @@
       "modeDescription": "Configurable Project Manager: choose trigger, tool permissions, and calendar / analysis outputs",
       "promptLabel": "Task prompt (goals / search / extraction rules)",
       "promptPlaceholder": "e.g. reconcile calendar from channel messages, or gather official announcements via web search",
-      "promptHint": "Describe what the Project Manager should do. Presets fill trigger/permissions/outputs; you can still fine-tune.",
+      "promptHint": "Describe what the Project Manager should do. Pick an Agent mode first; you can still fine-tune.",
       "scheduleDefaultHint": "Hourly recommended; switching to Project Manager remaps every-10-seconds to hourly.",
       "timedModeHint": "No channels = timed fire on schedule. Bind channels for threshold gate or cursor drain.",
-      "messageGateHint": "Channels bound with message-threshold: runs at threshold; messages are injected for verify/supplement.",
-      "cursorChannelHint": "Message-cursor drain requires at least one bound source channel."
+      "messageGateHint": "Bound sources with message-threshold: runs at threshold; messages are injected for verify/supplement.",
+      "cursorChannelHint": "Calendar reconcile requires at least one bound message source.",
+      "pureWebHint": "This mode does not bind sources; it only searches the web on schedule."
     }
   },
   "recurrence": {
@@ -375,6 +382,16 @@
   "deleted": "Task deleted",
   "addTask": "New task",
   "presets": {
+    "leaderboard-hot-topics": {
+      "name": "Hot topic ranking",
+      "description": "Rank today's / recent hot topics from bound sources with scores and summaries",
+      "promptTemplate": "Rank today's and recent hot topics from bound sources. Score heat by discussion volume, forwards, and sentiment; merge different phrasings of the same topic; write a one-line summary per topic. Ignore chatter, join-group spam, and system notices. Do not invent topics when nothing is hot enough."
+    },
+    "leaderboard-discussion-heat": {
+      "name": "Discussion heat",
+      "description": "Rank themes that keep coming up in bound channels by discussion heat",
+      "promptTemplate": "Rank themes that are mentioned repeatedly in the channels. Merge different phrasings of the same story into one item, score by mention count and discussion heat, and write a short summary of why it heated up. Ignore one-off chatter and system notices."
+    },
     "key-insights": {
       "name": "Key intel summary",
       "description": "Extract high-value intel events and opportunities",
@@ -415,23 +432,43 @@
       "description": "Capture rates, earnings, commodities, and macro market turns (not crypto-only)",
       "promptTemplate": "Extract finance/macro market events. Prioritize: rates/central banks, earnings and guidance, M&A, major commodity/FX moves, regulatory impacts on markets. In body include: market or ticker, event type, key figures or conclusions, likely impact. Fill start_time when clear. Ignore baseless calls and pure sentiment forecasts; use a Crypto template for crypto-specific feeds."
     },
-    "agent-date-crud": {
-      "name": "General project date manager",
-      "description": "Add, edit, and delete project dates/deadlines from source messages, and reconcile existing schedule when idle",
-      "promptTemplate": "You are a general project date manager. Goal: find project-related dates, deadlines, and meetings in bound source messages, then add/update/delete them with tools. Rules: 1) write only when the date is explicit or reasonably convertible; 2) inspect existing schedule first, update matches, create only when unmatched; 3) cancel/void from source means delete or deactivate; 4) ignore unrelated chatter; 5) even with no new messages, reconcile and fix obvious errors. Finish with a short JSON message summarizing changes."
-    },
     "agent-work-shift": {
-      "name": "Work shift roster",
-      "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
-      "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
+      "name": "Work shifts",
+      "description": "Write duty/rotation from bound sources into My schedule; update the same shift when its date changes. No web search.",
+      "promptTemplate": "Write duty, rotation, and shift rosters from bound sources into My schedule. Rules: 1) if the source changes the date of the same person's same shift, update that event instead of creating another; 2) create only when no matching shift exists; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date, and time clearly; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
+    },
+    "agent-project-schedule": {
+      "name": "Project schedule",
+      "description": "Write engineering/project milestones in the same workset (e.g. foundation, fit-out) into My schedule; update that event when the source changes the date, or create if none exists. No web search.",
+      "promptTemplate": "Write engineering/project milestones in the same workset into My schedule, such as foundation, fit-out, inspection, and handover. Rules: 1) if the source changes a date, update that event; create only when unmatched; 2) cancel means deactivate or delete; 3) record only the milestone's date and content — do not claim or invent Gantt dependencies or predecessor/successor links; 4) write only when the date is explicit or reasonably convertible; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
+    },
+    "agent-source-verify": {
+      "name": "Source verification",
+      "description": "Use bound sources as clues, verify against public news on the web, and write intel events.",
+      "promptTemplate": "Use bound source messages as clues, then verify with web.search against public news. Rules: 1) pull people, orgs, events, or dates from sources as search clues; 2) do not finish without a successful search; if snippets are not enough, web.fetch 1–2 URLs; 3) write only publicly verifiable facts; if the source conflicts with public news, say so in the body; 4) write intel events, not My schedule; 5) ignore chatter and unverifiable rumors. Finish by writing the verified findings as intel events."
+    },
+    "agent-pure-web-search": {
+      "name": "Pure web search",
+      "description": "No bound sources; scheduled forced web search; write findings as intel events",
+      "promptTemplate": "Use web.search on the task topic for the latest public news; do not finish without a successful search. If snippets are not enough, web.fetch 1–2 URLs. Do not rely on Telegram or other bound sources; this template binds no channels. Finish by writing the highlights as intel events."
     }
   },
   "agent": {
-    "presetsLabel": "Presets",
-    "presetsHint": "One-click fill; you can still change afterward.",
-    "presets": {
-      "project_reconcile": "Project reconcile",
-      "web_scout": "Web scout"
+    "modesLabel": "Agent mode",
+    "modesHint": "Pick a working style; you can still change trigger and permissions afterward.",
+    "modes": {
+      "project_reconcile": {
+        "name": "Calendar reconcile",
+        "hint": "Write shifts, meetings, and deadlines from bound sources into My schedule. No web search. Sources today are mainly Telegram."
+      },
+      "web_scout": {
+        "name": "Sources + web search",
+        "hint": "Use bound sources as leads, then check public web results. Sources today are mainly Telegram."
+      },
+      "pure_web_search": {
+        "name": "Pure web search",
+        "hint": "No bound sources; scheduled forced web search; write intel events."
+      }
     },
     "triggerLabel": "Trigger",
     "trigger": {
@@ -440,7 +477,7 @@
       "message_cursor": "Drain backlog",
       "message_cursorHint": "Run when new messages exist",
       "message_threshold": "Message threshold",
-      "message_thresholdHint": "Run at count; no channels ≈ schedule only"
+      "message_thresholdHint": "Run at count; bound sources required"
     },
     "capsLabel": "Tool permissions",
     "caps": {

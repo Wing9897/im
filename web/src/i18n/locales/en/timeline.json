@@ -37,7 +37,7 @@
     "showEnding": "Show ending",
     "showEndingHelp": "Show a compact icon and count for ending events in the month-cell header: cross-day ends, item expiry, and the final recurring occurrence (color matches the ending legend). Maps to the card tag “Ends today”.",
     "showDates": "Show dates",
-    "showDatesHelp": "Show slightly stronger date numbers in month cells, and hide events and ongoing/ending hints. Top-bar weather stays visible."
+    "showDatesHelp": "Show slightly stronger bottom date watermarks in month cells, and hide event titles. The top-row day number, ongoing/ending counts, and weather stay visible."
   },
   "view": {
     "loadTimeout": "Load timed out — please retry",
@@ -101,7 +101,7 @@
     "markImportant": "Mark important",
     "unmarkImportant": "Unmark important",
     "importantBadge": "Important",
-    "dismiss": "Remove from timeline",
+    "dismiss": "Take off timeline",
     "restore": "Restore to timeline",
     "manualTime": "Manual time adjust",
     "applyTime": "Apply time",
@@ -147,10 +147,10 @@
   "messages": {
     "saveFailed": "Save failed",
     "recurringCreated": "Recurring event created; the calendar expands it across matching days.",
-    "dismissFailed": "Failed to remove from timeline",
-    "restoreFailed": "Failed to restore to timeline",
+    "dismissFailed": "Failed to take off the timeline",
+    "restoreFailed": "Failed to restore to the timeline",
     "importantFailed": "Failed to update important marker",
-    "dismissConfirm": "Remove “{title}” from the timeline? You can restore it later.",
+    "dismissConfirm": "Take “{title}” off the timeline? You can restore it later.",
     "restoreConfirm": "Restore “{title}” to the timeline?",
     "ganttLoadTimeout": "Timed out loading task activity — please retry"
   },

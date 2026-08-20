@@ -114,8 +114,8 @@ export function EmojiPickerField({
           className={[
             "relative inline-flex h-[5.25rem] w-[5.25rem] shrink-0 items-center justify-center",
             "overflow-hidden rounded-full border border-surface-border/60",
-            "transition-[border-color,opacity,transform] duration-150 ease-out",
-            "hover:border-surface-border active:scale-[0.98]",
+            "transition-[border-color,opacity] duration-150 ease-out",
+            "hover:border-surface-border",
             "focus-visible:outline-none focus-visible:ring-2",
             "focus-visible:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)]",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -195,7 +195,6 @@ export function EmojiPickerField({
             "px-xs py-0.5",
             "text-caption text-text-secondary transition-[border-color,background,color,opacity] duration-150 ease-out",
             "hover:border-surface-border hover:text-text-primary",
-            "active:scale-[0.98]",
             "focus-visible:outline-none focus-visible:ring-2",
             "focus-visible:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)]",
             "disabled:cursor-not-allowed disabled:opacity-50",

@@ -20,7 +20,14 @@ import {
   updateWidgetSizeId,
   widgetDesignRect,
 } from "./boardLayoutStore";
-import { BOARD_WIDGET_DESCRIPTORS, BOARD_WIDGET_TYPES, getWidgetMeta } from "./widgetRegistry";
+import {
+  BOARD_LIST_WIDGET_MIN_ROWS,
+  BOARD_SCHEDULE_MIN_ROWS,
+  BOARD_WIDGET_DESCRIPTORS,
+  BOARD_WIDGET_TYPES,
+  getWidgetMeta,
+  getWidgetMinRows,
+} from "./widgetRegistry";
 import {
   BOARD_DESIGN_HEIGHT,
   BOARD_DESIGN_WIDTH,
@@ -102,13 +109,18 @@ describe("boardLayoutStore", () => {
       expect.arrayContaining(["3x4", "3x5", "4x4", "4x5", "4x6"]),
     );
     expect(BOARD_WIDGET_DESCRIPTORS.gantt.defaultSizeId).toBe("16x1");
-    expect(BOARD_WIDGET_DESCRIPTORS["calendar-day"].defaultSizeId).toBe("5x1");
-    for (const type of Object.keys(BOARD_WIDGET_DESCRIPTORS) as Array<
-      keyof typeof BOARD_WIDGET_DESCRIPTORS
-    >) {
-      for (const id of ["3x1", "4x1", "3x2", "4x2", "5x3", "6x4"] as const) {
-        expect(BOARD_WIDGET_DESCRIPTORS[type].sizeOptions).toContain(id);
-      }
+    expect(BOARD_WIDGET_DESCRIPTORS["calendar-day"].defaultSizeId).toBe("5x2");
+    expect(BOARD_WIDGET_DESCRIPTORS.schedule.defaultSizeId).toBe("3x3");
+    expect(BOARD_WIDGET_DESCRIPTORS.schedule.sizeOptions).not.toContain("3x1");
+    expect(BOARD_WIDGET_DESCRIPTORS.schedule.sizeOptions).not.toContain("3x2");
+    expect(BOARD_WIDGET_DESCRIPTORS.schedule.sizeOptions).toContain("3x3");
+    expect(getWidgetMinRows("schedule")).toBe(BOARD_SCHEDULE_MIN_ROWS);
+    for (const type of ["items", "tasks", "actions", "events", "feed", "logs"] as const) {
+      expect(getWidgetMinRows(type)).toBeGreaterThanOrEqual(BOARD_LIST_WIDGET_MIN_ROWS);
+      expect(BOARD_WIDGET_DESCRIPTORS[type].sizeOptions).not.toContain("3x1");
+    }
+    for (const type of ["clock", "system", "gantt"] as const) {
+      expect(BOARD_WIDGET_DESCRIPTORS[type].sizeOptions).toContain("3x1");
     }
   });
 
@@ -148,12 +160,12 @@ describe("boardLayoutStore", () => {
     expect(config.widgets.find((w) => w.type === "leaderboard")).toMatchObject({
       col: 0,
       row: 6,
-      sizeId: "3x2",
+      sizeId: "3x1",
     });
     expect(config.widgets.find((w) => w.type === "schedule")).toMatchObject({
       col: 0,
-      row: 8,
-      sizeId: "3x2",
+      row: 7,
+      sizeId: "3x3",
     });
     expect(config.widgets.find((w) => w.type === "map")).toMatchObject({
       col: 3,
@@ -168,12 +180,12 @@ describe("boardLayoutStore", () => {
     expect(config.widgets.find((w) => w.type === "calendar")).toMatchObject({
       col: 11,
       row: 2,
-      sizeId: "5x3",
+      sizeId: "5x2",
     });
     expect(config.widgets.find((w) => w.type === "calendar-day")).toMatchObject({
       col: 11,
-      row: 5,
-      sizeId: "5x1",
+      row: 4,
+      sizeId: "5x2",
     });
     expect(config.widgets.find((w) => w.type === "weather")).toMatchObject({
       col: 3,
@@ -263,7 +275,7 @@ describe("boardLayoutStore", () => {
     expect(parsed.widgets.find((widget) => widget.type === "calendar")).toMatchObject({
       col: 11,
       row: 2,
-      sizeId: "5x3",
+      sizeId: "5x2",
     });
   });
 
@@ -300,6 +312,80 @@ describe("boardLayoutStore", () => {
     expect(types.has("logs")).toBe(false);
     expect(types.has("queue")).toBe(false);
     expect(types.has("sources")).toBe(false);
+  });
+
+  it("parseBoardConfig lifts the v16 crushed 日程 mosaic without a reset", () => {
+    const parsed = parseBoardConfig({
+      version: 16,
+      widgets: [
+        { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 1 },
+        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 2 },
+        { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 3 },
+        { i: "w-system", type: "system", col: 0, row: 3, sizeId: "3x1", z: 4 },
+        { i: "w-actions", type: "actions", col: 0, row: 4, sizeId: "3x2", z: 5 },
+        { i: "w-leaderboard", type: "leaderboard", col: 0, row: 6, sizeId: "3x2", z: 6 },
+        { i: "w-schedule", type: "schedule", col: 0, row: 8, sizeId: "3x2", z: 7 },
+        { i: "w-map", type: "map", col: 3, row: 2, sizeId: "5x3", z: 8 },
+        { i: "w-wall", type: "wall", col: 8, row: 2, sizeId: "3x3", z: 9 },
+        { i: "w-calendar", type: "calendar", col: 11, row: 2, sizeId: "5x3", z: 10 },
+        { i: "w-calendar-day", type: "calendar-day", col: 11, row: 5, sizeId: "5x1", z: 11 },
+        { i: "w-weather", type: "weather", col: 3, row: 5, sizeId: "5x2", z: 12 },
+        { i: "w-tasks", type: "tasks", col: 8, row: 5, sizeId: "3x2", z: 13 },
+        { i: "w-stats", type: "stats", col: 11, row: 6, sizeId: "5x2", z: 14 },
+        { i: "w-events", type: "events", col: 3, row: 7, sizeId: "4x3", z: 15 },
+        { i: "w-feed", type: "feed", col: 7, row: 7, sizeId: "4x3", z: 16 },
+        { i: "w-items", type: "items", col: 11, row: 8, sizeId: "3x2", z: 17 },
+        { i: "w-llm-health", type: "llm-health", col: 14, row: 8, sizeId: "2x2", z: 18 },
+      ],
+    });
+    expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
+    expect(parsed.widgets.find((w) => w.type === "schedule")).toMatchObject({
+      col: 0,
+      row: 7,
+      sizeId: "3x3",
+    });
+    expect(parsed.widgets.find((w) => w.type === "leaderboard")).toMatchObject({
+      col: 0,
+      row: 6,
+      sizeId: "3x1",
+    });
+    expect(parsed.widgets.find((w) => w.type === "calendar-day")).toMatchObject({
+      col: 11,
+      row: 4,
+      sizeId: "5x2",
+    });
+    expect(parsed.widgets.find((w) => w.type === "calendar")).toMatchObject({
+      col: 11,
+      row: 2,
+      sizeId: "5x2",
+    });
+  });
+
+  it("parseBoardConfig grows a crushed schedule tile to min rows and keeps it on-grid", () => {
+    const parsed = parseBoardConfig({
+      version: 16,
+      widgets: [
+        { i: "w-map", type: "map", col: 5, row: 0, sizeId: "5x3", z: 1 },
+        { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 2 },
+        { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 3 },
+        { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 4 },
+        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 5 },
+        { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 6 },
+        { i: "w-schedule", type: "schedule", col: 0, row: 8, sizeId: "3x2", z: 7 },
+      ],
+    });
+    expect(parsed.widgets.find((w) => w.type === "schedule")).toMatchObject({
+      col: 0,
+      row: 7,
+      sizeId: "3x3",
+    });
+  });
+
+  it("updateWidgetSizeId cannot shrink schedule below min rows", () => {
+    let config = createDefaultBoardConfig();
+    const schedule = config.widgets.find((w) => w.type === "schedule")!;
+    config = updateWidgetSizeId(config, schedule.i, "3x1");
+    expect(config.widgets.find((w) => w.i === schedule.i)!.sizeId).toBe("3x3");
   });
 
   it("persists and reloads a filled custom config via memory cache", () => {

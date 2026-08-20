@@ -59,6 +59,12 @@ export {
 } from "./pipelineIds";
 
 export {
+  pipelinePointHandleSides,
+  pipelineBlockShowsLayerOutPort,
+  type PipelineHandleSides,
+} from "./pipelineHandleVisibility";
+
+export {
   buildWorksetPipelineGraph,
   taskOwnerWorksetId,
   assistantOwnerWorksetId,

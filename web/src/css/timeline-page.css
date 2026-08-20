@@ -201,12 +201,11 @@
 
 /* Reveal: lift watermark opacity only a little (still muted, never full
    white or accent-orange). Today/selected keep the cell border instead.
-   Keep the reserved header (weekday / 今天 / weather). Hide event rows
-   and 到期/+N chips only — not weather.
+   Keep the reserved header (day number / 進行中 / 結束 / weekday / 今天 /
+   weather). Hide event title rows / +N only — not first-row status marks.
    !important: this file is imported @layer components; utilities (opacity-*)
    would otherwise win and leave dates watermarked after 顯示. */
-.im-timeline-month-grid.is-revealed .im-month-day-events,
-.im-timeline-month-grid.is-revealed .im-month-span-indicators {
+.im-timeline-month-grid.is-revealed .im-month-day-events {
   visibility: hidden !important;
   pointer-events: none;
 }

@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-45 / prior hard-reject): ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-1 first database / non-current hard-reject): ``test_schema_wipe_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -234,7 +234,7 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
     db = Database(path)
     await db.connect()
     try:
-        with pytest.raises(SchemaBaselineError, match="newer than supported"):
+        with pytest.raises(SchemaBaselineError, match="Unsupported database schema version"):
             await db.ensure_schema()
         assert await db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION + 1
         assert await db.fetch_value("SELECT value FROM preserved") == "keep-me"

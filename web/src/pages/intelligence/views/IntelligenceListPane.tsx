@@ -13,10 +13,12 @@ import {
 import { contentFadeClass } from "../../../components/ui/pageLayout";
 import { useListKeyboardNavigation } from "../../../hooks/useListKeyboardNavigation";
 import type { AnalysisEvent, ViewMode } from "../../../types";
+import type { PipelineReadinessState } from "../../../domain/pipeline/pipelineReadiness";
 import { IntelligenceCard } from "./IntelligenceCardView";
 import { IntelligenceDetailView } from "./IntelligenceDetailDialog";
 import { IntelligenceRow } from "./IntelligenceListView";
 import { getIntelligenceEmptyCopy } from "../intelligenceEmptyState";
+import { PipelineGuideChecklist } from "../../../components/pipeline/PipelineGuideChecklist";
 
 /**
  * List + card pane only (infinite scroll + modal detail). Map stays in
@@ -42,6 +44,10 @@ interface IntelligenceListPaneProps {
   hasTimeFilter: boolean;
   hasSourceFilter: boolean;
   resetFilters: () => void;
+  showPipelineGuide?: boolean;
+  pipelineState?: PipelineReadinessState;
+  notIntelBusy?: boolean;
+  onNotIntel?: (item: AnalysisEvent) => void;
 }
 
 function IntelligenceListPaneComponent({
@@ -64,6 +70,10 @@ function IntelligenceListPaneComponent({
   hasTimeFilter,
   hasSourceFilter,
   resetFilters,
+  showPipelineGuide = false,
+  pipelineState = "no_sources",
+  notIntelBusy,
+  onNotIntel,
 }: IntelligenceListPaneProps) {
   const { t } = useTranslation("intelligence");
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -88,6 +98,9 @@ function IntelligenceListPaneComponent({
   }
 
   if (items.length === 0) {
+    if (showPipelineGuide && !hasActiveFilters) {
+      return <PipelineGuideChecklist state={pipelineState} />;
+    }
     const copy = getIntelligenceEmptyCopy(
       {
         intelligenceTasksCount,
@@ -150,6 +163,8 @@ function IntelligenceListPaneComponent({
                 isConsumed={isConsumed(item.id)}
                 onAutoRead={onAutoRead}
                 onClick={setSelectedItem}
+                notIntelBusy={notIntelBusy}
+                onNotIntel={onNotIntel}
               />
             ))}
           </CardGrid>
@@ -169,6 +184,8 @@ function IntelligenceListPaneComponent({
               isConsumed={isConsumed(item.id)}
               isSelected={focusedId === item.id || selectedItem?.id === item.id}
               onAutoRead={onAutoRead}
+              notIntelBusy={notIntelBusy}
+              onNotIntel={onNotIntel}
               onClick={(next) => {
                 setFocusedId(next.id);
                 setSelectedItem(next);
@@ -184,6 +201,8 @@ function IntelligenceListPaneComponent({
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
           presentation="modal"
+          notIntelBusy={notIntelBusy}
+          onNotIntel={onNotIntel}
         />
       ) : null}
     </>

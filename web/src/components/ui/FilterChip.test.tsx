@@ -21,6 +21,9 @@ describe("FilterChip", () => {
     });
     const btn = container.querySelector("button");
     expect(btn?.className).toContain("text-accent");
+    expect(btn?.className).not.toContain("font-semibold");
+    expect(btn?.className).toContain("hover:!transform-none");
+    expect(btn?.className).toContain("active:!transform-none");
     expect(btn?.getAttribute("aria-pressed")).toBe("true");
   });
 

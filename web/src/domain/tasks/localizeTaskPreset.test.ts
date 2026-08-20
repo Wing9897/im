@@ -40,4 +40,22 @@ describe("localizeTaskPreset", () => {
     expect(localized.defaultAnalysisTimeRange).toBe("1d");
     expect(localized.promptTemplate.length).toBeGreaterThan(40);
   });
+
+  it("localizes Agent catalog templates", async () => {
+    const shift = localizeTaskPreset(
+      { ...sample, id: "agent-work-shift", name: "工作輪更", analysisMode: "agent" },
+      i18n.t.bind(i18n),
+    );
+    expect(shift.name).toBe("工作輪更");
+    expect(shift.promptTemplate).toContain("我的日程");
+
+    setAppLocale("en");
+    await i18n.changeLanguage("en");
+    const verify = localizeTaskPreset(
+      { ...sample, id: "agent-source-verify", name: "來源核實", analysisMode: "agent" },
+      i18n.t.bind(i18n),
+    );
+    expect(verify.name).toBe("Source verification");
+    expect(verify.promptTemplate).toContain("web.search");
+  });
 });

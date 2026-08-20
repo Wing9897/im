@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { makeAnalysisEvent } from "../../test/analysisEventFixtures";
 
 // Mock useAutoRead to return a simple ref (avoids IntersectionObserver issues)
@@ -333,10 +334,14 @@ describe("IntelligenceDetailDialog coordinate display", () => {
     });
     act(() => {
       root.render(
-        createElement(IntelligenceDetailDialog, {
-          item,
-          onClose: vi.fn(),
-        }),
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(IntelligenceDetailDialog, {
+            item,
+            onClose: vi.fn(),
+          }),
+        ),
       );
     });
 
@@ -355,16 +360,38 @@ describe("IntelligenceDetailDialog coordinate display", () => {
     });
     act(() => {
       root.render(
-        createElement(IntelligenceDetailDialog, {
-          item,
-          onClose: vi.fn(),
-        }),
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(IntelligenceDetailDialog, {
+            item,
+            onClose: vi.fn(),
+          }),
+        ),
       );
     });
 
     const dialog = document.body.querySelector(".im-material-panel");
     expect(dialog?.textContent).toContain("無具體地理位置（不上地圖）");
     expect(dialog?.textContent).not.toContain("0.0000");
+  });
+
+  it("says the model did not bind a source when sourceMessageId is missing", () => {
+    act(() => {
+      root.render(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(IntelligenceDetailDialog, {
+            item: makeAnalysisEvent({ sourceMessageId: null }),
+            onClose: vi.fn(),
+          }),
+        ),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="intel-source-unbound"]')).not.toBeNull();
+    expect(document.body.textContent).toContain("模型沒有綁定來源訊息");
   });
 });
 
@@ -411,10 +438,14 @@ describe("IntelligenceDetailDialog dual avatar", () => {
   it("uses intel Radar large + task ListChecks small beside the title", () => {
     act(() => {
       root.render(
-        createElement(IntelligenceDetailDialog, {
-          item: makeAnalysisEvent({ title: "詳情標題", taskId: "task-1" }),
-          onClose: vi.fn(),
-        }),
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(IntelligenceDetailDialog, {
+            item: makeAnalysisEvent({ title: "詳情標題", taskId: "task-1" }),
+            onClose: vi.fn(),
+          }),
+        ),
       );
     });
     const dialog = document.body.querySelector(".im-material-panel");

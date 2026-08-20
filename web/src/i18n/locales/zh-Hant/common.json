@@ -367,7 +367,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 45／SemVer 0.1.0-beta.46；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 1／SemVer 1.0.0（第一個資料庫版本）；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"
@@ -475,5 +475,19 @@
     "sttErrorCode": "語音辨識錯誤：{code}",
     "ttsUnsupported": "此瀏覽器不支援語音合成。",
     "ttsFailed": "語音合成失敗"
+  },
+  "pipelineGuide": {
+    "title": "開始情報管線",
+    "description": "先接上 RSS，再點一次預設建立分析任務。第一則情報會出現在情報頁與時間規劃。",
+    "stepSourceTitle": "新增 RSS 來源",
+    "stepSourceBody": "第一則情報建議從 RSS 開始，不必先登入 Telegram。",
+    "addRss": "新增 RSS",
+    "stepTaskTitle": "建立分析任務",
+    "stepTaskBody": "點一次套用「關鍵情報」或「行程提取」，再於編輯器綁定頻道並儲存。不會自動建立任務。",
+    "telegramHint": "Telegram 才是主力來源，可在 RSS 跑通後再連。",
+    "presetKeyInsights": "關鍵情報",
+    "presetScheduleEvents": "行程提取",
+    "stepEventsTitle": "等第一次分析完成",
+    "stepEventsBody": "任務啟用後，分析結果會寫入情報事件；有時間的事件也會出現在時間規劃。"
   }
 }

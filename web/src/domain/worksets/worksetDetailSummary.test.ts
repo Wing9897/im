@@ -70,7 +70,7 @@ describe("selectSummaryExpiringItems", () => {
   });
 
   it("respects WORKSET_SUMMARY_LIMIT default", () => {
-    const rows = Array.from({ length: 8 }, (_, i) =>
+    const rows = Array.from({ length: WORKSET_SUMMARY_LIMIT + 4 }, (_, i) =>
       item({
         id: `i${i}`,
         title: `I${i}`,

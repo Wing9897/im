@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from server.queries.messages_queries import MessagesQueryError, build_message_filters, fetch_messages_page
+from server.queries.messages_queries import (
+    MessagesQueryError,
+    build_message_filters,
+    fetch_message_by_id,
+    fetch_messages_page,
+)
 from server.tests import seed
 
 
@@ -27,6 +32,14 @@ async def test_fetch_messages_page_finds_seeded_content(app) -> None:
     assert page["totalCount"] is not None
     assert page["totalCount"] >= 1
     assert any(m["id"] == seed.MESSAGE_1 for m in page["messages"])
+
+
+async def test_fetch_message_by_id(app) -> None:
+    found = await fetch_message_by_id(app.state.db, seed.MESSAGE_1)
+    assert found is not None
+    assert found["id"] == seed.MESSAGE_1
+    missing = await fetch_message_by_id(app.state.db, "missing-id")
+    assert missing is None
 
 
 async def test_messages_page_route_still_works(client) -> None:

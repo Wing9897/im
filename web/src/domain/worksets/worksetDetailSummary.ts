@@ -9,8 +9,8 @@ import { daysUntil } from "../items/itemExpiryTone";
 import { isItemExpiringSoon, isItemOverdue } from "../items/categoryAggregates";
 import { getOsTimeMs } from "../../utils/time";
 
-/** Max rows per summary list on the workset contents tab. */
-export const WORKSET_SUMMARY_LIMIT = 5;
+/** Max rows per summary list on the workset contents tab (物品到期／我的日程). */
+export const WORKSET_SUMMARY_LIMIT = 10;
 
 /** Recent past window for user-event summary (days before local today). */
 export const WORKSET_EVENTS_LOOKBACK_DAYS = 7;

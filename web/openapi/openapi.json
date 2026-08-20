@@ -3421,6 +3421,49 @@
         }
       }
     },
+    "/api/v1/messages/{message_id}": {
+      "get": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "Get Message",
+        "description": "Fetch one collected message by id (provenance quote on intel detail).",
+        "operationId": "get_message_api_v1_messages__message_id__get",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Message Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/messages": {
       "post": {
         "tags": [
@@ -8949,7 +8992,7 @@
           "widgets"
         ],
         "title": "BoardLayoutSchema",
-        "description": "Layout blob stored under ``ops_board_layout`` (v16 widgets mosaic)."
+        "description": "Layout blob stored under ``ops_board_layout`` (v17 widgets mosaic)."
       },
       "BoardMapViewSchema": {
         "properties": {

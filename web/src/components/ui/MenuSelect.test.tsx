@@ -109,6 +109,7 @@ describe("MenuSelect", () => {
       );
       expect(trigger).toBeTruthy();
       expect(trigger?.textContent).toContain("葉片");
+      expect(trigger?.className).toContain("active:!transform-none");
       expect(trigger?.getAttribute("aria-expanded")).toBe("false");
       expect(getComputedStyle(trigger!).minWidth).not.toBe("0px");
 
@@ -119,6 +120,7 @@ describe("MenuSelect", () => {
       expect(trigger?.getAttribute("aria-expanded")).toBe("true");
       const list = container.querySelector('[data-testid="theme-texture-pref-list"]');
       expect(list?.getAttribute("role")).toBe("listbox");
+      expect((list as HTMLElement | null)?.style.scrollbarGutter).toBe("stable");
       expect(
         container.querySelector('[data-testid="theme-texture-pref-option-default"]'),
       ).toBeTruthy();

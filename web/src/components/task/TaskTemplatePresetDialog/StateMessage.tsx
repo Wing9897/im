@@ -7,7 +7,7 @@ type StateMessageProps = {
 
 export function StateMessage({ children, detail }: StateMessageProps) {
   return (
-    <div className="grid gap-sm py-2xl text-center text-[13px] text-text-secondary">
+    <div className="grid min-h-full place-content-center gap-sm py-2xl text-center text-[13px] text-text-secondary">
       <div>{children}</div>
       {detail ? <div className="text-xs text-text-muted">{detail}</div> : null}
     </div>

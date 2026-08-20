@@ -77,7 +77,8 @@ function EventListItem({
   metaLookups: EventListCardMetaLookups;
 }) {
   const { t } = useTranslation("timeline");
-  const { eventStatuses } = useTimelinePageContext();
+  const { eventStatuses, onDismissTimelineEvent, onRestoreTimelineEvent, userEventActionBusy } =
+    useTimelinePageContext();
   const scheduleCard = isUserScheduleTimelineEvent(event.source);
   const emptyValue = t("calendar.emptyValue");
   const bodyPreview = event.body ? previewEventBody(event.body) : "";
@@ -228,6 +229,35 @@ function EventListItem({
           </>
         )}
       </button>
+      <div className="mt-sm">
+        {dismissed ? (
+          <button
+            type="button"
+            className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
+            disabled={userEventActionBusy}
+            data-testid="timeline-event-list-restore"
+            onClick={(clickEvent) => {
+              clickEvent.stopPropagation();
+              onRestoreTimelineEvent?.(event);
+            }}
+          >
+            {t("sidebar.restore")}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
+            disabled={userEventActionBusy}
+            data-testid="timeline-event-list-dismiss"
+            onClick={(clickEvent) => {
+              clickEvent.stopPropagation();
+              onDismissTimelineEvent?.(event);
+            }}
+          >
+            {t("sidebar.dismiss")}
+          </button>
+        )}
+      </div>
     </SurfaceCard>
   );
 }

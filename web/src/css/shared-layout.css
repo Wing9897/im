@@ -64,8 +64,7 @@ html[data-theme-bg="focal"] .app-main-content > * {
   transition:
     background var(--im-duration-fast) var(--im-easing-out),
     border-color var(--im-duration-fast) var(--im-easing-out),
-    box-shadow var(--im-duration-fast) var(--im-easing-out),
-    transform var(--im-duration-fast) var(--im-easing-out);
+    box-shadow var(--im-duration-fast) var(--im-easing-out);
 }
 
 .im-card-hover:hover {

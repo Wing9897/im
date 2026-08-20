@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { controlBaseClass } from "../components/ui/controlStyles";
+import { controlBaseClass, buttonBaseClass } from "../components/ui/controlStyles";
 import {
   pageChromeOuterClass,
   pageShellGridClass,
@@ -22,6 +22,7 @@ import {
   detailDialogScrollBodyClass,
 } from "../components/detail/classes/shell";
 import {
+  segmentedTabActiveClass,
   segmentedTrackClass,
   segmentedTrackInlineClass,
 } from "../components/ui/segmentedTabStyles";
@@ -41,6 +42,7 @@ const themeCss = readFileSync(resolve(here, "../theme.css"), "utf8");
 const themeGeneratedCss = readFileSync(resolve(here, "../theme.generated.css"), "utf8");
 const texturesCss = readFileSync(resolve(here, "../css/theme-textures.css"), "utf8");
 const dialogShellCss = readFileSync(resolve(here, "../css/dialog-shell.css"), "utf8");
+const appBaseCss = readFileSync(resolve(here, "../css/app-base.css"), "utf8");
 const layoutCss = readFileSync(resolve(here, "../css/shared-layout.css"), "utf8");
 const motionCss = readFileSync(resolve(here, "../css/motion-utilities.css"), "utf8");
 const indexHtml = readFileSync(resolve(here, "../../index.html"), "utf8");
@@ -208,6 +210,16 @@ describe("surface layer tokens", () => {
     expect(detailDialogModalShellClass).not.toContain("overflow-hidden");
     expect(detailDialogDrawerShellClass).not.toContain("overflow-hidden");
     expect(detailDialogScrollBodyClass).toMatch(/overflow-y-auto/);
+    expect(detailDialogScrollBodyClass).toContain("im-dialog-body");
+    expect(dialogShellCss).toMatch(
+      /\.im-dialog-body\s*\{[^}]*min-height:\s*var\(--im-dialog-body-min-h, 7\.5rem\)/s,
+    );
+    expect(dialogShellCss).toMatch(/\.im-dialog-body\s*\{[^}]*scrollbar-gutter:\s*stable/s);
+    expect(appBaseCss).not.toMatch(/button:active[^{]*\{[^}]*transform:\s*scale/);
+    expect(appBaseCss).toMatch(/\.im-auto-scrollbar,\s*\.im-picker-dialog-body\s*\{[^}]*scrollbar-gutter:\s*stable/s);
+    expect(buttonBaseClass).not.toContain("active:scale");
+    expect(buttonBaseClass).not.toContain("transform]");
+    expect(segmentedTabActiveClass).not.toContain("font-semibold");
     expect(dialogShellCss).toMatch(
       /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--surface-card\) 80%, transparent\)/s,
     );

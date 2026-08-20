@@ -25,4 +25,4 @@ export const detailDialogCloseClass =
 
 /** Inner scroll pane — owns overflow so the frosted shell can sample the photo. */
 export const detailDialogScrollBodyClass =
-  "im-auto-scrollbar min-h-0 overflow-x-hidden overflow-y-auto";
+  "im-auto-scrollbar im-dialog-body overflow-x-hidden overflow-y-auto";

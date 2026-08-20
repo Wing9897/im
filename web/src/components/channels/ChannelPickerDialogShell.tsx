@@ -94,19 +94,21 @@ export function ChannelPickerDialogShell({
       onClose={handleClose}
       closeAriaLabel={closeAriaLabel}
       testId={testId}
-      bodyClassName="im-picker-dialog-body"
-      footerJustify={draftIds.length > 0 ? "space-between" : "flex-end"}
+      bodyClassName="im-picker-dialog-body overflow-hidden flex flex-col"
+      footerJustify="space-between"
       footer={
         <>
-          {draftIds.length > 0 ? (
-            <Button
-              variant="secondary"
-              onClick={() => setDraftIds([])}
-              aria-label={t("channelPicker.clearAllAria")}
-            >
-              {t("channelPicker.clearSelection")}
-            </Button>
-          ) : null}
+          <Button
+            variant="secondary"
+            onClick={() => setDraftIds([])}
+            disabled={draftIds.length === 0}
+            className={draftIds.length === 0 ? "invisible" : undefined}
+            aria-hidden={draftIds.length === 0 ? true : undefined}
+            tabIndex={draftIds.length === 0 ? -1 : undefined}
+            aria-label={t("channelPicker.clearAllAria")}
+          >
+            {t("channelPicker.clearSelection")}
+          </Button>
           {onCancel ? (
             <span className="im-dialog-footer-actions">
               <Button variant="secondary" onClick={handleClose}>

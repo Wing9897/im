@@ -5,12 +5,12 @@ import {
   type BoardWidgetItem,
   type BoardWidgetType,
 } from "./types";
-import { resolveSizePreset, type BoardSizePresetId } from "./boardSizePresets";
+import { pickAllowedSizePreset, type BoardSizePresetId } from "./boardSizePresets";
 import { getWidgetDefaultSizeId, getWidgetSizeOptions } from "./widgetRegistry";
 import {
   createDefaultBoardConfig,
   migrateBoardLayout,
-  normalizeLayoutWidget,
+  readLayoutWidget,
 } from "./boardLayoutParse";
 import { findFreePlacement } from "./boardLayoutPlacement";
 import {
@@ -73,14 +73,14 @@ export function importBoardConfig(json: string): BoardConfig {
   if (rawWidgets.length === 0) {
     throw new Error(String(i18n.t("board:shell.importNeedOne")));
   }
-  const normalized = rawWidgets
-    .map((item, index) => normalizeLayoutWidget(item, index))
+  const read = rawWidgets
+    .map((item, index) => readLayoutWidget(item, index))
     .filter((item): item is BoardWidgetItem => item !== null);
-  if (normalized.length === 0) {
+  if (read.length === 0) {
     throw new Error(String(i18n.t("board:shell.importNoValid")));
   }
-  // Soft-migrate the already-normalized list (no second parse pass).
-  const config = migrateBoardLayout(normalized);
+  // Soft-migrate the already-parsed list (lift crushed defaults, then min-size clamp).
+  const config = migrateBoardLayout(read);
   saveBoardConfig(config);
   return config;
 }
@@ -171,7 +171,7 @@ export function updateWidgetSizeId(
         return widget;
       }
       const options = getWidgetSizeOptions(widget.type);
-      const resolved = resolveSizePreset(sizeId, options, getWidgetDefaultSizeId(widget.type));
+      const resolved = pickAllowedSizePreset(sizeId, options, getWidgetDefaultSizeId(widget.type));
       return { ...widget, sizeId: resolved.id as BoardSizePresetId };
     }),
   };

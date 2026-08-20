@@ -127,6 +127,91 @@ describe("TimelineCalendarView", () => {
     });
   });
 
+  describe("month cell header day number", () => {
+    const MONTH_DAY_NUMBER = '[data-testid="timeline-month-day-number"]';
+
+    it("puts 1–31 in the header top-left of every cell, including other-month days", () => {
+      const monthCursor = new Date(2025, 0, 1);
+      const monthDays = buildCalendarDays(monthCursor);
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays,
+          timeCursor: new Date(2025, 0, 15),
+        }),
+      );
+
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
+      expect(dayCells).toHaveLength(42);
+      expect(monthDays).toHaveLength(42);
+
+      dayCells.forEach((cell, index) => {
+        const day = monthDays[index]!;
+        const header = cell.querySelector('[data-testid="timeline-month-day-header"]');
+        const number = header?.querySelector<HTMLElement>(MONTH_DAY_NUMBER);
+        expect(number?.textContent).toBe(String(day.getDate()));
+        expect(header?.contains(number ?? null)).toBe(true);
+        expect(header?.firstElementChild?.firstElementChild).toBe(number);
+
+        const isCurrentMonth = day.getMonth() === 0;
+        const isActive = day.getDate() === 15 && isCurrentMonth;
+        if (isActive) {
+          expect(number?.className).toContain("rounded-full");
+          expect(number?.className).toContain("bg-accent");
+        } else if (isCurrentMonth) {
+          expect(number?.className).toContain("text-text-primary");
+          expect(number?.className).not.toContain("text-text-muted");
+        } else {
+          expect(number?.className).toContain("text-text-muted");
+          expect(cell.className).toMatch(/opacity-\[0\.72\]/);
+        }
+      });
+
+      expect(dayCells[0]?.querySelector(MONTH_DAY_NUMBER)?.textContent).toBe("29");
+      expect(dayCells[0]?.querySelector(MONTH_DAY_NUMBER)?.className).toContain("text-text-muted");
+    });
+
+    it("keeps Timer/CircleCheck counts beside the header date instead of covering it", () => {
+      const monthCursor = new Date(2025, 0, 1);
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays: buildCalendarDays(monthCursor),
+          monthEvents: [
+            makeEvent({
+              id: "span-trip",
+              title: "三日行程",
+              startTime: "2025-01-15T09:00:00",
+              endTime: "2025-01-17T18:00:00",
+            }),
+          ],
+          timeCursor: new Date(2025, 0, 10),
+        }),
+      );
+
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
+      const ongoingCell = dayCells.find((cell) =>
+        cell.querySelector('[data-testid="month-span-ongoing"]'),
+      );
+      const header = ongoingCell?.querySelector('[data-testid="timeline-month-day-header"]');
+      const number = header?.querySelector(MONTH_DAY_NUMBER);
+      const span = header?.querySelector('[data-testid="month-span-indicators"]');
+
+      expect(number?.textContent).toBe("16");
+      expect(span?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(
+        span?.querySelector('[data-testid="month-span-ongoing"] svg')?.classList.contains("lucide-timer"),
+      ).toBe(true);
+      expect(
+        number && span
+          ? Boolean(number.compareDocumentPosition(span) & Node.DOCUMENT_POSITION_FOLLOWING)
+          : false,
+      ).toBe(true);
+    });
+  });
+
   describe("week view — renders correct number of day cells", () => {
     it("renders 7 day cells for the week grid", () => {
       const timeCursor = new Date(2025, 0, 15);
@@ -388,6 +473,11 @@ describe("TimelineCalendarView", () => {
       expect(ongoingCell?.querySelector('[data-testid="month-span-ongoing"]')?.getAttribute("aria-label")).toBe(
         "1 進行中",
       );
+      expect(
+        ongoingCell
+          ?.querySelector('[data-testid="month-span-ongoing"] svg')
+          ?.classList.contains("lucide-timer"),
+      ).toBe(true);
       expect(ongoingCell?.textContent).not.toContain("進行中");
       expect(endingCell).toBeTruthy();
       expect(endingCell).not.toBe(startCell);
@@ -396,6 +486,11 @@ describe("TimelineCalendarView", () => {
       expect(endingCell?.querySelector('[data-testid="month-span-ending"]')?.getAttribute("aria-label")).toBe(
         "1 結束",
       );
+      expect(
+        endingCell
+          ?.querySelector('[data-testid="month-span-ending"] svg')
+          ?.classList.contains("lucide-circle-check"),
+      ).toBe(true);
       expect(endingCell?.textContent).not.toContain("結束");
       expect(container.querySelectorAll('[data-testid="month-span-indicators"]').length).toBe(2);
     });
@@ -436,6 +531,16 @@ describe("TimelineCalendarView", () => {
 
       expect(day1?.querySelector('[data-testid="month-span-ending"]')?.textContent).toBe("1");
       expect(day1?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(
+        day1
+          ?.querySelector('[data-testid="month-span-ongoing"] svg')
+          ?.classList.contains("lucide-timer"),
+      ).toBe(true);
+      expect(
+        day1
+          ?.querySelector('[data-testid="month-span-ending"] svg')
+          ?.classList.contains("lucide-circle-check"),
+      ).toBe(true);
       expect(day1?.textContent).not.toContain("結束");
       expect(day1?.textContent).not.toContain("進行中");
       expect(day2?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
@@ -511,6 +616,11 @@ describe("TimelineCalendarView", () => {
       expect(day16?.querySelector('[data-testid="month-span-ending"]')?.getAttribute("aria-label")).toBe(
         "1 結束",
       );
+      expect(
+        day16
+          ?.querySelector('[data-testid="month-span-ending"] svg')
+          ?.classList.contains("lucide-circle-check"),
+      ).toBe(true);
       expect(day16?.textContent).not.toContain("結束");
       // Remind item + recurring final remain normal preview rows (limit 2).
       expect(day16?.textContent).toContain("提醒 · milk");
@@ -783,6 +893,7 @@ describe("TimelineCalendarView", () => {
       expect(weather).toBeTruthy();
       expect(weather?.textContent).toContain("25°");
       expect(header?.querySelector(".im-weather-chip")).toBeTruthy();
+      expect(header?.querySelector('[data-testid="timeline-month-day-number"]')?.textContent).toBe("15");
       expect(jan15?.querySelector(".im-month-day-events")).toBeTruthy();
       expect(jan15?.querySelector(".im-month-day-events")?.textContent).toContain("第一個事件");
       expect(jan15?.querySelector(MONTH_SURFACE)?.getAttribute("aria-hidden")).toBeNull();
@@ -793,6 +904,49 @@ describe("TimelineCalendarView", () => {
         "元旦",
       );
       expect(jan1?.querySelector(".im-month-day-watermark-stack")?.className).toContain("is-holiday");
+    });
+
+    it("keeps first-row 進行中/結束 counts when dates are revealed", () => {
+      const container = renderBusyMonth({
+        datesRevealed: true,
+        monthEvents: [
+          makeEvent({
+            id: "span-trip",
+            title: "三日行程",
+            startTime: "2025-01-15T09:00:00",
+            endTime: "2025-01-17T18:00:00",
+          }),
+        ],
+      });
+      const grid = container.querySelector('[data-testid="timeline-month-grid"]');
+      expect(grid?.className).toContain("is-revealed");
+
+      const jan16 = cellFor(container, "2025年1月16日");
+      const jan17 = cellFor(container, "2025年1月17日");
+      const header16 = jan16?.querySelector('[data-testid="timeline-month-day-header"]');
+      const header17 = jan17?.querySelector('[data-testid="timeline-month-day-header"]');
+
+      expect(header16?.querySelector('[data-testid="timeline-month-day-number"]')?.textContent).toBe("16");
+      expect(header16?.querySelector('[data-testid="month-span-ongoing"]')?.textContent).toBe("1");
+      expect(
+        header16
+          ?.querySelector('[data-testid="month-span-ongoing"] svg')
+          ?.classList.contains("lucide-timer"),
+      ).toBe(true);
+      expect(header16?.querySelector('[data-testid="month-span-indicators"]')).toBeTruthy();
+
+      expect(header17?.querySelector('[data-testid="timeline-month-day-number"]')?.textContent).toBe("17");
+      expect(header17?.querySelector('[data-testid="month-span-ending"]')?.textContent).toBe("1");
+      expect(
+        header17
+          ?.querySelector('[data-testid="month-span-ending"] svg')
+          ?.classList.contains("lucide-circle-check"),
+      ).toBe(true);
+
+      const jan15 = cellFor(container, "2025年1月15日");
+      expect(jan15?.querySelector('[data-testid="timeline-month-day-number"]')?.textContent).toBe("15");
+      expect(jan15?.querySelector(".im-month-day-events")?.textContent).toContain("三日行程");
+      expect(jan15?.querySelector('[data-testid="month-span-indicators"]')).toBeNull();
     });
 
     it("datesRevealed marks the month grid root", () => {

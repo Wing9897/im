@@ -62,27 +62,26 @@ export function LeaderboardTopicModal({
         </div>
       </SurfaceCard>
 
-      <div className="text-[11px] text-text-muted">
+      <div className="min-h-4 text-[11px] leading-4 text-text-muted">
         {isLoadingMessages
           ? t("leaderboard:loadingMessages")
           : t("leaderboard:relatedMessages", { count: messages.length })}
       </div>
 
-      {!isLoadingMessages && !messageError && messages.length === 0 ? (
-        <EmptyState
-          compact
-          title={t("leaderboard:noMessagesTitle")}
-          description={t("leaderboard:noMessagesDescription")}
-        />
-      ) : null}
-
-      {!isLoadingMessages && messages.length > 0 ? (
-        <div className="grid max-h-[360px] gap-sm overflow-y-auto">
-          {messages.map((message) => (
-            <MessageCard key={message.id} message={message} />
-          ))}
-        </div>
-      ) : null}
+      <div className="grid min-h-[160px] max-h-[360px] gap-sm overflow-y-auto [scrollbar-gutter:stable]">
+        {!isLoadingMessages && !messageError && messages.length === 0 ? (
+          <EmptyState
+            compact
+            title={t("leaderboard:noMessagesTitle")}
+            description={t("leaderboard:noMessagesDescription")}
+          />
+        ) : null}
+        {isLoadingMessages
+          ? null
+          : messages.map((message) => (
+              <MessageCard key={message.id} message={message} />
+            ))}
+      </div>
     </ModalDialog>
   );
 }

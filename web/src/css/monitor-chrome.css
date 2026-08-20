@@ -22,6 +22,11 @@
   color: var(--text-muted);
   font-size: 12px;
   cursor: pointer;
+  transform: none;
+}
+
+.monitor-mode-switch__btn:active:not(:disabled) {
+  transform: none;
 }
 
 .monitor-mode-switch--compact .monitor-mode-switch__btn {

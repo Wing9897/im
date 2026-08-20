@@ -21,5 +21,4 @@ export const segmentedTabClass =
 export const segmentedTabInlineClass =
   "relative z-[2] flex h-full min-h-0 min-w-0 flex-none items-center justify-center gap-0.5 rounded-[5px] border border-transparent px-2 text-[10px] font-medium leading-none text-text-secondary no-underline transition-[color,background] duration-200 ease-[var(--im-easing-out)] hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color-mix(in_srgb,var(--accent)_24%,transparent)]";
 
-export const segmentedTabActiveClass =
-  "font-semibold text-text-primary";
+export const segmentedTabActiveClass = "text-text-primary";

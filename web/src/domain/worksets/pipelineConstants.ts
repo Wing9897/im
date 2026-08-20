@@ -7,7 +7,12 @@ export const PIPELINE_MAX_POINTS = 24;
 export const PIPELINE_VISIBLE_POINTS = 8;
 /** Max workset nodes rendered on the household graph (not the per-block overflow chip). */
 export const PIPELINE_MAX_VISIBLE_WORKSETS = 10;
-export const PIPELINE_BLOCK_WIDTH = 168;
+/**
+ * Card width SoT for the 4-layer household graph.
+ * 240px leaves room for `[live-eval] …` task titles beside point gates;
+ * zone/column X and out-handle X all derive from this.
+ */
+export const PIPELINE_BLOCK_WIDTH = 240;
 export const PIPELINE_ROW_HEIGHT = 24;
 export const PIPELINE_HEADER_HEIGHT = 30;
 export const PIPELINE_BODY_PAD_Y = 4;

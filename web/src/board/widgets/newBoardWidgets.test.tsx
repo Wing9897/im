@@ -172,14 +172,14 @@ describe("new board widgets (schedule / items / llm-health)", () => {
       /Kickoff/,
     );
     expect(container.querySelector('[data-testid="board-schedule-event-ue-1"]')?.textContent).toMatch(
-      /N\/A/,
+      /\d/,
     );
     expect(
       container.querySelector('[data-testid="board-schedule-series-ser-1"]')?.textContent,
     ).toContain("Weekly sync");
     expect(
       container.querySelector('[data-testid="board-schedule-series-ser-1"]')?.textContent,
-    ).toMatch(/N\/A/);
+    ).not.toMatch(/N\/A/);
     expect(
       container
         .querySelector('[data-testid="board-schedule-event-ue-1"] [data-testid="card-title-icon"]')

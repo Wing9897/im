@@ -12,6 +12,7 @@ import {
   buildIntelligenceSourceMetaTitle,
   formatIntelligenceEventTime,
 } from "../../../domain/intelligence/intelligenceSourceMeta";
+import { IntelligenceNotIntelButton } from "./IntelligenceNotIntelButton";
 import {
   AUTO_READ_VISIBILITY_THRESHOLD,
   AUTO_READ_DELAY_MS,
@@ -24,6 +25,8 @@ interface IntelligenceRowProps {
   isSelected?: boolean;
   onAutoRead: (id: string) => void;
   onClick?: (item: AnalysisEvent) => void;
+  notIntelBusy?: boolean;
+  onNotIntel?: (item: AnalysisEvent) => void;
 }
 
 export const IntelligenceRow = React.memo(function IntelligenceRow({
@@ -33,6 +36,8 @@ export const IntelligenceRow = React.memo(function IntelligenceRow({
   isSelected = false,
   onAutoRead,
   onClick,
+  notIntelBusy,
+  onNotIntel,
 }: IntelligenceRowProps) {
   const { t } = useTranslation("intelligence");
   const containerRef = useAutoRead<HTMLDivElement>({
@@ -104,6 +109,14 @@ export const IntelligenceRow = React.memo(function IntelligenceRow({
               aria-hidden="true"
             />
             {item.location}
+          </span>
+        ) : null}
+        {onNotIntel && !item.dismissed ? (
+          <span role="cell" className="shrink-0">
+            <IntelligenceNotIntelButton
+              disabled={notIntelBusy}
+              onClick={() => onNotIntel(item)}
+            />
           </span>
         ) : null}
       </SelectableSurface>

@@ -75,10 +75,17 @@
     "analyzedTime": "分析時間",
     "batchSources": "批次完整來源",
     "close": "關閉",
-    "ariaLabel": "情報詳情：{title}"
+    "ariaLabel": "情報詳情：{title}",
+    "sourceQuote": "來源訊息",
+    "sourceQuoteMissing": "模型沒有綁定來源訊息，無法回溯原文。",
+    "sourceQuoteGone": "來源訊息已不存在或無法載入。",
+    "sourceQuoteLoading": "正在載入來源訊息…",
+    "openInMonitor": "在監控打開"
   },
   "toast": {
-    "itemNotFound": "找不到指定的情報事件"
+    "itemNotFound": "找不到指定的情報事件",
+    "notIntelFailed": "無法從情報拿掉此則",
+    "notIntelDone": "已從情報拿掉"
   },
   "list": {
     "viewDetailAria": "查看情報詳情：{title}",
@@ -86,7 +93,8 @@
   },
   "card": {
     "sourcedFrom": "來源於 {time}",
-    "eventAvatarAria": "情報事件與任務標記"
+    "eventAvatarAria": "情報事件與任務標記",
+    "notIntel": "不是情報"
   },
   "sourceMeta": {
     "batchGroups": "批次來源 {count} 個群組",

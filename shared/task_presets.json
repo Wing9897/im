@@ -1,5 +1,51 @@
 [
   {
+    "id": "leaderboard-hot-topics",
+    "analysisMode": "leaderboard",
+    "defaultAnalysisTimeRange": "1d",
+    "badge": "🔥",
+    "i18n": {
+      "zh-Hant": {
+        "name": "熱門話題排行",
+        "description": "從已綁來源整理當日／近期熱門話題分數與摘要",
+        "promptTemplate": "從已綁來源整理當日與近期熱門話題。依討論量、轉傳與情緒強度評估熱度，合併同一主題的不同說法，並為每個主題寫一句摘要。忽略閒聊、加群與系統通知；沒有夠熱的主題就不要硬湊。"
+      },
+      "en": {
+        "name": "Hot topic ranking",
+        "description": "Rank today's / recent hot topics from bound sources with scores and summaries",
+        "promptTemplate": "Rank today's and recent hot topics from bound sources. Score heat by discussion volume, forwards, and sentiment; merge different phrasings of the same topic; write a one-line summary per topic. Ignore chatter, join-group spam, and system notices. Do not invent topics when nothing is hot enough."
+      },
+      "zh-Hans": {
+        "name": "热门话题排行",
+        "description": "从已绑来源整理当日／近期热门话题分数与摘要",
+        "promptTemplate": "从已绑来源整理当日与近期热门话题。依讨论量、转传与情绪强度评估热度，合并同一主题的不同说法，并为每个主题写一句摘要。忽略闲聊、加群与系统通知；没有够热的主题就不要硬凑。"
+      }
+    }
+  },
+  {
+    "id": "leaderboard-discussion-heat",
+    "analysisMode": "leaderboard",
+    "defaultAnalysisTimeRange": "7d",
+    "badge": "💬",
+    "i18n": {
+      "zh-Hant": {
+        "name": "討論熱度",
+        "description": "排出頻道裡被反覆提到的主題與討論熱度",
+        "promptTemplate": "排出頻道裡被反覆提到的主題。同一件事的不同說法要合併成一項，依提及次數與討論熱度給分，並寫短摘要說明為何變熱。忽略一次性閒聊與系統通知。"
+      },
+      "en": {
+        "name": "Discussion heat",
+        "description": "Rank themes that keep coming up in bound channels by discussion heat",
+        "promptTemplate": "Rank themes that are mentioned repeatedly in the channels. Merge different phrasings of the same story into one item, score by mention count and discussion heat, and write a short summary of why it heated up. Ignore one-off chatter and system notices."
+      },
+      "zh-Hans": {
+        "name": "讨论热度",
+        "description": "排出频道里被反复提到的主题与讨论热度",
+        "promptTemplate": "排出频道里被反复提到的主题。同一件事的不同说法要合并成一项，依提及次数与讨论热度给分，并写短摘要说明为何变热。忽略一次性闲聊与系统通知。"
+      }
+    }
+  },
+  {
     "id": "key-insights",
     "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
@@ -184,59 +230,123 @@
     }
   },
   {
-    "id": "agent-date-crud",
-    "analysisMode": "agent",
-    "defaultAnalysisTimeRange": "7d",
-    "badge": "📅",
-    "i18n": {
-      "zh-Hant": {
-        "name": "通用專案日期管理",
-        "description": "依來源訊息為專案新增、修改、刪除單次日期與期限，並在無新訊時對帳既有日程",
-        "promptTemplate": "你是通用專案日期管理員。目標：從綁定來源訊息中找出與本專案有關的日期／期限／會議／截止日期，並用工具完成增、改、刪。規則：1) 有明確日期或可合理換算的相對日期才寫入；2) 先查現有日程，能對上就更新，對不上才新建；3) 來源說取消／作廢就刪除或停用；4) 忽略無關閒聊；5) 即使沒有新訊息也要對帳並修正明顯錯誤。完成後用簡短 JSON message 總結本回合改動。"
-      },
-      "en": {
-        "name": "General project date manager",
-        "description": "Add, edit, and delete project dates/deadlines from source messages, and reconcile existing schedule when idle",
-        "promptTemplate": "You are a general project date manager. Goal: find project-related dates, deadlines, and meetings in bound source messages, then add/update/delete them with tools. Rules: 1) write only when the date is explicit or reasonably convertible; 2) inspect existing schedule first, update matches, create only when unmatched; 3) cancel/void from source means delete or deactivate; 4) ignore unrelated chatter; 5) even with no new messages, reconcile and fix obvious errors. Finish with a short JSON message summarizing changes."
-      },
-      "zh-Hans": {
-        "name": "通用项目日期管理",
-        "description": "从来源消息为项目新增、修改、删除单次日期与期限，并在无新消息时对账既有日程",
-        "promptTemplate": "你是通用项目日期管理员。目标：从绑定来源消息中找出与本项目有关的日期／期限／会议／截止日期，并用工具完成增、改、删。规则：1) 有明确日期或可合理换算的相对日期才写入；2) 先查现有日程，能对上就更新，对不上才新建；3) 来源说取消／作废就删除或停用；4) 忽略无关闲聊；5) 即使没有新消息也要对账并修正明显错误。完成后用简短 JSON message 总结本回合改动。"
-      }
-    },
-    "triggerMode": "message_cursor",
-    "outputCalendar": true,
-    "outputAnalysisEvents": false,
-    "capCalendarWrites": true,
-    "capForceWebSearch": false
-  },
-  {
     "id": "agent-work-shift",
     "analysisMode": "agent",
+    "agentPreset": "project_reconcile",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🕒",
     "i18n": {
       "zh-Hant": {
-        "name": "工作輪更表",
-        "description": "依來源訊息建立與維護工作輪更／更份表，含更份變更、對調與取消",
-        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子週期任務或單次事件就更新，對不上才新建；2) 固定輪更用週期任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
+        "name": "工作輪更",
+        "description": "把來源裡的值班／輪更寫進「我的日程」；同一班次改期則更新。不上網。",
+        "promptTemplate": "把已綁來源裡的值班、輪更、班表寫進「我的日程」。規則：1) 同一人同一班次若來源改期，更新既有事件，不要另開一筆；2) 對不上現有班次才新建；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、班次、日期與時間；5) 不上網搜尋；6) 忽略無關閒聊。完成後簡短總結本回合改動。"
       },
       "en": {
-        "name": "Work shift roster",
-        "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
-        "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
+        "name": "Work shifts",
+        "description": "Write duty/rotation from bound sources into My schedule; update the same shift when its date changes. No web search.",
+        "promptTemplate": "Write duty, rotation, and shift rosters from bound sources into My schedule. Rules: 1) if the source changes the date of the same person's same shift, update that event instead of creating another; 2) create only when no matching shift exists; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date, and time clearly; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
       },
       "zh-Hans": {
-        "name": "工作轮更表",
-        "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
-        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子周期任务或单次事件就更新，对不上才新建；2) 固定轮更用周期任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+        "name": "工作轮更",
+        "description": "把来源里的值班／轮更写入「我的日程」；同一班次改期则更新。不上网。",
+        "promptTemplate": "把已绑来源里的值班、轮更、班表写入「我的日程」。规则：1) 同一人同一班次若来源改期，更新既有事件，不要另开一笔；2) 对不上现有班次才新建；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、班次、日期与时间；5) 不上网搜索；6) 忽略无关闲聊。完成后简短总结本回合改动。"
       }
     },
     "triggerMode": "message_cursor",
     "outputCalendar": true,
     "outputAnalysisEvents": false,
     "capCalendarWrites": true,
+    "capWebSearch": false,
     "capForceWebSearch": false
+  },
+  {
+    "id": "agent-project-schedule",
+    "analysisMode": "agent",
+    "agentPreset": "project_reconcile",
+    "defaultAnalysisTimeRange": "7d",
+    "badge": "📅",
+    "i18n": {
+      "zh-Hant": {
+        "name": "專案日程",
+        "description": "把同一工作集內的工程／專案節點（如地基、裝修）寫進「我的日程」；來源說改期就改該事件，沒有就新建。不上網。",
+        "promptTemplate": "把同一工作集內的工程／專案節點寫進「我的日程」，例如地基、裝修、驗收、交付。規則：1) 來源說改期就更新該事件，對不上才新建；2) 來源說取消就停用或刪除；3) 只記錄節點本身的日期與內容，不要宣稱或編造甘特圖依賴、前後置關係；4) 有明確日期或可合理換算的相對日期才寫入；5) 不上網搜尋；6) 忽略無關閒聊。完成後簡短總結本回合改動。"
+      },
+      "en": {
+        "name": "Project schedule",
+        "description": "Write engineering/project milestones in the same workset (e.g. foundation, fit-out) into My schedule; update that event when the source changes the date, or create if none exists. No web search.",
+        "promptTemplate": "Write engineering/project milestones in the same workset into My schedule, such as foundation, fit-out, inspection, and handover. Rules: 1) if the source changes a date, update that event; create only when unmatched; 2) cancel means deactivate or delete; 3) record only the milestone's date and content — do not claim or invent Gantt dependencies or predecessor/successor links; 4) write only when the date is explicit or reasonably convertible; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
+      },
+      "zh-Hans": {
+        "name": "项目日程",
+        "description": "把同一工作集内的工程／项目节点（如地基、装修）写入「我的日程」；来源说改期就改该事件，没有就新建。不上网。",
+        "promptTemplate": "把同一工作集内的工程／项目节点写入「我的日程」，例如地基、装修、验收、交付。规则：1) 来源说改期就更新该事件，对不上才新建；2) 来源说取消就停用或删除；3) 只记录节点本身的日期与内容，不要宣称或编造甘特图依赖、前后置关系；4) 有明确日期或可合理换算的相对日期才写入；5) 不上网搜索；6) 忽略无关闲聊。完成后简短总结本回合改动。"
+      }
+    },
+    "triggerMode": "message_cursor",
+    "outputCalendar": true,
+    "outputAnalysisEvents": false,
+    "capCalendarWrites": true,
+    "capWebSearch": false,
+    "capForceWebSearch": false
+  },
+  {
+    "id": "agent-source-verify",
+    "analysisMode": "agent",
+    "agentPreset": "web_scout",
+    "defaultAnalysisTimeRange": "1d",
+    "badge": "✅",
+    "i18n": {
+      "zh-Hant": {
+        "name": "來源核實",
+        "description": "用已綁來源當線索，再上網核對公開消息，寫成情報事件。",
+        "promptTemplate": "用已綁來源訊息當線索，再以 web.search 核對公開消息。規則：1) 先從來源取出人名、機構、事件或日期當搜尋線索；2) 必須成功搜尋後才收工；摘要不夠再 web.fetch 1–2 個 URL；3) 只寫能核對到的公開事實，來源與公開消息衝突時在內容標明；4) 產出情報事件，不要寫入「我的日程」；5) 忽略閒聊與無法核對的傳聞。完成後把核對結果寫成情報事件。"
+      },
+      "en": {
+        "name": "Source verification",
+        "description": "Use bound sources as clues, verify against public news on the web, and write intel events.",
+        "promptTemplate": "Use bound source messages as clues, then verify with web.search against public news. Rules: 1) pull people, orgs, events, or dates from sources as search clues; 2) do not finish without a successful search; if snippets are not enough, web.fetch 1–2 URLs; 3) write only publicly verifiable facts; if the source conflicts with public news, say so in the body; 4) write intel events, not My schedule; 5) ignore chatter and unverifiable rumors. Finish by writing the verified findings as intel events."
+      },
+      "zh-Hans": {
+        "name": "来源核实",
+        "description": "用已绑来源当线索，再上网核对公开消息，写成情报事件。",
+        "promptTemplate": "用已绑来源消息当线索，再以 web.search 核对公开消息。规则：1) 先从来源取出人名、机构、事件或日期当搜索线索；2) 必须成功搜索后才收工；摘要不够再 web.fetch 1–2 个 URL；3) 只写能核对到的公开事实，来源与公开消息冲突时在内容标明；4) 产出情报事件，不要写入「我的日程」；5) 忽略闲聊与无法核对的传闻。完成后把核对结果写成情报事件。"
+      }
+    },
+    "triggerMode": "message_threshold",
+    "outputCalendar": false,
+    "outputAnalysisEvents": true,
+    "capCalendarWrites": false,
+    "capWebSearch": true,
+    "capForceWebSearch": true
+  },
+  {
+    "id": "agent-pure-web-search",
+    "analysisMode": "agent",
+    "agentPreset": "pure_web_search",
+    "defaultAnalysisTimeRange": "1d",
+    "badge": "🔎",
+    "i18n": {
+      "zh-Hant": {
+        "name": "純網搜",
+        "description": "不綁來源、依排程強制上網搜尋，並把結果寫入情報事件",
+        "promptTemplate": "依任務主題用 web.search 查最新公開消息；沒有成功搜尋不得收工。摘要不夠再 web.fetch 1–2 個 URL。不要依賴 Telegram 或其他已綁來源；本模板不綁頻道。完成後把重點寫成情報事件。"
+      },
+      "en": {
+        "name": "Pure web search",
+        "description": "No bound sources; scheduled forced web search; write findings as intel events",
+        "promptTemplate": "Use web.search on the task topic for the latest public news; do not finish without a successful search. If snippets are not enough, web.fetch 1–2 URLs. Do not rely on Telegram or other bound sources; this template binds no channels. Finish by writing the highlights as intel events."
+      },
+      "zh-Hans": {
+        "name": "纯网搜",
+        "description": "不绑来源、按排程强制上网搜索，并把结果写入情报事件",
+        "promptTemplate": "依任务主题用 web.search 查最新公开消息；没有成功搜索不得收工。摘要不够再 web.fetch 1–2 个 URL。不要依赖 Telegram 或其他已绑来源；本模板不绑频道。完成后把重点写成情报事件。"
+      }
+    },
+    "triggerMode": "schedule",
+    "outputCalendar": false,
+    "outputAnalysisEvents": true,
+    "capCalendarWrites": false,
+    "capWebSearch": true,
+    "capForceWebSearch": true
   }
 ]

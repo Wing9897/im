@@ -37,7 +37,7 @@
     "showEnding": "顯示結束",
     "showEndingHelp": "月曆格子頂列以圖示加數字顯示結束件數：跨日結束、物品到期，以及循環系列的最後一次（顏色對應圖例結束）。",
     "showDates": "顯示日期",
-    "showDatesHelp": "月曆格子顯示較實的日期數字，並隱藏事件與進行中／結束提示。頂欄天氣仍會顯示。"
+    "showDatesHelp": "月曆格子顯示較實的底部日期水印，並隱藏事件標題。頂列日期、進行中／結束件數與天氣仍會顯示。"
   },
   "view": {
     "loadTimeout": "載入逾時，請重試",
@@ -99,8 +99,8 @@
     "unmarkImportant": "取消重要",
     "importantBadge": "重要",
     "edit": "編輯",
-    "dismiss": "從時間規劃移除",
-    "restore": "還原到時間規劃",
+    "dismiss": "從時間軸拿掉",
+    "restore": "還原到時間軸",
     "manualTime": "手動調整時間",
     "applyTime": "套用時間",
     "resetAiTime": "還原 AI 時間",
@@ -145,11 +145,11 @@
   "messages": {
     "saveFailed": "儲存失敗",
     "recurringCreated": "已建立週期任務；月曆會依重複規則展開多次。",
-    "dismissFailed": "從時間規劃移除失敗",
-    "restoreFailed": "還原到時間規劃失敗",
+    "dismissFailed": "從時間軸拿掉失敗",
+    "restoreFailed": "還原到時間軸失敗",
     "importantFailed": "更新重要標記失敗",
-    "dismissConfirm": "將「{title}」從時間規劃移除？之後可以還原。",
-    "restoreConfirm": "將「{title}」還原到時間規劃？",
+    "dismissConfirm": "將「{title}」從時間軸拿掉？之後可以還原。",
+    "restoreConfirm": "將「{title}」還原到時間軸？",
     "ganttLoadTimeout": "載入任務活動資料逾時，請重試"
   },
   "userEvent": {

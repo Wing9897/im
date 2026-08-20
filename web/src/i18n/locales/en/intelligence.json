@@ -77,10 +77,17 @@
     "analyzedTime": "Analyzed at",
     "batchSources": "Full batch sources",
     "close": "Close",
-    "ariaLabel": "Intelligence detail: {title}"
+    "ariaLabel": "Intelligence detail: {title}",
+    "sourceQuote": "Source message",
+    "sourceQuoteMissing": "The model did not bind a source message, so the original cannot be shown.",
+    "sourceQuoteGone": "The source message is missing or could not be loaded.",
+    "sourceQuoteLoading": "Loading source message…",
+    "openInMonitor": "Open in Monitor"
   },
   "toast": {
-    "itemNotFound": "Could not find the specified intel event"
+    "itemNotFound": "Could not find the specified intel event",
+    "notIntelFailed": "Could not remove this from intelligence",
+    "notIntelDone": "Removed from intelligence"
   },
   "list": {
     "viewDetailAria": "View intelligence detail: {title}",
@@ -88,7 +95,8 @@
   },
   "card": {
     "sourcedFrom": "From {time}",
-    "eventAvatarAria": "Intelligence event and task mark"
+    "eventAvatarAria": "Intelligence event and task mark",
+    "notIntel": "Not intelligence"
   },
   "sourceMeta": {
     "batchGroups_one": "Batch source · {count} group",

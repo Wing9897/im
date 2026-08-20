@@ -15,6 +15,7 @@ import {
 } from "../domain/tasks/triggerSchedule";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import type { AnalysisMode, TaskFormState, TaskTemplatePreset } from "../types";
+import { CATALOG_AGENT_PRESET_ID, agentPresetFormPatch } from "../domain/tasks/agentTaskPolicy";
 import { usePersistedState } from "./usePersistedState";
 
 export type { ScheduleType, TaskFormState } from "../types";
@@ -90,7 +91,10 @@ export function getTaskSaveBlockReason(
     if (fields.triggerMode === "message_cursor" && fields.outputAnalysisEvents) {
       return String(i18n.t("tasks:editor.saveNeeds.agentCursorAnalysis"));
     }
-    if (fields.triggerMode === "message_cursor" && fields.channelIds.length === 0) {
+    if (
+      (fields.triggerMode === "message_cursor" || fields.triggerMode === "message_threshold") &&
+      fields.channelIds.length === 0
+    ) {
       return String(i18n.t("tasks:editor.saveNeeds.channels"));
     }
     return null;
@@ -165,18 +169,35 @@ export function useTaskEditorState(
           analysisMode: nextMode,
           analysisTimeRange: localized.defaultAnalysisTimeRange,
         };
-        if (
-          nextMode === "agent" &&
-          prev.scheduleType === "seconds_10" &&
-          !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
-        ) {
-          next.scheduleType = "hourly";
-          next.scheduleRrule = presetToTriggerRrule("hourly", next.scheduleValue);
-        }
-        if (nextMode === "agent" && next.agentWaveIntervalSeconds == null) {
-          next.agentWaveIntervalSeconds = DEFAULT_AGENT_WAVE_INTERVAL_SECONDS;
-        }
-        if (nextMode !== "agent") {
+        if (nextMode === "agent") {
+          const mapped = CATALOG_AGENT_PRESET_ID[preset.id];
+          if (mapped) {
+            const patch = agentPresetFormPatch(mapped);
+            next.triggerMode = patch.policy.triggerMode;
+            next.capCalendarRead = patch.policy.capCalendarRead;
+            next.capCalendarWrites = patch.policy.capCalendarWrites;
+            next.capWebSearch = patch.policy.capWebSearch;
+            next.capForceWebSearch = patch.policy.capForceWebSearch;
+            next.capReadAnalysisEvents = patch.policy.capReadAnalysisEvents;
+            next.capReadItems = patch.policy.capReadItems;
+            next.outputCalendar = patch.policy.outputCalendar;
+            next.outputAnalysisEvents = patch.policy.outputAnalysisEvents;
+            if (patch.clearChannels) next.channelIds = [];
+            if (patch.setWaveInterval && next.agentWaveIntervalSeconds == null) {
+              next.agentWaveIntervalSeconds = DEFAULT_AGENT_WAVE_INTERVAL_SECONDS;
+            }
+          }
+          if (
+            prev.scheduleType === "seconds_10" &&
+            !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
+          ) {
+            next.scheduleType = "hourly";
+            next.scheduleRrule = presetToTriggerRrule("hourly", next.scheduleValue);
+          }
+          if (next.agentWaveIntervalSeconds == null) {
+            next.agentWaveIntervalSeconds = DEFAULT_AGENT_WAVE_INTERVAL_SECONDS;
+          }
+        } else {
           next.outputAnalysisEvents = defaultOutputAnalysisEvents(nextMode);
         }
         return next;

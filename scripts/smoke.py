@@ -22,11 +22,14 @@ import uuid
 from pathlib import Path
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+_ROOT = _SCRIPT_DIR.parent
+for _path in (_ROOT, _SCRIPT_DIR):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
 from urllib.parse import quote  # noqa: E402
 
+from server.db.schema_inspect import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER  # noqa: E402
 from _verify_common import (  # noqa: E402
     BASE,
     FAILURES,
@@ -56,8 +59,8 @@ def main() -> int:
         status == 200
         and isinstance(body, dict)
         and body.get("status") == "ok"
-        and body.get("schemaVersion") == 45
-        and body.get("schemaSemver") == "0.1.0-beta.46",
+        and body.get("schemaVersion") == CURRENT_SCHEMA_VERSION
+        and body.get("schemaSemver") == SCHEMA_SEMVER,
     )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)

@@ -369,7 +369,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 45 / SemVer 0.1.0-beta.46 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 1 / SemVer 1.0.0 (first database version) — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"
@@ -477,5 +477,19 @@
     "sttErrorCode": "Speech recognition error: {code}",
     "ttsUnsupported": "This browser does not support speech synthesis.",
     "ttsFailed": "Speech synthesis failed"
+  },
+  "pipelineGuide": {
+    "title": "Start the intelligence pipeline",
+    "description": "Connect an RSS feed, then tap a preset to create an analysis task. The first intel event will show up on Intelligence and Timeline.",
+    "stepSourceTitle": "Add an RSS source",
+    "stepSourceBody": "Start with RSS for first intel — you do not need a Telegram session yet.",
+    "addRss": "Add RSS",
+    "stepTaskTitle": "Create an analysis task",
+    "stepTaskBody": "Tap Key insights or Extract schedule once, then bind channels and save in the editor. Tasks are not created automatically.",
+    "telegramHint": "Telegram is the main body of sources; connect it after RSS works.",
+    "presetKeyInsights": "Key insights",
+    "presetScheduleEvents": "Extract schedule",
+    "stepEventsTitle": "Wait for the first analysis",
+    "stepEventsBody": "After the task is active, results appear as intel events; timed ones also show on Timeline."
   }
 }

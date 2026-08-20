@@ -52,6 +52,7 @@ import { listUserEventsPage } from "../../api/userEvents";
 import { updateWorkset } from "../../api/worksets";
 import { updateTask } from "../../api/tasks";
 import {
+  PIPELINE_LAYER_PORT,
   PIPELINE_PAGE,
   PIPELINE_VISIBLE_POINTS,
   buildWorksetPipelineGraph,
@@ -333,6 +334,67 @@ describe("WorksetPipelineGraphPanel", () => {
     ) as HTMLButtonElement;
     expect(settings).toBeTruthy();
     expect(settings.style.pointerEvents).not.toBe("none");
+  });
+
+  it("hides ports that cannot connect", async () => {
+    mockListItems.mockResolvedValue([
+      { id: "item-1", title: "Milk", worksetId: "__general__", status: "active" },
+    ] as Awaited<ReturnType<typeof listItems>>);
+    await flushGraph(harness);
+
+    expect(
+      harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(sourcePointId("src-1"), "in")}"]`),
+    ).toBeNull();
+    expect(
+      harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(sourcePointId("src-1"), "out")}"]`),
+    ).toBeTruthy();
+    expect(
+      harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(itemPointId("item-1"), "in")}"]`),
+    ).toBeNull();
+    expect(
+      harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(itemPointId("item-1"), "out")}"]`),
+    ).toBeTruthy();
+
+    expect(
+      harness.container.querySelector(
+        `[data-handleid="${pipelinePointHandleId(worksetPointId("__general__"), "out")}"]`,
+      ),
+    ).toBeNull();
+    expect(
+      harness.container.querySelector(
+        `[data-handleid="${pipelinePointHandleId(PIPELINE_LAYER_PORT.worksets, "out")}"]`,
+      ),
+    ).toBeTruthy();
+    expect(
+      harness.container.querySelectorAll(
+        '[data-testid="workset-graph-block-worksets"] .im-ws-graph-port-out',
+      ),
+    ).toHaveLength(1);
+
+    expect(
+      harness.container.querySelector(
+        `[data-handleid="${pipelinePointHandleId(PIPELINE_PAGE.assistant, "in")}"]`,
+      ),
+    ).toBeNull();
+    expect(
+      harness.container.querySelector(
+        `[data-handleid="${pipelinePointHandleId(PIPELINE_PAGE.assistant, "out")}"]`,
+      ),
+    ).toBeTruthy();
+
+    for (const pageId of [
+      PIPELINE_PAGE.timeline,
+      PIPELINE_PAGE.intel,
+      PIPELINE_PAGE.notify,
+      PIPELINE_PAGE.external,
+    ]) {
+      expect(
+        harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(pageId, "out")}"]`),
+      ).toBeNull();
+      expect(
+        harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(pageId, "in")}"]`),
+      ).toBeTruthy();
+    }
   });
 
   it("onConnect PATCHes a legal task→workset pair", async () => {

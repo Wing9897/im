@@ -37,7 +37,7 @@
     "showEnding": "显示结束",
     "showEndingHelp": "月历格子顶列以图标加数字显示结束件数：跨日结束、物品到期，以及循环系列的最后一次（颜色对应图例结束）。",
     "showDates": "显示日期",
-    "showDatesHelp": "月历格子显示较实的日期数字，并隐藏事件与进行中／结束提示。顶栏天气仍会显示。"
+    "showDatesHelp": "月历格子显示较实的底部日期水印，并隐藏事件标题。顶列日期、进行中／结束件数与天气仍会显示。"
   },
   "view": {
     "loadTimeout": "载入逾时，请重试",
@@ -99,8 +99,8 @@
     "markImportant": "标为重要",
     "unmarkImportant": "取消重要",
     "importantBadge": "重要",
-    "dismiss": "从时间规划移除",
-    "restore": "还原到时间规划",
+    "dismiss": "从时间轴拿掉",
+    "restore": "还原到时间轴",
     "manualTime": "手动调整时间",
     "applyTime": "套用时间",
     "resetAiTime": "还原 AI 时间",
@@ -145,11 +145,11 @@
   "messages": {
     "saveFailed": "储存失败",
     "recurringCreated": "已建立周期任务；月历会按重复规则展开多次。",
-    "dismissFailed": "从时间规划移除失败",
-    "restoreFailed": "还原到时间规划失败",
+    "dismissFailed": "从时间轴拿掉失败",
+    "restoreFailed": "还原到时间轴失败",
     "importantFailed": "更新重要标记失败",
-    "dismissConfirm": "将「{title}」从时间规划移除？之后可以还原。",
-    "restoreConfirm": "将「{title}」还原到时间规划？",
+    "dismissConfirm": "将「{title}」从时间轴拿掉？之后可以还原。",
+    "restoreConfirm": "将「{title}」还原到时间轴？",
     "ganttLoadTimeout": "载入任务活动资料逾时，请重试"
   },
   "userEvent": {

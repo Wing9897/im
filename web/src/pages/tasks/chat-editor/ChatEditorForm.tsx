@@ -16,6 +16,7 @@ import { ChatNameModeFields } from "./ChatNameModeFields";
 import type { LlmProfileGate } from "./useChatEditorLlmProfiles";
 import {
   applyAgentPolicyFields,
+  ChatAgentModeCards,
   ChatAgentSkillsFields,
   ChatAgentTriggerFields,
 } from "./ChatAgentPolicyFields";
@@ -188,6 +189,9 @@ export function ChatEditorForm({
             onLlmProfileIdChange={(v) => updateField("llmProfileId", v)}
             onLlmProfileGateChange={onLlmProfileGateChange}
           />
+          {vis.isAgent ? (
+            <ChatAgentModeCards formState={formState} updateField={updateField} />
+          ) : null}
           {!vis.promptFieldsVisible ? (
             <p className="m-0 text-caption text-text-muted md:col-span-2">
               {modeMeta.modeDescription}
@@ -220,12 +224,17 @@ export function ChatEditorForm({
                   >
                     {formState.triggerMode === "message_cursor"
                       ? t("tasks:modes.agent.cursorChannelHint")
-                      : formState.channelIds.length > 0
-                        ? t("tasks:modes.agent.messageGateHint")
-                        : t("tasks:modes.agent.timedModeHint")}
+                      : t("tasks:modes.agent.messageGateHint")}
                   </p>
                 ) : null}
               </div>
+            ) : vis.isAgent ? (
+              <p
+                className={`m-0 md:col-span-2 ${formHelpClass}`}
+                data-testid="task-agent-channel-hint"
+              >
+                {t("tasks:modes.agent.pureWebHint")}
+              </p>
             ) : null}
 
             <ChatPromptFields

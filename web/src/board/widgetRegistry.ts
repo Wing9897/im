@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import i18n from "../i18n";
 import type { BoardWidgetProps, BoardWidgetType } from "./types";
-import type { BoardSizePresetId } from "./boardSizePresets";
+import { BOARD_SIZE_PRESETS, type BoardSizePresetId } from "./boardSizePresets";
 import { MapBoardWidget } from "./widgets/MapBoardWidget";
 import { CalendarBoardWidget, CalendarDayBoardWidget } from "./widgets/CalendarBoardWidget";
 import { GanttBoardWidget } from "./widgets/GanttBoardWidget";
@@ -33,6 +33,11 @@ interface BoardWidgetDescriptor {
   defaultSizeId: BoardSizePresetId;
 }
 
+/** List / feed frames refuse 1-row slivers so title+time rows stay readable. */
+export const BOARD_LIST_WIDGET_MIN_ROWS = 2;
+/** Schedule needs ~4–6 title+time rows; 3 grid rows ≈ 212px design height. */
+export const BOARD_SCHEDULE_MIN_ROWS = 3;
+
 /** Every frame offers these sizes in addition to type-specific ones. */
 const BOARD_UNIVERSAL_SIZE_OPTIONS = [
   "3x1",
@@ -45,34 +50,37 @@ const BOARD_UNIVERSAL_SIZE_OPTIONS = [
 
 function withUniversalSizes(
   options: readonly BoardSizePresetId[],
+  minRows = 1,
 ): readonly BoardSizePresetId[] {
   const merged = new Set<BoardSizePresetId>([
     ...BOARD_UNIVERSAL_SIZE_OPTIONS,
     ...options,
   ]);
-  return [...merged].sort((a, b) => {
-    const [aCols, aRows] = a.split("x").map(Number);
-    const [bCols, bRows] = b.split("x").map(Number);
-    return aCols - bCols || aRows - bRows;
-  });
+  return [...merged]
+    .filter((id) => BOARD_SIZE_PRESETS[id].rows >= minRows)
+    .sort((a, b) => {
+      const [aCols, aRows] = a.split("x").map(Number);
+      const [bCols, bRows] = b.split("x").map(Number);
+      return aCols - bCols || aRows - bRows;
+    });
 }
 
 /**
- * Per-frame size catalog (type-specific + universal 3x1/4x1/3x2/4x2/5x3/6x4).
+ * Per-frame size catalog (type-specific + universal sizes, filtered by min rows).
  */
 export const BOARD_WIDGET_DESCRIPTORS: Record<BoardWidgetType, BoardWidgetDescriptor> = {
   map: {
     titleKey: "board:widgets.map.title",
     descriptionKey: "board:widgets.map.description",
     component: MapBoardWidget,
-    sizeOptions: withUniversalSizes(["4x3", "5x5", "6x5", "6x6", "8x5", "8x6", "9x6"]),
+    sizeOptions: withUniversalSizes(["4x3", "5x5", "6x5", "6x6", "8x5", "8x6", "9x6"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "5x3",
   },
   wall: {
     titleKey: "board:widgets.wall.title",
     descriptionKey: "board:widgets.wall.description",
     component: WallBoardWidget,
-    sizeOptions: withUniversalSizes(["3x3", "4x3", "4x4", "5x4", "5x5", "6x5", "8x5"]),
+    sizeOptions: withUniversalSizes(["3x3", "4x3", "4x4", "5x4", "5x5", "6x5", "8x5"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x3",
   },
   gantt: {
@@ -113,29 +121,35 @@ export const BOARD_WIDGET_DESCRIPTORS: Record<BoardWidgetType, BoardWidgetDescri
     titleKey: "board:widgets.events.title",
     descriptionKey: "board:widgets.events.description",
     component: EventsBoardWidget,
-    sizeOptions: withUniversalSizes(["3x4", "3x5", "4x3", "4x4", "4x5", "4x6", "5x4"]),
+    sizeOptions: withUniversalSizes(
+      ["3x4", "3x5", "4x3", "4x4", "4x5", "4x6", "5x4"],
+      BOARD_LIST_WIDGET_MIN_ROWS,
+    ),
     defaultSizeId: "4x4",
   },
   feed: {
     titleKey: "board:widgets.feed.title",
     descriptionKey: "board:widgets.feed.description",
     component: FeedBoardWidget,
-    sizeOptions: withUniversalSizes(["3x4", "3x5", "4x3", "4x4", "4x5", "4x6", "5x4"]),
+    sizeOptions: withUniversalSizes(
+      ["3x4", "3x5", "4x3", "4x4", "4x5", "4x6", "5x4"],
+      BOARD_LIST_WIDGET_MIN_ROWS,
+    ),
     defaultSizeId: "4x4",
   },
   calendar: {
     titleKey: "board:widgets.calendar.title",
     descriptionKey: "board:widgets.calendar.description",
     component: CalendarBoardWidget,
-    sizeOptions: withUniversalSizes(["4x3", "6x3"]),
+    sizeOptions: withUniversalSizes(["4x3", "5x2", "6x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "5x3",
   },
   "calendar-day": {
     titleKey: "board:widgets.calendarDay.title",
     descriptionKey: "board:widgets.calendarDay.description",
     component: CalendarDayBoardWidget,
-    sizeOptions: withUniversalSizes(["5x1", "6x1", "6x2"]),
-    defaultSizeId: "5x1",
+    sizeOptions: withUniversalSizes(["5x2", "6x2"], BOARD_LIST_WIDGET_MIN_ROWS),
+    defaultSizeId: "5x2",
   },
   leaderboard: {
     titleKey: "board:widgets.leaderboard.title",
@@ -148,14 +162,14 @@ export const BOARD_WIDGET_DESCRIPTORS: Record<BoardWidgetType, BoardWidgetDescri
     titleKey: "board:widgets.stats.title",
     descriptionKey: "board:widgets.stats.description",
     component: StatsBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "4x3", "5x2"]),
+    sizeOptions: withUniversalSizes(["2x2", "4x3", "5x2"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "5x2",
   },
   queue: {
     titleKey: "board:widgets.queue.title",
     descriptionKey: "board:widgets.queue.description",
     component: QueueBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "4x3", "5x2"]),
+    sizeOptions: withUniversalSizes(["2x2", "4x3", "5x2"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x2",
   },
   system: {
@@ -176,56 +190,56 @@ export const BOARD_WIDGET_DESCRIPTORS: Record<BoardWidgetType, BoardWidgetDescri
     titleKey: "board:widgets.weather.title",
     descriptionKey: "board:widgets.weather.description",
     component: WeatherBoardWidget,
-    sizeOptions: withUniversalSizes(["4x3", "5x2", "6x2"]),
+    sizeOptions: withUniversalSizes(["4x3", "5x2", "6x2"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "5x2",
   },
   sources: {
     titleKey: "board:widgets.sources.title",
     descriptionKey: "board:widgets.sources.description",
     component: SourcesBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "5x1", "6x1"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "2x2",
   },
   logs: {
     titleKey: "board:widgets.logs.title",
     descriptionKey: "board:widgets.logs.description",
     component: LogsBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3", "5x1"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x2",
   },
   tasks: {
     titleKey: "board:widgets.tasks.title",
     descriptionKey: "board:widgets.tasks.description",
     component: TasksBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x2",
   },
   actions: {
     titleKey: "board:widgets.actions.title",
     descriptionKey: "board:widgets.actions.description",
     component: ActionsBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "5x1"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x2",
   },
   schedule: {
     titleKey: "board:widgets.schedule.title",
     descriptionKey: "board:widgets.schedule.description",
     component: ScheduleBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3", "5x1"]),
-    defaultSizeId: "3x2",
+    sizeOptions: withUniversalSizes(["3x3", "3x4", "4x3", "4x4"], BOARD_SCHEDULE_MIN_ROWS),
+    defaultSizeId: "3x3",
   },
   items: {
     titleKey: "board:widgets.items.title",
     descriptionKey: "board:widgets.items.description",
     component: ItemsBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3", "5x1"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "3x2",
   },
   "llm-health": {
     titleKey: "board:widgets.llmHealth.title",
     descriptionKey: "board:widgets.llmHealth.description",
     component: LlmHealthBoardWidget,
-    sizeOptions: withUniversalSizes(["2x2", "3x2", "5x1"]),
+    sizeOptions: withUniversalSizes(["2x2", "3x2"], BOARD_LIST_WIDGET_MIN_ROWS),
     defaultSizeId: "2x2",
   },
 };
@@ -260,4 +274,9 @@ export function getWidgetDefaultSizeId(type: BoardWidgetType): BoardSizePresetId
 
 export function getWidgetSizeOptions(type: BoardWidgetType): readonly BoardSizePresetId[] {
   return BOARD_WIDGET_DESCRIPTORS[type].sizeOptions;
+}
+
+export function getWidgetMinRows(type: BoardWidgetType): number {
+  const options = BOARD_WIDGET_DESCRIPTORS[type].sizeOptions;
+  return Math.min(...options.map((id) => BOARD_SIZE_PRESETS[id].rows));
 }
