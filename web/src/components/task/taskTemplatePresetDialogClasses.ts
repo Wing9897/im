@@ -1,20 +1,28 @@
 import { dialogShellClass } from "../dialogs/dialogShellClasses";
 
-/** Wider / taller shell so more compact template cards fit on screen. */
+/** Frozen shell: same width/height when switching tabs or selecting a card. */
 export const presetDialogContainerClass =
-  `${dialogShellClass} flex max-h-[min(88vh,860px)] w-[min(960px,calc(100vw-32px))] max-w-[min(960px,calc(100vw-32px))] flex-col`;
+  `${dialogShellClass} box-border flex h-[min(88vh,860px)] w-[min(960px,calc(100vw-32px))] max-w-[min(960px,calc(100vw-32px))] flex-col`;
 
-export const presetDialogFilterGridClass = "mb-md grid gap-sm";
+/** Inner body: sticky filters; only the card list scrolls. */
+export const presetDialogBodyClass = "im-preset-dialog-body flex min-h-0 flex-1 flex-col overflow-hidden";
 
-export const presetDialogFilterChipRowClass = "flex flex-wrap gap-sm";
+export const presetDialogFilterGridClass = "mb-md grid shrink-0 gap-sm";
+
+export const presetDialogFilterChipRowClass =
+  "flex flex-nowrap gap-sm overflow-x-auto [scrollbar-gutter:stable]";
 
 export const presetDialogSearchGridClass = "grid gap-xs";
 
 export const presetDialogSearchInputClass =
-  "im-surface-inset w-full rounded-[10px] border border-surface-border px-md py-2 text-[13px] text-text-primary outline-none focus:border-accent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent)_20%,transparent)]";
+  "im-surface-inset box-border w-full rounded-[10px] border border-surface-border px-md py-2 text-[13px] text-text-primary outline-none focus:border-accent focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--accent)_20%,transparent)]";
+
+/** One-line status; extra filter copy ellipsizes instead of growing the grid. */
+export const presetDialogStatusClass =
+  "min-h-4 overflow-hidden text-ellipsis whitespace-nowrap text-xs leading-4 text-text-muted";
 
 export const presetDialogScrollableClass =
-  "min-h-0 flex-1 overflow-y-auto pr-xs";
+  "im-preset-dialog-scroll min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]";
 
 export const presetDialogGroupGridClass = "grid gap-md";
 

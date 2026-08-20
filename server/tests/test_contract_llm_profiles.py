@@ -1,4 +1,4 @@
-"""Contract tests for LLM profiles / staff-instances / global slots (stamp 45)."""
+"""Contract tests for LLM profiles / staff-instances / global slots (stamp 1)."""
 
 from __future__ import annotations
 

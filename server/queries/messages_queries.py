@@ -131,3 +131,11 @@ async def fetch_messages_page(
         "hasMore": has_more,
         "totalCount": total_count,
     }
+
+
+async def fetch_message_by_id(db: Database, message_id: str) -> dict[str, Any] | None:
+    """Single message by id (joined channel name), or None."""
+    row = await db.fetch_one(MESSAGES_SELECT + " WHERE m.id = ?", (message_id,))
+    if row is None:
+        return None
+    return serialize_message(row)

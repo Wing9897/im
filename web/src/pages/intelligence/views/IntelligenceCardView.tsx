@@ -10,6 +10,7 @@ import { useAutoRead } from "../../../hooks/useAutoRead";
 import { CardFieldIcon, FeedCard } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { formatIntelligenceEventTime } from "../../../domain/intelligence/intelligenceSourceMeta";
+import { IntelligenceNotIntelButton } from "./IntelligenceNotIntelButton";
 import {
   AUTO_READ_VISIBILITY_THRESHOLD,
   AUTO_READ_DELAY_MS,
@@ -23,6 +24,8 @@ interface IntelligenceCardProps {
   isConsumed: boolean;
   onAutoRead: (id: string) => void;
   onClick?: (item: AnalysisEvent) => void;
+  notIntelBusy?: boolean;
+  onNotIntel?: (item: AnalysisEvent) => void;
 }
 
 export const IntelligenceCard = React.memo(function IntelligenceCard({
@@ -31,6 +34,8 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
   isConsumed,
   onAutoRead,
   onClick,
+  notIntelBusy,
+  onNotIntel,
 }: IntelligenceCardProps) {
   const { t } = useTranslation("intelligence");
   const taskGlyph = lookupTaskEmoji(item.emoji);
@@ -109,9 +114,17 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
         }
         body={<span title={item.body}>{item.body}</span>}
         footer={
-          <span className="inline-flex min-w-0 items-center gap-xs truncate">
-            <CardFieldIcon icon={Clock} />
-            {t("card.sourcedFrom", { time: formatIntelligenceEventTime(item) })}
+          <span className="flex min-w-0 items-center justify-between gap-sm">
+            <span className="inline-flex min-w-0 items-center gap-xs truncate">
+              <CardFieldIcon icon={Clock} />
+              {t("card.sourcedFrom", { time: formatIntelligenceEventTime(item) })}
+            </span>
+            {onNotIntel && !item.dismissed ? (
+              <IntelligenceNotIntelButton
+                disabled={notIntelBusy}
+                onClick={() => onNotIntel(item)}
+              />
+            ) : null}
           </span>
         }
       />

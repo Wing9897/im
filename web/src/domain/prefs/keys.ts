@@ -111,6 +111,8 @@ export const WORKSETS_SEARCH_STORAGE_KEY = "im:worksets:search";
 export const SCHEDULE_SEARCH_STORAGE_KEY = "im:schedule:search";
 export const SCHEDULE_FILTERS_STORAGE_KEY = "im:schedule:filters";
 export const CHAT_EDITOR_TEMPLATE_USAGE_KEY = "im:task-template-usage";
+/** Pipeline guide: hide the full checklist after first completion until wipe. */
+export const PIPELINE_EVER_COMPLETED_KEY = "im:pipeline:ever-completed";
 
 export function chatEditorFormStorageKey(taskId: string | undefined): string {
   return taskId

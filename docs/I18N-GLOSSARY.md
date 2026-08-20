@@ -107,10 +107,10 @@
 
 - **顯示文案 SoT**：[`shared/task_presets.json`](../shared/task_presets.json) — 各 preset 的 `i18n.{zh-Hant,en,zh-Hans}.{name,description,promptTemplate}`。UI 經 `localizeTaskPreset()` 查 locale key。
 - **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）。`webSearchQuery` 已於 stamp 20 從 schema／OpenAPI／FE 移除（Agent 從 prompt 自行選關鍵字）。
-- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。
+- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。Agent 模板另有 `agentPreset`（對應編輯器模式卡）與 trigger／output／cap 欄位，供套用時對齊 `AgentTaskSpec`；API `GET /tasks/templates` 仍只回傳顯示欄位，FE 以 `CATALOG_AGENT_PRESET_ID` 對應模式卡。
 - **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `tasks.json` → `presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。
-- **產品目錄（精簡）**：情報 `intel_event` 八則（`key-insights` 關鍵情報摘要、`schedule-time-inference` 時間行程推理、`iot-device-alerts` IoT 設備告警、`crypto-airdrop-deals` 薅羊毛情報、`schedule-events` 行程事件提取、`security-scam-watch` 資安詐騙警示、`policy-regulation` 政策法規動態、`finance-markets` 金融市場要聞）；專案經理 `agent` 兩則（`agent-date-crud` 通用專案日期管理、`agent-work-shift` 工作輪更表）。編輯器內 Agent 政策芯片仍是 `project_reconcile`／`web_scout`，不是目錄列。無排行榜目錄模板；排行榜任務走 `/leaderboard` + 通知，不進情報事件頁。
+- **產品目錄（精簡）**：排行榜 `leaderboard` 兩則（`leaderboard-hot-topics` 熱門話題排行、`leaderboard-discussion-heat` 討論熱度）；情報 `intel_event` 八則（`key-insights` 關鍵情報摘要、`schedule-time-inference` 時間行程推理、`iot-device-alerts` IoT 設備告警、`crypto-airdrop-deals` 薅羊毛情報、`schedule-events` 行程事件提取、`security-scam-watch` 資安詐騙警示、`policy-regulation` 政策法規動態、`finance-markets` 金融市場要聞）；專案經理 `agent` 四則（`agent-work-shift` 工作輪更、`agent-project-schedule` 專案日程、`agent-source-verify` 來源核實、`agent-pure-web-search` 純網搜）。編輯器內 Agent 模式卡是 `project_reconcile`／`web_scout`／`pure_web_search`。排行榜任務仍走 `/leaderboard` + 通知，不進情報事件頁。
 
 ## 產品用語
 
@@ -121,8 +121,9 @@
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
 | mode `leaderboard` | 排行榜任務 | Leaderboard task | 排行榜任务 |
 | mode `agent` | **專案經理任務** | Project Manager task | 项目经理任务 |
-| Agent 預設 `project_reconcile` | **專案調和**（預設名；員工／任務類型顯示名為專案經理） | Project reconcile | 项目调和 |
-| Agent 預設 `web_scout` | **網蒐** | Web scout | 网蒐 |
+| Agent 模式 `project_reconcile` | **對帳日曆**（把已綁來源的班表／會議／截止寫進「我的日程」；不上網；現況來源以 Telegram 為主） | Calendar reconcile | 对账日历 |
+| Agent 模式 `web_scout` | **來源 + 網搜** | Sources + web search | 来源 + 网搜 |
+| Agent 模式 `pure_web_search` | **純網搜** | Pure web search | 纯网搜 |
 | Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__general__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
@@ -142,6 +143,10 @@
 | 畫面呈現：直至關閉 | **持續** | Persistent | 持续 |
 | 日曆相對開始日的前置天數 | **提前天數**（勿稱提醒／提前提醒） | Days ahead | 提前天数 |
 | 日期／時間欄旁填入本機此刻 | **現在** | Now | 现在 |
+| 情報管線檢查清單（Tasks／Intelligence，非 FirstRun、非時間規劃） | **情報管線** | Intelligence pipeline | 情报管线 |
+| 情報卡校正（timeline_dismissals） | **不是情報** | Not intelligence | 不是情报 |
+| 時間規劃卡校正 | **從時間軸拿掉** | Take off timeline | 从时间轴拿掉 |
+| Agent 任務頁收回最近完成批次寫入 | **收回最近一次調和** | Retract last reconcile | 收回最近一次调和 |
 
 ## AI 員工（staff／employees／intro）
 

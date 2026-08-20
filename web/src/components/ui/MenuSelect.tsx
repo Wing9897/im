@@ -135,6 +135,7 @@ const listBoxChromeStyle: CSSProperties = {
   listStyle: "none",
   maxHeight: 280,
   overflowY: "auto",
+  scrollbarGutter: "stable",
   boxSizing: "border-box",
   ...listSurfaceStyle,
 };
@@ -342,11 +343,11 @@ export function MenuSelect({
                 title={optionTitle}
                 data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
                 className={[
-                  "rounded-sm border-none px-sm py-1.5 text-caption leading-snug",
+                  "rounded-sm border-none px-sm py-1.5 text-caption font-medium leading-snug hover:!transform-none active:!transform-none",
                   optionDisabled
                     ? "cursor-not-allowed bg-transparent text-text-muted opacity-70"
                     : isActive
-                      ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-medium text-text-primary"
+                      ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] text-text-primary"
                       : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_10%,var(--surface-card))]",
                 ].join(" ")}
                 style={optionStyle}
@@ -385,11 +386,12 @@ export function MenuSelect({
           usesFormChrome
             ? [
                 isToolbar ? toolbarTriggerClass : fieldTriggerClass,
+                "hover:!transform-none active:!transform-none",
                 triggerClassName ?? "",
               ]
                 .filter(Boolean)
                 .join(" ")
-            : "im-surface-inset rounded-md border border-surface-border px-sm py-1.5 text-caption font-medium leading-snug text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            : "im-surface-inset rounded-md border border-surface-border px-sm py-1.5 text-caption font-medium leading-snug text-text-primary hover:!transform-none active:!transform-none disabled:cursor-not-allowed disabled:opacity-50"
         }
         style={isField ? fieldTriggerStyle : isToolbar ? toolbarTriggerStyle : triggerStyle}
         onClick={() => {

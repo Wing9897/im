@@ -38,16 +38,16 @@ describe("Task mode field visibility", () => {
     }
   });
 
-  it("agent web_scout shows prompt and optional channels without messageBatch", () => {
-    const policy = agentPresetPolicy("web_scout");
+  it("agent 來源+網搜 requires bound sources without messageBatch", () => {
+    const policy = agentPresetPolicy("web_scout", { hasChannels: true });
     expect(ANALYSIS_MODE_CAPABILITIES.agent.messageBatch).toBe(false);
     expect(analysisModeRequiresChannels("agent")).toBe(false);
     expect(analysisModeShowsOptionalChannels("agent")).toBe(true);
     expect(getTaskModeFieldVisibility("agent", policy)).toEqual({
       promptFieldsVisible: true,
       channelFieldsVisible: true,
-      channelsOptional: true,
-      channelsRequired: false,
+      channelsOptional: false,
+      channelsRequired: true,
       analysisTimeRangeVisible: false,
       timelineToggleVisible: true,
       outputGroupVisible: true,
@@ -59,8 +59,19 @@ describe("Task mode field visibility", () => {
     });
   });
 
+  it("agent 純網搜 hides the source picker", () => {
+    const policy = agentPresetPolicy("pure_web_search");
+    expect(getTaskModeFieldVisibility("agent", policy)).toMatchObject({
+      promptFieldsVisible: true,
+      channelFieldsVisible: false,
+      channelsOptional: false,
+      channelsRequired: false,
+      showWaveInterval: false,
+    });
+  });
+
   it("hides analysis time range for agent but keeps it for intel_event", () => {
-    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout")).analysisTimeRangeVisible).toBe(false);
+    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout", { hasChannels: true })).analysisTimeRangeVisible).toBe(false);
     expect(getTaskModeFieldVisibility("intel_event").analysisTimeRangeVisible).toBe(true);
   });
 
@@ -70,7 +81,7 @@ describe("Task mode field visibility", () => {
       expect(getTaskModeFieldVisibility(mode, policy).outputGroupVisible).toBe(true);
     }
     expect(getTaskModeFieldVisibility("intel_event").timelineToggleVisible).toBe(true);
-    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout")).timelineToggleVisible).toBe(true);
+    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout", { hasChannels: true })).timelineToggleVisible).toBe(true);
     expect(getTaskModeFieldVisibility("leaderboard").timelineToggleVisible).toBe(false);
   });
 });

@@ -75,10 +75,17 @@
     "analyzedTime": "分析时间",
     "batchSources": "批次完整来源",
     "close": "关闭",
-    "ariaLabel": "情报详情：{title}"
+    "ariaLabel": "情报详情：{title}",
+    "sourceQuote": "来源消息",
+    "sourceQuoteMissing": "模型没有绑定来源消息，无法回溯原文。",
+    "sourceQuoteGone": "来源消息已不存在或无法载入。",
+    "sourceQuoteLoading": "正在载入来源消息…",
+    "openInMonitor": "在监控打开"
   },
   "toast": {
-    "itemNotFound": "找不到指定的情报事件"
+    "itemNotFound": "找不到指定的情报事件",
+    "notIntelFailed": "无法从情报拿掉此则",
+    "notIntelDone": "已从情报拿掉"
   },
   "list": {
     "viewDetailAria": "查看情报详情：{title}",
@@ -86,7 +93,8 @@
   },
   "card": {
     "sourcedFrom": "来源于 {time}",
-    "eventAvatarAria": "情报事件与任务标记"
+    "eventAvatarAria": "情报事件与任务标记",
+    "notIntel": "不是情报"
   },
   "sourceMeta": {
     "batchGroups": "批次来源 {count} 个群组",

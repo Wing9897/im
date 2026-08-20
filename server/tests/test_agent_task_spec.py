@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from server.domain.agent_task_spec import (
@@ -9,6 +12,8 @@ from server.domain.agent_task_spec import (
     agent_preset_spec,
     normalize_agent_task_spec,
 )
+
+_SHARED_PRESETS = Path(__file__).resolve().parents[2] / "shared" / "task_presets.json"
 
 
 def test_agent_preset_project_reconcile():
@@ -31,6 +36,19 @@ def test_web_scout_preset_schedule_without_channels():
 def test_web_scout_preset_threshold_with_channels():
     spec = agent_preset_spec("web_scout", has_channels=True)
     assert spec.trigger_mode == "message_threshold"
+
+
+def test_pure_web_search_preset_ignores_channels_flag():
+    spec = agent_preset_spec("pure_web_search", has_channels=True)
+    assert spec.trigger_mode == "schedule"
+    assert spec.output_analysis_events is True
+    assert spec.output_calendar is False
+    assert spec.cap_web_search is True
+    assert spec.cap_force_web_search is True
+    assert spec.cap_calendar_writes is False
+
+    spec_no_channels = agent_preset_spec("pure_web_search", has_channels=False)
+    assert spec_no_channels == spec
 
 
 def test_requires_at_least_one_output():
@@ -123,3 +141,24 @@ def test_message_threshold_without_channels_becomes_schedule():
         has_channels=False,
     )
     assert spec.trigger_mode == "schedule"
+
+
+def test_catalog_agent_templates_match_mode_caps():
+    raw = json.loads(_SHARED_PRESETS.read_text(encoding="utf-8"))
+    agent_entries = [entry for entry in raw if entry["analysisMode"] == "agent"]
+    assert {entry["id"] for entry in agent_entries} == {
+        "agent-work-shift",
+        "agent-project-schedule",
+        "agent-source-verify",
+        "agent-pure-web-search",
+    }
+    for entry in agent_entries:
+        preset = entry["agentPreset"]
+        has_channels = preset != "pure_web_search"
+        spec = agent_preset_spec(preset, has_channels=has_channels)
+        assert spec.trigger_mode == entry["triggerMode"], entry["id"]
+        assert spec.output_calendar is entry["outputCalendar"], entry["id"]
+        assert spec.output_analysis_events is entry["outputAnalysisEvents"], entry["id"]
+        assert spec.cap_calendar_writes is entry["capCalendarWrites"], entry["id"]
+        assert spec.cap_web_search is entry["capWebSearch"], entry["id"]
+        assert spec.cap_force_web_search is entry["capForceWebSearch"], entry["id"]

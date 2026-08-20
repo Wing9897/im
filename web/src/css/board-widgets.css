@@ -95,7 +95,7 @@
 
 .board-widget-frame__title {
   margin: 0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text-primary);
@@ -155,7 +155,7 @@
 .board-widget-frame__size-btn {
   min-width: 28px;
   padding: 0 4px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -184,6 +184,7 @@
   z-index: 10050;
   max-height: min(280px, calc(100vh - 16px));
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .board-widget-frame__size-item {
@@ -192,7 +193,7 @@
   padding: 4px 6px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   cursor: pointer;
 }
@@ -238,8 +239,9 @@
 }
 
 .board-widget-body {
-  padding: 6px 8px;
-  font-size: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
   color: var(--text-secondary);
   display: flex;
   flex: 1;
@@ -247,12 +249,15 @@
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
+  overflow: auto;
 }
 
 .board-widget-muted {
   margin: 0;
+  padding: 4px 0;
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .board-widget-list {
@@ -261,7 +266,9 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .board-widget-list__item {
@@ -269,21 +276,25 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .board-widget-list__row {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 2px;
   width: 100%;
+  min-height: 36px;
   margin: 0;
-  padding: 3px 4px;
+  padding: 6px 8px;
   border: none;
   border-radius: 4px;
   background: transparent;
   text-align: left;
   cursor: pointer;
   color: inherit;
+  box-sizing: border-box;
 }
 
 .board-widget-list__row:hover {
@@ -305,12 +316,13 @@
 
 .board-widget-list__primary {
   color: var(--text-primary);
-  font-size: 10px;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 1.35;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+  word-break: break-word;
 }
 
 .board-widget-list__title .board-widget-list__primary {
@@ -320,7 +332,8 @@
 
 .board-widget-list__meta {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 11px;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -332,8 +345,8 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin-top: 2px;
-  font-size: 9px;
-  line-height: 1.3;
+  font-size: 11px;
+  line-height: 1.35;
   color: var(--error);
   text-align: left;
   white-space: normal;
@@ -349,7 +362,7 @@
 .board-widget-status__detail {
   margin: 0;
   max-width: 100%;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;

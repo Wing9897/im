@@ -86,8 +86,8 @@ export function ScheduleCardEmoji({ emoji, name, defaultIcon, onSelect }: Props)
         data-testid="schedule-card-emoji-trigger"
         className={[
           "appearance-none border-0 bg-transparent p-0 shadow-none",
-          "rounded-full transition-[opacity,transform] duration-150 ease-out",
-          "hover:opacity-85 active:scale-[0.97]",
+          "rounded-full transition-opacity duration-150 ease-out",
+          "hover:opacity-85",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
           "focus-visible:ring-[color-mix(in_srgb,var(--accent)_40%,transparent)]",
           "focus-visible:ring-offset-[var(--surface-card)]",

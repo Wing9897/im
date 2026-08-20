@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus, CirclePlay, Flag, type LucideIcon } from "lucide-react";
+import { CalendarPlus, CircleCheck, Timer, type LucideIcon } from "lucide-react";
 import type { TimelineItem } from "../../../types";
 import { itemDateKindMarkerClass } from "../../../domain/items/itemCalendarProjection";
 import { lookupScheduleEmoji } from "../../../domain/schedule/scheduleEmoji";
@@ -18,6 +18,7 @@ import { preferActiveEvents, dismissedSurfaceClass, dismissedTitleClass } from "
 import {
   monthDayCellClass,
   monthDayHeaderClass,
+  monthDayNumberClass,
   monthDayWatermarkClass,
   monthDayWatermarkStackClass,
   monthDayHolidayWatermarkClass,
@@ -70,7 +71,7 @@ type TimelineMonthGridProps = {
   onFocusDay: (day: Date) => void;
   /** Month cell context menu → create event prefilled on that day. */
   onCreateOnDay?: (day: Date) => void;
-  /** Toolbar 篩選 hover / 顯示日期: muted dates, hide event rows (header weather stays). */
+  /** Toolbar 篩選 hover / 顯示日期: stronger bottom watermarks; hide event rows. Header (day number, 進行中/結束, weather) stays. */
   datesRevealed?: boolean;
 };
 
@@ -243,6 +244,16 @@ export function TimelineMonthGrid({
                   data-testid="timeline-month-day-header"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-[3px] overflow-hidden">
+                    <span
+                      className={monthDayNumberClass({
+                        isCurrentMonth,
+                        today,
+                        activeDay,
+                      })}
+                      data-testid="timeline-month-day-number"
+                    >
+                      {day.getDate()}
+                    </span>
                     {showTodayLabel && (
                       <span className={monthTodayLabelClass}>{t("calendar.today")}</span>
                     )}
@@ -251,7 +262,7 @@ export function TimelineMonthGrid({
                         {visibleOngoing > 0 && (
                           <MonthSpanCountChip
                             display={t("calendar.ongoing", { count: visibleOngoing })}
-                            icon={CirclePlay}
+                            icon={Timer}
                             iconClass={monthSpanOngoingIconClass}
                             textClass={monthSpanOngoingTextClass}
                             label={t("calendar.ongoingAria", { count: visibleOngoing })}
@@ -261,7 +272,7 @@ export function TimelineMonthGrid({
                         {visibleEnding > 0 && (
                           <MonthSpanCountChip
                             display={t("calendar.ending", { count: visibleEnding })}
-                            icon={Flag}
+                            icon={CircleCheck}
                             iconClass={monthSpanEndingIconClass}
                             textClass={monthSpanEndingTextClass}
                             label={t("calendar.endingAria", { count: visibleEnding })}

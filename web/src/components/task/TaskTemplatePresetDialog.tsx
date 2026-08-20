@@ -8,11 +8,15 @@ import { formatAnalysisMode } from "../../utils/analysis";
 import { localizeTaskPreset } from "../../domain/tasks/localizeTaskPreset";
 import type { TemplateUsageMap } from "./taskTemplateTypes";
 import { getTaskFormAnalysisModeMeta, taskFormAnalysisModeOrder } from "./taskFormAnalysisModeMeta";
-import { analysisModeSupportsTaskPresets } from "../../domain/tasks/taskPresetModes";
+import {
+  analysisModeSupportsTaskPresets,
+  filterTaskTemplatePresetsByMode,
+} from "../../domain/tasks/taskPresetModes";
 import { FilterChip } from "../ui";
 import { PresetGroupSection } from "./TaskTemplatePresetDialog/PresetGroupSection";
 import { StateMessage } from "./TaskTemplatePresetDialog/StateMessage";
 import {
+  presetDialogBodyClass,
   presetDialogContainerClass,
   presetDialogFilterChipRowClass,
   presetDialogFilterGridClass,
@@ -20,6 +24,7 @@ import {
   presetDialogScrollableClass,
   presetDialogSearchGridClass,
   presetDialogSearchInputClass,
+  presetDialogStatusClass,
 } from "./taskTemplatePresetDialogClasses";
 
 type TaskTemplatePresetDialogProps = {
@@ -64,13 +69,7 @@ export function TaskTemplatePresetDialog({
 
   const visiblePresets = React.useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    return presets.filter((preset) => {
-      if (!analysisModeSupportsTaskPresets(preset.analysisMode)) {
-        return false;
-      }
-      if (filter !== "all" && preset.analysisMode !== filter) {
-        return false;
-      }
+    return filterTaskTemplatePresetsByMode(presets, filter).filter((preset) => {
       if (!normalizedQuery) {
         return true;
       }
@@ -158,7 +157,9 @@ export function TaskTemplatePresetDialog({
       open
       title={t("tasks:template.title")}
       onClose={onClose}
+      testId="task-template-preset-dialog"
       shellClassName={presetDialogContainerClass}
+      bodyClassName={presetDialogBodyClass}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -200,18 +201,19 @@ export function TaskTemplatePresetDialog({
               placeholder={t("tasks:template.searchPlaceholder")}
               className={presetDialogSearchInputClass}
             />
-            <div className="text-xs text-text-muted">
+            <div className={presetDialogStatusClass} data-testid="task-template-preset-status">
               {t("tasks:template.showing", {
                 visible: visiblePresets.length,
                 total: presets.length,
               })}
-              {filter !== "all" &&
-                t("tasks:template.filteredMode", { mode: formatAnalysisMode(filter) })}
+              {filter !== "all"
+                ? t("tasks:template.filteredMode", { mode: formatAnalysisMode(filter) })
+                : ""}
             </div>
           </div>
         </div>
 
-        <div className={presetDialogScrollableClass}>
+        <div className={presetDialogScrollableClass} data-testid="task-template-preset-scroll">
           {presetsLoading ? (
             <StateMessage>{t("tasks:template.loading")}</StateMessage>
           ) : presets.length === 0 ? (

@@ -25,7 +25,7 @@
 .board-feed-cards__hit .im-monitor-message-card {
   min-height: 48px;
   pointer-events: none;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* Events row alignment with intelligence list */
@@ -40,11 +40,11 @@
   flex-shrink: 0;
   text-transform: none;
   letter-spacing: normal;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .board-events-row__body {
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.35;
   color: var(--text-secondary);
   overflow: hidden;
@@ -84,7 +84,7 @@
   margin-left: 4px;
   text-transform: none;
   letter-spacing: normal;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .board-widget-link-btn {
@@ -94,7 +94,7 @@
   border: 1px solid var(--surface-border-alpha, var(--surface-border));
   background: transparent;
   color: var(--text-primary);
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -125,7 +125,7 @@
 }
 
 .board-queue-stat__label {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -161,7 +161,7 @@
 }
 
 .board-system-tile__label {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -189,7 +189,8 @@
 
 .board-clock__date {
   margin: 0;
-  font-size: 9px;
+  font-size: 11px;
+  line-height: 1.3;
   color: var(--text-muted);
 }
 
@@ -267,7 +268,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -298,7 +299,7 @@
 
 .board-weather__weekday,
 .board-weather__day-temps {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

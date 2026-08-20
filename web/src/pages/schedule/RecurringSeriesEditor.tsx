@@ -154,7 +154,7 @@ export function RecurringSeriesEditor() {
         </div>
       </header>
 
-      <div className="min-h-0 overflow-y-auto">
+      <div className="im-auto-scrollbar min-h-0 overflow-y-auto [scrollbar-gutter:stable]">
         <AppPageShell>
           {loading ? <SkeletonScreen variant="list-rows" count={4} /> : null}
           {!loading ? (

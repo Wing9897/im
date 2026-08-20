@@ -134,19 +134,21 @@ export function FilterBar({
         size="xl"
         bodyPadding="none"
         bodyClassName="overflow-hidden flex flex-col gap-0"
-        footerJustify={hasActiveFilters && onReset ? "space-between" : "flex-end"}
+        footerJustify="space-between"
         footer={
           <>
-            {hasActiveFilters && onReset ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onReset}
-                aria-label={t("filter.clearAllAria")}
-              >
-                {t("filter.clear")}
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onReset?.()}
+              disabled={!hasActiveFilters || !onReset}
+              className={!hasActiveFilters || !onReset ? "invisible" : undefined}
+              aria-hidden={!hasActiveFilters || !onReset ? true : undefined}
+              tabIndex={!hasActiveFilters || !onReset ? -1 : undefined}
+              aria-label={t("filter.clearAllAria")}
+            >
+              {t("filter.clear")}
+            </Button>
             <Button type="button" variant="primary" onClick={() => setOpen(false)}>
               {t("filter.done")}
             </Button>

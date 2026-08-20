@@ -27,6 +27,7 @@ from server.ingestion import insert_message
 from server.message_media import MediaServiceError, MessageMediaService
 from server.queries.messages_queries import (
     MessagesQueryError,
+    fetch_message_by_id,
     fetch_messages_page,
     message_source_exists,
 )
@@ -80,6 +81,15 @@ async def get_messages_page(
     except MessagesQueryError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     return MessagesPageResponse.model_validate(page)
+
+
+@router.get("/{message_id}", response_model=MessageResponse)
+async def get_message(request: Request, message_id: str) -> MessageResponse:
+    """Fetch one collected message by id (provenance quote on intel detail)."""
+    message = await fetch_message_by_id(get_db(request), message_id)
+    if message is None:
+        raise http_error(404, "Message not found", error_code=NOT_FOUND)
+    return MessageResponse.model_validate(message)
 
 
 # ── external ingestion (documented under 來源 → HTTP → Webhook /sources?tab=http&mode=webhook) ──

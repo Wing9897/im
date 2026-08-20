@@ -1,13 +1,16 @@
 /**
- * Agent preset + trigger / capability fields for ChatEditorForm.
+ * Agent mode cards + trigger / capability fields for ChatEditorForm.
  * Calendar write (`outputCalendar`) lives in ChatOutputFields (agent-only).
  */
 import { useTranslation } from "react-i18next";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
-import { Button, SelectTile, SelectTileGrid } from "../../../components/ui";
+import { SelectTile, SelectTileGrid } from "../../../components/ui";
+import { DEFAULT_AGENT_WAVE_INTERVAL_SECONDS } from "../../../domain/tasks/scheduleDefaults";
+import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import {
-  AGENT_PRESET_PROJECT_RECONCILE,
-  AGENT_PRESET_WEB_SCOUT,
+  AGENT_MODE_CARD_IDS,
+  agentPresetFormPatch,
+  inferAgentPreset,
   normalizeAgentPolicy,
   type AgentPresetId,
   type AgentTaskPolicy,
@@ -120,39 +123,23 @@ function useAgentPolicyActions({
   const hasChannels = formState.channelIds.length > 0;
 
   const applyPreset = (preset: AgentPresetId) => {
-    const next =
-      preset === AGENT_PRESET_WEB_SCOUT
-        ? normalizeAgentPolicy(
-            {
-              triggerMode: hasChannels ? "message_threshold" : "schedule",
-              capCalendarRead: true,
-              capCalendarWrites: false,
-              capWebSearch: true,
-              capForceWebSearch: true,
-              capReadAnalysisEvents: true,
-              capReadItems: true,
-              outputCalendar: false,
-              outputAnalysisEvents: true,
-            },
-            { hasChannels },
-          )
-        : normalizeAgentPolicy(
-            {
-              triggerMode: "message_cursor",
-              capCalendarRead: true,
-              capCalendarWrites: true,
-              capWebSearch: false,
-              capForceWebSearch: false,
-              capReadAnalysisEvents: true,
-              capReadItems: true,
-              outputCalendar: true,
-              outputAnalysisEvents: false,
-            },
-            { hasChannels: true },
-          );
-    applyAgentPolicyFields(updateField, next);
-    if (preset === AGENT_PRESET_PROJECT_RECONCILE && formState.agentWaveIntervalSeconds == null) {
-      updateField("agentWaveIntervalSeconds", 20);
+    const patch = agentPresetFormPatch(preset);
+    applyAgentPolicyFields(updateField, patch.policy);
+    if (patch.clearChannels) {
+      updateField("channelIds", []);
+    }
+    if (patch.setWaveInterval && formState.agentWaveIntervalSeconds == null) {
+      updateField("agentWaveIntervalSeconds", DEFAULT_AGENT_WAVE_INTERVAL_SECONDS);
+    }
+    if (
+      formState.scheduleType === "seconds_10" &&
+      !isUnmappedTriggerSchedule(
+        formState.scheduleType,
+        formState.scheduleValue,
+        formState.scheduleRrule,
+      )
+    ) {
+      updateField("scheduleType", "hourly");
     }
   };
 
@@ -165,6 +152,49 @@ function useAgentPolicyActions({
   };
 
   return { applyPreset, patchPolicy };
+}
+
+/** Three equal Agent work-mode cards (identity step, after 任務類型). */
+export function ChatAgentModeCards({
+  formState,
+  updateField,
+}: ChatAgentPolicyFieldsProps) {
+  const { t } = useTranslation("common");
+  const { applyPreset } = useAgentPolicyActions({ formState, updateField });
+  const selected = inferAgentPreset(policyFromForm(formState), {
+    hasChannels: formState.channelIds.length > 0,
+  });
+
+  return (
+    <div
+      className="md:col-span-2 flex flex-col gap-xs"
+      role="radiogroup"
+      aria-label={t("tasks:agent.modesLabel")}
+      data-testid="task-agent-mode-cards"
+    >
+      <span className={formLabelClass}>{t("tasks:agent.modesLabel")}</span>
+      <SelectTileGrid columns="repeat(auto-fit, minmax(148px, 1fr))" className="gap-sm">
+        {AGENT_MODE_CARD_IDS.map((id) => {
+          const active = selected === id;
+          return (
+            <SelectTile
+              key={id}
+              compact
+              active={active}
+              aria-pressed={active}
+              data-testid={`task-agent-mode-${id}`}
+              aria-label={t(`tasks:agent.modes.${id}.name`)}
+              hint={t(`tasks:agent.modes.${id}.hint`)}
+              onClick={() => applyPreset(id)}
+            >
+              {t(`tasks:agent.modes.${id}.name`)}
+            </SelectTile>
+          );
+        })}
+      </SelectTileGrid>
+      <p className={`m-0 ${formHelpClass}`}>{t("tasks:agent.modesHint")}</p>
+    </div>
+  );
 }
 
 export function ChatAgentTriggerFields({
@@ -210,62 +240,36 @@ export function ChatAgentSkillsFields({
   updateField,
 }: ChatAgentPolicyFieldsProps) {
   const { t } = useTranslation("common");
-  const { applyPreset, patchPolicy } = useAgentPolicyActions({ formState, updateField });
+  const { patchPolicy } = useAgentPolicyActions({ formState, updateField });
 
   return (
-    <div className="flex flex-col gap-md">
-      <div className="flex flex-col gap-xs">
-        <span className={formLabelClass}>{t("tasks:agent.presetsLabel")}</span>
-        <div className="flex flex-wrap gap-sm">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            data-testid="task-agent-preset-project"
-            onClick={() => applyPreset(AGENT_PRESET_PROJECT_RECONCILE)}
+    <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
+      <legend className={formLabelClass}>{t("tasks:agent.capsLabel")}</legend>
+      <SelectTileGrid columns="repeat(2, minmax(0, 1fr))" className="gap-sm">
+        {CAP_OPTIONS.map((cap) => (
+          <SelectTile
+            key={cap.testId}
+            compact
+            variant="toggle"
+            active={cap.active(formState)}
+            data-testid={cap.testId}
+            aria-label={t(cap.labelKey)}
+            hint={t(cap.hintKey)}
+            onClick={() => patchPolicy(cap.patch(formState))}
           >
-            {t("tasks:agent.presets.project_reconcile")}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            data-testid="task-agent-preset-web"
-            onClick={() => applyPreset(AGENT_PRESET_WEB_SCOUT)}
-          >
-            {t("tasks:agent.presets.web_scout")}
-          </Button>
-        </div>
-        <p className={`m-0 ${formHelpClass}`}>{t("tasks:agent.presetsHint")}</p>
-      </div>
-
-      <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
-        <legend className={formLabelClass}>{t("tasks:agent.capsLabel")}</legend>
-        <SelectTileGrid columns="repeat(2, minmax(0, 1fr))" className="gap-sm">
-          {CAP_OPTIONS.map((cap) => (
-            <SelectTile
-              key={cap.testId}
-              compact
-              variant="toggle"
-              active={cap.active(formState)}
-              data-testid={cap.testId}
-              aria-label={t(cap.labelKey)}
-              hint={t(cap.hintKey)}
-              onClick={() => patchPolicy(cap.patch(formState))}
-            >
-              {t(cap.labelKey)}
-            </SelectTile>
-          ))}
-        </SelectTileGrid>
-      </fieldset>
-    </div>
+            {t(cap.labelKey)}
+          </SelectTile>
+        ))}
+      </SelectTileGrid>
+    </fieldset>
   );
 }
 
-/** Presets + trigger + caps in one block (unit tests). */
+/** Mode cards + trigger + caps in one block (unit tests). */
 export function ChatAgentPolicyFields(props: ChatAgentPolicyFieldsProps) {
   return (
     <div className="md:col-span-2 flex flex-col gap-md" data-testid="task-agent-policy">
+      <ChatAgentModeCards {...props} />
       <ChatAgentSkillsFields {...props} />
       <ChatAgentTriggerFields {...props} />
     </div>

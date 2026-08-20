@@ -52,7 +52,7 @@ export interface BoardWidgetItem {
   z?: number;
 }
 
-/** Persisted board configuration (current = v16). */
+/** Persisted board configuration (current = v17). */
 export interface BoardConfig {
   version: typeof BOARD_LAYOUT_VERSION;
   widgets: BoardWidgetItem[];
@@ -61,4 +61,4 @@ export interface BoardConfig {
 export type BoardEditMode = "view" | "edit";
 
 /** Current layout schema version written to server ui-prefs. */
-export const BOARD_LAYOUT_VERSION = 16 as const;
+export const BOARD_LAYOUT_VERSION = 17 as const;

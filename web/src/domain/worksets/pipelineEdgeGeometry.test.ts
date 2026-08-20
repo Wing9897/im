@@ -4,10 +4,16 @@ import {
   PIPELINE_BEZIER_OFFSET,
   PIPELINE_BLOCK,
   PIPELINE_BLOCK_WIDTH,
+  PIPELINE_COL_GAP_X,
+  PIPELINE_COL_X,
+  PIPELINE_ZONE_ORIGIN_X,
+  PIPELINE_ZONE_PAD_X,
+  PIPELINE_ZONE_WIDTH,
   buildWorksetPipelineGraph,
   itemPointId,
   layoutPipelineFlow,
   pipelinePointHandleTop,
+  pipelineZoneX,
   routePipelineEdge,
   worksetPointId,
   type PipelineGraphLabels,
@@ -117,5 +123,41 @@ describe("pipelineEdgeGeometry", () => {
     const route = routePipelineEdge({ source, target });
     expect(route.path).toBe(expectedCubicPath(source, target));
     expect(route.samples.some((point) => point.x > 200 && point.x < 380)).toBe(true);
+  });
+
+  it("sizes cards and columns from PIPELINE_BLOCK_WIDTH so wires meet handles", () => {
+    expect(PIPELINE_BLOCK_WIDTH).toBe(240);
+    expect(PIPELINE_ZONE_WIDTH).toBe(PIPELINE_BLOCK_WIDTH + PIPELINE_ZONE_PAD_X * 2);
+    expect(PIPELINE_COL_X[0]).toBe(pipelineZoneX(0) + PIPELINE_ZONE_PAD_X);
+    expect(PIPELINE_COL_X[1] - PIPELINE_COL_X[0]).toBe(PIPELINE_ZONE_WIDTH + PIPELINE_COL_GAP_X);
+    expect(PIPELINE_COL_X[2] - PIPELINE_COL_X[1]).toBe(PIPELINE_ZONE_WIDTH + PIPELINE_COL_GAP_X);
+    expect(PIPELINE_COL_X[3] - PIPELINE_COL_X[2]).toBe(PIPELINE_ZONE_WIDTH + PIPELINE_COL_GAP_X);
+
+    const graph = buildWorksetPipelineGraph({
+      worksets: [{ id: "__general__", name: "一般", notifyEnabled: true, externalEnabled: true }],
+      tasks: [{ id: "t1", name: "[live-eval] 關鍵情報摘要", worksetId: "__general__", outputAnalysisEvents: true }],
+      items: [],
+      sources: [],
+      events: [],
+      labels,
+    });
+    const flow = layoutPipelineFlow(graph);
+    const tasks = flow.nodes.find((node) => node.id === PIPELINE_BLOCK.tasks);
+    const worksets = flow.nodes.find((node) => node.id === PIPELINE_BLOCK.worksets);
+    const timeline = flow.nodes.find((node) => node.id === PIPELINE_BLOCK.timeline);
+    expect(tasks?.style.width).toBe(PIPELINE_BLOCK_WIDTH);
+    expect(worksets?.style.width).toBe(PIPELINE_BLOCK_WIDTH);
+    expect(tasks?.position.x).toBe(PIPELINE_COL_X[1]);
+    expect(worksets?.position.x).toBe(PIPELINE_COL_X[2]);
+
+    const source = handlePos(tasks!, 0, "out");
+    const target = handlePos(worksets!, 0, "in");
+    expect(source.x).toBe(PIPELINE_COL_X[1] + PIPELINE_BLOCK_WIDTH);
+    expect(target.x).toBe(PIPELINE_COL_X[2]);
+    expect(routePipelineEdge({ source, target }).path).toBe(expectedCubicPath(source, target));
+
+    const layer4Right = pipelineZoneX(3) + PIPELINE_ZONE_WIDTH;
+    expect(layer4Right - PIPELINE_ZONE_ORIGIN_X).toBeLessThan(1280);
+    expect(timeline?.position.x).toBe(PIPELINE_COL_X[3]);
   });
 });

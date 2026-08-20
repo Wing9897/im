@@ -72,7 +72,7 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, and `agent` via `agent_tick` (`AgentRuntime` + task policy for trigger/caps/outputs). Standalone calendar RRULE series expand only at read time.
 3. **Out:** `analysis_events` (intel_event / agent when `output_analysis_events` is on) / leaderboard `trending_topics` (always, independent of that flag), board widgets, actions, and local notifications bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__general__`) with optional provenance `task_id`; agent `output_calendar` writes owned `user_events` + child `recurring` (`origin=agent`). Leaderboard tasks do not feed the Intelligence page.
 
-**Task outputs (task editor only; not extra task types):** intelligence (`outputAnalysisEvents` — intel_event / agent; off skips `analysis_events` persist), time planning (`includeInTimeline` on dated analysis events), notify (`notifyPref` inherit／off), and Agent calendar write (`outputCalendar`, agent-only) in the same output group. Leaderboard always writes `/leaderboard` + may notify; the editor hides the Intelligence-page toggle. Items and user calendars keep their own date／notify overlays. Agent policy fieldset is preset + trigger + caps only. Builtin templates: eight intel_event jobs (關鍵情報／時間行程推理／IoT 設備告警／薅羊毛／行程事件提取／資安詐騙／政策法規／金融市場) plus two 專案經理 jobs (通用專案日期管理／工作輪更表). In-editor Agent chips remain 專案調和／網蒐.
+**Task outputs (task editor only; not extra task types):** intelligence (`outputAnalysisEvents` — intel_event / agent; off skips `analysis_events` persist), time planning (`includeInTimeline` on dated analysis events), notify (`notifyPref` inherit／off), and Agent calendar write (`outputCalendar`, agent-only) in the same output group. Leaderboard always writes `/leaderboard` + may notify; the editor hides the Intelligence-page toggle. Items and user calendars keep their own date／notify overlays. Agent policy fieldset is preset + trigger + caps only. Builtin templates: two leaderboard jobs (熱門話題排行／討論熱度), eight intel_event jobs (關鍵情報／時間行程推理／IoT 設備告警／薅羊毛／行程事件提取／資安詐騙／政策法規／金融市場), plus four 專案經理 jobs (工作輪更／專案日程／來源核實／純網搜). In-editor Agent mode cards are 對帳日曆／來源 + 網搜／純網搜.
 
 **Task-scoped UI vs exceptions**
 
@@ -100,7 +100,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v45** (`SCHEMA_SEMVER` `0.1.0-beta.46`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v1** (`SCHEMA_SEMVER` `1.0.0`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -235,7 +235,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 #### Ops board
 
 - **Display vs code:** UI label SoT [`I18N-GLOSSARY.md`](I18N-GLOSSARY.md)（畫布 / Ops Board）. Wire: mode=`canvas`, prefs=`ops_board_*`, code `web/src/board/` (`BoardRoot`). CSS `web/src/css/board-*.css`.
-- **Persistence:** SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/board` — `layout` (mosaic `version` + `widgets`; **v16** / `BOARD_LAYOUT_VERSION`) and `widgetState` `{ mapViews, sourceFilters, ganttViewModes }` (FE `BoardSourceFilterPref`; retired `taskFilters`). Empty server (`configured: false`) → seed default mosaic + empty widgetState (no LS migrate). Still device-local: `im:monitor-mode`, `im:pages-last-path`.
+- **Persistence:** SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/board` — `layout` (mosaic `version` + `widgets`; **v17** / `BOARD_LAYOUT_VERSION`) and `widgetState` `{ mapViews, sourceFilters, ganttViewModes }` (FE `BoardSourceFilterPref`; retired `taskFilters`). Empty server (`configured: false`) → seed default mosaic + empty widgetState (no LS migrate). Still device-local: `im:monitor-mode`, `im:pages-last-path`.
 - **Layout version:** older layouts **migrate in place** (`migrateBoardLayout`): keep known `widgetRegistry` types, drop unknown, bump to `BOARD_LAYOUT_VERSION`. Version lag alone does not wipe a custom layout. Hydrate write-backs when parse/normalize changes the blob.
 - Shared timed-event projectors: `domain/timeline/timedEventMerge`. Source filter: `components/SourceFilterDialog` (`{ taskIds, worksetIds } | null`). Board RRULE / `item_remind` filter aligns with Timeline (`worksetId` ownership).
 - Default mosaic widget set lives in `web/src/board/` (`widgetRegistry` / `BOARD_LAYOUT_VERSION`) — not duplicated here.
@@ -282,10 +282,11 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-45 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-1 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
+| `seed_trace_correct_demo.py` | — | **Dev-only:** seed Intelligence source-quote / 「不是情報」/ Timeline dismiss / Agent 「收回最近一次調和」 fixtures (`[demo]` prefix); not used by CI or product runtime |
 | `_seed_common.py` | — | Shared scaffolding for the dev-only `seed_*.py` fixtures (CLI/db boilerplate, cleanup, workset + linked-calendar helpers) |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
@@ -391,7 +392,7 @@ Timeline window rows use wire `source`; item linkage and `user_events.kind` are 
 
 ### Schema baseline (wipe-only)
 
-Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-45 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
+Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-1 first-database wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
 
 ### Unified event analysis pipeline
 
@@ -512,7 +513,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-45 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-1 first-database wipe-floor / non-current hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 

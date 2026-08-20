@@ -82,11 +82,7 @@ input,
 textarea,
 a {
   transition: background 150ms ease, color 150ms ease, border-color 150ms ease,
-    box-shadow 150ms ease, opacity 150ms ease, transform 100ms ease;
-}
-
-button:active:not(:disabled) {
-  transform: scale(0.985);
+    box-shadow 150ms ease, opacity 150ms ease;
 }
 
 input:focus,
@@ -123,6 +119,7 @@ input:disabled {
 .im-picker-dialog-body {
   scrollbar-width: thin;
   scrollbar-color: var(--im-scrollbar-thumb-idle) transparent;
+  scrollbar-gutter: stable;
 }
 
 .im-auto-scrollbar:hover,

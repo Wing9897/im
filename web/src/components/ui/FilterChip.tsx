@@ -22,10 +22,10 @@ export function FilterChip({
   ...rest
 }: FilterChipProps) {
   const cls = [
-    "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border font-medium font-[inherit] whitespace-nowrap transition-[background,color,border-color,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50",
+    "box-border inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full border font-medium font-[inherit] whitespace-nowrap transition-[background,color,border-color,box-shadow] duration-150 ease-out hover:!transform-none active:!transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)] disabled:cursor-not-allowed disabled:opacity-50",
     sizeClass[size],
     active
-      ? "border-[color-mix(in_srgb,var(--accent)_45%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] font-semibold text-accent shadow-[var(--shadow-sm)]"
+      ? "border-[color-mix(in_srgb,var(--accent)_45%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"
       : "border-surface-border bg-transparent text-text-secondary hover:border-surface-overlay hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary",
     className ?? "",
   ]

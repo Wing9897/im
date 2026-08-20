@@ -13,7 +13,7 @@ describe("ChatAgentPolicyFields", () => {
     await ensureZhHantLocale();
   });
 
-  it("keeps preset, trigger radios, and caps without calendar output", () => {
+  it("keeps mode cards, trigger radios, and caps without calendar output", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
@@ -32,6 +32,10 @@ describe("ChatAgentPolicyFields", () => {
       );
     });
     expect(container.querySelector('[data-testid="task-agent-policy"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-cards"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-project_reconcile"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-web_scout"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-pure_web_search"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-agent-output-calendar"]')).toBeNull();
     expect(container.querySelector('[data-testid="task-agent-trigger"]')?.getAttribute("role")).toBe(
       "radiogroup",
@@ -71,7 +75,7 @@ describe("ChatAgentPolicyFields", () => {
     expect(updateField).toHaveBeenCalledWith("triggerMode", "message_cursor");
   });
 
-  it("web_scout preset sets intelligence on and calendar off", () => {
+  it("來源+網搜 card sets intelligence on, calendar off, and threshold trigger", () => {
     const updateField = vi.fn();
     const container = document.createElement("div");
     act(() => {
@@ -92,13 +96,17 @@ describe("ChatAgentPolicyFields", () => {
       );
     });
     act(() => {
-      (container.querySelector('[data-testid="task-agent-preset-web"]') as HTMLButtonElement).click();
+      (
+        container.querySelector('[data-testid="task-agent-mode-web_scout"]') as HTMLButtonElement
+      ).click();
     });
+    expect(updateField).toHaveBeenCalledWith("triggerMode", "message_threshold");
     expect(updateField).toHaveBeenCalledWith("outputAnalysisEvents", true);
     expect(updateField).toHaveBeenCalledWith("outputCalendar", false);
+    expect(updateField).toHaveBeenCalledWith("capWebSearch", true);
   });
 
-  it("project_reconcile preset sets intelligence off and calendar on", () => {
+  it("對帳日曆 card sets intelligence off and calendar on", () => {
     const updateField = vi.fn();
     const container = document.createElement("div");
     act(() => {
@@ -119,9 +127,49 @@ describe("ChatAgentPolicyFields", () => {
       );
     });
     act(() => {
-      (container.querySelector('[data-testid="task-agent-preset-project"]') as HTMLButtonElement).click();
+      (
+        container.querySelector(
+          '[data-testid="task-agent-mode-project_reconcile"]',
+        ) as HTMLButtonElement
+      ).click();
     });
     expect(updateField).toHaveBeenCalledWith("outputAnalysisEvents", false);
     expect(updateField).toHaveBeenCalledWith("outputCalendar", true);
+    expect(updateField).toHaveBeenCalledWith("capWebSearch", false);
+    expect(updateField).toHaveBeenCalledWith("triggerMode", "message_cursor");
+  });
+
+  it("純網搜 card sets schedule search, clears channels, and skips calendar", () => {
+    const updateField = vi.fn();
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        wrapWithI18n(
+          createElement(ChatAgentPolicyFields, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "agent",
+              triggerMode: "message_cursor",
+              outputCalendar: true,
+              outputAnalysisEvents: false,
+              channelIds: ["ch-1"],
+            },
+            updateField,
+          }),
+        ),
+      );
+    });
+    act(() => {
+      (
+        container.querySelector(
+          '[data-testid="task-agent-mode-pure_web_search"]',
+        ) as HTMLButtonElement
+      ).click();
+    });
+    expect(updateField).toHaveBeenCalledWith("triggerMode", "schedule");
+    expect(updateField).toHaveBeenCalledWith("outputAnalysisEvents", true);
+    expect(updateField).toHaveBeenCalledWith("outputCalendar", false);
+    expect(updateField).toHaveBeenCalledWith("capForceWebSearch", true);
+    expect(updateField).toHaveBeenCalledWith("channelIds", []);
   });
 });

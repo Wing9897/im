@@ -103,7 +103,7 @@ export function SourceFilterTree({
         className="im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] placeholder:text-text-secondary/80"
       />
       <ul
-        className="m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0"
+        className="im-auto-scrollbar m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0 [scrollbar-gutter:stable]"
         aria-label={t("workset:filterBrowseAria")}
       >
         {rows.map((row) => {

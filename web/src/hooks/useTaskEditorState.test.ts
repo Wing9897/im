@@ -88,17 +88,20 @@ describe("useTaskEditorState", () => {
     expect(latest.formState.scheduleType).toBe("seconds_10");
   });
 
-  it("applyPreset for project upgrades seconds_10 schedule to hourly", () => {
+  it("applyPreset for 對帳日曆 templates fills calendar caps and hourly schedule", () => {
     renderHarness();
+    act(() => {
+      latest.updateField("channelIds", ["ch-1"]);
+    });
 
     const preset: TaskTemplatePreset = {
-      id: "agent-product-launch",
-      name: "產品上線專案",
+      id: "agent-work-shift",
+      name: "工作輪更",
       description: "desc",
-      promptTemplate: "prompt",
+      promptTemplate: "把值班寫進我的日程",
       analysisMode: "agent",
       defaultAnalysisTimeRange: "7d",
-      badge: "🚀",
+      badge: "🕒",
     };
 
     act(() => {
@@ -106,7 +109,102 @@ describe("useTaskEditorState", () => {
     });
 
     expect(latest.formState.analysisMode).toBe("agent");
+    expect(latest.formState.name).toBe("工作輪更");
+    expect(latest.formState.triggerMode).toBe("message_cursor");
+    expect(latest.formState.outputCalendar).toBe(true);
+    expect(latest.formState.outputAnalysisEvents).toBe(false);
+    expect(latest.formState.capWebSearch).toBe(false);
+    expect(latest.formState.capCalendarWrites).toBe(true);
+    expect(latest.formState.channelIds).toEqual(["ch-1"]);
     expect(latest.formState.scheduleType).toBe("hourly");
+    expect(latest.formState.promptTemplate).toContain("值班");
+  });
+
+  it("applyPreset for 專案日程 uses the same 對帳日曆 caps", () => {
+    renderHarness();
+
+    const preset: TaskTemplatePreset = {
+      id: "agent-project-schedule",
+      name: "專案日程",
+      description: "desc",
+      promptTemplate: "地基裝修寫進日程，不要宣稱甘特依賴",
+      analysisMode: "agent",
+      defaultAnalysisTimeRange: "7d",
+      badge: "📅",
+    };
+
+    act(() => {
+      latest.applyPreset(preset);
+    });
+
+    expect(latest.formState.name).toBe("專案日程");
+    expect(latest.formState.triggerMode).toBe("message_cursor");
+    expect(latest.formState.outputCalendar).toBe(true);
+    expect(latest.formState.capWebSearch).toBe(false);
+    expect(latest.formState.promptTemplate).toContain("甘特");
+  });
+
+  it("applyPreset for 來源核實 fills web_scout caps and keeps sources", () => {
+    renderHarness();
+    act(() => {
+      latest.updateField("channelIds", ["ch-1"]);
+    });
+
+    const preset: TaskTemplatePreset = {
+      id: "agent-source-verify",
+      name: "來源核實",
+      description: "desc",
+      promptTemplate: "用已綁來源當線索再 web.search",
+      analysisMode: "agent",
+      defaultAnalysisTimeRange: "1d",
+      badge: "✅",
+    };
+
+    act(() => {
+      latest.applyPreset(preset);
+    });
+
+    expect(latest.formState.analysisMode).toBe("agent");
+    expect(latest.formState.name).toBe("來源核實");
+    expect(latest.formState.triggerMode).toBe("message_threshold");
+    expect(latest.formState.capWebSearch).toBe(true);
+    expect(latest.formState.capForceWebSearch).toBe(true);
+    expect(latest.formState.outputAnalysisEvents).toBe(true);
+    expect(latest.formState.outputCalendar).toBe(false);
+    expect(latest.formState.channelIds).toEqual(["ch-1"]);
+    expect(latest.formState.scheduleType).toBe("hourly");
+  });
+
+  it("applyPreset for 純網搜 fills search caps, hourly schedule, and clears sources", () => {
+    renderHarness();
+    act(() => {
+      latest.updateField("channelIds", ["ch-1"]);
+    });
+
+    const preset: TaskTemplatePreset = {
+      id: "agent-pure-web-search",
+      name: "純網搜",
+      description: "desc",
+      promptTemplate: "Use web.search",
+      analysisMode: "agent",
+      defaultAnalysisTimeRange: "1d",
+      badge: "🔎",
+    };
+
+    act(() => {
+      latest.applyPreset(preset);
+    });
+
+    expect(latest.formState.analysisMode).toBe("agent");
+    expect(latest.formState.triggerMode).toBe("schedule");
+    expect(latest.formState.capWebSearch).toBe(true);
+    expect(latest.formState.capForceWebSearch).toBe(true);
+    expect(latest.formState.outputAnalysisEvents).toBe(true);
+    expect(latest.formState.outputCalendar).toBe(false);
+    expect(latest.formState.channelIds).toEqual([]);
+    expect(latest.formState.scheduleType).toBe("hourly");
+    expect(latest.formState.promptTemplate).toContain("web.search");
+    expect(latest.formState.name).toBe("純網搜");
   });
 
   describe("canSave", () => {
@@ -154,7 +252,7 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(false);
     });
 
-    it("requires prompt for agent (channels optional for schedule/threshold)", () => {
+    it("requires prompt for agent; schedule needs no sources, threshold does", () => {
       renderHarness();
       act(() => {
         latest.updateField("analysisMode", "agent");
@@ -172,6 +270,12 @@ describe("useTaskEditorState", () => {
       });
       expect(latest.canSave).toBe(true);
       expect(latest.saveBlockReason).toBeNull();
+
+      act(() => {
+        latest.updateField("triggerMode", "message_threshold");
+      });
+      expect(latest.canSave).toBe(false);
+      expect(latest.saveBlockReason).toMatch(/來源|channel/i);
     });
 
     it("blocks message_cursor combined with outputAnalysisEvents", () => {

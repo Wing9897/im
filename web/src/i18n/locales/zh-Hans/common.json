@@ -367,7 +367,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 45／SemVer 0.1.0-beta.46；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 1／SemVer 1.0.0（第一个数据库版本）；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"
@@ -475,5 +475,19 @@
     "sttErrorCode": "语音识别错误：{code}",
     "ttsUnsupported": "此浏览器不支持语音合成。",
     "ttsFailed": "语音合成失败"
+  },
+  "pipelineGuide": {
+    "title": "开始情报管线",
+    "description": "先接上 RSS，再点一次预设建立分析任务。第一则情报会出现在情报页与时间规划。",
+    "stepSourceTitle": "新增 RSS 来源",
+    "stepSourceBody": "第一则情报建议从 RSS 开始，不必先登录 Telegram。",
+    "addRss": "新增 RSS",
+    "stepTaskTitle": "建立分析任务",
+    "stepTaskBody": "点一次套用「关键情报」或「行程提取」，再于编辑器绑定频道并保存。不会自动建立任务。",
+    "telegramHint": "Telegram 才是主力来源，可在 RSS 跑通后再连。",
+    "presetKeyInsights": "关键情报",
+    "presetScheduleEvents": "行程提取",
+    "stepEventsTitle": "等第一次分析完成",
+    "stepEventsBody": "任务启用后，分析结果会写入情报事件；有时间的事件也会出现在时间规划。"
   }
 }

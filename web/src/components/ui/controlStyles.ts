@@ -17,7 +17,7 @@ export const controlSizeClass: Record<ControlSize, string> = {
 
 /** Button base — pairs with sizeClass in Button.tsx. */
 export const buttonBaseClass =
-  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-transparent font-medium font-[inherit] leading-[1.25] cursor-pointer transition-[background,color,border-color,box-shadow,transform] duration-[var(--im-duration-fast)] ease-[var(--im-easing-out)] disabled:opacity-50 disabled:cursor-not-allowed motion-safe:enabled:active:scale-[0.985]";
+  "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-transparent font-medium font-[inherit] leading-[1.25] cursor-pointer transition-[background,color,border-color,box-shadow] duration-[var(--im-duration-fast)] ease-[var(--im-easing-out)] disabled:opacity-50 disabled:cursor-not-allowed";
 
 export const buttonSizeClass: Record<ButtonSize, string> = {
   sm: "min-h-7 px-sm text-caption font-medium",

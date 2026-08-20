@@ -90,7 +90,7 @@ export function GeminiBaseUrlField({
                 type="button"
                 role="option"
                 aria-selected={value === preset.url}
-                className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]"
+                className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:!transform-none hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))] active:!transform-none"
                 onClick={() => {
                   onChange(preset.url);
                   setOpen(false);

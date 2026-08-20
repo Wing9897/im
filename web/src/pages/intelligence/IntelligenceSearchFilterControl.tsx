@@ -91,13 +91,14 @@ export function IntelligenceSearchFilterControl({
         closeAriaLabel={t("filter.closeAria")}
         onClose={() => setOpen(false)}
         testId="intelligence-search-filter-dialog"
-        footerJustify={hasActiveSearch ? "space-between" : "flex-end"}
+        footerJustify="space-between"
         footer={
           <>
             <Button
               type="button"
               variant="secondary"
               disabled={!hasActiveSearch}
+              className={!hasActiveSearch ? "invisible" : undefined}
               onClick={clearSearch}
               aria-label={t("filter.clearAria")}
             >

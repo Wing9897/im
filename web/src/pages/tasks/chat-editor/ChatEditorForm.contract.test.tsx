@@ -98,7 +98,7 @@ describe("ChatEditorForm analysis-task contract", () => {
     },
   );
 
-  it("shows agent optional channels and timed-mode hint (no seed query)", async () => {
+  it("hides sources for 純網搜 schedule and shows the three Agent mode cards", async () => {
     await act(async () => {
       root.render(
         wrapWithI18n(createElement(ChatEditorForm, {
@@ -108,6 +108,8 @@ describe("ChatEditorForm analysis-task contract", () => {
               triggerMode: "schedule",
               outputCalendar: false,
               outputAnalysisEvents: true,
+              capWebSearch: true,
+              capForceWebSearch: true,
               scheduleType: "hourly",
               promptTemplate: "",
               channelIds: [],
@@ -121,10 +123,16 @@ describe("ChatEditorForm analysis-task contract", () => {
     expect(container.querySelector('[data-testid="task-web-search-query"]')).toBeNull();
     expect(container.querySelector('[data-testid="task-agent-schedule-hint"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-prompt-required"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="task-agent-channel-hint"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-channel-hint"]')?.textContent).toContain(
+      "不綁來源",
+    );
     expect(container.textContent).toContain("純定時");
-    expect(container.textContent).toContain("來源頻道（選填）");
-    expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).not.toBeNull();
+    expect(container.textContent).not.toContain("來源頻道（選填）");
+    expect(container.querySelector('[data-testid="channel-picker-button"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-cards"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-project_reconcile"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-web_scout"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-mode-pure_web_search"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-schedule-overrides"]')).toBeNull();
     const output = container.querySelector('[data-testid="task-output-fields"]');
     expect(output?.querySelector('[data-testid="task-agent-output-calendar"]')).not.toBeNull();
@@ -299,7 +307,7 @@ describe("ChatEditorForm analysis-task contract", () => {
     expect(identity?.querySelector('[data-testid="task-prompt-template"]')).toBeNull();
   });
 
-  it("does not mark optional agent channels as required", async () => {
+  it("hides the source picker for schedule Agent (純網搜)", async () => {
     await act(async () => {
       root.render(
         wrapWithI18n(createElement(ChatEditorForm, {
@@ -309,6 +317,8 @@ describe("ChatEditorForm analysis-task contract", () => {
               triggerMode: "schedule",
               outputCalendar: false,
               outputAnalysisEvents: true,
+              capWebSearch: true,
+              capForceWebSearch: true,
               scheduleType: "hourly",
               promptTemplate: "Gather intel",
               channelIds: [],
@@ -319,9 +329,11 @@ describe("ChatEditorForm analysis-task contract", () => {
           })),
       );
     });
+    const identity = container.querySelector('[data-testid="task-editor-step-identity"]');
     const scope = container.querySelector('[data-testid="task-editor-step-scope"]');
-    expect(scope?.textContent).toContain("來源頻道（選填）");
-    expect(scope?.querySelector("label")?.textContent).not.toMatch(/\*/);
+    expect(identity?.querySelector('[data-testid="task-agent-mode-cards"]')).not.toBeNull();
+    expect(scope?.textContent).not.toContain("來源頻道（選填）");
+    expect(scope?.querySelector('[data-testid="channel-picker-button"]')).toBeNull();
     expect(container.querySelector('[data-testid="task-editor-step-when"] [data-testid="task-agent-trigger"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-editor-step-output"] [data-testid="task-agent-policy"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-editor-step-when"] [data-testid="task-agent-policy"]')).toBeNull();

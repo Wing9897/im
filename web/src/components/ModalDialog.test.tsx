@@ -144,8 +144,34 @@ describe("ModalDialog", () => {
 
     const dialog = document.body.querySelector('[data-testid="no-pad-modal"]')!;
     const body = dialog.querySelector('[role="dialog"]')?.children[1] as HTMLElement;
+    expect(body.className).toContain("im-dialog-body");
+    expect(body.className).toContain("min-h-[7.5rem]");
     expect(body.className).not.toContain("px-lg");
     expect(body.className).not.toContain("py-md");
+  });
+
+  it("does not keep overflow-auto when bodyClassName sets overflow-hidden", () => {
+    act(() => {
+      root.render(
+        createElement(
+          ModalDialog,
+          {
+            open: true,
+            title: "Hidden overflow",
+            onClose: vi.fn(),
+            testId: "overflow-hidden-modal",
+            bodyClassName: "overflow-hidden flex flex-col",
+            footer: createElement("button", { type: "button" }, "OK"),
+          },
+          createElement("p", null, "Body"),
+        ),
+      );
+    });
+
+    const dialog = document.body.querySelector('[data-testid="overflow-hidden-modal"]')!;
+    const body = dialog.querySelector('[role="dialog"]')?.children[1] as HTMLElement;
+    expect(body.className).toContain("overflow-hidden");
+    expect(body.className).not.toContain("overflow-auto");
   });
 
   it("keepMounted parks the tree without re-applying enter animation", () => {

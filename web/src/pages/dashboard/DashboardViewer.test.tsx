@@ -8,6 +8,14 @@ const mockNavigate = vi.fn();
 let mockPathname = "/tasks";
 let mockSearch = "";
 
+const mockPipeline = vi.hoisted(() => ({
+  current: {
+    state: "complete" as const,
+    showChecklist: false,
+    loading: false,
+  },
+}));
+
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({}),
@@ -16,6 +24,9 @@ vi.mock("react-router-dom", () => ({
     new URLSearchParams(mockSearch.startsWith("?") ? mockSearch.slice(1) : mockSearch),
     vi.fn(),
   ],
+  Link: ({ children, to }: { children?: unknown; to: string }) => (
+    <a href={typeof to === "string" ? to : ""}>{children as never}</a>
+  ),
 }));
 
 vi.mock("../../context/ToastContext", async () =>
@@ -55,8 +66,8 @@ vi.mock("../../api/items", () => ({
   listItems: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("../../api/sources", () => ({
-  listSources: vi.fn().mockResolvedValue([]),
+vi.mock("../../hooks/usePipelineReadiness", () => ({
+  usePipelineReadiness: () => mockPipeline.current,
 }));
 
 vi.mock("../../api/userEvents", () => ({
@@ -143,6 +154,11 @@ describe("DashboardViewer", () => {
     mockNavigate.mockReset();
     mockPathname = "/tasks";
     mockSearch = "";
+    mockPipeline.current = {
+      state: "complete",
+      showChecklist: false,
+      loading: false,
+    };
     mockShowToast.mockReset();
     mockCreateWorkset.mockClear();
     resetTaskCatalogState();
@@ -163,6 +179,11 @@ describe("DashboardViewer", () => {
   });
 
   it("shows empty state when no tasks exist", () => {
+    mockPipeline.current = {
+      state: "no_sources",
+      showChecklist: true,
+      loading: false,
+    };
     taskCatalogState.tasks = [];
 
     act(() => {
@@ -173,7 +194,7 @@ describe("DashboardViewer", () => {
     // EmptyState renders role="status" and contains the title text
     const emptyState = container.querySelector('[role="status"]');
     expect(emptyState).not.toBeNull();
-    expect(container.textContent).toContain("尚無任務");
+    expect(container.textContent).toContain("開始情報管線");
   });
 
   it("shows an error toast without adding a retry banner when task loading fails", () => {

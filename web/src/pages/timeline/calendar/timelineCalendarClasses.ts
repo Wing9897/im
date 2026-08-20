@@ -6,7 +6,8 @@ export const calendarMonthPanelClass = `${timelinePanelClass} box-border flex h-
 
 export const monthCalendarFillClass = "flex h-full min-h-0 flex-1 flex-col";
 
-export const calendarScrollableClass = "min-h-0 flex-1 overflow-auto";
+export const calendarScrollableClass =
+  "min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]";
 
 export const monthGridContainerClass =
   "im-timeline-month-grid flex h-full min-h-0 flex-1 flex-col gap-xs";
@@ -40,7 +41,7 @@ export function monthDayCellClass({
   today,
 }: MonthDayCellParams): string {
   const base =
-    "im-month-day-cell relative flex h-full min-h-0 cursor-pointer flex-col items-stretch justify-start overflow-hidden rounded-md border p-[3px_5px] shadow-[0_1px_2px_color-mix(in_srgb,var(--text-primary)_12%,transparent)] transition-[border-color,box-shadow,background] duration-150";
+    "im-month-day-cell box-border relative flex h-full min-h-0 cursor-pointer flex-col items-stretch justify-start overflow-hidden rounded-md border p-[3px_5px] shadow-[0_1px_2px_color-mix(in_srgb,var(--text-primary)_12%,transparent)] transition-[border-color,box-shadow,background] duration-150";
 
   if (activeDay) {
     return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-panel))] ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
@@ -60,6 +61,26 @@ export function monthDayCellClass({
 
 /** Fixed-height chip band; CSS in timeline-page.css reserves height even when empty. */
 export const monthDayHeaderClass = "im-month-day-header";
+
+/** Compact 1–31 numeral pinned top-left of the header (watermark stays decorative). */
+export function monthDayNumberClass({
+  isCurrentMonth,
+  today,
+  activeDay,
+}: Pick<MonthDayCellParams, "isCurrentMonth" | "today" | "activeDay">): string {
+  const highlighted = (today || activeDay) && isCurrentMonth;
+  if (!highlighted) {
+    return [
+      "im-month-day-number flex h-4 min-w-4 shrink-0 items-center justify-center text-card-meta tabular-nums leading-none",
+      isCurrentMonth ? "font-medium text-text-primary" : "font-normal text-text-muted",
+    ].join(" ");
+  }
+
+  return [
+    "im-month-day-number flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-0.5 text-card-meta font-bold tabular-nums leading-none text-[color:var(--accent-contrast,white)]",
+    activeDay ? "bg-accent" : "bg-[color-mix(in_srgb,var(--accent)_72%,transparent)]",
+  ].join(" ");
+}
 
 /** Positioned stack: large date number + optional holiday name underneath. */
 export function monthDayWatermarkStackClass(isHoliday = false): string {
@@ -86,7 +107,7 @@ export function monthDayWatermarkClass({
     .join(" ");
 }
 
-/** Event overlay above the watermark date + holiday name. Reveal hides events/+N, not the header. */
+/** Event overlay above the watermark date + holiday name. Reveal hides event titles/+N, not the header. */
 export const monthDaySurfaceClass =
   "im-month-day-surface relative z-[1] flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden";
 
@@ -120,11 +141,11 @@ export const monthSpanIndicatorsClass =
 export const monthSpanIndicatorRowClass =
   `flex min-w-0 shrink-0 items-center gap-px ${monthSurfaceChipClass}`;
 
-/** 進行中 lucide — --calendar-dot-ongoing (info; same token as 已確認 legend). */
+/** 進行中 lucide Timer — --calendar-dot-ongoing (info; same token as 已確認 legend). */
 export const monthSpanOngoingIconClass =
   "shrink-0 text-[var(--calendar-dot-ongoing)] opacity-95";
 
-/** 結束 lucide — --calendar-dot-ending (warning; same token as 待確認 legend). */
+/** 結束 lucide CircleCheck — --calendar-dot-ending (warning; same token as 待確認 legend). */
 export const monthSpanEndingIconClass =
   "shrink-0 text-[var(--calendar-dot-ending)] opacity-95";
 

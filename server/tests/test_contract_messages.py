@@ -199,6 +199,17 @@ async def test_channels_latest_messages_batches_multiple_channels(client):
     assert len(resp.json()[discord_key]) == 1
 
 
+async def test_get_message_by_id(client):
+    found = await client.get("/api/v1/messages/msg-1")
+    assert found.status_code == 200
+    body = found.json()
+    assert_keys(body, MESSAGE_KEYS, "Message")
+    assert body["id"] == seed.MESSAGE_1
+
+    missing = await client.get("/api/v1/messages/does-not-exist")
+    assert missing.status_code == 404
+
+
 async def test_message_media_errors(client, app):
     missing = await client.get("/api/v1/messages/does-not-exist/media")
     assert missing.status_code == 404

@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-45 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-1 (first database) + non-current stamps hard-reject.
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -20,12 +20,14 @@ from server.db.schema_bootstrap import (
 from server.tests.schema_fixtures import file_snapshot, logical_snapshot, make_stamped_db
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-_HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
+# Stamp 1 is the first database: there is no 1..current-1 range. Retired pre-cut
+# numbers (and any other non-current stamp) still hard-reject without mutation.
+_HARD_REJECT_PRIOR_VERSIONS = (2, 27, 45)
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 45
-    assert SCHEMA_SEMVER == "0.1.0-beta.46"
+    assert CURRENT_SCHEMA_VERSION == 1
+    assert SCHEMA_SEMVER == "1.0.0"
 
 
 @pytest.mark.asyncio
@@ -143,7 +145,7 @@ async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog)
     """App lifespan logs reset script for wipe-only prior stamps."""
     from server.main import create_app
 
-    wipe_only_version = 1  # any prior stamp → hard-reject
+    wipe_only_version = 45  # retired pre-cut stamp → hard-reject
     path = tmp_path / "startup-reject.db"
     await make_stamped_db(
         str(path),

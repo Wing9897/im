@@ -32,11 +32,15 @@ import {
   buildIntelligenceSourceMeta,
 } from "../../../domain/intelligence/intelligenceSourceMeta";
 import { formatOsDateTime } from "../../../utils/time";
+import { IntelligenceSourceQuote } from "./IntelligenceSourceQuote";
+import { IntelligenceNotIntelButton } from "./IntelligenceNotIntelButton";
 
 interface IntelligenceDetailViewProps {
   item: AnalysisEvent;
   onClose: () => void;
   presentation?: DetailPresentation;
+  notIntelBusy?: boolean;
+  onNotIntel?: (item: AnalysisEvent) => void;
 }
 
 function isUnspecifiedLocationLabel(location: string | null | undefined): boolean {
@@ -78,6 +82,8 @@ export function IntelligenceDetailView({
   item,
   onClose,
   presentation = "modal",
+  notIntelBusy = false,
+  onNotIntel,
 }: IntelligenceDetailViewProps) {
   const { t } = useTranslation("intelligence");
   const taskGlyph = lookupTaskEmoji(item.emoji);
@@ -145,9 +151,17 @@ export function IntelligenceDetailView({
           title={t("detail.batchSources")}
           tags={item.batchSourceChannelNames ?? []}
         />
+
+        <IntelligenceSourceQuote sourceMessageId={item.sourceMessageId} />
       </div>
 
       <footer className={detailChromeFooterPlainClass}>
+        {onNotIntel && !item.dismissed ? (
+          <IntelligenceNotIntelButton
+            disabled={notIntelBusy}
+            onClick={() => onNotIntel(item)}
+          />
+        ) : null}
         <Button variant="secondary" onClick={onClose}>
           {t("detail.close")}
         </Button>
@@ -174,16 +188,22 @@ export function IntelligenceDetailDialog({
   item,
   onClose,
   presentation = "modal",
+  notIntelBusy,
+  onNotIntel,
 }: {
   item: AnalysisEvent;
   onClose: () => void;
   presentation?: DetailPresentation;
+  notIntelBusy?: boolean;
+  onNotIntel?: (item: AnalysisEvent) => void;
 }) {
   return (
     <IntelligenceDetailView
       item={item}
       onClose={onClose}
       presentation={presentation}
+      notIntelBusy={notIntelBusy}
+      onNotIntel={onNotIntel}
     />
   );
 }

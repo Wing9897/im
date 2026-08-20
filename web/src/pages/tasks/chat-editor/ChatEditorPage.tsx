@@ -20,6 +20,7 @@ export function ChatEditorPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isEditMode = Boolean(taskId);
   const worksetDeepLinkHandled = useRef(false);
+  const presetDeepLinkHandled = useRef(false);
 
   const {
     formState,
@@ -67,6 +68,39 @@ export function ChatEditorPage() {
     next.delete("worksetId");
     setSearchParams(next, { replace: true });
   }, [isEditMode, searchParams, setSearchParams, updateField]);
+
+  // Deep-link from pipeline guide: /tasks/new?preset=key-insights
+  useEffect(() => {
+    if (isEditMode) {
+      presetDeepLinkHandled.current = false;
+      return;
+    }
+    const presetId = searchParams.get("preset")?.trim();
+    if (!presetId) {
+      presetDeepLinkHandled.current = false;
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const loaded = await listTaskTemplatePresets();
+        if (cancelled || presetDeepLinkHandled.current) return;
+        const preset = loaded.find((row) => row.id === presetId);
+        if (preset) applyPreset(preset);
+      } catch {
+        // Non-critical: user can still pick a preset in the dialog.
+      } finally {
+        if (cancelled) return;
+        presetDeepLinkHandled.current = true;
+        const next = new URLSearchParams(searchParams);
+        next.delete("preset");
+        setSearchParams(next, { replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, searchParams, setSearchParams, applyPreset]);
 
   useEffect(() => {
     if (!showPresetDialog) return;
@@ -137,7 +171,7 @@ export function ChatEditorPage() {
         onOpenPresetDialog={() => setShowPresetDialog(true)}
       />
 
-      <div className="min-h-0 overflow-y-auto">
+      <div className="im-auto-scrollbar min-h-0 overflow-y-auto [scrollbar-gutter:stable]">
         <div className="mx-auto w-full max-w-5xl px-page-x pb-xl pt-sm">
           {error ? (
             <p className="mb-sm text-caption text-danger" role="alert">

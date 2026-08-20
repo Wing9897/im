@@ -86,7 +86,7 @@ export function ItemUnitCombobox({ id, value, placeholder, disabled, onChange }:
         <ul
           id={listId}
           role="listbox"
-          className="im-menu-surface absolute left-0 right-0 top-[calc(100%+4px)] z-20 m-0 max-h-48 list-none overflow-y-auto rounded-md p-xs"
+          className="im-menu-surface absolute left-0 right-0 top-[calc(100%+4px)] z-20 m-0 max-h-48 list-none overflow-y-auto rounded-md p-xs [scrollbar-gutter:stable]"
         >
           {presets.map((preset) => (
             <li key={preset} role="presentation">

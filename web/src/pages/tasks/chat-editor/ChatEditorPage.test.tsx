@@ -176,6 +176,32 @@ describe("ChatEditorPage integration tests", () => {
       expect(updateField).toHaveBeenCalledWith("worksetId", "ws-ops");
       cleanup();
     });
+
+    it("applies preset from /tasks/new?preset= on create", async () => {
+      const applyPreset = vi.fn();
+      mockUseChatEditor.mockReturnValue(createMockHookReturn({ applyPreset }));
+      listTaskTemplatePresetsMock.mockResolvedValue([
+        {
+          id: "key-insights",
+          name: "關鍵情報摘要",
+          description: "x",
+          promptTemplate: "y",
+          analysisMode: "intel_event",
+          defaultAnalysisTimeRange: "7d",
+        },
+      ]);
+
+      let result: ReturnType<typeof renderPage>;
+      await act(async () => {
+        result = renderPage("/tasks/new?preset=key-insights");
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const { cleanup } = result!;
+      expect(applyPreset).toHaveBeenCalled();
+      expect(applyPreset.mock.calls[0][0]).toMatchObject({ id: "key-insights" });
+      cleanup();
+    });
   });
 
   describe("renders form (no page advisor chat)", () => {
@@ -411,6 +437,65 @@ describe("ChatEditorPage integration tests", () => {
           description: "追蹤群組中的熱門話題",
           analysisMode: "leaderboard",
           promptTemplate: "分析以下訊息中的熱門話題",
+        }),
+      );
+
+      cleanup();
+    });
+
+    it("applies Agent catalog template from 快速預設", async () => {
+      const applyPresetMock = vi.fn();
+      listTaskTemplatePresetsMock.mockResolvedValue([
+        {
+          id: "agent-work-shift",
+          name: "工作輪更",
+          description: "把來源裡的值班／輪更寫進我的日程",
+          analysisMode: "agent",
+          promptTemplate: "把值班寫進我的日程",
+          defaultAnalysisTimeRange: "7d",
+          badge: "🕒",
+        },
+      ]);
+      mockUseChatEditor.mockReturnValue(
+        createMockHookReturn({
+          applyPreset: applyPresetMock,
+          formState: {
+            ...createMockHookReturn().formState,
+            analysisMode: "agent",
+            scheduleType: "hourly",
+          },
+        }),
+      );
+
+      let result: ReturnType<typeof renderPage>;
+      await act(async () => {
+        result = renderPage();
+        await Promise.resolve();
+      });
+      const { container, cleanup } = result!;
+
+      const presetBtn = container.querySelector(
+        '[data-testid="preset-button"]',
+      ) as HTMLButtonElement;
+      await act(async () => {
+        presetBtn.click();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      const applyBtn = container.querySelector(
+        '[data-testid="preset-dialog-apply"]',
+      ) as HTMLButtonElement;
+      await act(async () => {
+        applyBtn.click();
+        await Promise.resolve();
+      });
+
+      expect(applyPresetMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "agent-work-shift",
+          name: "工作輪更",
+          analysisMode: "agent",
         }),
       );
 

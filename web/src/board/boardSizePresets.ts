@@ -118,6 +118,53 @@ export function resolveSizePreset(
   return BOARD_SIZE_PRESETS[id];
 }
 
+/**
+ * Map a stored / requested size onto an allowed preset.
+ * Prefer keeping the same column count and growing rows when the old size
+ * is no longer allowed (e.g. a crushed 3×2 schedule → 3×3).
+ */
+export function pickAllowedSizePreset(
+  sizeId: string | undefined,
+  allowed: readonly BoardSizePresetId[],
+  fallback: BoardSizePresetId,
+): BoardSizePreset {
+  if (sizeId && allowed.includes(sizeId as BoardSizePresetId)) {
+    return BOARD_SIZE_PRESETS[sizeId as BoardSizePresetId];
+  }
+  const parsed = typeof sizeId === "string" ? /^(\d+)x(\d+)$/.exec(sizeId) : null;
+  if (parsed && allowed.length > 0) {
+    const cols = Number(parsed[1]);
+    const rows = Number(parsed[2]);
+    const presets = allowed.map((id) => BOARD_SIZE_PRESETS[id]);
+    const growSameCols = presets
+      .filter((preset) => preset.cols === cols && preset.rows >= rows)
+      .sort((a, b) => a.rows - b.rows);
+    if (growSameCols[0]) {
+      return growSameCols[0];
+    }
+    const sameCols = presets
+      .filter((preset) => preset.cols === cols)
+      .sort((a, b) => a.rows - b.rows);
+    if (sameCols[0]) {
+      return sameCols[0];
+    }
+  }
+  return resolveSizePreset(sizeId, allowed, fallback);
+}
+
+/** Keep a widget origin inside the 16×10 design grid for its size. */
+export function clampGridOrigin(
+  col: number,
+  row: number,
+  cols: number,
+  rows: number,
+): { col: number; row: number } {
+  return {
+    col: Math.max(0, Math.min(col, Math.max(0, BOARD_GRID_COLS - cols))),
+    row: Math.max(0, Math.min(row, Math.max(0, BOARD_GRID_ROWS - rows))),
+  };
+}
+
 /** Axis-aligned overlap test in design pixels (for layout invariants). */
 export function rectsOverlap(
   a: { x: number; y: number; w: number; h: number },

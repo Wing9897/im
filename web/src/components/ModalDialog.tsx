@@ -56,11 +56,11 @@ interface ModalDialogProps {
 }
 
 const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
-  default: "w-[400px] max-w-[min(92vw,400px)] max-h-[min(78vh,640px)]",
-  compact: "w-[380px] max-w-[min(90vw,380px)] max-h-[min(78vh,640px)]",
-  wide: "w-[480px] max-w-[min(92vw,480px)] max-h-[min(78vh,640px)]",
-  xl: "w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
-  form: "w-[720px] max-w-[min(94vw,720px)] max-h-[min(86vh,780px)]",
+  default: "box-border w-[400px] max-w-[min(92vw,400px)] max-h-[min(78vh,640px)]",
+  compact: "box-border w-[380px] max-w-[min(90vw,380px)] max-h-[min(78vh,640px)]",
+  wide: "box-border w-[480px] max-w-[min(92vw,480px)] max-h-[min(78vh,640px)]",
+  xl: "box-border w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
+  form: "box-border w-[720px] max-w-[min(94vw,720px)] h-[min(86vh,780px)]",
 };
 
 function prefersReducedMotion(): boolean {
@@ -165,8 +165,12 @@ export function ModalDialog({
     title ? "px-lg pt-lg pb-sm" : "px-lg pt-md",
   ].join(" ");
 
+  const bodyHasOverflow = Boolean(
+    bodyClassName?.split(/\s+/).some((token) => token.startsWith("overflow-")),
+  );
   const bodyCls = [
-    "min-h-0 flex-1 overflow-auto",
+    "im-dialog-body box-border min-h-[7.5rem] flex-1",
+    bodyHasOverflow ? "" : "overflow-auto",
     bodyPadding === "none" ? "" : "px-lg py-md",
     bodyClassName ?? "",
   ]

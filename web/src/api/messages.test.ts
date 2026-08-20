@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { apiClient } from "./client";
 import {
   queryMessagesPage,
+  fetchMessage,
   fetchMessageMediaBlob,
 } from "./messages";
 
@@ -75,6 +76,15 @@ describe("messages API", () => {
       await expect(
         queryMessagesPage({ filters: {}, limit: 20 }),
       ).rejects.toThrow("Server error");
+    });
+  });
+
+  describe("fetchMessage", () => {
+    it("gets a message by id", async () => {
+      const message = { id: "msg-1", content: "hello" };
+      vi.mocked(apiClient.get).mockResolvedValue(message);
+      await expect(fetchMessage("msg-1")).resolves.toEqual(message);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/messages/msg-1");
     });
   });
 

@@ -20,7 +20,7 @@ export const PillButton = forwardRef<HTMLButtonElement, PillButtonProps>(
     ref,
   ) {
     const cls = [
-      "inline-flex min-h-7 cursor-pointer items-center justify-center rounded-md border text-caption font-medium transition-[background,color,border-color,box-shadow] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)]",
+      "inline-flex min-h-7 cursor-pointer items-center justify-center rounded-md border text-caption font-medium transition-[background,color,border-color,box-shadow] duration-150 ease-out hover:!transform-none active:!transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)]",
       paddingClass[padding],
       active
         ? "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] text-accent"

@@ -35,7 +35,9 @@
   border-radius: 10px;
   overflow: hidden;
   /* Fill comes from .im-surface-panel (--surface-panel frost over photo BG). */
-  --im-ws-graph-zone-width: 188px;
+  /* Keep in sync with PIPELINE_BLOCK_WIDTH / PIPELINE_ZONE_WIDTH / PIPELINE_COL_GAP_X. */
+  --im-ws-graph-block-width: 240px;
+  --im-ws-graph-zone-width: 260px;
   --im-ws-graph-col-gap-x: 64px;
 }
 
@@ -222,7 +224,8 @@
 }
 
 .im-ws-graph-node {
-  width: 168px;
+  box-sizing: border-box;
+  width: var(--im-ws-graph-block-width);
   pointer-events: auto;
   background: color-mix(in srgb, var(--surface-card) 78%, #000);
   border: 1px solid var(--surface-border);

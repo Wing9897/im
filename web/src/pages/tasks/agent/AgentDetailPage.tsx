@@ -28,10 +28,14 @@ import { colorStatusDotStyle } from "../../../styles/statusDot";
 import { scheduleFieldsFromTask } from "../../../domain/tasks/taskFormUtils";
 import { formatAnalysisTimeRangeNullable } from "../../../utils/analysis";
 import { useErrorToast } from "../../../hooks/useErrorToast";
+import { useToast } from "../../../context/ToastContext";
+import { ConfirmDialog } from "../../../components/dialogs/ConfirmDialog";
+import { handleCommandError } from "../../../utils/errors";
 import { ExpandableErrorText, formatIsoLocal } from "./agentDetailFormat";
 import { AgentDetailSourcesSection } from "./AgentDetailSourcesSection";
 import { AgentDetailTickSection } from "./AgentDetailTickSection";
 import { useAgentDetail } from "./useAgentDetail";
+import { retractLastAgentWave } from "./retractLastAgentWave";
 
 export function AgentDetailPage() {
   const { t } = useTranslation("common");
@@ -58,9 +62,12 @@ export function AgentDetailPage() {
     goEditChild,
     goTimeline,
   } = useAgentDetail();
+  const { showToast } = useToast();
 
   const [childrenOpen, setChildrenOpen] = useState(true);
   const [eventsOpen, setEventsOpen] = useState(false);
+  const [retractConfirm, setRetractConfirm] = useState(false);
+  const [retractBusy, setRetractBusy] = useState(false);
 
   useErrorToast(catalogError);
   useErrorToast(eventsError);
@@ -129,6 +136,15 @@ export function AgentDetailPage() {
           </Button>
           <Button variant="secondary" size="md" onClick={goTimeline}>
             {t("tasks:agentDetail.openTimeline")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            data-testid="project-detail-retract"
+            disabled={retractBusy}
+            onClick={() => setRetractConfirm(true)}
+          >
+            {t("tasks:agentDetail.retractLastWave")}
           </Button>
           <Button variant="primary" size="md" onClick={goEdit}>
             <Pencil size={14} aria-hidden="true" />
@@ -295,6 +311,50 @@ export function AgentDetailPage() {
           spanLoading={spanLoading}
         />
       </div>
+      {retractConfirm ? (
+        <ConfirmDialog
+          title={t("tasks:agentDetail.retractLastWave")}
+          body={t("tasks:agentDetail.retractConfirm")}
+          confirmLabel={t("tasks:agentDetail.retractLastWave")}
+          confirmBusyLabel={t("ui.loading")}
+          busy={retractBusy}
+          onCancel={() => {
+            if (!retractBusy) setRetractConfirm(false);
+          }}
+          onConfirm={() => {
+            void (async () => {
+              setRetractBusy(true);
+              try {
+                const result = await retractLastAgentWave({
+                  taskId: project.id,
+                  ticks: tickStatus?.ticks,
+                  events,
+                  children,
+                });
+                if (result.status === "no_batch") {
+                  showToast(t("tasks:agentDetail.retractNoBatch"), "warning");
+                } else if (result.status === "none") {
+                  showToast(t("tasks:agentDetail.retractNone"), "warning");
+                } else {
+                  showToast(
+                    t("tasks:agentDetail.retractDone", { count: result.count }),
+                    "success",
+                  );
+                  await reload();
+                }
+                setRetractConfirm(false);
+              } catch (error) {
+                showToast(
+                  handleCommandError(error) || t("tasks:agentDetail.retractFailed"),
+                  "error",
+                );
+              } finally {
+                setRetractBusy(false);
+              }
+            })();
+          }}
+        />
+      ) : null}
     </AppPageShell>
   );
 }

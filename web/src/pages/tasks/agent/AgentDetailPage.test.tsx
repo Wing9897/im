@@ -42,6 +42,14 @@ vi.mock("../../../api/recurringSeries", () => ({
   }),
 }));
 
+vi.mock("../../../api/calendarWindow", () => ({
+  fetchCalendarWindow: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../../../api/timelineDismissals", () => ({
+  dismissTimelineEvent: vi.fn().mockResolvedValue({}),
+}));
+
 vi.mock("../../../api/tasks", () => ({
   fetchTaskActivitySpans: vi.fn().mockResolvedValue([
     {
@@ -146,7 +154,9 @@ describe("AgentDetailPage", () => {
     });
 
     expect(container.querySelector('[data-testid="project-detail-toolbar"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="project-detail-reload"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="project-detail-retract"]')?.textContent).toContain(
+      "收回最近一次調和",
+    );
     expect(container.textContent).toContain("Launch");
     expect(container.textContent).toContain("Ship the product");
     expect(container.querySelector('[data-testid="project-detail-children"]')?.textContent).toContain(

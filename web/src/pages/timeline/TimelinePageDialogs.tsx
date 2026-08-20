@@ -92,8 +92,8 @@ export function TimelinePageDialogs({
         <ConfirmDialog
           title={
             pendingConfirm.kind === "dismiss"
-              ? t("detail.dismiss")
-              : t("detail.restore")
+              ? t("sidebar.dismiss")
+              : t("sidebar.restore")
           }
           body={
             pendingConfirm.kind === "dismiss"

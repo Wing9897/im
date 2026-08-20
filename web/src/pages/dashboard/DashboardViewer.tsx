@@ -34,6 +34,8 @@ import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
 import { DashboardViewerDialogs } from "./components/DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./components/DashboardViewerToolbar";
 import { WorksetPipelineGraphPanel } from "../worksets/WorksetPipelineGraphPanel";
+import { PipelineGuideChecklist } from "../../components/pipeline/PipelineGuideChecklist";
+import { usePipelineReadiness } from "../../hooks/usePipelineReadiness";
 
 export function DashboardViewer() {
   const { t } = useTranslation();
@@ -58,6 +60,7 @@ export function DashboardViewer() {
     setDeleteTarget,
     navigate,
   } = useDashboardViewer();
+  const pipeline = usePipelineReadiness();
   const [searchParams] = useSearchParams();
   useErrorToast(error);
   const { channels } = useChannelsWithSources();
@@ -155,7 +158,14 @@ export function DashboardViewer() {
 
       {loading ? <SkeletonScreen variant="card-grid" count={6} columns={3} /> : null}
 
-      {!loading && !error && tasks.length === 0 && isTaskView && (
+      {!loading && !error && pipeline.showChecklist && isTaskView ? (
+        <PipelineGuideChecklist
+          state={pipeline.state}
+          compact={tasks.length > 0}
+        />
+      ) : null}
+
+      {!loading && !error && tasks.length === 0 && isTaskView && !pipeline.showChecklist && (
         <EmptyState
           className="im-enter-rise"
           illustration={<EmptyStateGlyph icon={ListChecks} />}

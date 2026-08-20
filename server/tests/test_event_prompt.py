@@ -108,6 +108,17 @@ def test_event_presets_are_intent_only_not_schema_duplicates():
         assert len(text) > 20
 
 
+def test_leaderboard_presets_are_intent_only_not_schema_duplicates():
+    leaderboard_presets = [p for p in BUILTIN_PRESETS if p["analysisMode"] == "leaderboard"]
+    assert leaderboard_presets
+    for preset in leaderboard_presets:
+        text = preset["promptTemplate"]
+        assert "JSON" not in text
+        assert "related_message_ids" not in text
+        assert "不要輸出 rank" not in text
+        assert len(text) > 20
+
+
 def test_event_presets_expected_ids():
     by_id = {p["id"]: p for p in BUILTIN_PRESETS}
     intel_ids = {p["id"] for p in BUILTIN_PRESETS if p["analysisMode"] == "intel_event"}
@@ -122,8 +133,22 @@ def test_event_presets_expected_ids():
         "finance-markets",
     }
     agent_ids = {p["id"] for p in BUILTIN_PRESETS if p["analysisMode"] == "agent"}
-    assert agent_ids == {"agent-date-crud", "agent-work-shift"}
-    assert not any(p["analysisMode"] == "leaderboard" for p in BUILTIN_PRESETS)
+    assert agent_ids == {
+        "agent-work-shift",
+        "agent-project-schedule",
+        "agent-source-verify",
+        "agent-pure-web-search",
+    }
+    leaderboard_ids = {p["id"] for p in BUILTIN_PRESETS if p["analysisMode"] == "leaderboard"}
+    assert leaderboard_ids == {
+        "leaderboard-hot-topics",
+        "leaderboard-discussion-heat",
+    }
     assert by_id["schedule-time-inference"]["name"] == "時間行程推理"
     assert by_id["iot-device-alerts"]["name"] == "IoT 設備告警"
     assert by_id["key-insights"]["name"] == "關鍵情報摘要"
+    assert by_id["agent-work-shift"]["name"] == "工作輪更"
+    assert by_id["agent-project-schedule"]["name"] == "專案日程"
+    assert by_id["agent-source-verify"]["name"] == "來源核實"
+    assert by_id["leaderboard-hot-topics"]["name"] == "熱門話題排行"
+    assert by_id["leaderboard-discussion-heat"]["name"] == "討論熱度"

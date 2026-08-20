@@ -201,6 +201,39 @@ async def test_agent_tick_timed_agent_writes_events(app, monkeypatch: pytest.Mon
 
 
 @pytest.mark.asyncio
+async def test_agent_tick_persists_tool_calls_when_writing_events(
+    app,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Scout / intel output must store tool_calls_json, not only analysis_events."""
+    db = app.state.db
+    task_id = "agent-web-tools-persist"
+    await _insert_agent_task(db, task_id=task_id)
+    _patch_agent_chat(
+        monkeypatch,
+        tool_calls=[
+            {"name": "web.search", "arguments": {"query": "q"}, "resultSummary": "ok"},
+        ],
+    )
+
+    await execute_agent_tick(db=db, broadcaster=_Broadcaster(), task_id=task_id)
+
+    batch = await db.fetch_one(
+        "SELECT status, agent_message, tool_calls_json FROM analysis_batches WHERE task_id = ?",
+        (task_id,),
+    )
+    assert batch is not None
+    assert batch["status"] == "completed"
+    assert "web.search" in (batch["tool_calls_json"] or "")
+    assert batch["agent_message"]
+    event_count = await db.fetch_value(
+        "SELECT COUNT(*) FROM analysis_events WHERE task_id = ?",
+        (task_id,),
+    )
+    assert int(event_count or 0) == 1
+
+
+@pytest.mark.asyncio
 async def test_agent_tick_forces_web_search_via_channel(
     app,
     monkeypatch: pytest.MonkeyPatch,

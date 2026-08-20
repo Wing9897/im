@@ -233,6 +233,19 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 
+  it("does not overlay the intelligence pipeline guide on an empty month calendar", () => {
+    const { container } = renderViewSwitch({
+      initialLoading: false,
+      events: [],
+      filteredEvents: [],
+      viewMode: "calendar",
+      timeScale: "month",
+    });
+    expect(container.querySelector('[data-testid="pipeline-guide-checklist"]')).toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
+    expect(container.textContent).toContain("沒有事件");
+  });
+
   it("renders calendar main layout while loading (calendar mode)", () => {
     const { container } = renderViewSwitch({
       initialLoading: true,

@@ -7,6 +7,7 @@ import { getMapSyncCapHint } from "../intelligenceFeedConfig";
 import type { useIntelligenceFeed } from "../useIntelligenceFeed";
 import { MapPlaceholder } from "./MapPlaceholder";
 import { IntelligenceListPane } from "./IntelligenceListPane";
+import type { PipelineReadinessState } from "../../../domain/pipeline/pipelineReadiness";
 
 const LazyMapView = React.lazy(() => import("../map/MapView").then((m) => ({ default: m.MapView })));
 
@@ -56,6 +57,9 @@ interface IntelligenceContentAreaProps {
     resetViewTrigger: number;
     onResetView: () => void;
   };
+  pipeline: { showChecklist: boolean; state: PipelineReadinessState };
+  notIntelBusy: boolean;
+  onNotIntel: (item: AnalysisEvent) => void;
 }
 
 function IntelligenceContentAreaComponent({
@@ -63,9 +67,14 @@ function IntelligenceContentAreaComponent({
   read,
   selection,
   mapUi,
+  pipeline,
+  notIntelBusy,
+  onNotIntel,
 }: IntelligenceContentAreaProps) {
   const { t } = useTranslation("intelligence");
   const mapBatchBusy = feed.loadingMore || feed.mapSyncing;
+  const visibleItems = feed.items.filter((item) => !item.dismissed);
+  const visibleAllItems = feed.allItems.filter((item) => !item.dismissed);
 
   return (
     <>
@@ -95,7 +104,7 @@ function IntelligenceContentAreaComponent({
           <LazyLoadErrorBoundary fallbackHeight="100%">
             <React.Suspense fallback={<MapPlaceholder />}>
               <LazyMapView
-                items={feed.allItems}
+                items={visibleAllItems}
                 resetViewTrigger={mapUi.resetViewTrigger}
                 onResetView={mapUi.onResetView}
                 onFetchWindowChange={feed.handleMapFetchWindowChange}
@@ -106,10 +115,10 @@ function IntelligenceContentAreaComponent({
       )}
 
       {!feed.isMapMode && (
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="im-auto-scrollbar min-h-0 flex-1 overflow-y-auto">
           <IntelligenceListPane
             loading={feed.loading}
-            items={feed.items}
+            items={visibleItems}
             viewMode={feed.viewMode}
             hasMore={feed.hasMore}
             loadMoreHint={feed.loadMoreHint}
@@ -127,6 +136,10 @@ function IntelligenceContentAreaComponent({
             hasTimeFilter={feed.hasTimeFilter}
             hasSourceFilter={feed.hasSourceFilter}
             resetFilters={feed.resetFilters}
+            showPipelineGuide={pipeline.showChecklist}
+            pipelineState={pipeline.state}
+            notIntelBusy={notIntelBusy}
+            onNotIntel={onNotIntel}
           />
         </div>
       )}

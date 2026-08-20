@@ -33,6 +33,11 @@ describe("SelectTile", () => {
     expect(tile?.getAttribute("aria-pressed")).toBe("true");
     expect(tile?.getAttribute("role")).toBeNull();
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+    expect(tile?.className).toContain("-outline-offset-2");
+    expect(tile?.className).not.toContain("font-semibold");
+    expect(tile?.className).not.toContain("scale-[");
+    expect(tile?.className).toContain("hover:!transform-none");
+    expect(tile?.className).toContain("active:!transform-none");
   });
 
   it("shows a switch track and aria-checked for independent toggles", () => {

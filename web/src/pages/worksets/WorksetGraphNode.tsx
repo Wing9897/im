@@ -13,8 +13,10 @@ import {
   PIPELINE_LAYER_PORT,
   isPipelineOutputBlockKind,
   isPipelineOutputPage,
+  pipelineBlockShowsLayerOutPort,
   pipelineLayerForColumn,
   pipelinePointHandleId,
+  pipelinePointHandleSides,
   pipelinePointHandleTop,
   type PipelineBlock,
   type PipelineGate,
@@ -136,7 +138,7 @@ export function WorksetGraphNode({ data }: NodeProps<WorksetGraphNodeType>) {
       data-layer={layer}
       data-testid={`workset-graph-block-${block.kind}`}
     >
-      {block.kind === "worksets" ? (
+      {pipelineBlockShowsLayerOutPort(block.kind) ? (
         <Handle
           type="source"
           position={Position.Right}
@@ -149,18 +151,21 @@ export function WorksetGraphNode({ data }: NodeProps<WorksetGraphNodeType>) {
       {block.points.map((point, index) => {
         const top = pipelinePointHandleTop(index);
         const legendPage = isPipelineOutputPage(point);
+        const handles = pipelinePointHandleSides(block.kind, point);
         return (
           <Fragment key={point.id}>
-            <Handle
-              type="target"
-              position={Position.Left}
-              id={pipelinePointHandleId(point.id, "in")}
-              className="im-ws-graph-port im-ws-graph-port-in nodrag nopan"
-              style={{ top }}
-              isConnectable={!legendPage}
-              title={legendPage ? undefined : t("graphPortConnectAria")}
-            />
-            {legendPage ? null : (
+            {handles.in ? (
+              <Handle
+                type="target"
+                position={Position.Left}
+                id={pipelinePointHandleId(point.id, "in")}
+                className="im-ws-graph-port im-ws-graph-port-in nodrag nopan"
+                style={{ top }}
+                isConnectable={!legendPage}
+                title={legendPage ? undefined : t("graphPortConnectAria")}
+              />
+            ) : null}
+            {handles.out ? (
               <Handle
                 type="source"
                 position={Position.Right}
@@ -170,7 +175,7 @@ export function WorksetGraphNode({ data }: NodeProps<WorksetGraphNodeType>) {
                 isConnectable
                 title={t("graphPortConnectAria")}
               />
-            )}
+            ) : null}
           </Fragment>
         );
       })}

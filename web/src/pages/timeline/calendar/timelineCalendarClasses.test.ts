@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   monthDayHeaderClass,
   monthDayHolidayWatermarkClass,
+  monthDayNumberClass,
   monthDaySurfaceClass,
   monthDayWatermarkClass,
   monthDayWatermarkStackClass,
@@ -23,6 +24,18 @@ describe("month cell CSS contract", () => {
     expect(monthGridRootClass(false)).toBe(monthGridContainerClass);
     expect(monthGridRootClass(true)).toBe(`${monthGridContainerClass} is-revealed`);
     expect(monthDayHeaderClass).toBe("im-month-day-header");
+    expect(
+      monthDayNumberClass({ isCurrentMonth: true, today: false, activeDay: false }),
+    ).toContain("im-month-day-number");
+    expect(
+      monthDayNumberClass({ isCurrentMonth: true, today: false, activeDay: false }),
+    ).toContain("text-text-primary");
+    expect(
+      monthDayNumberClass({ isCurrentMonth: false, today: false, activeDay: false }),
+    ).toContain("text-text-muted");
+    expect(
+      monthDayNumberClass({ isCurrentMonth: true, today: true, activeDay: false }),
+    ).toContain("rounded-full");
     expect(monthDayWatermarkStackClass()).toBe("im-month-day-watermark-stack");
     expect(monthDayWatermarkStackClass(true)).toBe("im-month-day-watermark-stack is-holiday");
     expect(monthDayHolidayWatermarkClass).toBe("im-month-day-holiday-watermark");
@@ -51,7 +64,10 @@ describe("month cell CSS contract", () => {
     expect(timelineCss).toMatch(
       /\.im-timeline-month-grid\.is-revealed \.im-month-day-events[\s\S]*visibility:\s*hidden/s,
     );
-    expect(timelineCss).toContain(".im-timeline-month-grid.is-revealed .im-month-span-indicators");
+    expect(timelineCss).not.toContain(".im-timeline-month-grid.is-revealed .im-month-span-indicators");
+    expect(timelineCss).not.toMatch(
+      /\.im-timeline-month-grid\.is-revealed \.im-month-day-number/,
+    );
     expect(timelineCss).not.toMatch(
       /\.im-timeline-month-grid\.is-revealed \.im-weather-chip/,
     );

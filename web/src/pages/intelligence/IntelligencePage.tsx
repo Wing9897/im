@@ -12,6 +12,9 @@ import { useIntelligenceUrlState } from "./useIntelligenceUrlState";
 import { INTELLIGENCE_READ_ITEM_IDS_STORAGE_KEY } from "../../domain/prefs";
 import { useIdReadTracking } from "../../hooks/useIdReadTracking";
 import { IntelligenceContentArea } from "./views/IntelligenceContentArea";
+import { usePipelineReadiness } from "../../hooks/usePipelineReadiness";
+import { dismissAnalysisEvent } from "../../domain/intelligence/dismissAnalysisEvent";
+import { handleCommandError } from "../../utils/errors";
 
 /**
  * Intelligence workspace shell (card / list / map).
@@ -43,6 +46,8 @@ export function IntelligencePage() {
   const [selectedItem, setSelectedItem] = useState<AnalysisEvent | null>(null);
   const [pendingSelectedId, setPendingSelectedId] = useState<string | null>(null);
   const [resetViewTrigger, setResetViewTrigger] = useState(0);
+  const [notIntelBusy, setNotIntelBusy] = useState(false);
+  const pipeline = usePipelineReadiness();
 
   const handleSelectedIdFromUrl = useCallback((id: string | null) => {
     setPendingSelectedId(id);
@@ -99,6 +104,23 @@ export function IntelligencePage() {
     setResetViewTrigger((n) => n + 1);
   }, []);
 
+  const handleNotIntel = useCallback(
+    async (item: AnalysisEvent) => {
+      setNotIntelBusy(true);
+      try {
+        await dismissAnalysisEvent(item.id);
+        if (selectedItem?.id === item.id) setSelectedItem(null);
+        showToast(t("toast.notIntelDone"), "success");
+        await feed.refreshItems();
+      } catch (error) {
+        showToast(handleCommandError(error) || t("toast.notIntelFailed"), "error");
+      } finally {
+        setNotIntelBusy(false);
+      }
+    },
+    [feed, selectedItem, showToast, t],
+  );
+
   return (
     <div className={intelligencePageClass}>
       <IntelligenceToolbar
@@ -129,6 +151,11 @@ export function IntelligencePage() {
           read={{ readIntelligenceIdSet, isConsumed, onAutoRead: handleAutoRead }}
           selection={{ selectedItem, setSelectedItem }}
           mapUi={{ resetViewTrigger, onResetView: handleResetView }}
+          pipeline={pipeline}
+          notIntelBusy={notIntelBusy}
+          onNotIntel={(item) => {
+            void handleNotIntel(item);
+          }}
         />
       </div>
     </div>

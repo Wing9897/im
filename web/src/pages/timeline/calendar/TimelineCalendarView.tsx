@@ -66,7 +66,7 @@ type TimelineCalendarViewProps = {
   onSelectEvent: (event: TimelineItem) => void;
   onFocusDay: (day: Date) => void;
   onCreateOnDay?: (day: Date) => void;
-  /** Page toolbar 顯示日期: muted dates; event rows hide, header weather stays. */
+  /** Page toolbar 顯示日期: stronger bottom watermarks; event rows hide. Header (day number, 進行中/結束, weather) stays. */
   datesRevealed?: boolean;
 };
 

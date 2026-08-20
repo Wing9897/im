@@ -43,7 +43,7 @@ async function fetchItemRemindSummary(): Promise<ItemRemindRow[]> {
         when: formatWhen(row.startTime),
       },
     ];
-  }).slice(0, 8);
+  }).slice(0, 12);
 }
 
 /** Item remind / expiry summary from calendar derive-on-read projections. */
