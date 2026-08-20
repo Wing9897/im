@@ -150,7 +150,7 @@ class RetentionRunResponse(BaseModel):
 class SystemSettingsSnapshot(BaseModel):
     """GET/PUT ``/config/settings`` wire snapshot (camelCase).
 
-    LLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``.
+    LLM provider slots / assistant_llm_* retired — use ``/api/v1/llm/profiles``. See ``docs/RETIRED-API.md``.
     """
 
     model_config = ConfigDict(extra="forbid")

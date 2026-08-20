@@ -5,7 +5,7 @@ import {
   normalizePipelineChannelIds,
   sourceIdsForTaskChannels,
   taskOwnerWorksetId,
-} from "./buildWorksetPipelineGraph";
+} from "./pipelineGraphFlags";
 import type { PipelineGraph, PipelineGraphInput } from "./pipelineGraphTypes";
 
 /** Limit the household graph to selected worksets; keep sources that feed their tasks. */
@@ -43,6 +43,7 @@ export function scopePipelineInputToWorkset(
   };
 }
 
+/** Collapse expanded-block overflow: hide extra points and drop dangling wires. */
 export function collapsePipelineGraph(
   graph: PipelineGraph,
   expandedBlockIds: ReadonlySet<string>,

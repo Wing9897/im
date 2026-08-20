@@ -88,13 +88,13 @@ export function financePresetRange(
   }
 }
 
-/** ISO window for `listUserEventsPage({ start, end })` (local day bounds). */
-export function financeEventsQueryWindow(range: ItemsFinanceRange): { start: string; end: string } {
+/** ISO window for `listUserEventsPage({ startTime, endTime })` (local day bounds). */
+export function financeEventsQueryWindow(range: ItemsFinanceRange): { startTime: string; endTime: string } {
   const startMs = Date.parse(`${range.startDay}T00:00:00`);
   const endMs = Date.parse(`${range.endDay}T23:59:59.999`);
-  const start = Number.isFinite(startMs) ? new Date(startMs).toISOString() : range.startDay;
-  const end = Number.isFinite(endMs) ? new Date(endMs).toISOString() : range.endDay;
-  return { start, end };
+  const startTime = Number.isFinite(startMs) ? new Date(startMs).toISOString() : range.startDay;
+  const endTime = Number.isFinite(endMs) ? new Date(endMs).toISOString() : range.endDay;
+  return { startTime, endTime };
 }
 
 function itemTitleById(items: readonly TrackableItem[]): Map<string, TrackableItem> {

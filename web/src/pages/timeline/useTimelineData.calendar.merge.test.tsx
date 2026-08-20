@@ -1,24 +1,16 @@
 /**
- * Regression tests for recurring-task occurrence wiring.
+ * Regression tests for calendar window merge / source filters.
  *
  * Recurring tasks are expanded server-side (GET /api/v1/calendar/window).
- * These tests pin hook wiring (adapter unit coverage lives in timedEventMerge.test.ts):
- * - occurrences are fetched for the visible range (padded for the month grid)
- * - "all tasks" merges analysis + calendar occurrences
- * - filtering by a recurring task shows only that task's occurrences
- * - filtering by an event task does not mix in calendar occurrences
- * - timelineTasks includes event, recurring, and agent modes
- * - __general__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
- * - task filters include tagged user_events for that task
+ * Shared harness: `useTimelineData.calendar.testHarness.tsx`.
  */
-import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { act } from "react";
+import { type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
-import type { CalendarWindowItem } from "../../api/calendarWindow";
 
 const {
   mockFetchCalendarWindow,
@@ -45,87 +37,30 @@ vi.mock("../../context/ToastContext", async () =>
 vi.mock("../../context/AnalysisStatusContext", async () =>
   (await import("../../test/context-mocks")).analysisStatusModuleMock());
 
-import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetAnalysisStatusState, resetTaskCatalogState } from "../../test/context-mocks";
-import { useTimelineData } from "./useTimelineData";
-
-type HookResult = ReturnType<typeof useTimelineData>;
-
-function windowItem(overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">): CalendarWindowItem {
-  return {
-    startTime: "2025-01-15T09:00:00Z",
-    endTime: "2025-01-15T10:00:00Z",
-    location: null,
-    isAllDay: false,
-    timezone: null,
-    emoji: null,
-    taskId: null,
-    seriesId: null,
-    worksetId: SYSTEM_WORKSET_ID,
-    itemId: null,
-    origin: null,
-    itemDateKind: null,
-    notifyPref: "inherit",
-    dismissed: false,
-    important: false,
-    taskName: null,
-    isLastOccurrence: false,
-    remindBeforeDays: null,
-    body: "",
-    ...overrides,
-  };
-}
+import {
+  makeCalendarWindowItem,
+  renderTimelineDataHook,
+  setupTimelineDataCalendarDom,
+  teardownTimelineDataCalendarDom,
+  TIMELINE_CALENDAR_TEST_RANGE,
+  type TimelineDataHookResult,
+} from "./useTimelineData.calendar.testHarness";
 
 describe("useTimelineData calendar occurrence wiring", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
-  let resultRef: { current: HookResult | null };
+  let resultRef: { current: TimelineDataHookResult | null };
 
-  const rangeStart = new Date("2025-01-01T00:00:00Z");
-  const rangeEnd = new Date("2025-02-01T00:00:00Z");
-
-  function HookHarness({
-    selectedSources,
-    refOut,
-  }: {
-    selectedSources: SourceFilterSelection;
-    refOut: { current: HookResult | null };
-  }) {
-    const result = useTimelineData({
-      selectedSources,
-      viewMode: "calendar",
-      rangeStart,
-      rangeEnd,
-    });
-    refOut.current = result;
-    return null;
-  }
+  const rangeStart = TIMELINE_CALENDAR_TEST_RANGE.start;
+  const rangeEnd = TIMELINE_CALENDAR_TEST_RANGE.end;
 
   async function renderHook(selectedSources: SourceFilterSelection = null) {
-    await act(async () => {
-      root = createRoot(container);
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(HookHarness, { selectedSources, refOut: resultRef }),
-          ),
-        ),
-      );
-    });
+    root = await renderTimelineDataHook(container, resultRef, selectedSources);
   }
 
   beforeEach(() => {
-    window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
-    container = document.createElement("div");
-    document.body.appendChild(container);
+    container = setupTimelineDataCalendarDom();
     mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetTaskCatalogState();
@@ -134,28 +69,23 @@ describe("useTimelineData calendar occurrence wiring", () => {
   });
 
   afterEach(() => {
-    if (root) {
-      act(() => {
-        root!.unmount();
-      });
-      root = null;
-    }
-    container.remove();
+    teardownTimelineDataCalendarDom(root, container);
+    root = null;
   });
 
   it("fetches the calendar window padded around the visible range", async () => {
     await renderHook();
     expect(mockFetchCalendarWindow).toHaveBeenCalled();
-    const params = mockFetchCalendarWindow.mock.calls[0][0] as { start: string; end: string };
-    expect(new Date(params.start).getTime()).toBeLessThan(rangeStart.getTime());
-    expect(new Date(params.end).getTime()).toBeGreaterThan(rangeEnd.getTime());
+    const params = mockFetchCalendarWindow.mock.calls[0][0] as { startTime: string; endTime: string };
+    expect(new Date(params.startTime).getTime()).toBeLessThan(rangeStart.getTime());
+    expect(new Date(params.endTime).getTime()).toBeGreaterThan(rangeEnd.getTime());
   });
 
   it("fetches one window for all sources in the padded visible range", async () => {
     await renderHook();
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
-      start: "2024-12-25T00:00:00.000Z",
-      end: "2025-02-08T00:00:00.000Z",
+      startTime: "2024-12-25T00:00:00.000Z",
+      endTime: "2025-02-08T00:00:00.000Z",
       includeAnalysis: true,
       includeUser: true,
       includeRecurring: true,
@@ -165,7 +95,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("maps recurring window rows into events in the all-tasks view", async () => {
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "cal-1:20250115T090000Z",
         source: "recurring",
         title: "Weekly Standup",
@@ -182,7 +112,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("maps user events into the all-tasks view", async () => {
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-1",
         source: "user",
         title: "用戶事件",
@@ -211,7 +141,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       }),
     ]);
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-cross",
         source: "user",
         title: "归属 B，provenance 指向 A 成员",
@@ -221,7 +151,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         taskId: "memberOfA",
         worksetId: "ws-B",
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-owned-a",
         source: "user",
         title: "归属 A",
@@ -241,14 +171,14 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("shows all user events owned by the general workset when __general__ is selected", async () => {
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "cal-1:20250115T090000Z",
         source: "recurring",
         title: "Weekly Standup",
         seriesId: "cal-1",
         worksetId: "ws-cal",
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-only",
         source: "user",
         title: "用戶事件",
@@ -258,7 +188,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         taskId: "",
         worksetId: SYSTEM_WORKSET_ID,
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-tagged-same-ws",
         source: "user",
         title: "同工作集但有 provenance",
@@ -268,7 +198,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         taskId: "ct-1",
         worksetId: SYSTEM_WORKSET_ID,
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-other-ws",
         source: "user",
         title: "其他工作集",
@@ -304,7 +234,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "intel_event" }),
     ]);
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "cal-1:20250115T090000Z",
         source: "recurring",
         title: "Weekly Standup",
@@ -328,7 +258,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "intel_event" }),
     ]);
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "analysis-1",
         source: "analysis",
         title: "分析事件",
@@ -337,7 +267,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         startTime: "2025-01-10T00:00:00Z",
         endTime: null,
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-match",
         source: "user",
         title: "掛到事件任務",
@@ -346,7 +276,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         origin: "manual",
         taskId: "timeline-task-1",
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "ue-other",
         source: "user",
         title: "其他",
@@ -369,14 +299,14 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({ id: "evt-1", name: "Event", analysisMode: "intel_event", worksetId: "ws-a" }),
     ]);
     mockFetchCalendarWindow.mockResolvedValue([
-      windowItem({
+      makeCalendarWindowItem({
         id: "cal-1:a",
         source: "recurring",
         title: "Standup",
         seriesId: "cal-1",
         worksetId: "ws-a",
       }),
-      windowItem({
+      makeCalendarWindowItem({
         id: "cal-2:b",
         source: "recurring",
         title: "Other",
@@ -400,4 +330,3 @@ describe("useTimelineData calendar occurrence wiring", () => {
     );
   });
 });
-

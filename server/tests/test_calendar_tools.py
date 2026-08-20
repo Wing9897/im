@@ -371,6 +371,16 @@ async def test_upcoming_days_schema_matches_horizon() -> None:
     assert HORIZON_DAYS == 365
 
 
+def test_window_schema_canonical_range_is_start_time_end_time() -> None:
+    window = next(s for s in TOOL_SCHEMAS if s["name"] == "calendar.window")
+    props = window["parameters"]["properties"]
+    assert "startTime" in props
+    assert "endTime" in props
+    assert window["parameters"]["required"] == ["startTime", "endTime"]
+    assert "start" in props
+    assert "end" in props
+
+
 async def test_upcoming_and_recent_hard_cap(app) -> None:
     db = app.state.db
     upcoming = await execute_calendar_tool(db, "calendar.upcoming", {"limit": 10_000})

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from server.domain.collector_platforms import CollectorPlatform
+
 
 class MessageMediaResponse(BaseModel):
     kind: str
@@ -44,7 +46,7 @@ class MessagesIngestBatchResponse(BaseModel):
 
 class ChannelResponse(BaseModel):
     id: str
-    platform: str
+    platform: CollectorPlatform
     platformId: str
     channelName: str
     createdAt: str
@@ -52,7 +54,7 @@ class ChannelResponse(BaseModel):
 
 class ChannelWithSourceResponse(BaseModel):
     id: str
-    platform: str
+    platform: CollectorPlatform
     platformId: str
     channelName: str
     createdAt: str

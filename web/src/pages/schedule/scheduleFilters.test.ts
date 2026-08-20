@@ -78,10 +78,10 @@ describe("scheduleFilters", () => {
 
   it("builds an inclusive local ISO window and swaps inverted days", () => {
     const window = scheduleDateQueryWindow("2026-08-10", "2026-08-01");
-    expect(window.start).toBe(new Date("2026-08-01T00:00:00").toISOString());
-    expect(window.end).toBe(new Date("2026-08-10T23:59:59.999").toISOString());
+    expect(window.startTime).toBe(new Date("2026-08-01T00:00:00").toISOString());
+    expect(window.endTime).toBe(new Date("2026-08-10T23:59:59.999").toISOString());
     expect(scheduleDateQueryWindow("2026-08-01", "")).toEqual({
-      start: new Date("2026-08-01T00:00:00").toISOString(),
+      startTime: new Date("2026-08-01T00:00:00").toISOString(),
     });
   });
 

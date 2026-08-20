@@ -39,10 +39,10 @@ describe("system API", () => {
     it("fetches public health status", async () => {
       const response = {
         status: "ok",
-        version: "0.1.0-beta.33",
+        version: "1.0.0",
         runtimeReady: true,
-        schemaVersion: 31,
-        schemaSemver: "0.1.0-beta.33",
+        schemaVersion: 1,
+        schemaSemver: "1.0.0",
         secretsReady: true,
         bindHost: "0.0.0.0",
       };

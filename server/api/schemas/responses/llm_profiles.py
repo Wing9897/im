@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from server.api.schemas.web_search_fields import web_search_secret_field_definitions
@@ -44,16 +46,24 @@ class _LlmProfileResponseCore(BaseModel):
     webSearchProvider: WebSearchProviderWire | str = "auto"
 
 
-LlmProfileResponse = create_model(
-    "LlmProfileResponse",
-    __base__=_LlmProfileResponseCore,
-    __module__=__name__,
-    **web_search_secret_field_definitions(optional=False),
-    staffClasses=(list[str], Field(default_factory=list)),
-    staffInstances=(list[LlmStaffInstanceResponse], Field(default_factory=list)),
-    createdAt=(str | None, None),
-    updatedAt=(str | None, None),
-)
+if TYPE_CHECKING:
+
+    class LlmProfileResponse(_LlmProfileResponseCore):
+        staffClasses: list[str]
+        staffInstances: list[LlmStaffInstanceResponse]
+        createdAt: str | None
+        updatedAt: str | None
+else:
+    LlmProfileResponse = create_model(
+        "LlmProfileResponse",
+        __base__=_LlmProfileResponseCore,
+        __module__=__name__,
+        **web_search_secret_field_definitions(optional=False),
+        staffClasses=(list[str], Field(default_factory=list)),
+        staffInstances=(list[LlmStaffInstanceResponse], Field(default_factory=list)),
+        createdAt=(str | None, None),
+        updatedAt=(str | None, None),
+    )
 
 
 class LlmProfileDeleteResponse(BaseModel):

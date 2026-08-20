@@ -85,12 +85,12 @@ describe("selectSummaryExpiringItems", () => {
 describe("selectSummaryUserEvents", () => {
   it("filters dismissed / out-of-window and sorts chronologically", () => {
     const now = new Date();
-    const { start, end } = worksetEventsQueryWindow(now);
-    const startMs = Date.parse(start);
+    const { startTime, endTime } = worksetEventsQueryWindow(now);
+    const startMs = Date.parse(startTime);
     const mid = new Date(startMs + 3 * 86_400_000).toISOString();
     const later = new Date(startMs + 10 * 86_400_000).toISOString();
     const pastWindow = new Date(startMs - 86_400_000).toISOString();
-    const futureWindow = new Date(Date.parse(end) + 86_400_000).toISOString();
+    const futureWindow = new Date(Date.parse(endTime) + 86_400_000).toISOString();
 
     const picked = selectSummaryUserEvents(
       [
@@ -107,8 +107,8 @@ describe("selectSummaryUserEvents", () => {
 
   it("caps at limit", () => {
     const now = new Date();
-    const { start } = worksetEventsQueryWindow(now);
-    const base = Date.parse(start);
+    const { startTime } = worksetEventsQueryWindow(now);
+    const base = Date.parse(startTime);
     const rows = Array.from({ length: 8 }, (_, i) =>
       event({
         id: `e${i}`,

@@ -39,7 +39,7 @@ async function fetchScheduleSummary(): Promise<ScheduleSummary> {
   const end = new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString();
   const start = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const [eventsPage, seriesPage] = await Promise.all([
-    listUserEventsPage({ start, end, limit: 12 }),
+    listUserEventsPage({ startTime: start, endTime: end, limit: 12 }),
     listRecurringSeries({ limit: 12 }),
   ]);
   const upcoming = [...eventsPage.items]

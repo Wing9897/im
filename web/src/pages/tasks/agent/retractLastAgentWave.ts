@@ -23,8 +23,8 @@ async function dismissRecurringOccurrences(
   const rangeEnd = new Date();
   rangeEnd.setFullYear(rangeEnd.getFullYear() + 2);
   const items = await fetchCalendarWindow({
-    start: new Date(startMs).toISOString(),
-    end: rangeEnd.toISOString(),
+    startTime: new Date(startMs).toISOString(),
+    endTime: rangeEnd.toISOString(),
     includeAnalysis: false,
     includeUser: false,
     includeRecurring: true,

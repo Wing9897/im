@@ -167,10 +167,7 @@ CHAT_ASSISTANT_SYSTEM_PROMPT = (
 AGENT_WEB_SEARCH_DISABLED_NOTE = (
     "\n（設定已關閉助手聯網；本次對話不提供 web.search／web.fetch，也不啟用供應商原生搜尋。）\n"
 )
-AGENT_WEB_FETCH_HINT = (
-    " 摘要不夠時可用 web.fetch 讀取 1–2 個具體 URL 的正文（有長度上限）；"
-    "不要自動抓取所有搜尋結果。"
-)
+AGENT_WEB_FETCH_HINT = " 摘要不夠時可用 web.fetch 讀取 1–2 個具體 URL 的正文（有長度上限）；不要自動抓取所有搜尋結果。"
 AGENT_WEB_SEARCH_DUCKDUCKGO_HINT = " DuckDuckGo 免 API key；結果品質可能弱於付費搜尋。"
 _KEYED_SEARCH_HINT_LABELS = {
     "brave": "Brave",

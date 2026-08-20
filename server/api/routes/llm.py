@@ -34,7 +34,7 @@ from server.llm_global_slots import (
 from server.queries import llm_profiles_queries as q
 from server.secrets import MASKED_SECRET
 from server.util import new_id, utc_now_iso
-from server.wire.serializer_domains.llm_profiles import (
+from server.wire.serializers import (
     serialize_llm_profile,
     serialize_llm_staff_instance,
 )

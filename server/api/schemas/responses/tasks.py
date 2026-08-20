@@ -6,9 +6,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.api.schemas.notify_pref import CoercedNotifyPref
 from server.domain.analysis_modes import AnalysisMode
 from server.domain.analysis_time_ranges import AnalysisTimeRange
-from server.api.schemas.notify_pref import CoercedNotifyPref
 
 
 class TaskTemplateResponse(BaseModel):
@@ -53,7 +53,10 @@ class TaskDraftPayload(BaseModel):
     outputCalendar: bool | None = None
     outputAnalysisEvents: bool | None = Field(
         default=None,
-        description="Intelligence-page write gate (intel_event / agent). Leaderboard stores this flag but does not write analysis_events.",
+        description=(
+            "Intelligence-page write gate (intel_event / agent). "
+            "Leaderboard stores this flag but does not write analysis_events."
+        ),
     )
     llmProfileId: str | None = None
     notifyPref: CoercedNotifyPref | None = None

@@ -5,7 +5,8 @@
  * legal for message filters only — they must **not** be written to
  * ``analysis_tasks.analysis_time_range`` (DB CHECK rejects them; use ``1d``／``48h``).
  *
- * See also: ``TaskAnalysisTimeRange`` in ``domain/tasks/taskAnalysisTimeRange``.
+ * FE mirror of ``server/domain/message_time_ranges.py``. See also:
+ * ``TaskAnalysisTimeRange`` in ``domain/tasks/taskAnalysisTimeRange``.
  */
 
 import {

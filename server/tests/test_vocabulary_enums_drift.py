@@ -1,4 +1,4 @@
-"""Drift guards for vocabulary enums moved to ``server/domain`` (stamp 33).
+"""Drift guards for vocabulary enums moved to ``server/domain``.
 
 Covers ``analysis_time_range``, app log ``level`` / ``category``, ``json_mode``,
 ``web_search_provider``, and the nullable ``analysis_strategy_mode``.

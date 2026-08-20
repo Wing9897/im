@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from server.api.schemas.web_search_fields import web_search_secret_field_definitions
@@ -28,13 +30,18 @@ class _LlmProfileUpsertCore(BaseModel):
     webSearchProvider: WebSearchProviderWire = "auto"
 
 
-LlmProfileUpsertBody = create_model(
-    "LlmProfileUpsertBody",
-    __base__=_LlmProfileUpsertCore,
-    __module__=__name__,
-    **web_search_secret_field_definitions(optional=True),
-    staffClasses=(list[StaffClassWire], Field(default_factory=list)),
-)
+if TYPE_CHECKING:
+
+    class LlmProfileUpsertBody(_LlmProfileUpsertCore):
+        staffClasses: list[StaffClassWire]
+else:
+    LlmProfileUpsertBody = create_model(
+        "LlmProfileUpsertBody",
+        __base__=_LlmProfileUpsertCore,
+        __module__=__name__,
+        **web_search_secret_field_definitions(optional=True),
+        staffClasses=(list[StaffClassWire], Field(default_factory=list)),
+    )
 
 
 class LlmProfileCopyBody(BaseModel):

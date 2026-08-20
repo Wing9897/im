@@ -1,6 +1,7 @@
 """HTTP assembly for task routes: 422 mapping stays in the route modules.
 
 HTTP-agnostic policy lives in ``services.task_policy``.
+Recurring-only recurrence expanded at query time; never an AI analysis trigger.
 """
 
 from __future__ import annotations

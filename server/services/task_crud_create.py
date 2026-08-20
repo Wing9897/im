@@ -9,11 +9,6 @@ from server.api.routes.task_helpers import (
     resolve_llm_profile_id,
     task_response,
 )
-from server.services.task_policy import (
-    agent_policy_write_fields,
-    resolve_workset_id,
-    schedule_override_write_fields,
-)
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import LEADERBOARD_MODE
 from server.domain.notify_prefs import normalize_notify_pref
@@ -27,6 +22,11 @@ from server.services.task_crud_mutate_common import (
     task_emoji_from_body,
     validate_agent_prompt,
     validate_task_config_body,
+)
+from server.services.task_policy import (
+    agent_policy_write_fields,
+    resolve_workset_id,
+    schedule_override_write_fields,
 )
 from server.services.task_writes import (
     TaskWriteError,

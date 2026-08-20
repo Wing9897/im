@@ -17,6 +17,7 @@ import {
   controlSizeClass,
   pageOpsControlClass,
 } from "../../components/ui/controlStyles";
+import { spacing } from "../../styles/tokens";
 import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
 import { PIPELINE_MAX_VISIBLE_WORKSETS } from "../../domain/worksets/worksetPipelineGraph";
 import {
@@ -64,7 +65,7 @@ const toolbarTriggerStyle: CSSProperties = {
   boxSizing: "border-box",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: 8,
+  gap: spacing.sm,
   cursor: "pointer",
   textAlign: "left",
 };

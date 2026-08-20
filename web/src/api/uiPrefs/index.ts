@@ -15,7 +15,8 @@
  * - Timeline client statuses / time overrides: `/ui-prefs/timeline/annotations`
  *   (not soft-dismiss; that stays on `/api/v1/calendar/dismissals`).
  * - Card glyphs live on entity `emoji` columns (tasks / user_events /
- *   recurring_schedules / items). Stamp 43 dropped ui_prefs maps.
+ *   recurring_schedules / items). ui_prefs emoji maps are retired
+ *   (see docs/RETIRED-API.md).
  * - UI locale remains LS-first (`i18n/locale.ts`); do not make server authoritative
  *   for `auto` locale the same way as board layout.
  * Transport is hand-written; request/response shapes derive from OpenAPI

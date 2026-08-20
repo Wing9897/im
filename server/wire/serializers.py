@@ -6,6 +6,8 @@ continue importing from this module so route/service boundaries stay stable.
 
 from server.wire.serializer_domains.calendar import (
     serialize_analysis_event,
+    serialize_dismissal,
+    serialize_importance,
     serialize_trending_topic,
     serialize_user_event,
 )
@@ -18,6 +20,7 @@ from server.wire.serializer_domains.llm_profiles import (
     serialize_llm_staff_instance,
 )
 from server.wire.serializer_domains.operations import (
+    parse_tool_call_entries,
     serialize_action,
     serialize_action_trigger_history,
     serialize_activity_span,
@@ -40,6 +43,7 @@ from server.wire.serializer_domains.worksets import serialize_workset
 
 __all__ = [
     "channel_key",
+    "parse_tool_call_entries",
     "serialize_action",
     "serialize_action_trigger_history",
     "serialize_activity_span",
@@ -48,6 +52,8 @@ __all__ = [
     "serialize_batch_tool_calls",
     "serialize_channel",
     "serialize_channel_ref",
+    "serialize_dismissal",
+    "serialize_importance",
     "serialize_item",
     "serialize_item_category",
     "serialize_llm_profile",

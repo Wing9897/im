@@ -257,8 +257,8 @@ describe("fetchMergedTimelineEvents", () => {
     });
 
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
-      start: "2025-01-01T00:00:00.000Z",
-      end: "2025-02-01T00:00:00.000Z",
+      startTime: "2025-01-01T00:00:00.000Z",
+      endTime: "2025-02-01T00:00:00.000Z",
       includeAnalysis: true,
       includeUser: true,
       includeRecurring: false,
@@ -298,8 +298,8 @@ describe("fetchMergedTimelineEvents", () => {
     });
 
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
-      start: "2025-01-01T00:00:00.000Z",
-      end: "2025-02-01T00:00:00.000Z",
+      startTime: "2025-01-01T00:00:00.000Z",
+      endTime: "2025-02-01T00:00:00.000Z",
       includeAnalysis: false,
       includeUser: true,
       includeRecurring: true,
@@ -358,8 +358,8 @@ describe("fetchMergedTimelineEvents", () => {
     });
 
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith({
-      start: "2026-08-01T00:00:00.000Z",
-      end: "2026-08-31T23:59:59.000Z",
+      startTime: "2026-08-01T00:00:00.000Z",
+      endTime: "2026-08-31T23:59:59.000Z",
       includeAnalysis: false,
       includeUser: true,
       includeRecurring: true,

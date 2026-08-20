@@ -192,6 +192,48 @@ def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
         assert entry["pipeline"] == spec.pipeline
 
 
+def test_fe_mirrors_notify_kind_trigger_and_message_ranges() -> None:
+    from server.domain.agent_task_spec import ALL_TRIGGER_MODES
+    from server.domain.message_time_ranges import ALL_MESSAGE_ONLY_TIME_RANGES, ALL_MESSAGE_TIME_RANGES
+    from server.domain.notify_prefs import ALL_NOTIFY_PREFS
+    from server.domain.user_event_kinds import ALL_USER_EVENT_KINDS
+
+    root = Path(__file__).resolve().parents[2]
+    notify_path = root / "web" / "src" / "domain" / "notify" / "notifyPref.ts"
+    kind_path = root / "web" / "src" / "domain" / "timeline" / "userEventCalendarKind.ts"
+    trigger_path = root / "web" / "src" / "domain" / "tasks" / "agentTaskPolicy.ts"
+    message_range_path = root / "web" / "src" / "domain" / "messages" / "messageTimeRange.ts"
+    task_range_path = root / "web" / "src" / "domain" / "tasks" / "taskAnalysisTimeRange.ts"
+
+    assert _parse_ts_string_array(notify_path, "NOTIFY_PREFS") == ALL_NOTIFY_PREFS
+    assert _parse_ts_string_array(kind_path, "USER_EVENT_CALENDAR_KINDS") == ALL_USER_EVENT_KINDS
+    assert _parse_ts_string_array(trigger_path, "AGENT_TRIGGER_MODES") == ALL_TRIGGER_MODES
+    fe_message_only = _parse_ts_string_array(message_range_path, "MESSAGE_ONLY_TIME_RANGE_VALUES")
+    fe_task_ranges = _parse_ts_string_array(task_range_path, "TASK_ANALYSIS_TIME_RANGE_VALUES")
+    assert fe_message_only == ALL_MESSAGE_ONLY_TIME_RANGES
+    assert (*fe_task_ranges, *fe_message_only) == ALL_MESSAGE_TIME_RANGES
+
+
+def test_vocabulary_reexports_every_domain_check_sql() -> None:
+    import importlib
+    import pkgutil
+
+    import server.domain as domain_pkg
+    from server.db.schema_domains import vocabulary
+
+    found: dict[str, str] = {}
+    for module_info in pkgutil.iter_modules(domain_pkg.__path__):
+        module = importlib.import_module(f"server.domain.{module_info.name}")
+        for name, value in vars(module).items():
+            if name.endswith("_CHECK_SQL") and isinstance(value, str):
+                assert name not in found, name
+                found[name] = value
+    exported = set(vocabulary.__all__)
+    assert set(found) == exported
+    for name, value in found.items():
+        assert getattr(vocabulary, name) == value
+
+
 def test_agent_tool_schema_caps_share_named_policy_constants() -> None:
     for name in ("calendar.upcoming", "calendar.recent", "calendar.window"):
         assert _limit_maximum(CALENDAR_SCHEMAS, name) == CALENDAR_RESULT_HARD_CAP
@@ -229,7 +271,11 @@ async def test_empty_user_event_patch_uses_canonical_dismissal_serialization(cli
         json={"title": "canonical", "startTime": "2026-07-28T09:00:00Z"},
     )
     event_id = created.json()["id"]
-    assert (await client.delete(f"/api/v1/calendar/user-events/{event_id}")).status_code == 204
+    dismissed = await client.put(
+        "/api/v1/calendar/dismissals",
+        json={"source": "user", "eventId": event_id},
+    )
+    assert dismissed.status_code == 200
 
     response = await client.patch(f"/api/v1/calendar/user-events/{event_id}", json={})
     assert response.status_code == 200

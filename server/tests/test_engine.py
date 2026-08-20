@@ -64,7 +64,7 @@ async def test_json_mode_for_analyze_honors_profile_json_mode(app) -> None:
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.provider = "openai"
 
-    # Stored vocabulary is CHECK-constrained (stamp 33): disabled / json_schema /
+    # Stored vocabulary is CHECK-constrained: disabled / json_schema /
     # json_object. Legacy sentinel collapse ("off" / "0" / …) stays unit-tested
     # against is_openai_json_mode_enabled in test_util.py.
     await db.execute(

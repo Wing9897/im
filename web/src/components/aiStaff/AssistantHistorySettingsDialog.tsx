@@ -12,7 +12,7 @@ type AssistantHistorySettingsDialogProps = {
   onSave: (patch: Partial<SystemSettingsSnapshot>) => void | Promise<void>;
 };
 
-/** History caps only — LLM connection lives on profiles (Stamp 29). */
+/** History caps only — LLM connection lives on profiles. */
 export function AssistantHistorySettingsDialog({
   open,
   settings,

@@ -1,24 +1,15 @@
 /**
- * Regression tests for recurring-task occurrence wiring.
+ * Regression tests for calendar refresh / SSE / errors.
  *
  * Recurring tasks are expanded server-side (GET /api/v1/calendar/window).
- * These tests pin hook wiring (adapter unit coverage lives in timedEventMerge.test.ts):
- * - occurrences are fetched for the visible range (padded for the month grid)
- * - "all tasks" merges analysis + calendar occurrences
- * - filtering by a recurring task shows only that task's occurrences
- * - filtering by an event task does not mix in calendar occurrences
- * - timelineTasks includes event, recurring, and agent modes
- * - __general__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
- * - task filters include tagged user_events for that task
+ * Shared harness: `useTimelineData.calendar.testHarness.tsx`.
  */
-import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { act } from "react";
+import { type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CalendarOccurrence } from "../../types";
-import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 const {
   mockFetchCalendarWindow,
@@ -46,83 +37,30 @@ vi.mock("../../context/AnalysisStatusContext", async () =>
   (await import("../../test/context-mocks")).analysisStatusModuleMock());
 
 import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../../context/MonitorModeContext";
+import { createElement } from "react";
+import { MonitorModeProvider } from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetAnalysisStatusState, resetTaskCatalogState, taskCatalogState } from "../../test/context-mocks";
 import { emitResourceModified } from "../../domain/sse/resourceModified";
-import { useTimelineData } from "./useTimelineData";
-
-type HookResult = ReturnType<typeof useTimelineData>;
-
-function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
-  return {
-    id: "cal-1:20250115T090000Z",
-    seriesId: "cal-1",
-    taskName: "Weekly Standup",
-    title: "Weekly Standup",
-    startTime: "2025-01-15T09:00:00Z",
-    endTime: "2025-01-15T10:00:00Z",
-    isAllDay: false,
-    location: null,
-    description: "Team sync",
-    rrule: "FREQ=WEEKLY;BYDAY=WE",
-    source: "recurring",
-    ...overrides,
-  };
-}
+import {
+  makeCalendarOccurrence,
+  renderTimelineDataHook,
+  setupTimelineDataCalendarDom,
+  teardownTimelineDataCalendarDom,
+  TimelineDataHookHarness,
+  type TimelineDataHookResult,
+} from "./useTimelineData.calendar.testHarness";
 
 describe("useTimelineData calendar refresh and errors", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
-  let resultRef: { current: HookResult | null };
-
-  const rangeStart = new Date("2025-01-01T00:00:00Z");
-  const rangeEnd = new Date("2025-02-01T00:00:00Z");
-
-  function HookHarness({
-    selectedSources,
-    refOut,
-    rangeStart: start = rangeStart,
-    rangeEnd: end = rangeEnd,
-  }: {
-    selectedSources: SourceFilterSelection;
-    refOut: { current: HookResult | null };
-    rangeStart?: Date;
-    rangeEnd?: Date;
-  }) {
-    const result = useTimelineData({
-      selectedSources,
-      viewMode: "calendar",
-      rangeStart: start,
-      rangeEnd: end,
-    });
-    refOut.current = result;
-    return null;
-  }
+  let resultRef: { current: TimelineDataHookResult | null };
 
   async function renderHook(selectedSources: SourceFilterSelection = null) {
-    await act(async () => {
-      root = createRoot(container);
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(HookHarness, { selectedSources, refOut: resultRef }),
-          ),
-        ),
-      );
-    });
+    root = await renderTimelineDataHook(container, resultRef, selectedSources);
   }
 
   beforeEach(() => {
-    window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
-    container = document.createElement("div");
-    document.body.appendChild(container);
+    container = setupTimelineDataCalendarDom();
     mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetTaskCatalogState();
@@ -131,13 +69,8 @@ describe("useTimelineData calendar refresh and errors", () => {
   });
 
   afterEach(() => {
-    if (root) {
-      act(() => {
-        root!.unmount();
-      });
-      root = null;
-    }
-    container.remove();
+    teardownTimelineDataCalendarDom(root, container);
+    root = null;
   });
 
   it("refreshEvents fetches standalone recurring rows without a task catalog override", async () => {
@@ -150,8 +83,8 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     mockFetchCalendarWindow.mockClear();
     mockFetchCalendarWindow.mockResolvedValue([
-      makeOccurrence({ id: "rec-new:a", seriesId: "rec-new", title: "每日", worksetId: SYSTEM_WORKSET_ID }),
-      makeOccurrence({
+      makeCalendarOccurrence({ id: "rec-new:a", seriesId: "rec-new", title: "每日", worksetId: SYSTEM_WORKSET_ID }),
+      makeCalendarOccurrence({
         id: "rec-new:b",
         seriesId: "rec-new",
         title: "每日",
@@ -195,7 +128,7 @@ describe("useTimelineData calendar refresh and errors", () => {
 
   it("merges source=item_remind calendar rows and refreshes on item SSE", async () => {
     mockFetchCalendarWindow.mockResolvedValue([
-      makeOccurrence({
+      makeCalendarOccurrence({
         id: "item:i1:remind",
         taskId: "",
         taskName: "",
@@ -352,7 +285,7 @@ describe("useTimelineData calendar refresh and errors", () => {
   it("re-fetches calendar occurrences when the visible range changes", async () => {
     await renderHook();
     expect(mockFetchCalendarWindow).toHaveBeenCalled();
-    const firstWindow = mockFetchCalendarWindow.mock.calls[0][0] as { start: string };
+    const firstWindow = mockFetchCalendarWindow.mock.calls[0][0] as { startTime: string };
     mockFetchCalendarWindow.mockClear();
 
     await act(async () => {
@@ -363,7 +296,7 @@ describe("useTimelineData calendar refresh and errors", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(HookHarness, {
+            createElement(TimelineDataHookHarness, {
               selectedSources: null,
               refOut: resultRef,
               rangeStart: new Date("2025-02-01T00:00:00Z"),
@@ -375,8 +308,8 @@ describe("useTimelineData calendar refresh and errors", () => {
     });
 
     expect(mockFetchCalendarWindow).toHaveBeenCalled();
-    const nextWindow = mockFetchCalendarWindow.mock.calls[0][0] as { start: string };
-    expect(nextWindow.start).not.toBe(firstWindow.start);
+    const nextWindow = mockFetchCalendarWindow.mock.calls[0][0] as { startTime: string };
+    expect(nextWindow.startTime).not.toBe(firstWindow.startTime);
   });
 
   it("leaves schedule events untouched when there are no occurrences", async () => {

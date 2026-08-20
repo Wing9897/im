@@ -348,9 +348,7 @@ async def test_intel_event_skips_store_when_output_analysis_events_off(db):
     assert "analysis_completed" in broadcaster.types()
     completed = next(p for (t, p) in broadcaster.events if t == "analysis_completed")
     assert completed["findingsCount"] == 0
-    after = int(
-        await db.fetch_value("SELECT COUNT(*) FROM analysis_events WHERE task_id = ?", (seed.TASK_EVENT,)) or 0
-    )
+    after = int(await db.fetch_value("SELECT COUNT(*) FROM analysis_events WHERE task_id = ?", (seed.TASK_EVENT,)) or 0)
     assert after == before
     batch = await db.fetch_one(
         "SELECT status FROM analysis_batches WHERE task_id = ? ORDER BY created_at DESC LIMIT 1",

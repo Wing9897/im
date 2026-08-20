@@ -92,7 +92,7 @@ async def test_calendar_window_returns_tagged_emojis(client) -> None:
 
     window = await client.get(
         "/api/v1/calendar/window",
-        params={"start": "2026-08-19T00:00:00Z", "end": "2026-08-19T23:59:59Z"},
+        params={"startTime": "2026-08-19T00:00:00Z", "endTime": "2026-08-19T23:59:59Z"},
     )
     assert window.status_code == 200, window.text
     payload = window.json()
@@ -104,8 +104,8 @@ async def test_calendar_window_returns_tagged_emojis(client) -> None:
     skipped = await client.get(
         "/api/v1/calendar/window",
         params={
-            "start": "2026-08-19T00:00:00Z",
-            "end": "2026-08-19T23:59:59Z",
+            "startTime": "2026-08-19T00:00:00Z",
+            "endTime": "2026-08-19T23:59:59Z",
             "includeUser": "false",
         },
     )

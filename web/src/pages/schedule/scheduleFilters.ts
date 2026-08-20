@@ -68,20 +68,20 @@ function orderedRange(startDay: string, endDay: string): { startDay: string; end
   return { startDay, endDay };
 }
 
-/** ISO window for `listUserEventsPage({ start, end })` (local day bounds). */
+/** ISO window for `listUserEventsPage({ startTime, endTime })` (local day bounds). */
 export function scheduleDateQueryWindow(
   startDay: string,
   endDay: string,
-): { start?: string; end?: string } {
+): { startTime?: string; endTime?: string } {
   const range = orderedRange(startDay.trim(), endDay.trim());
-  const out: { start?: string; end?: string } = {};
+  const out: { startTime?: string; endTime?: string } = {};
   if (isScheduleDayInput(range.startDay)) {
     const startMs = Date.parse(`${range.startDay}T00:00:00`);
-    out.start = Number.isFinite(startMs) ? new Date(startMs).toISOString() : `${range.startDay}T00:00:00`;
+    out.startTime = Number.isFinite(startMs) ? new Date(startMs).toISOString() : `${range.startDay}T00:00:00`;
   }
   if (isScheduleDayInput(range.endDay)) {
     const endMs = Date.parse(`${range.endDay}T23:59:59.999`);
-    out.end = Number.isFinite(endMs) ? new Date(endMs).toISOString() : `${range.endDay}T23:59:59.999`;
+    out.endTime = Number.isFinite(endMs) ? new Date(endMs).toISOString() : `${range.endDay}T23:59:59.999`;
   }
   return out;
 }
@@ -127,7 +127,7 @@ export function userEventInDateRange(event: UserEvent, startDay: string, endDay:
   return rangesOverlap(eventStart, eventEnd, rangeStart, rangeEnd);
 }
 
-/** Client-side date filter for recurring rows (one-offs already use list `start`/`end`). */
+/** Client-side date filter for recurring rows (one-offs already use list `startTime`/`endTime`). */
 export function filterScheduleEntriesByDate(
   entries: readonly ScheduleListEntry[],
   startDay: string,

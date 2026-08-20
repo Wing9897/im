@@ -10,11 +10,11 @@ import { SCHEDULE_PAGE_SIZE } from "./scheduleConfig";
 export function useScheduleOneOffFeed(opts: {
   debouncedSearch: string;
   worksetId?: string;
-  start?: string;
-  end?: string;
+  startTime?: string;
+  endTime?: string;
   enabled?: boolean;
 }) {
-  const { debouncedSearch, worksetId, start, end, enabled = true } = opts;
+  const { debouncedSearch, worksetId, startTime, endTime, enabled = true } = opts;
   const [items, setItems] = useState<UserEvent[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -38,8 +38,8 @@ export function useScheduleOneOffFeed(opts: {
       const page = await listUserEventsPage({
         search: debouncedSearch.trim() || undefined,
         worksetId: worksetId || undefined,
-        start,
-        end,
+        startTime,
+        endTime,
         limit: SCHEDULE_PAGE_SIZE,
         offset: 0,
       });
@@ -56,7 +56,7 @@ export function useScheduleOneOffFeed(opts: {
     } finally {
       if (requestId === requestIdRef.current) setInitialLoading(false);
     }
-  }, [debouncedSearch, enabled, end, start, worksetId]);
+  }, [debouncedSearch, enabled, endTime, startTime, worksetId]);
 
   useEffect(() => {
     void reload();
@@ -70,8 +70,8 @@ export function useScheduleOneOffFeed(opts: {
       const page = await listUserEventsPage({
         search: debouncedSearch.trim() || undefined,
         worksetId: worksetId || undefined,
-        start,
-        end,
+        startTime,
+        endTime,
         limit: SCHEDULE_PAGE_SIZE,
         offset: items.length,
       });
@@ -92,7 +92,7 @@ export function useScheduleOneOffFeed(opts: {
     } finally {
       if (requestId === requestIdRef.current) setLoadingMore(false);
     }
-  }, [debouncedSearch, enabled, end, hasMore, initialLoading, items.length, loadingMore, start, worksetId]);
+  }, [debouncedSearch, enabled, endTime, hasMore, initialLoading, items.length, loadingMore, startTime, worksetId]);
 
   return {
     items,

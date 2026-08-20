@@ -3180,8 +3180,11 @@ export interface components {
         ChannelResponse: {
             /** Id */
             id: string;
-            /** Platform */
-            platform: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "telegram" | "discord" | "rss" | "http" | "mqtt" | "email";
             /** Platformid */
             platformId: string;
             /** Channelname */
@@ -3193,8 +3196,11 @@ export interface components {
         ChannelWithSourceResponse: {
             /** Id */
             id: string;
-            /** Platform */
-            platform: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "telegram" | "discord" | "rss" | "http" | "mqtt" | "email";
             /** Platformid */
             platformId: string;
             /** Channelname */
@@ -3744,8 +3750,9 @@ export interface components {
             /**
              * Status
              * @default active
+             * @enum {string}
              */
-            status: string;
+            status: "active" | "archived";
             /** Emoji */
             emoji?: string | null;
             /** Quantity */
@@ -4632,7 +4639,7 @@ export interface components {
          * SystemSettingsSnapshot
          * @description GET/PUT ``/config/settings`` wire snapshot (camelCase).
          *
-         *     LLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``.
+         *     LLM provider slots / assistant_llm_* retired — use ``/api/v1/llm/profiles``. See ``docs/RETIRED-API.md``.
          */
         SystemSettingsSnapshot: {
             /** Analysispaused */
@@ -5178,8 +5185,11 @@ export interface components {
         };
         /** TimelineDismissalBody */
         TimelineDismissalBody: {
-            /** Source */
-            source: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "analysis" | "user" | "recurring" | "item_remind";
             /** Eventid */
             eventId: string;
         };
@@ -5204,8 +5214,11 @@ export interface components {
         };
         /** TimelineImportanceBody */
         TimelineImportanceBody: {
-            /** Source */
-            source: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "analysis" | "user" | "recurring" | "item_remind";
             /** Eventid */
             eventId: string;
         };
@@ -8906,9 +8919,7 @@ export interface operations {
     list_calendar_window_api_v1_calendar_window_get: {
         parameters: {
             query?: {
-                start?: string | null;
                 startTime?: string | null;
-                end?: string | null;
                 endTime?: string | null;
                 worksetId?: string | null;
                 taskId?: string | null;
@@ -9273,8 +9284,8 @@ export interface operations {
     list_events_api_v1_calendar_user_events_get: {
         parameters: {
             query?: {
-                start?: string | null;
-                end?: string | null;
+                startTime?: string | null;
+                endTime?: string | null;
                 taskId?: string | null;
                 worksetId?: string | null;
                 itemId?: string | null;

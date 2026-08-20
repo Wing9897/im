@@ -4455,22 +4455,6 @@
         "operationId": "list_calendar_window_api_v1_calendar_window_get",
         "parameters": [
           {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Start"
-            }
-          },
-          {
             "name": "startTime",
             "in": "query",
             "required": false,
@@ -4484,22 +4468,6 @@
                 }
               ],
               "title": "Starttime"
-            }
-          },
-          {
-            "name": "end",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "End"
             }
           },
           {
@@ -5214,7 +5182,7 @@
         "operationId": "list_events_api_v1_calendar_user_events_get",
         "parameters": [
           {
-            "name": "start",
+            "name": "startTime",
             "in": "query",
             "required": false,
             "schema": {
@@ -5226,11 +5194,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Start"
+              "title": "Starttime"
             }
           },
           {
-            "name": "end",
+            "name": "endTime",
             "in": "query",
             "required": false,
             "schema": {
@@ -5242,7 +5210,7 @@
                   "type": "null"
                 }
               ],
-              "title": "End"
+              "title": "Endtime"
             }
           },
           {
@@ -10240,6 +10208,14 @@
           },
           "platform": {
             "type": "string",
+            "enum": [
+              "telegram",
+              "discord",
+              "rss",
+              "http",
+              "mqtt",
+              "email"
+            ],
             "title": "Platform"
           },
           "platformId": {
@@ -10273,6 +10249,14 @@
           },
           "platform": {
             "type": "string",
+            "enum": [
+              "telegram",
+              "discord",
+              "rss",
+              "http",
+              "mqtt",
+              "email"
+            ],
             "title": "Platform"
           },
           "platformId": {
@@ -11961,6 +11945,10 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ],
             "title": "Status",
             "default": "active"
           },
@@ -14915,7 +14903,7 @@
           "mcpCapItemsWrite"
         ],
         "title": "SystemSettingsSnapshot",
-        "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase).\n\nLLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``."
+        "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase).\n\nLLM provider slots / assistant_llm_* retired — use ``/api/v1/llm/profiles``. See ``docs/RETIRED-API.md``."
       },
       "SystemSettingsUpdateBody": {
         "properties": {
@@ -16653,6 +16641,12 @@
         "properties": {
           "source": {
             "type": "string",
+            "enum": [
+              "analysis",
+              "user",
+              "recurring",
+              "item_remind"
+            ],
             "title": "Source"
           },
           "eventId": {
@@ -16727,6 +16721,12 @@
         "properties": {
           "source": {
             "type": "string",
+            "enum": [
+              "analysis",
+              "user",
+              "recurring",
+              "item_remind"
+            ],
             "title": "Source"
           },
           "eventId": {

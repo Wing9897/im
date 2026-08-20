@@ -182,7 +182,7 @@ describe("WorksetContentsPanel", () => {
 
     expect(listItems).toHaveBeenCalledWith({ worksetId: "ws-1" });
     expect(listUserEventsPage).toHaveBeenCalledWith(
-      expect.objectContaining({ worksetId: "ws-1", start: expect.any(String), end: expect.any(String) }),
+      expect.objectContaining({ worksetId: "ws-1", startTime: expect.any(String), endTime: expect.any(String) }),
     );
     expect(container.textContent).toContain("Scan");
     const taskCardText =

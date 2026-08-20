@@ -117,11 +117,7 @@ async def _holidays_for_country(year: int, country: str) -> list[dict[str, Any]]
     payload = await _fetch_nager_json(year, country)
     if payload is None:
         return []
-    items = [
-        parsed
-        for raw in payload
-        if (parsed := _parse_nager_item(raw, country)) is not None
-    ]
+    items = [parsed for raw in payload if (parsed := _parse_nager_item(raw, country)) is not None]
     _HOLIDAY_CACHE[cache_key] = (time.monotonic() + _CACHE_TTL_SECONDS, items)
     return items
 

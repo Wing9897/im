@@ -22,7 +22,7 @@ export function isDefaultProviderBaseUrl(url: string, provider?: LlmProvider): b
   if (provider) {
     return normalized === normalizeLlmProviderBaseUrl(DEFAULT_PROVIDER_BASE_URLS[provider]);
   }
-  return (Object.values(DEFAULT_PROVIDER_BASE_URLS) as string[]).some(
+  return Object.values(DEFAULT_PROVIDER_BASE_URLS).some(
     (defaultUrl) => normalized === normalizeLlmProviderBaseUrl(defaultUrl),
   );
 }

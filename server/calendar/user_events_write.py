@@ -79,9 +79,7 @@ async def create_user_event(
         direction=direction,
     )
     try:
-        clean_notify = normalize_notify_pref(
-            notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF
-        )
+        clean_notify = normalize_notify_pref(notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF)
     except ValueError as exc:
         raise UserEventValidationError(str(exc)) from exc
     try:

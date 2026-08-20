@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from server.services import weather_providers
 from server.services.holiday_country import country_from_weather_location
 from server.services.location_map import geocode_queries_for_location
-from server.services import weather_providers
 
 
 def test_cjk_weather_cities_alias_to_english_geocode_query():

@@ -475,7 +475,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
 
     user_events = await client.get(
         "/api/v1/calendar/user-events",
-        params={"start": "2026-08-01T00:00:00Z", "end": "2026-08-31T23:59:59Z"},
+        params={"startTime": "2026-08-01T00:00:00Z", "endTime": "2026-08-31T23:59:59Z"},
     )
     assert user_events.status_code == 200
     imported_user = next(item for item in user_events.json()["items"] if item["id"] == ids["single-1@example.test"])

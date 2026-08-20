@@ -103,7 +103,6 @@
     "presets": "快速预设",
     "updateTask": "更新任务",
     "createTask": "建立任务",
-    "settingsTitle": "任务设定",
     "optionalAria": "进阶设定",
     "channelsLoadError": "无法加载频道列表",
     "timeRangeLabel": "分析时间范围",
@@ -490,7 +489,6 @@
       "calendarHint": "写入我的日程",
       "calendarHelp": "写入即含写日历权限"
     },
-    "outputHint": "写入「我的日程」。情报页在上方「输出」里单独勾选。",
     "outputHintCursor": "消息积压抽干仅写日历事件；情报事件请改用排程或消息阈值触发。"
   }
 }

@@ -1,4 +1,4 @@
-/** Default system settings snapshot for tests (Stamp 29 — no LLM provider slots). */
+/** Default system settings snapshot for tests (no LLM provider slots on Settings wire). */
 import type { SystemSettingsSnapshot } from "../types";
 
 export const defaultSettingsSnapshot: SystemSettingsSnapshot = {

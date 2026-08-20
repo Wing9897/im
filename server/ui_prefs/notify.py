@@ -77,10 +77,7 @@ def sanitize_notify_settings(raw: Any) -> dict[str, Any]:
             if isinstance(item, float) and not item.is_integer():
                 continue
             offset = int(item)
-            if (
-                _LEAD_OFFSET_MIN_MINUTES <= offset <= _LEAD_OFFSET_MAX_MINUTES
-                and offset not in seen
-            ):
+            if _LEAD_OFFSET_MIN_MINUTES <= offset <= _LEAD_OFFSET_MAX_MINUTES and offset not in seen:
                 seen.add(offset)
         leads = sorted(seen)
     if not leads:

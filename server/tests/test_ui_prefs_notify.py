@@ -10,8 +10,8 @@ from server.ui_prefs import (
     KEY_NOTIFY_FIRED,
     KEY_NOTIFY_SETTINGS,
     KEY_NOTIFY_TRIGGER_HISTORY,
-    MAX_PREF_JSON_CHARS,
     MAX_NOTIFY_HISTORY_ENTRIES,
+    MAX_PREF_JSON_CHARS,
     sanitize_fired_keys,
     sanitize_notify_history,
     sanitize_notify_settings,
@@ -210,7 +210,7 @@ async def test_notify_history_oversized_payload_422(client) -> None:
 
 
 async def test_retired_voice_reminder_paths_are_404(client) -> None:
-    """Stamp 37: ``/ui-prefs/voice-reminder/*`` is gone; SoT is ``/ui-prefs/notify/*``."""
+    """``/ui-prefs/voice-reminder/*`` is gone; SoT is ``/ui-prefs/notify/*`` (docs/RETIRED-API.md)."""
     for path in (
         "/api/v1/ui-prefs/voice-reminder/settings",
         "/api/v1/ui-prefs/voice-reminder/fired",

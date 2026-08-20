@@ -10,28 +10,29 @@ Requires wipe-only stamp 1 (``SCHEMA_SEMVER`` ``1.0.0``); reset first if needed.
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
 import json
+from argparse import Namespace
+from pathlib import Path
 
 from _seed_common import (
-    build_seed_parser,
     clean_calendar_fixtures,
     create_linked_milestone,
+    create_user_events_from_specs,
     delete_workset,
+    ensure_agent_task,
+    ensure_completed_batch,
+    ensure_intel_task,
+    ensure_llm_profile,
     ensure_workset,
-    open_seed_db,
-    resolve_db_path,
+    insert_analysis_event,
+    run_seed_cli,
 )
 
 from server.calendar.timeline_dismissals import dismiss_timeline_event
-from server.calendar.user_events_write import create_user_event
 from server.db.database import Database
-from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.items.service import create_item
 from server.services.recurring_series_create import create_recurring_series
-from server.util import utc_now_iso
 
 PREFIX = "[cal-ui]"
 WS_ID = "ws-cal-ui-demo"
@@ -40,10 +41,7 @@ WEB_TASK_ID = "cal-ui-agent-web"
 PROJECT_TASK_ID = "cal-ui-agent-reconcile"
 BATCH_ID = "cal-ui-intel-batch"
 LLM_PROFILE_ID = "cal-ui-llm-profile"
-
-
-def _hash(s: str) -> str:
-    return hashlib.sha256(s.encode()).hexdigest()[:24]
+WEB_BATCH_ID = "cal-ui-web-batch"
 
 
 async def _clean(db: Database) -> None:
@@ -58,122 +56,38 @@ async def _clean(db: Database) -> None:
     await delete_workset(db, WS_ID)
 
 
-async def _ensure_llm_profile(db: Database) -> None:
-    """Tasks require a bound profile (stamp 33 seeds zero profiles)."""
-    row = await db.fetch_one("SELECT id FROM llm_profiles WHERE id = ?", (LLM_PROFILE_ID,))
-    if row:
-        return
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO llm_profiles (id, name, base_url, model, created_at, updated_at) "
-        "VALUES (?, ?, 'http://localhost:11434', 'cal-ui-demo', ?, ?)",
-        (LLM_PROFILE_ID, f"{PREFIX} seed profile", now, now),
-    )
-
-
 async def _ensure_intel_tasks(db: Database) -> None:
-    now = utc_now_iso()
-    intel = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (INTEL_TASK_ID,))
-    if not intel:
-        await db.execute(
-            "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
-            "analysis_time_range, version, is_active, include_in_timeline, "
-            "schedule_rrule, workset_id, llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__general__', ?, ?, ?)",
-            (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", INTEL_EVENT_MODE, LLM_PROFILE_ID, now, now),
-        )
-
+    await ensure_intel_task(
+        db,
+        task_id=INTEL_TASK_ID,
+        name=f"{PREFIX} 情報事件任務",
+        llm_profile_id=LLM_PROFILE_ID,
+        analysis_mode=INTEL_EVENT_MODE,
+    )
     for task_id, name, preset in (
         (WEB_TASK_ID, f"{PREFIX} Agent 網蒐任務", "web_scout"),
         (PROJECT_TASK_ID, f"{PREFIX} Agent 專案調和任務", "project_reconcile"),
     ):
-        row = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (task_id,))
-        if row:
-            continue
-        policy = agent_spec_to_db_kwargs(agent_preset_spec(preset, has_channels=preset == "project_reconcile"))
-        await db.execute(
-            "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
-            "analysis_time_range, version, is_active, include_in_timeline, "
-            "schedule_rrule, workset_id, "
-            "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
-            "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-            "output_calendar, output_analysis_events, "
-            "llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__general__', "
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                task_id,
-                name,
-                AGENT_MODE,
-                policy["trigger_mode"],
-                int(policy["cap_calendar_read"]),
-                int(policy["cap_calendar_writes"]),
-                int(policy["cap_web_search"]),
-                int(policy["cap_force_web_search"]),
-                int(policy["cap_read_analysis_events"]),
-                int(policy["cap_read_items"]),
-                int(policy["output_calendar"]),
-                int(policy["output_analysis_events"]),
-                LLM_PROFILE_ID,
-                now,
-                now,
-            ),
+        await ensure_agent_task(
+            db,
+            task_id=task_id,
+            name=name,
+            llm_profile_id=LLM_PROFILE_ID,
+            analysis_mode=AGENT_MODE,
+            preset=preset,
+            has_channels=preset == "project_reconcile",
         )
-
-    batch = await db.fetch_one("SELECT id FROM analysis_batches WHERE id = ?", (BATCH_ID,))
-    if not batch:
-        await db.execute(
-            "INSERT INTO analysis_batches (id, task_id, version, status, "
-            "message_count, retry_count, error_message, agent_message, created_at, "
-            "updated_at, completed_at) VALUES (?, ?, 1, 'completed', 3, 0, '', '', ?, ?, ?)",
-            (BATCH_ID, INTEL_TASK_ID, now, now, now),
-        )
-
-
-async def _insert_analysis_event(
-    db: Database,
-    *,
-    event_id: str,
-    task_id: str,
-    title: str,
-    body: str,
-    start: str | None,
-    end: str | None,
-    location: str = "",
-    lat: float | None = None,
-    lon: float | None = None,
-) -> None:
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
-        "start_time, end_time, location, latitude, longitude, participants_json, "
-        "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
-        "event_key, created_at, updated_at) "
-        "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, '[]', NULL, ?, ?, ?, ?, ?, ?)",
-        (
-            event_id,
-            task_id,
-            BATCH_ID,
-            title,
-            body,
-            start,
-            end,
-            location,
-            lat,
-            lon,
-            json.dumps(["cal-ui-seed"]),
-            _hash(event_id + "c"),
-            _hash(event_id + "s"),
-            event_id,
-            now,
-            now,
-        ),
-    )
+    await ensure_completed_batch(db, batch_id=BATCH_ID, task_id=INTEL_TASK_ID)
 
 
 async def seed(db: Database) -> dict[str, int]:
     await ensure_workset(db, ws_id=WS_ID, name="日曆 UI 測試組")
-    await _ensure_llm_profile(db)
+    await ensure_llm_profile(
+        db,
+        profile_id=LLM_PROFILE_ID,
+        name=f"{PREFIX} seed profile",
+        model="cal-ui-demo",
+    )
     await _ensure_intel_tasks(db)
     counts = {
         "user_events": 0,
@@ -323,23 +237,8 @@ async def seed(db: Database) -> dict[str, int]:
         },
     ]
 
-    created_user_ids: list[str] = []
-    for spec in user_specs:
-        kwargs: dict = {
-            "title": spec["title"],
-            "start_time": spec["start_time"],
-            "end_time": spec.get("end_time"),
-            "body": spec.get("body", ""),
-            "location": spec.get("location", ""),
-            "origin": spec.get("origin", "manual"),
-            "is_all_day": bool(spec.get("is_all_day", False)),
-            "task_id": spec.get("task_id"),
-        }
-        if "workset_id" in spec:
-            kwargs["workset_id"] = spec["workset_id"]
-        item = await create_user_event(db, **kwargs)
-        created_user_ids.append(str(item["id"]))
-        counts["user_events"] += 1
+    created_user_ids = await create_user_events_from_specs(db, user_specs)
+    counts["user_events"] += len(created_user_ids)
 
     # Soft-dismiss one user event (restore UI)
     if created_user_ids:
@@ -544,57 +443,26 @@ async def seed(db: Database) -> dict[str, int]:
         },
     ]
     for spec in analysis_specs:
-        # agent events need their own batch FK — reuse intel batch only for INTEL_TASK_ID
+        batch_id = BATCH_ID
         if spec["task_id"] != INTEL_TASK_ID:
-            web_batch = "cal-ui-web-batch"
-            now = utc_now_iso()
-            exists = await db.fetch_one("SELECT id FROM analysis_batches WHERE id = ?", (web_batch,))
-            if not exists:
-                await db.execute(
-                    "INSERT INTO analysis_batches (id, task_id, version, status, "
-                    "message_count, retry_count, error_message, agent_message, created_at, "
-                    "updated_at, completed_at) VALUES (?, ?, 1, 'completed', 1, 0, '', '', ?, ?, ?)",
-                    (web_batch, WEB_TASK_ID, now, now, now),
-                )
-            # temporarily swap batch via direct insert variant
-            await db.execute(
-                "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
-                "start_time, end_time, location, latitude, longitude, participants_json, "
-                "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
-                "event_key, created_at, updated_at) "
-                "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, '[]', NULL, ?, ?, ?, ?, ?, ?)",
-                (
-                    spec["id"],
-                    spec["task_id"],
-                    web_batch,
-                    spec["title"],
-                    spec["body"],
-                    spec["start"],
-                    spec["end"],
-                    spec.get("location", ""),
-                    spec.get("lat"),
-                    spec.get("lon"),
-                    json.dumps(["cal-ui-seed"]),
-                    _hash(spec["id"] + "c"),
-                    _hash(spec["id"] + "s"),
-                    spec["id"],
-                    now,
-                    now,
-                ),
+            batch_id = WEB_BATCH_ID
+            await ensure_completed_batch(
+                db, batch_id=batch_id, task_id=WEB_TASK_ID, message_count=1
             )
-        else:
-            await _insert_analysis_event(
-                db,
-                event_id=spec["id"],
-                task_id=spec["task_id"],
-                title=spec["title"],
-                body=spec["body"],
-                start=spec["start"],
-                end=spec["end"],
-                location=spec.get("location", ""),
-                lat=spec.get("lat"),
-                lon=spec.get("lon"),
-            )
+        await insert_analysis_event(
+            db,
+            event_id=spec["id"],
+            task_id=spec["task_id"],
+            batch_id=batch_id,
+            title=spec["title"],
+            body=spec["body"],
+            start=spec["start"],
+            end=spec["end"],
+            location=spec.get("location", ""),
+            lat=spec.get("lat"),
+            lon=spec.get("lon"),
+            channel_names=["cal-ui-seed"],
+        )
         counts["analysis_events"] += 1
 
     await dismiss_timeline_event(db, source="analysis", event_id="cal-ui-ae-meeting")
@@ -603,19 +471,14 @@ async def seed(db: Database) -> dict[str, int]:
     return counts
 
 
-async def main() -> None:
-    args = build_seed_parser(__doc__, prefix=PREFIX).parse_args()
-
-    path = resolve_db_path(args.db)
-    print(f"DB: {path}")
-    async with open_seed_db(path) as db:
-        if args.clean:
-            await _clean(db)
-            print("Cleaned prior [cal-ui] fixtures")
-        counts = await seed(db)
-        print("Seeded:", json.dumps(counts, ensure_ascii=False))
-        print("Open /timeline — filter by workset「日曆 UI 測試組」or titles starting with [cal-ui]")
+async def _cli(db: Database, args: Namespace, _path: Path) -> None:
+    if args.clean:
+        await _clean(db)
+        print("Cleaned prior [cal-ui] fixtures")
+    counts = await seed(db)
+    print("Seeded:", json.dumps(counts, ensure_ascii=False))
+    print("Open /timeline — filter by workset「日曆 UI 測試組」or titles starting with [cal-ui]")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_seed_cli(description=__doc__, prefix=PREFIX, run=_cli)

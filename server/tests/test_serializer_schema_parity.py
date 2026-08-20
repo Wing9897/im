@@ -12,22 +12,31 @@ from server.api.schemas.responses import (
     ActionResponse,
     AnalysisEventResponse,
     AppLogEntryResponse,
+    CalendarWindowItemResponse,
+    ChannelResponse,
     MessageResponse,
     QueueBatchResponse,
     RecurringSeriesResponse,
     SourceResponse,
     TaskResponse,
+    TimelineDismissalResponse,
+    TimelineImportanceResponse,
     TrendingTopicResponse,
     UserEventResponse,
     WorksetResponse,
 )
 from server.api.schemas.responses.items import ItemCategoryResponse, ItemResponse
+from server.api.schemas.responses.llm_profiles import LlmProfileResponse
 from server.wire.serializers import (
     serialize_action,
     serialize_analysis_event,
     serialize_app_log,
+    serialize_channel,
+    serialize_dismissal,
+    serialize_importance,
     serialize_item,
     serialize_item_category,
+    serialize_llm_profile,
     serialize_message,
     serialize_queue_batch,
     serialize_recurring_series,
@@ -308,6 +317,30 @@ Serializer = Callable[[], dict[str, Any]]
             frozenset(),
         ),
         (
+            "timeline dismissal",
+            TimelineDismissalResponse,
+            lambda: serialize_dismissal(
+                {
+                    "source": "user",
+                    "event_id": "ue-1",
+                    "dismissed_at": "2026-07-28T09:00:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "timeline importance",
+            TimelineImportanceResponse,
+            lambda: serialize_importance(
+                {
+                    "source": "analysis",
+                    "event_id": "ev-1",
+                    "marked_at": "2026-07-28T09:00:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
             "user event",
             UserEventResponse,
             lambda: serialize_user_event(
@@ -349,6 +382,73 @@ Serializer = Callable[[], dict[str, Any]]
                 },
                 dismissed=False,
             ),
+            frozenset(),
+        ),
+        (
+            "llm profile",
+            LlmProfileResponse,
+            lambda: serialize_llm_profile(
+                {
+                    "id": "profile-1",
+                    "name": "Local",
+                    "provider": "ollama",
+                    "base_url": "http://localhost:11434",
+                    "model": "llama",
+                    "api_key": "",
+                    "thinking_enabled": 0,
+                    "json_mode": "disabled",
+                    "web_search_enabled": 1,
+                    "web_search_provider": "auto",
+                    "brave_search_api_key": "",
+                    "tavily_search_api_key": "",
+                    "perplexity_search_api_key": "",
+                    "serper_search_api_key": "",
+                    "created_at": "2026-07-28T09:00:00Z",
+                    "updated_at": "2026-07-28T09:00:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "channel",
+            ChannelResponse,
+            lambda: serialize_channel(
+                {
+                    "platform": "telegram",
+                    "platform_id": "news",
+                    "channel_name": "Announcements",
+                    "created_at": "2026-07-28T09:00:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "calendar window item",
+            CalendarWindowItemResponse,
+            lambda: {
+                "id": "evt-1",
+                "source": "analysis",
+                "title": "Quarterly review",
+                "startTime": "2026-07-28T09:00:00Z",
+                "endTime": None,
+                "location": "Taipei",
+                "isAllDay": False,
+                "timezone": None,
+                "emoji": None,
+                "taskId": "task-1",
+                "seriesId": None,
+                "worksetId": None,
+                "itemId": None,
+                "origin": None,
+                "itemDateKind": None,
+                "notifyPref": None,
+                "dismissed": False,
+                "important": False,
+                "taskName": "Event analysis",
+                "isLastOccurrence": False,
+                "remindBeforeDays": None,
+                "body": "Review Q3",
+            },
             frozenset(),
         ),
     ],

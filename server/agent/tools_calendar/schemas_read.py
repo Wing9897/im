@@ -93,21 +93,30 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": "calendar.window",
         "description": (
-            f"List events in an inclusive [start, end] window (default "
+            f"List events in an inclusive [startTime, endTime] window (default "
             f"{CALENDAR_DEFAULT_WINDOW_LIMIT}, max {CALENDAR_RESULT_HARD_CAP}). "
             "Use only for absolute dates the user named. Prefer calendar.upcoming+days "
-            "for「未來 N 天」. Date-only end means end of that UTC day."
+            "for「未來 N 天」. Date-only endTime means end of that UTC day. "
+            "start/end remain accepted aliases of startTime/endTime."
         ),
         "parameters": {
             "type": "object",
             "properties": {
+                "startTime": {
+                    "type": "string",
+                    "description": "ISO-8601 start (required)",
+                },
+                "endTime": {
+                    "type": "string",
+                    "description": ("ISO-8601 end (required); date-only = end of that day UTC"),
+                },
                 "start": {
                     "type": "string",
-                    "description": "ISO-8601 start (required; alias of startTime)",
+                    "description": "Alias of startTime",
                 },
                 "end": {
                     "type": "string",
-                    "description": ("ISO-8601 end (required; alias of endTime); date-only = end of that day UTC"),
+                    "description": "Alias of endTime",
                 },
                 "limit": {"type": "integer", "minimum": 1, "maximum": CALENDAR_RESULT_HARD_CAP},
                 "cursor": {"type": "string", "description": "Opaque offset cursor from nextCursor"},
@@ -115,7 +124,7 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "taskId": _TASK_ID,
                 "seriesId": _SERIES_ID,
             },
-            "required": ["start", "end"],
+            "required": ["startTime", "endTime"],
             "additionalProperties": False,
         },
     },

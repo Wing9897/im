@@ -2,12 +2,12 @@
 
 from server.db.schema_domains.vocabulary import (
     ANALYSIS_MODE_CHECK_SQL,
+    ANALYSIS_STRATEGY_MODE_CHECK_SQL,
     ANALYSIS_TIME_RANGE_CHECK_SQL,
+    BATCH_STATUS_CHECK_SQL,
     NOTIFY_PREF_CHECK_SQL,
+    TRIGGER_MODE_CHECK_SQL,
 )
-from server.domain.agent_task_spec import TRIGGER_MODE_CHECK_SQL
-from server.domain.analysis_strategy_modes import ANALYSIS_STRATEGY_MODE_CHECK_SQL
-from server.domain.batch_statuses import BATCH_STATUS_CHECK_SQL
 
 DDL = f"""
 CREATE TABLE IF NOT EXISTS analysis_tasks (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     cap_read_analysis_events  INTEGER NOT NULL DEFAULT 1,
     cap_read_items            INTEGER NOT NULL DEFAULT 1,
     output_calendar           INTEGER NOT NULL DEFAULT 0,
-    -- All-mode intelligence hard gate (stamp 35+). Agent still writes explicit 0/1.
+    -- All-mode intelligence hard gate (see docs/SCHEMA-BASELINE.md). Agent still writes explicit 0/1.
     output_analysis_events    INTEGER NOT NULL DEFAULT 1,
     -- LLM connection profile; tasks always bind a profile.
     llm_profile_id       TEXT NOT NULL

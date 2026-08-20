@@ -597,6 +597,41 @@ describe("Retired dual-track paths stay absent", () => {
   });
 });
 
+describe("Wire serializers facade: serializer_domains stays internal", () => {
+  it("serializer_domains may only be imported from inside server/wire/", () => {
+    const domainImport =
+      /(?:from\s+|import\s+)server\.wire\.serializer_domains\b/;
+    const fromWireImport =
+      /from\s+server\.wire\s+import\s+.*\bserializer_domains\b/;
+    const offenders: string[] = [];
+    for (const file of allProductFiles()) {
+      const rel = relFromRoot(file);
+      if (rel.startsWith("server/wire/")) continue;
+      const content = fs.readFileSync(file, "utf-8");
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (
+          trimmed.startsWith("#") ||
+          trimmed.startsWith("//") ||
+          trimmed.startsWith("*")
+        ) {
+          continue;
+        }
+        if (domainImport.test(line) || fromWireImport.test(line)) {
+          offenders.push(`${rel} :: ${trimmed}`);
+        }
+      }
+    }
+    if (offenders.length > 0) {
+      const report = offenders.map((f) => `  - ${f}`).join("\n");
+      expect(
+        offenders,
+        `serializer_domains may only be imported from inside server/wire/:\n${report}`,
+      ).toEqual([]);
+    }
+  });
+});
+
 describe("LLM profiles + recurring series invariants", () => {
   it("product code has no calendar.*_recurring_task tool names", () => {
     const pattern = /calendar\.\w*_recurring_task\b/;

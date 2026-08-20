@@ -34,7 +34,7 @@ export type AiEngineTestDraft = components["schemas"]["AiEngineTestBody"];
  */
 export type AiEngineStatus = AiEngineHealthStatus["status"] | "unknown";
 
-/** LLM Provider options (OpenAPI `LlmProfileUpsertBody.provider` — stamp 33 CHECK vocabulary). */
+/** LLM Provider options (OpenAPI `LlmProfileUpsertBody.provider` — domain CHECK vocabulary). */
 export type LlmProvider = components["schemas"]["LlmProfileUpsertBody"]["provider"];
 
 /** Analysis mode — see `domain/tasks/analysisModeCapabilities` (FE SoT / BE drift-tested). */

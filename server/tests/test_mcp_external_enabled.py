@@ -140,9 +140,7 @@ async def test_mcp_external_disabled_hides_other_worksets_on_intelligence_messag
     )
     assert denied["error"] == "workset not allowed"
 
-    calendar = await execute_mcp_tool(
-        app.state.db, "calendar.upcoming", {"days": 1}, broadcaster=app.state.broadcaster
-    )
+    calendar = await execute_mcp_tool(app.state.db, "calendar.upcoming", {"days": 1}, broadcaster=app.state.broadcaster)
     assert "error" not in calendar
 
     key = await seed_access_key(app.state.db, "mcp-ws-http", scopes=[FULL_SCOPE])

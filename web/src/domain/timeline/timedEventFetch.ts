@@ -98,8 +98,8 @@ export async function fetchMergedTimedEvents(
     }
 
     const windowItems = await fetchCalendarWindow({
-      start: startIso,
-      end: endIso,
+      startTime: startIso,
+      endTime: endIso,
       includeAnalysis: plan.fetchAnalysis,
       includeUser: plan.fetchUserEvents,
       includeRecurring: plan.fetchCalendar,
@@ -117,8 +117,8 @@ export async function fetchMergedTimedEvents(
   }
 
   const windowItems = await fetchCalendarWindow({
-    start: startIso,
-    end: endIso,
+    startTime: startIso,
+    endTime: endIso,
     includeAnalysis: true,
     includeUser: includeUserEvents !== false,
     includeRecurring: includeRrule !== false,

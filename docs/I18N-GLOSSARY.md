@@ -106,7 +106,7 @@
 ## 任務模板 Presets（顯示文案 SoT）
 
 - **顯示文案 SoT**：[`shared/task_presets.json`](../shared/task_presets.json) — 各 preset 的 `i18n.{zh-Hant,en,zh-Hans}.{name,description,promptTemplate}`。UI 經 `localizeTaskPreset()` 查 locale key。
-- **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）。`webSearchQuery` 已於 stamp 20 從 schema／OpenAPI／FE 移除（Agent 從 prompt 自行選關鍵字）。
+- **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）。`webSearchQuery` 已從 schema／OpenAPI／FE 移除（Agent 從 prompt 自行選關鍵字；見 [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md)／[`RETIRED-API.md`](./RETIRED-API.md)）。
 - **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。Agent 模板另有 `agentPreset`（對應編輯器模式卡）與 trigger／output／cap 欄位，供套用時對齊 `AgentTaskSpec`；API `GET /tasks/templates` 仍只回傳顯示欄位，FE 以 `CATALOG_AGENT_PRESET_ID` 對應模式卡。
 - **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `tasks.json` → `presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。

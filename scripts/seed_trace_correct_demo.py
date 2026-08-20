@@ -15,29 +15,29 @@ Covers:
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
 import json
 import sqlite3
 import sys
+from argparse import Namespace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from _seed_common import (
-    build_seed_parser,
     builtin_category_id,
     clean_calendar_fixtures,
     create_linked_milestone,
-    open_seed_db,
-    resolve_db_path,
-    utf8_stdio,
+    create_user_events_from_specs,
+    ensure_agent_task,
+    ensure_completed_batch,
+    ensure_intel_task,
+    ensure_llm_profile,
+    insert_analysis_event,
+    run_seed_cli,
 )
 
-from server.calendar.user_events_write import create_user_event
 from server.db.database import Database, SchemaBaselineError
 from server.db.schema_inspect import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
 from server.db.sqlite_busy import is_sqlite_busy
-from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.domain.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.items.service import create_item
@@ -66,10 +66,6 @@ AE_UNBOUND_UNTIMED = f"{IDP}-ae-unbound-2"
 
 RESET_CMD = "uv run python scripts/reset_local_databases.py --apply"
 SEED_CMD = "uv run python scripts/seed_trace_correct_demo.py"
-
-
-def _hash(s: str) -> str:
-    return hashlib.sha256(s.encode()).hexdigest()[:24]
 
 
 def _iso(dt: datetime) -> str:
@@ -131,19 +127,6 @@ async def _clean(db: Database) -> None:
     await db.execute(
         "DELETE FROM channels WHERE platform = 'rss' AND platform_id = ?",
         (RSS_FEED_URL,),
-    )
-
-
-async def _ensure_llm_profile(db: Database) -> None:
-    """Tasks require llm_profile_id; fresh DBs seed zero profiles."""
-    row = await db.fetch_one("SELECT id FROM llm_profiles WHERE id = ?", (LLM_PROFILE_ID,))
-    if row:
-        return
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO llm_profiles (id, name, provider, base_url, model, created_at, updated_at) "
-        "VALUES (?, ?, 'ollama', 'http://localhost:11434', 'demo-trace-unused', ?, ?)",
-        (LLM_PROFILE_ID, f"{PREFIX} seed profile (unused)", now, now),
     )
 
 
@@ -212,57 +195,26 @@ async def _ensure_source_and_messages(db: Database) -> None:
 
 
 async def _ensure_tasks(db: Database) -> None:
-    now = utc_now_iso()
-    intel = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (INTEL_TASK_ID,))
-    if not intel:
-        await db.execute(
-            "INSERT INTO analysis_tasks (id, name, description, prompt_template, analysis_mode, "
-            "analysis_time_range, version, is_active, include_in_timeline, "
-            "schedule_rrule, workset_id, llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, 'seed', ?, 'all', 1, 0, 1, NULL, '__general__', ?, ?, ?)",
-            (
-                INTEL_TASK_ID,
-                f"{PREFIX} 情報事件任務",
-                "dev seed — inactive so dummy LLM is never ticked",
-                INTEL_EVENT_MODE,
-                LLM_PROFILE_ID,
-                now,
-                now,
-            ),
-        )
-
-    agent = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (AGENT_TASK_ID,))
-    if not agent:
-        policy = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
-        await db.execute(
-            "INSERT INTO analysis_tasks (id, name, description, prompt_template, analysis_mode, "
-            "analysis_time_range, version, is_active, include_in_timeline, "
-            "schedule_rrule, workset_id, "
-            "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
-            "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-            "output_calendar, output_analysis_events, "
-            "llm_profile_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, 'seed', ?, 'all', 1, 0, 1, NULL, '__general__', "
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                AGENT_TASK_ID,
-                f"{PREFIX} Agent 調和任務",
-                "dev seed — inactive; completed batch is pre-inserted",
-                AGENT_MODE,
-                policy["trigger_mode"],
-                int(policy["cap_calendar_read"]),
-                int(policy["cap_calendar_writes"]),
-                int(policy["cap_web_search"]),
-                int(policy["cap_force_web_search"]),
-                int(policy["cap_read_analysis_events"]),
-                int(policy["cap_read_items"]),
-                int(policy["output_calendar"]),
-                int(policy["output_analysis_events"]),
-                LLM_PROFILE_ID,
-                now,
-                now,
-            ),
-        )
+    await ensure_intel_task(
+        db,
+        task_id=INTEL_TASK_ID,
+        name=f"{PREFIX} 情報事件任務",
+        llm_profile_id=LLM_PROFILE_ID,
+        analysis_mode=INTEL_EVENT_MODE,
+        description="dev seed — inactive so dummy LLM is never ticked",
+        is_active=0,
+    )
+    await ensure_agent_task(
+        db,
+        task_id=AGENT_TASK_ID,
+        name=f"{PREFIX} Agent 調和任務",
+        llm_profile_id=LLM_PROFILE_ID,
+        analysis_mode=AGENT_MODE,
+        preset="project_reconcile",
+        has_channels=True,
+        description="dev seed — inactive; completed batch is pre-inserted",
+        is_active=0,
+    )
 
     for task_id in (INTEL_TASK_ID, AGENT_TASK_ID):
         bound = await db.fetch_one(
@@ -276,57 +228,27 @@ async def _ensure_tasks(db: Database) -> None:
             )
 
 
-async def _insert_analysis_event(
-    db: Database,
-    *,
-    event_id: str,
-    title: str,
-    body: str,
-    start: str | None,
-    end: str | None,
-    source_message_id: str | None,
-    location: str = "",
-) -> None:
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
-        "start_time, end_time, location, latitude, longitude, participants_json, "
-        "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
-        "event_key, created_at, updated_at) "
-        "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, NULL, NULL, '[]', ?, ?, ?, ?, ?, ?, ?)",
-        (
-            event_id,
-            INTEL_TASK_ID,
-            INTEL_BATCH_ID,
-            title,
-            body,
-            start,
-            end,
-            location,
-            source_message_id,
-            json.dumps([f"{PREFIX} 示範頻道"]),
-            _hash(event_id + "c"),
-            _hash(event_id + "s"),
-            event_id,
-            now,
-            now,
-        ),
-    )
-
-
 async def seed(db: Database) -> dict[str, object]:
     await _clean(db)
-    await _ensure_llm_profile(db)
+    await ensure_llm_profile(
+        db,
+        profile_id=LLM_PROFILE_ID,
+        name=f"{PREFIX} seed profile (unused)",
+        model="demo-trace-unused",
+        provider="ollama",
+    )
     await _ensure_source_and_messages(db)
     await _ensure_tasks(db)
 
     now_dt = datetime.now(UTC)
     intel_now = _iso(now_dt)
-    await db.execute(
-        "INSERT INTO analysis_batches (id, task_id, version, status, "
-        "message_count, retry_count, error_message, agent_message, created_at, "
-        "updated_at, completed_at) VALUES (?, ?, 1, 'completed', 3, 0, '', '', ?, ?, ?)",
-        (INTEL_BATCH_ID, INTEL_TASK_ID, intel_now, intel_now, intel_now),
+    await ensure_completed_batch(
+        db,
+        batch_id=INTEL_BATCH_ID,
+        task_id=INTEL_TASK_ID,
+        created_at=intel_now,
+        updated_at=intel_now,
+        completed_at=intel_now,
     )
 
     analysis_specs = [
@@ -368,26 +290,31 @@ async def seed(db: Database) -> dict[str, object]:
         },
     ]
     for spec in analysis_specs:
-        await _insert_analysis_event(
+        await insert_analysis_event(
             db,
             event_id=spec["id"],
+            task_id=INTEL_TASK_ID,
+            batch_id=INTEL_BATCH_ID,
             title=spec["title"],
             body=spec["body"],
             start=spec["start"],
             end=spec["end"],
             source_message_id=spec["source_message_id"],
             location=spec.get("location") or "",
+            channel_names=[f"{PREFIX} 示範頻道"],
         )
 
     wave_start = now_dt - timedelta(minutes=10)
     wave_mid = now_dt - timedelta(minutes=4)
     wave_end = now_dt + timedelta(minutes=2)
-    await db.execute(
-        "INSERT INTO analysis_batches (id, task_id, version, status, "
-        "message_count, retry_count, error_message, agent_message, created_at, "
-        "updated_at, completed_at) VALUES (?, ?, 1, 'completed', 3, 0, '', "
-        "'[demo] 已寫入調和日程', ?, ?, ?)",
-        (AGENT_BATCH_ID, AGENT_TASK_ID, _iso(wave_start), _iso(wave_end), _iso(wave_end)),
+    await ensure_completed_batch(
+        db,
+        batch_id=AGENT_BATCH_ID,
+        task_id=AGENT_TASK_ID,
+        created_at=_iso(wave_start),
+        updated_at=_iso(wave_end),
+        completed_at=_iso(wave_end),
+        agent_message="[demo] 已寫入調和日程",
     )
 
     agent_event_specs = [
@@ -397,6 +324,8 @@ async def seed(db: Database) -> dict[str, object]:
             "end_time": "2026-08-21T10:00:00+08:00",
             "body": "最近一次調和寫入的單次日程",
             "location": "線上",
+            "origin": "agent",
+            "task_id": AGENT_TASK_ID,
         },
         {
             "title": f"{PREFIX} 調和寫入：出差補登",
@@ -404,6 +333,8 @@ async def seed(db: Database) -> dict[str, object]:
             "end_time": "2026-08-22T18:00:00+08:00",
             "body": "origin=agent，落在已完成批次時間窗內",
             "location": "台北",
+            "origin": "agent",
+            "task_id": AGENT_TASK_ID,
         },
         {
             "title": f"{PREFIX} 調和寫入：截止提醒",
@@ -411,21 +342,11 @@ async def seed(db: Database) -> dict[str, object]:
             "end_time": "2026-08-25T17:30:00+08:00",
             "body": "第三則調和寫入，供收回最近一次調和使用",
             "location": "",
+            "origin": "agent",
+            "task_id": AGENT_TASK_ID,
         },
     ]
-    agent_event_ids: list[str] = []
-    for spec in agent_event_specs:
-        row = await create_user_event(
-            db,
-            title=spec["title"],
-            start_time=spec["start_time"],
-            end_time=spec["end_time"],
-            body=spec["body"],
-            location=spec["location"],
-            origin="agent",
-            task_id=AGENT_TASK_ID,
-        )
-        agent_event_ids.append(str(row["id"]))
+    agent_event_ids = await create_user_events_from_specs(db, agent_event_specs)
 
     series = await create_recurring_series(
         db,
@@ -519,18 +440,29 @@ def _print_howto(path: Path, seeded: dict[str, object]) -> None:
     print(f"Cleanup later: {SEED_CMD} --clean")
 
 
-async def main() -> None:
-    utf8_stdio()
-    args = build_seed_parser(__doc__, prefix=PREFIX).parse_args()
-    path = resolve_db_path(args.db)
-    print(f"DB: {path}")
+async def _cli(db: Database, args: Namespace, path: Path) -> None:
+    stamp_row = await db.fetch_one("PRAGMA user_version")
+    stamp_val = list(stamp_row.values())[0] if stamp_row else None
+    print(f"Schema stamp: {stamp_val} ({SCHEMA_SEMVER})")
+    if int(stamp_val or 0) != CURRENT_SCHEMA_VERSION:
+        _stamp_mismatch_exit(stamp_val)
+        raise SystemExit(2)
 
+    if args.clean:
+        await _clean(db)
+        print(f"Cleaned prior {PREFIX} fixtures (no re-seed)")
+        return
+
+    seeded = await seed(db)
+    _print_howto(path, seeded)
+
+
+def _before_open(_args: Namespace, path: Path) -> None:
     try:
         stamp = _peek_stamp(path)
     except sqlite3.OperationalError as exc:
         print(
-            f"ERROR: cannot read schema stamp ({exc}). If the app has the DB locked, close it or retry:\n"
-            f"  {SEED_CMD}",
+            f"ERROR: cannot read schema stamp ({exc}). If the app has the DB locked, close it or retry:\n  {SEED_CMD}",
             file=sys.stderr,
         )
         raise SystemExit(3) from exc
@@ -539,35 +471,27 @@ async def main() -> None:
         _stamp_mismatch_exit(stamp)
         raise SystemExit(2)
 
-    try:
-        async with open_seed_db(path) as db:
-            stamp_row = await db.fetch_one("PRAGMA user_version")
-            stamp_val = list(stamp_row.values())[0] if stamp_row else None
-            print(f"Schema stamp: {stamp_val} ({SCHEMA_SEMVER})")
-            if int(stamp_val or 0) != CURRENT_SCHEMA_VERSION:
-                _stamp_mismatch_exit(stamp_val)
-                raise SystemExit(2)
 
-            if args.clean:
-                await _clean(db)
-                print(f"Cleaned prior {PREFIX} fixtures (no re-seed)")
-                return
-
-            seeded = await seed(db)
-            _print_howto(path, seeded)
-    except SchemaBaselineError as exc:
+def _on_error(exc: BaseException) -> bool:
+    if isinstance(exc, SchemaBaselineError):
         print(f"ERROR: {exc}", file=sys.stderr)
         _stamp_mismatch_exit("mismatch")
         raise SystemExit(2) from exc
-    except Exception as exc:
-        if is_sqlite_busy(exc):
-            print(
-                f"ERROR: database is locked (server probably running). Close the app or retry:\n  {SEED_CMD}",
-                file=sys.stderr,
-            )
-            raise SystemExit(3) from exc
-        raise
+    if is_sqlite_busy(exc):
+        print(
+            f"ERROR: database is locked (server probably running). Close the app or retry:\n  {SEED_CMD}",
+            file=sys.stderr,
+        )
+        raise SystemExit(3) from exc
+    return False
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_seed_cli(
+        description=__doc__,
+        prefix=PREFIX,
+        run=_cli,
+        utf8=True,
+        before_open=_before_open,
+        on_error=_on_error,
+    )

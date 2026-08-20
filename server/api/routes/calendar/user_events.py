@@ -43,8 +43,8 @@ def _notify(request: Request, event_id: str, action: str) -> None:
 @router.get("", response_model=UserEventsPageResponse)
 async def list_events(
     request: Request,
-    start: str | None = None,
-    end: str | None = None,
+    start_time: str | None = qalias("startTime", default=None),
+    end_time: str | None = qalias("endTime", default=None),
     task_id: str | None = qalias("taskId", default=None),
     workset_id: str | None = qalias("worksetId", default=None),
     item_id: str | None = qalias("itemId", default=None),
@@ -56,8 +56,8 @@ async def list_events(
     try:
         page = await list_user_events_page(
             db,
-            start=start,
-            end=end,
+            start=start_time,
+            end=end_time,
             task_id=task_id,
             workset_id=workset_id,
             item_id=item_id,

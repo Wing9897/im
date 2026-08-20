@@ -19,7 +19,7 @@ from server.services.recurring_series_writes import (
     patch_recurring_series,
 )
 from server.services.task_writes import TaskWriteError
-from server.wire.serializer_domains.recurring import serialize_recurring_series
+from server.wire.serializers import serialize_recurring_series
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 router = APIRouter(prefix="/recurring", tags=["calendar"])

@@ -1,6 +1,6 @@
 """SQLite DDL for the items domain."""
 
-from server.domain.item_statuses import ITEM_STATUS_CHECK_SQL
+from server.db.schema_domains.vocabulary import ITEM_STATUS_CHECK_SQL
 
 DDL = f"""
 -- Soft-template categories for trackable items (global; ownership is via workset).

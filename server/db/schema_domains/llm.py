@@ -1,16 +1,16 @@
 """SQLite DDL for LLM profiles and staff instances (Python SoT CHECKs)."""
 
-from server.domain.json_modes import JSON_MODE_CHECK_SQL
-from server.domain.llm_providers import LLM_PROVIDER_CHECK_SQL
-from server.domain.llm_staff_classes import (
+from server.db.schema_domains.vocabulary import (
+    JSON_MODE_CHECK_SQL,
+    LLM_PROVIDER_CHECK_SQL,
     LLM_STAFF_CLASS_CHECK_SQL,
+    WEB_SEARCH_PROVIDER_CHECK_SQL,
+)
+from server.domain.llm_staff_classes import (
     LLM_STAFF_CLASSES,
     LLM_TASK_STAFF_CLASSES,
 )
-from server.domain.web_search_providers import (
-    WEB_SEARCH_PROVIDER_CHECK_SQL,
-    WEB_SEARCH_SECRET_COLUMNS,
-)
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_COLUMNS
 
 #: Legacy / test fixture id only — fresh DDL never seeds this row; production
 #: paths must not invent it as a fallback.
