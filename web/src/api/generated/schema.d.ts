@@ -3837,12 +3837,27 @@ export interface components {
              * Websearchprovider
              * @default auto
              */
-            webSearchProvider: ("auto" | "duckduckgo" | "brave") | string;
+            webSearchProvider: ("auto" | "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper") | string;
             /**
              * Bravesearchapikey
              * @default
              */
             braveSearchApiKey: string;
+            /**
+             * Tavilysearchapikey
+             * @default
+             */
+            tavilySearchApiKey: string;
+            /**
+             * Perplexitysearchapikey
+             * @default
+             */
+            perplexitySearchApiKey: string;
+            /**
+             * Serpersearchapikey
+             * @default
+             */
+            serperSearchApiKey: string;
             /** Staffclasses */
             staffClasses?: string[];
             /** Staffinstances */
@@ -3895,9 +3910,15 @@ export interface components {
              * @default auto
              * @enum {string}
              */
-            webSearchProvider: "auto" | "duckduckgo" | "brave";
+            webSearchProvider: "auto" | "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper";
             /** Bravesearchapikey */
             braveSearchApiKey?: string | null;
+            /** Tavilysearchapikey */
+            tavilySearchApiKey?: string | null;
+            /** Perplexitysearchapikey */
+            perplexitySearchApiKey?: string | null;
+            /** Serpersearchapikey */
+            serperSearchApiKey?: string | null;
             /** Staffclasses */
             staffClasses?: ("leaderboard" | "intel_event" | "agent")[];
         };

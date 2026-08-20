@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-43 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-45 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -24,8 +24,8 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 43
-    assert SCHEMA_SEMVER == "0.1.0-beta.44"
+    assert CURRENT_SCHEMA_VERSION == 45
+    assert SCHEMA_SEMVER == "0.1.0-beta.46"
 
 
 @pytest.mark.asyncio
@@ -85,6 +85,16 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert "emoji" in task_cols
         assert int(task_cols["emoji"][3]) == 0
         assert str(task_cols["emoji"][4] or "NULL").replace("'", "").upper() == "NULL"
+        async with db.conn.execute("PRAGMA table_info(llm_profiles)") as cursor:
+            profile_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "tavily_search_api_key" in profile_cols
+        assert "perplexity_search_api_key" in profile_cols
+        assert "serper_search_api_key" in profile_cols
+        assert int(profile_cols["tavily_search_api_key"][3]) == 1
+        assert int(profile_cols["perplexity_search_api_key"][3]) == 1
+        assert int(profile_cols["serper_search_api_key"][3]) == 1
+        assert "web_fetch" not in profile_cols
+        assert not any("fetch" in name for name in profile_cols)
     finally:
         await db.close()
 

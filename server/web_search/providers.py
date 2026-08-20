@@ -1,4 +1,4 @@
-"""DuckDuckGo (default, no key) and Brave Search providers."""
+"""DuckDuckGo (default, no key) plus Brave / Tavily / Perplexity / Serper Search providers."""
 
 from __future__ import annotations
 
@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 DDG_INSTANT_URL = "https://api.duckduckgo.com/"
 DDG_LITE_URL = "https://lite.duckduckgo.com/lite/"
 BRAVE_SEARCH_URL = "https://api.search.brave.com/res/v1/web/search"
+TAVILY_SEARCH_URL = "https://api.tavily.com/search"
+PERPLEXITY_SEARCH_URL = "https://api.perplexity.ai/search"
+SERPER_SEARCH_URL = "https://google.serper.dev/search"
 
 DEFAULT_COUNT = 5
 MAX_COUNT = 8
@@ -136,6 +139,53 @@ async def _fetch_json(session: aiohttp.ClientSession, url: str, *, headers: dict
         return await resp.json(content_type=None)
 
 
+async def _post_json(
+    session: aiohttp.ClientSession,
+    url: str,
+    *,
+    json_body: dict[str, Any],
+    headers: dict[str, str] | None = None,
+) -> Any:
+    await validate_outbound_url(url)
+    merged = {**_REQUEST_HEADERS, **(headers or {})}
+    async with session.post(url, json=json_body, headers=merged, allow_redirects=False) as resp:
+        resp.raise_for_status()
+        return await resp.json(content_type=None)
+
+
+def _missing_key_result(provider: str, config_key: str | None = None) -> dict[str, Any]:
+    return {
+        "error": f"{config_key or f'{provider}_search_api_key'} not configured",
+        "items": [],
+        "provider": provider,
+        "count": 0,
+    }
+
+
+def _search_failed(provider: str, exc: BaseException) -> dict[str, Any]:
+    return {
+        "error": f"{provider} search failed: {exc}",
+        "items": [],
+        "provider": provider,
+        "count": 0,
+    }
+
+
+def _items_from_result_rows(rows: Any, *, url_key: str, snippet_key: str, count: int) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    if not isinstance(rows, list):
+        return items
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        title = str(row.get("title") or "").strip()
+        href = str(row.get(url_key) or row.get("url") or "").strip()
+        snippet = str(row.get(snippet_key) or row.get("content") or row.get("snippet") or "").strip()
+        if href:
+            items.append(_item(title or href, href, snippet))
+    return _normalize_items(items, count=count)
+
+
 async def _search_duckduckgo_instant(session: aiohttp.ClientSession, query: str, count: int) -> list[dict[str, str]]:
     params = urlencode(
         {
@@ -204,12 +254,7 @@ async def search_duckduckgo(query: str, *, count: int | None = None) -> dict[str
 async def search_brave(query: str, *, api_key: str, count: int | None = None) -> dict[str, Any]:
     key = (api_key or "").strip()
     if not key:
-        return {
-            "error": "brave_search_api_key not configured",
-            "items": [],
-            "provider": "brave",
-            "count": 0,
-        }
+        return _missing_key_result("brave")
     limit = _clamp_count(count)
     params = urlencode({"q": query, "count": str(limit)})
     url = f"{BRAVE_SEARCH_URL}?{params}"
@@ -220,22 +265,104 @@ async def search_brave(query: str, *, api_key: str, count: int | None = None) ->
             data = await _fetch_json(session, url, headers=headers)
     except (aiohttp.ClientError, OutboundUrlError, OSError, ValueError) as exc:
         logger.warning("Brave search failed: %s", exc)
-        return {"error": f"brave search failed: {exc}", "items": [], "provider": "brave", "count": 0}
+        return _search_failed("brave", exc)
 
     web = data.get("web") if isinstance(data, dict) else None
     results = web.get("results") if isinstance(web, dict) else None
-    items: list[dict[str, str]] = []
-    if isinstance(results, list):
-        for row in results:
-            if not isinstance(row, dict):
-                continue
-            title = str(row.get("title") or "").strip()
-            href = str(row.get("url") or "").strip()
-            snippet = str(row.get("description") or "").strip()
-            if href:
-                items.append(_item(title or href, href, snippet))
-    items = _normalize_items(items, count=limit)
+    items = _items_from_result_rows(results, url_key="url", snippet_key="description", count=limit)
     return {"items": items, "provider": "brave", "count": len(items)}
+
+
+async def _keyed_post_search(
+    query: str,
+    *,
+    provider: str,
+    api_key: str,
+    count: int | None,
+    url: str,
+    headers: dict[str, str],
+    body: dict[str, Any],
+    results_key: str,
+    url_key: str,
+    snippet_key: str,
+) -> dict[str, Any]:
+    """Shared POST JSON search (Tavily / Perplexity / Serper). Key + vendor URL stay in the wrapper."""
+    key = (api_key or "").strip()
+    if not key:
+        return _missing_key_result(provider)
+    limit = _clamp_count(count)
+    timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_S)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            data = await _post_json(session, url, json_body=body, headers=headers)
+    except (aiohttp.ClientError, OutboundUrlError, OSError, ValueError) as exc:
+        logger.warning("%s search failed: %s", provider.capitalize(), exc)
+        return _search_failed(provider, exc)
+    results = data.get(results_key) if isinstance(data, dict) else None
+    items = _items_from_result_rows(results, url_key=url_key, snippet_key=snippet_key, count=limit)
+    return {"items": items, "provider": provider, "count": len(items)}
+
+
+async def search_tavily(query: str, *, api_key: str, count: int | None = None) -> dict[str, Any]:
+    """Official Tavily Search (``POST /search``), not crawl / extract / research."""
+    key = (api_key or "").strip()
+    limit = _clamp_count(count)
+    return await _keyed_post_search(
+        query,
+        provider="tavily",
+        api_key=key,
+        count=limit,
+        url=TAVILY_SEARCH_URL,
+        headers={"Accept": "application/json", "Authorization": f"Bearer {key}"},
+        body={"api_key": key, "query": query, "max_results": limit, "search_depth": "basic"},
+        results_key="results",
+        url_key="url",
+        snippet_key="content",
+    )
+
+
+async def search_perplexity(query: str, *, api_key: str, count: int | None = None) -> dict[str, Any]:
+    """Official Perplexity Search API (``POST /search``), not Sonar chat completions."""
+    key = (api_key or "").strip()
+    limit = _clamp_count(count)
+    return await _keyed_post_search(
+        query,
+        provider="perplexity",
+        api_key=key,
+        count=limit,
+        url=PERPLEXITY_SEARCH_URL,
+        headers={"Accept": "application/json", "Authorization": f"Bearer {key}"},
+        body={"query": query, "max_results": limit},
+        results_key="results",
+        url_key="url",
+        snippet_key="snippet",
+    )
+
+
+async def search_serper(query: str, *, api_key: str, count: int | None = None) -> dict[str, Any]:
+    """Official Serper Search API (``POST /search``), not HTML scraping."""
+    key = (api_key or "").strip()
+    limit = _clamp_count(count)
+    return await _keyed_post_search(
+        query,
+        provider="serper",
+        api_key=key,
+        count=limit,
+        url=SERPER_SEARCH_URL,
+        headers={"Accept": "application/json", "X-API-KEY": key},
+        body={"q": query, "num": limit},
+        results_key="organic",
+        url_key="link",
+        snippet_key="snippet",
+    )
+
+
+_KEYED_SEARCHERS = {
+    "brave": search_brave,
+    "tavily": search_tavily,
+    "perplexity": search_perplexity,
+    "serper": search_serper,
+}
 
 
 async def search_web(
@@ -251,8 +378,9 @@ async def search_web(
     # Keep query length bounded for outbound URLs
     q = q[:500]
     name = (provider or "duckduckgo").strip().lower()
-    if name == "brave":
-        return await search_brave(q, api_key=api_key, count=count)
+    keyed = _KEYED_SEARCHERS.get(name)
+    if keyed is not None:
+        return await keyed(q, api_key=api_key, count=count)
     if name != "duckduckgo":
         return {
             "error": f"unsupported web_search_provider: {provider}",

@@ -5,12 +5,19 @@ import {
   llmHasNativeWebSearch,
   normalizeWebSearchProviderSetting,
   resolveAssistantWebSearchStatus,
+  resolveWebSearchToolProvider,
+  resolveWebSearchUiMode,
+  settingsFromWebSearchUiMode,
 } from "./assistantWebSearchRoute";
 
 describe("assistantWebSearchRoute", () => {
   it("normalizes provider setting", () => {
     expect(normalizeWebSearchProviderSetting("brave")).toBe("brave");
     expect(normalizeWebSearchProviderSetting("DUCKDUCKGO")).toBe("duckduckgo");
+    expect(normalizeWebSearchProviderSetting("tavily")).toBe("tavily");
+    expect(normalizeWebSearchProviderSetting("PERPLEXITY")).toBe("perplexity");
+    expect(normalizeWebSearchProviderSetting("serper")).toBe("serper");
+    expect(normalizeWebSearchProviderSetting("SERPER")).toBe("serper");
     expect(normalizeWebSearchProviderSetting("auto")).toBe("auto");
     expect(normalizeWebSearchProviderSetting("nope")).toBe("auto");
   });
@@ -24,9 +31,19 @@ describe("assistantWebSearchRoute", () => {
 
   it("reports native web search capability", () => {
     expect(llmHasNativeWebSearch("openai_compatible", "https://api.openai.com/v1")).toBe(true);
+    expect(llmHasNativeWebSearch("openai_compatible", "https://api.openai.com")).toBe(true);
     expect(llmHasNativeWebSearch("gemini_compatible", "https://generativelanguage.googleapis.com/v1beta")).toBe(
       true,
     );
+    expect(llmHasNativeWebSearch("gemini_compatible", "https://generativelanguage.googleapis.com/v1")).toBe(
+      true,
+    );
+    expect(llmHasNativeWebSearch("openai_compatible", "https://openrouter.ai/api/v1")).toBe(false);
+    expect(llmHasNativeWebSearch("openai_compatible", "https://generativelanguage.googleapis.com/v1beta")).toBe(
+      false,
+    );
+    expect(llmHasNativeWebSearch("gemini_compatible", "https://example.com/gemini")).toBe(false);
+    expect(llmHasNativeWebSearch("gemini_compatible", "https://api.openai.com/v1")).toBe(false);
     expect(llmHasNativeWebSearch("ollama", "http://localhost:11434")).toBe(false);
     expect(llmHasNativeWebSearch("openrouter", "https://openrouter.ai/api/v1")).toBe(false);
   });
@@ -71,6 +88,33 @@ describe("assistantWebSearchRoute", () => {
     expect(
       resolveAssistantWebSearchStatus({
         enabled: true,
+        searchProvider: "tavily",
+        llmProvider: "ollama",
+        llmBaseUrl: "http://localhost:11434",
+      }),
+    ).toBe("tool_tavily");
+
+    expect(
+      resolveAssistantWebSearchStatus({
+        enabled: true,
+        searchProvider: "perplexity",
+        llmProvider: "ollama",
+        llmBaseUrl: "http://localhost:11434",
+      }),
+    ).toBe("tool_perplexity");
+
+    expect(
+      resolveAssistantWebSearchStatus({
+        enabled: true,
+        searchProvider: "serper",
+        llmProvider: "ollama",
+        llmBaseUrl: "http://localhost:11434",
+      }),
+    ).toBe("tool_serper");
+
+    expect(
+      resolveAssistantWebSearchStatus({
+        enabled: true,
         searchProvider: "duckduckgo",
         llmProvider: "ollama",
         llmBaseUrl: "http://localhost:11434",
@@ -85,5 +129,89 @@ describe("assistantWebSearchRoute", () => {
         llmBaseUrl: "http://localhost:11434",
       }),
     ).toBe("auto_fallback_tool");
+  });
+
+  it("maps stored settings onto UI mode vs tool vendor", () => {
+    expect(
+      resolveWebSearchUiMode({
+        enabled: false,
+        searchProvider: "auto",
+        nativeAvailable: true,
+      }),
+    ).toBe("off");
+
+    expect(
+      resolveWebSearchUiMode({
+        enabled: true,
+        searchProvider: "auto",
+        nativeAvailable: true,
+      }),
+    ).toBe("native");
+
+    expect(
+      resolveWebSearchUiMode({
+        enabled: true,
+        searchProvider: "auto",
+        nativeAvailable: false,
+      }),
+    ).toBe("tool");
+
+    expect(
+      resolveWebSearchUiMode({
+        enabled: true,
+        searchProvider: "duckduckgo",
+        nativeAvailable: true,
+      }),
+    ).toBe("tool");
+
+    expect(
+      resolveWebSearchUiMode({
+        enabled: true,
+        searchProvider: "brave",
+        nativeAvailable: true,
+      }),
+    ).toBe("tool");
+
+    expect(resolveWebSearchToolProvider("auto")).toBe("duckduckgo");
+    expect(resolveWebSearchToolProvider("duckduckgo")).toBe("duckduckgo");
+    expect(resolveWebSearchToolProvider("brave")).toBe("brave");
+    expect(resolveWebSearchToolProvider("tavily")).toBe("tavily");
+    expect(resolveWebSearchToolProvider("perplexity")).toBe("perplexity");
+    expect(resolveWebSearchToolProvider("serper")).toBe("serper");
+  });
+
+  it("writes auto only for native mode; tool mode never persists auto", () => {
+    expect(settingsFromWebSearchUiMode("off", "auto")).toEqual({
+      enabled: false,
+      provider: "auto",
+    });
+    expect(settingsFromWebSearchUiMode("off", "brave")).toEqual({
+      enabled: false,
+      provider: "brave",
+    });
+    expect(settingsFromWebSearchUiMode("native", "duckduckgo")).toEqual({
+      enabled: true,
+      provider: "auto",
+    });
+    expect(settingsFromWebSearchUiMode("tool", "auto")).toEqual({
+      enabled: true,
+      provider: "duckduckgo",
+    });
+    expect(settingsFromWebSearchUiMode("tool", "brave")).toEqual({
+      enabled: true,
+      provider: "brave",
+    });
+    expect(settingsFromWebSearchUiMode("tool", "tavily")).toEqual({
+      enabled: true,
+      provider: "tavily",
+    });
+    expect(settingsFromWebSearchUiMode("tool", "perplexity")).toEqual({
+      enabled: true,
+      provider: "perplexity",
+    });
+    expect(settingsFromWebSearchUiMode("tool", "serper")).toEqual({
+      enabled: true,
+      provider: "serper",
+    });
   });
 });

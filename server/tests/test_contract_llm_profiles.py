@@ -1,4 +1,4 @@
-"""Contract tests for LLM profiles / staff-instances / global slots (stamp 33)."""
+"""Contract tests for LLM profiles / staff-instances / global slots (stamp 45)."""
 
 from __future__ import annotations
 
@@ -19,6 +19,9 @@ PROFILE_KEYS = [
     "webSearchEnabled",
     "webSearchProvider",
     "braveSearchApiKey",
+    "tavilySearchApiKey",
+    "perplexitySearchApiKey",
+    "serperSearchApiKey",
     "staffClasses",
     "staffInstances",
     "createdAt",
@@ -152,6 +155,51 @@ async def test_profile_create_rejects_unknown_provider_and_web_search_provider(c
         "SELECT COUNT(*) FROM llm_profiles WHERE name IN ('Bad provider', 'Bad web search')"
     )
     assert stored == 0
+
+    ok_tavily = await client.post(
+        "/api/v1/llm/profiles",
+        json={
+            "name": "Tavily pack",
+            "provider": "ollama",
+            "baseUrl": "http://localhost:11434",
+            "model": "llama-test",
+            "webSearchProvider": "tavily",
+            "tavilySearchApiKey": "tvly-contract",
+        },
+    )
+    assert ok_tavily.status_code == 201
+    assert ok_tavily.json()["webSearchProvider"] == "tavily"
+    assert ok_tavily.json()["tavilySearchApiKey"] == MASKED_SECRET
+
+    ok_perplexity = await client.post(
+        "/api/v1/llm/profiles",
+        json={
+            "name": "Perplexity pack",
+            "provider": "ollama",
+            "baseUrl": "http://localhost:11434",
+            "model": "llama-test",
+            "webSearchProvider": "perplexity",
+            "perplexitySearchApiKey": "pplx-contract",
+        },
+    )
+    assert ok_perplexity.status_code == 201
+    assert ok_perplexity.json()["webSearchProvider"] == "perplexity"
+    assert ok_perplexity.json()["perplexitySearchApiKey"] == MASKED_SECRET
+
+    ok_serper = await client.post(
+        "/api/v1/llm/profiles",
+        json={
+            "name": "Serper pack",
+            "provider": "ollama",
+            "baseUrl": "http://localhost:11434",
+            "model": "llama-test",
+            "webSearchProvider": "serper",
+            "serperSearchApiKey": "serper-contract",
+        },
+    )
+    assert ok_serper.status_code == 201
+    assert ok_serper.json()["webSearchProvider"] == "serper"
+    assert ok_serper.json()["serperSearchApiKey"] == MASKED_SECRET
 
 
 async def test_task_create_defaults_llm_profile_id(client):

@@ -292,6 +292,9 @@ def test_config_from_draft_fields_merges_over_fallback() -> None:
         "web_search_enabled": True,
         "web_search_provider": "auto",
         "brave_search_api_key": "",
+        "tavily_search_api_key": "",
+        "perplexity_search_api_key": "",
+        "serper_search_api_key": "",
         "profile_id": DEFAULT_LLM_PROFILE_ID,
     }
     config = config_from_draft_fields(

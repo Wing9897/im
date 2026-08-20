@@ -2,7 +2,7 @@
 
 Modes:
 - ``off`` — master switch off; no tool injection, no native search tools
-- ``tool`` — inject ``web.search`` (DuckDuckGo / Brave)
+- ``tool`` — inject ``web.search`` (DuckDuckGo / Brave / Tavily / Perplexity / Serper)
 - ``openai_native`` — OpenAI Responses ``web_search``; do not inject ``web.search``
 - ``gemini_native`` — Gemini Google Search grounding; do not inject ``web.search``
 """
@@ -13,10 +13,14 @@ from dataclasses import dataclass
 from typing import Literal
 from urllib.parse import urlparse
 
-from server.domain.web_search_providers import ALLOWED_WEB_SEARCH_PROVIDERS
+from server.domain.web_search_providers import (
+    ALLOWED_TOOL_WEB_SEARCH_PROVIDERS,
+    ALLOWED_WEB_SEARCH_PROVIDERS,
+    WebSearchToolProviderWire,
+)
 
 WebSearchMode = Literal["off", "tool", "openai_native", "gemini_native"]
-ToolProvider = Literal["duckduckgo", "brave"]
+ToolProvider = WebSearchToolProviderWire
 NativeKind = Literal["openai", "gemini"]
 
 _WEB_SEARCH_SETTING_PROVIDERS = ALLOWED_WEB_SEARCH_PROVIDERS
@@ -30,7 +34,7 @@ class WebSearchRoute:
     mode: WebSearchMode
     #: Provider for the ``web.search`` tool path (also the auto→tool fallback).
     tool_provider: ToolProvider
-    #: Setting value after normalization (``auto`` / ``duckduckgo`` / ``brave``).
+    #: Setting value after normalization (``auto`` / tool vendors).
     setting_provider: str
     #: When True, inject the custom ``web.search`` tool schema.
     inject_web_search_tool: bool
@@ -79,11 +83,11 @@ def resolve_web_search_route(
             native_web_search=None,
         )
 
-    if setting in {"duckduckgo", "brave"}:
+    if setting in ALLOWED_TOOL_WEB_SEARCH_PROVIDERS:
         return WebSearchRoute(
             enabled=True,
             mode="tool",
-            tool_provider=setting,  # type: ignore[arg-type]
+            tool_provider=setting,  # type: ignore[assignment]
             setting_provider=setting,
             inject_web_search_tool=True,
             native_web_search=None,

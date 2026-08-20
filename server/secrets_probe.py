@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_COLUMNS
 from server.secrets import SECRET_CONFIG_KEYS, SecretProtectionError, unprotect_text
 
 logger = logging.getLogger(__name__)
 
 _ENCRYPTED_PREFIX = "enc:v1:"
 _CIPHER_LIKE = f"{_ENCRYPTED_PREFIX}%"
+_PROFILE_SECRET_COLUMNS = ("api_key", *WEB_SEARCH_SECRET_COLUMNS)
 
 
 def _ciphertext(value: Any) -> str | None:
@@ -39,10 +41,11 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
             (*SECRET_CONFIG_KEYS, _CIPHER_LIKE),
         )
 
+    set_sql = ", ".join(f"{column} = ''" for column in _PROFILE_SECRET_COLUMNS)
+    where_sql = " OR ".join(f"{column} LIKE ?" for column in _PROFILE_SECRET_COLUMNS)
     profiles_count = await db.execute(
-        "UPDATE llm_profiles SET api_key = '', brave_search_api_key = '', updated_at = ? "
-        "WHERE api_key LIKE ? OR brave_search_api_key LIKE ?",
-        (now, _CIPHER_LIKE, _CIPHER_LIKE),
+        f"UPDATE llm_profiles SET {set_sql}, updated_at = ? WHERE {where_sql}",
+        (now, *(_CIPHER_LIKE for _ in _PROFILE_SECRET_COLUMNS)),
     )
 
     sources_count = await db.execute(
@@ -95,13 +98,14 @@ async def probe_stored_secrets(db: Any) -> tuple[bool, str | None]:
             if cipher is not None:
                 samples.append(cipher)
 
+    select_sql = ", ".join(_PROFILE_SECRET_COLUMNS)
+    where_sql = " OR ".join(f"{column} LIKE ?" for column in _PROFILE_SECRET_COLUMNS)
     profile_rows = await db.fetch_all(
-        "SELECT api_key, brave_search_api_key FROM llm_profiles "
-        "WHERE api_key LIKE ? OR brave_search_api_key LIKE ? LIMIT 8",
-        (_CIPHER_LIKE, _CIPHER_LIKE),
+        f"SELECT {select_sql} FROM llm_profiles WHERE {where_sql} LIMIT 8",
+        tuple(_CIPHER_LIKE for _ in _PROFILE_SECRET_COLUMNS),
     )
     for row in profile_rows:
-        for key in ("api_key", "brave_search_api_key"):
+        for key in _PROFILE_SECRET_COLUMNS:
             cipher = _ciphertext(row.get(key))
             if cipher is not None:
                 samples.append(cipher)

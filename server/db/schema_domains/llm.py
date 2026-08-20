@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS llm_profiles (
     web_search_provider     TEXT NOT NULL DEFAULT 'auto'
                             {WEB_SEARCH_PROVIDER_CHECK_SQL},
     brave_search_api_key    TEXT NOT NULL DEFAULT '',
+    tavily_search_api_key   TEXT NOT NULL DEFAULT '',
+    perplexity_search_api_key TEXT NOT NULL DEFAULT '',
+    serper_search_api_key   TEXT NOT NULL DEFAULT '',
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );

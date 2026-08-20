@@ -45,6 +45,7 @@ def _search_clause(spec: AgentTaskSpec) -> str:
         return (
             "## 網搜\n"
             "- web.search 已強制啟用；請至少搜尋一次（可多輪、可調整關鍵字）。\n"
+            "- 摘要不夠時可用 web.fetch 讀取 1–2 個具體頁面正文；不要整批抓取搜尋結果。\n"
             "- 不要編造搜尋結果中不存在的事實。\n"
         )
     return "## 網搜\n- 本任務未授權 web.search。\n"

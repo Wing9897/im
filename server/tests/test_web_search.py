@@ -4,8 +4,18 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from server.agent.tools_registry import build_tool_schemas, execute_tool
-from server.web_search.providers import search_brave, search_duckduckgo, search_web, unwrap_ddg_redirect
+from server.web_search.providers import (
+    search_brave,
+    search_duckduckgo,
+    search_perplexity,
+    search_serper,
+    search_tavily,
+    search_web,
+    unwrap_ddg_redirect,
+)
 
 
 def test_unwrap_ddg_redirect() -> None:
@@ -25,9 +35,11 @@ def test_build_tool_schemas_omits_web_when_disabled() -> None:
     enabled = {s["name"] for s in build_tool_schemas(web_search_enabled=True)}
     disabled = {s["name"] for s in build_tool_schemas(web_search_enabled=False)}
     assert "web.search" in enabled
+    assert "web.fetch" in enabled
     assert "messages.search" in enabled
     assert "intelligence.search_events" in enabled
     assert "web.search" not in disabled
+    assert "web.fetch" not in disabled
     assert "messages.search" in disabled
     assert "intelligence.search_events" in disabled
     assert "calendar.upcoming" in disabled
@@ -170,10 +182,22 @@ async def test_duckduckgo_parses_instant_answer() -> None:
     assert result["items"][0]["url"] == "https://example.com/page"
 
 
-async def test_brave_requires_api_key() -> None:
-    result = await search_brave("query", api_key="")
-    assert result["error"] == "brave_search_api_key not configured"
+@pytest.mark.parametrize(
+    ("searcher", "provider"),
+    [
+        (search_brave, "brave"),
+        (search_tavily, "tavily"),
+        (search_perplexity, "perplexity"),
+        (search_serper, "serper"),
+    ],
+)
+async def test_keyed_provider_requires_api_key(searcher, provider: str) -> None:
+    result = await searcher("query", api_key="")
+    assert result["error"] == f"{provider}_search_api_key not configured"
     assert result["count"] == 0
+    fallback = await search_web("query", provider=provider, api_key="")
+    assert fallback["provider"] == provider
+    assert fallback["error"] == f"{provider}_search_api_key not configured"
 
 
 async def test_brave_parses_results_with_key() -> None:
@@ -225,6 +249,164 @@ async def test_brave_parses_results_with_key() -> None:
     assert result["provider"] == "brave"
     assert result["count"] == 1
     assert result["items"][0]["title"] == "Brave Hit"
+
+
+async def test_tavily_parses_results_with_key() -> None:
+    payload = {
+        "results": [
+            {
+                "title": "Tavily Hit",
+                "url": "https://example.com/tavily",
+                "content": "Snippet",
+            }
+        ]
+    }
+
+    class _Resp:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def raise_for_status(self):
+            return None
+
+        async def json(self, content_type=None):
+            return payload
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def post(self, url, json=None, headers=None, allow_redirects=None):
+            assert url == "https://api.tavily.com/search"
+            assert headers and headers.get("Authorization") == "Bearer test-key"
+            assert json and json.get("api_key") == "test-key"
+            assert json.get("query") == "query"
+            assert json.get("search_depth") == "basic"
+            return _Resp()
+
+    with (
+        patch("server.web_search.providers.aiohttp.ClientSession", _Session),
+        patch("server.web_search.providers.validate_outbound_url", AsyncMock()),
+    ):
+        result = await search_tavily("query", api_key="test-key", count=3)
+
+    assert result["provider"] == "tavily"
+    assert result["count"] == 1
+    assert result["items"][0]["title"] == "Tavily Hit"
+
+
+async def test_perplexity_parses_results_with_key() -> None:
+    payload = {
+        "results": [
+            {
+                "title": "Perplexity Hit",
+                "url": "https://example.com/pplx",
+                "snippet": "Snippet",
+            }
+        ]
+    }
+
+    class _Resp:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def raise_for_status(self):
+            return None
+
+        async def json(self, content_type=None):
+            return payload
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def post(self, url, json=None, headers=None, allow_redirects=None):
+            assert url == "https://api.perplexity.ai/search"
+            assert headers and headers.get("Authorization") == "Bearer test-key"
+            assert json and json.get("query") == "query"
+            assert json.get("max_results") == 3
+            return _Resp()
+
+    with (
+        patch("server.web_search.providers.aiohttp.ClientSession", _Session),
+        patch("server.web_search.providers.validate_outbound_url", AsyncMock()),
+    ):
+        result = await search_perplexity("query", api_key="test-key", count=3)
+
+    assert result["provider"] == "perplexity"
+    assert result["count"] == 1
+    assert result["items"][0]["title"] == "Perplexity Hit"
+
+
+async def test_serper_parses_organic_results_with_key() -> None:
+    payload = {
+        "organic": [
+            {
+                "title": "Serper Hit",
+                "link": "https://example.com/serper",
+                "snippet": "Snippet",
+            }
+        ]
+    }
+
+    class _Resp:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def raise_for_status(self):
+            return None
+
+        async def json(self, content_type=None):
+            return payload
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def post(self, url, json=None, headers=None, allow_redirects=None):
+            assert url == "https://google.serper.dev/search"
+            assert headers and headers.get("X-API-KEY") == "test-key"
+            assert json and json.get("q") == "query"
+            assert json.get("num") == 3
+            return _Resp()
+
+    with (
+        patch("server.web_search.providers.aiohttp.ClientSession", _Session),
+        patch("server.web_search.providers.validate_outbound_url", AsyncMock()),
+    ):
+        result = await search_serper("query", api_key="test-key", count=3)
+
+    assert result["provider"] == "serper"
+    assert result["count"] == 1
+    assert result["items"][0]["title"] == "Serper Hit"
+    assert result["items"][0]["url"] == "https://example.com/serper"
 
 
 async def test_search_web_empty_query() -> None:
@@ -290,3 +472,17 @@ async def test_web_search_execution_service_respects_enabled_and_count() -> None
         )
     assert mocked.await_args is not None
     assert mocked.await_args.kwargs["count"] == MAX_COUNT
+
+
+async def test_web_search_execution_service_selects_keyed_api_key() -> None:
+    from server.web_search.execution import WebSearchExecutionService
+
+    service = WebSearchExecutionService(api_keys={"serper": "serper-secret", "brave": "brave-secret"})
+    with patch(
+        "server.web_search.execution.search_web",
+        AsyncMock(return_value={"items": [], "provider": "serper", "count": 0}),
+    ) as mocked:
+        await service.tool_search("hello", provider="serper", enabled=True)
+        await service.tool_search("hello", provider="duckduckgo", enabled=True)
+    assert mocked.await_args_list[0].kwargs["api_key"] == "serper-secret"
+    assert mocked.await_args_list[1].kwargs["api_key"] == ""

@@ -55,7 +55,7 @@ export function isLlmStaffClass(value: string): value is LlmStaffClass {
 
 export type LlmWebSearchProvider = LlmProfileUpsertBody["webSearchProvider"];
 
-/** Server-side vocabulary for `jsonMode` (stamp 33 CHECK: disabled / json_schema / json_object). */
+/** Server-side vocabulary for `jsonMode` (CHECK: disabled / json_schema / json_object). */
 export type LlmJsonMode = LlmProfileUpsertBody["jsonMode"];
 
 /** Wire shape from GET /api/v1/llm/staff-instances. */

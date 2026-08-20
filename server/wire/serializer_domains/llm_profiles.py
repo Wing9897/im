@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_FIELDS
 from server.secrets import MASKED_SECRET, unprotect_text
 
 
@@ -32,7 +33,10 @@ def serialize_llm_profile(
     staff_rows: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     api_key = unprotect_text(row.get("api_key") or "")
-    brave_key = unprotect_text(row.get("brave_search_api_key") or "")
+    search_keys = {
+        wire: (MASKED_SECRET if unprotect_text(row.get(column) or "") else "")
+        for column, wire in WEB_SEARCH_SECRET_WIRE_FIELDS
+    }
     staff = [serialize_llm_staff_instance(s) for s in (staff_rows or ())]
     return {
         "id": row["id"],
@@ -45,7 +49,7 @@ def serialize_llm_profile(
         "jsonMode": row.get("json_mode") or "disabled",
         "webSearchEnabled": bool(int(row.get("web_search_enabled") or 0)),
         "webSearchProvider": row.get("web_search_provider") or "auto",
-        "braveSearchApiKey": MASKED_SECRET if brave_key else "",
+        **search_keys,
         "staffClasses": sorted({str(s.get("staff_class") or "") for s in (staff_rows or ()) if s.get("staff_class")}),
         "staffInstances": staff,
         "createdAt": row.get("created_at"),

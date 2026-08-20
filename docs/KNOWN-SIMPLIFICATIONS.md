@@ -10,7 +10,7 @@ SoT: [`agent/mcp.md`](./agent/mcp.md) (`/api/v1/mcp`)、[`agent/a2a.md`](./agent
 
 - **No stdio** (or other local-subprocess MCP transports); Streamable HTTP + Bearer only.
 - **No per-key tool scopes** (`calendar:write` 等). Identity is household `scopes: ["*"]`; `mcp_cap_*` and `worksets.external_enabled` are household filters, not key scopes. In-app assistant is not gated by them.
-- **No config-class MCP tools** (tasks／sources／Actions／LLM／agent tick／system settings). No MCP create/delete workset. `web.search`／`tasks.consult_advisor` stay out of MCP.
+- **No config-class MCP tools** (tasks／sources／Actions／LLM／agent tick／system settings). No MCP create/delete workset. `web.search`／`web.fetch`／`tasks.consult_advisor` stay out of MCP.
 
 ## API / stats deltas
 
@@ -70,7 +70,7 @@ Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEM
 
 ## Stamp 33 LLM simplifications (intentional)
 
-Still in force under wipe-floor **43** / `SCHEMA_SEMVER` `0.1.0-beta.44`. Do **not** restore without a new contract:
+Still in force under wipe-floor **45** / `SCHEMA_SEMVER` `0.1.0-beta.46`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -133,7 +133,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v43 | Wipe-only floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) (support matrix, explicit reset, stamp-43 floor). Product note: [`CHANGELOG.md` Unreleased](../CHANGELOG.md#unreleased). Unique here: `schema_domains/vocabulary.py` is a re-export hub only (no assembly); `item_id` FK is `ON DELETE SET NULL`. |
+| Schema stamp v45 | Wipe-only floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) (support matrix, explicit reset, stamp-45 floor). Product note: [`CHANGELOG.md` Unreleased](../CHANGELOG.md#unreleased). Unique here: `schema_domains/vocabulary.py` is a re-export hub only (no assembly); `item_id` FK is `ON DELETE SET NULL`. |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

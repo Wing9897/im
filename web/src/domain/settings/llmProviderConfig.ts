@@ -4,6 +4,45 @@ import type { LlmProvider } from "../../types";
 
 type Translate = TFunction | typeof i18n.t;
 
+/** Canonical base URL filled when a profile is created or the provider tile changes. */
+export const DEFAULT_PROVIDER_BASE_URLS: Record<LlmProvider, string> = {
+  ollama: "http://localhost:11434",
+  openai_compatible: "https://api.openai.com/v1",
+  gemini_compatible: "https://generativelanguage.googleapis.com/v1beta",
+  openrouter: "https://openrouter.ai/api/v1",
+};
+
+function normalizeLlmProviderBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "").toLowerCase();
+}
+
+export function isDefaultProviderBaseUrl(url: string, provider?: LlmProvider): boolean {
+  const normalized = normalizeLlmProviderBaseUrl(url);
+  if (!normalized) return false;
+  if (provider) {
+    return normalized === normalizeLlmProviderBaseUrl(DEFAULT_PROVIDER_BASE_URLS[provider]);
+  }
+  return (Object.values(DEFAULT_PROVIDER_BASE_URLS) as string[]).some(
+    (defaultUrl) => normalized === normalizeLlmProviderBaseUrl(defaultUrl),
+  );
+}
+
+/**
+ * URL to use after the editor provider tile changes.
+ * Empty URLs and leftover defaults from any provider are replaced;
+ * a user-typed custom endpoint (e.g. a Gemini proxy) is kept.
+ */
+export function baseUrlAfterProviderChange(
+  currentUrl: string,
+  nextProvider: LlmProvider,
+): string {
+  const nextDefault = DEFAULT_PROVIDER_BASE_URLS[nextProvider];
+  if (!normalizeLlmProviderBaseUrl(currentUrl) || isDefaultProviderBaseUrl(currentUrl)) {
+    return nextDefault;
+  }
+  return currentUrl;
+}
+
 type GeminiBaseUrlPreset = {
   id: string;
   /** Shown in the combobox suggestion list. */
@@ -19,7 +58,7 @@ export function getGeminiBaseUrlPresets(
     {
       id: "v1beta",
       label: String(t("settings:llm.geminiPresetBeta")),
-      url: "https://generativelanguage.googleapis.com/v1beta",
+      url: DEFAULT_PROVIDER_BASE_URLS.gemini_compatible,
     },
     {
       id: "v1",
@@ -64,7 +103,7 @@ export function getLlmProviderConfig(
       hint: String(t("settings:llm.providers.ollama.hint")),
       baseUrlLabel: String(t("settings:llm.providers.ollama.baseUrlLabel")),
       modelLabel: String(t("settings:llm.providers.ollama.modelLabel")),
-      baseUrlPlaceholder: "http://localhost:11434",
+      baseUrlPlaceholder: DEFAULT_PROVIDER_BASE_URLS.ollama,
       modelPlaceholder: "qwen3:4b",
       apiKeyPlaceholder: String(t("settings:llm.providers.ollama.apiKeyPlaceholder")),
     },
@@ -74,7 +113,7 @@ export function getLlmProviderConfig(
       label: String(t("settings:llm.providers.openai_compatible.label")),
       baseUrlLabel: String(t("settings:llm.providers.openai_compatible.baseUrlLabel")),
       modelLabel: String(t("settings:llm.providers.openai_compatible.modelLabel")),
-      baseUrlPlaceholder: "https://api.openai.com/v1",
+      baseUrlPlaceholder: DEFAULT_PROVIDER_BASE_URLS.openai_compatible,
       modelPlaceholder: "provider-specific model id",
       apiKeyPlaceholder: "sk-...",
     },
@@ -84,7 +123,7 @@ export function getLlmProviderConfig(
       label: String(t("settings:llm.providers.gemini_compatible.label")),
       baseUrlLabel: String(t("settings:llm.providers.gemini_compatible.baseUrlLabel")),
       modelLabel: String(t("settings:llm.providers.gemini_compatible.modelLabel")),
-      baseUrlPlaceholder: "https://generativelanguage.googleapis.com/v1beta",
+      baseUrlPlaceholder: DEFAULT_PROVIDER_BASE_URLS.gemini_compatible,
       modelPlaceholder: "gemini-3.1-flash-lite",
       apiKeyPlaceholder: "AIza...",
     },
@@ -94,7 +133,7 @@ export function getLlmProviderConfig(
       label: String(t("settings:llm.providers.openrouter.label")),
       baseUrlLabel: String(t("settings:llm.providers.openrouter.baseUrlLabel")),
       modelLabel: String(t("settings:llm.providers.openrouter.modelLabel")),
-      baseUrlPlaceholder: "https://openrouter.ai/api/v1",
+      baseUrlPlaceholder: DEFAULT_PROVIDER_BASE_URLS.openrouter,
       modelPlaceholder: "openai/gpt-4o",
       apiKeyPlaceholder: "sk-or-...",
     },

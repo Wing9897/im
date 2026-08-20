@@ -6,7 +6,7 @@
 A2A 自然語言門面：`POST /api/v1/a2a/agent`（見 [`a2a.md`](a2a.md)）。  
 MCP 工具門面：`/api/v1/mcp`（本文件；Streamable HTTP）。
 
-MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）；**不**注入 `web.search`／`tasks.consult_advisor`；**不**需要本機 AI 供應商即可 list／call。
+MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）；**不**注入 `web.search`／`web.fetch`／`tasks.consult_advisor`；**不**需要本機 AI 供應商即可 list／call。
 
 設定頁：`/settings/integrations?tab=mcp`（MCP 總開關 + 連線測試 + 能力群組）。同一能力群組也出現在 `/settings/integrations?tab=a2a`（MCP 與 A2A 共用；A2A 另有獨立總開關 `a2a_enabled`）。工作集可見性在 `/worksets`（每張工作集的「外部接口」；`worksets.external_enabled`）。預設 `mcp_enabled=true`；關閉後 MCP 協議入口回 403。能力群組預設全開，**同時**約束 MCP `list_tools`／`call_tool` 與 A2A 內部 tool loop（各自總開關開啟時）。新建工作集預設 `external_enabled=1`。
 
@@ -132,6 +132,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 ## 明確不暴露
 
 - `web.search`（聯網搜）
+- `web.fetch`（讀取頁面正文）
 - `tasks.consult_advisor`（任務顧問）
 - 分析任務／來源／Actions／LLM 設定／專案經理（`agent`）tick 控制面
 - 工作集建／刪（僅唯讀 `worksets.list`）
@@ -142,7 +143,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **43**／`SCHEMA_SEMVER` `0.1.0-beta.44`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`（stamp 38+）。
+**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **45**／`SCHEMA_SEMVER` `0.1.0-beta.46`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`（stamp 38+）。
 
 ## 非目標
 

@@ -12287,7 +12287,10 @@
                 "enum": [
                   "auto",
                   "duckduckgo",
-                  "brave"
+                  "brave",
+                  "tavily",
+                  "perplexity",
+                  "serper"
                 ]
               },
               {
@@ -12300,6 +12303,21 @@
           "braveSearchApiKey": {
             "type": "string",
             "title": "Bravesearchapikey",
+            "default": ""
+          },
+          "tavilySearchApiKey": {
+            "type": "string",
+            "title": "Tavilysearchapikey",
+            "default": ""
+          },
+          "perplexitySearchApiKey": {
+            "type": "string",
+            "title": "Perplexitysearchapikey",
+            "default": ""
+          },
+          "serperSearchApiKey": {
+            "type": "string",
+            "title": "Serpersearchapikey",
             "default": ""
           },
           "staffClasses": {
@@ -12413,7 +12431,10 @@
             "enum": [
               "auto",
               "duckduckgo",
-              "brave"
+              "brave",
+              "tavily",
+              "perplexity",
+              "serper"
             ],
             "title": "Websearchprovider",
             "default": "auto"
@@ -12428,6 +12449,39 @@
               }
             ],
             "title": "Bravesearchapikey"
+          },
+          "tavilySearchApiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tavilysearchapikey"
+          },
+          "perplexitySearchApiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Perplexitysearchapikey"
+          },
+          "serperSearchApiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serpersearchapikey"
           },
           "staffClasses": {
             "items": {
