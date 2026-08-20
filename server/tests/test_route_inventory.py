@@ -50,6 +50,8 @@ _EXTERNAL_ONLY_PATHS = frozenset(
         "/api/v1/a2a/agent",
         # External HTTP ingest (Webhook / scripts); no in-app UI caller.
         "/api/v1/messages/batch",
+        # MCP / assistant / internal RRULE expand — SPA time-window SoT is /calendar/window.
+        "/api/v1/calendar/occurrences",
     }
 )
 

@@ -51,6 +51,14 @@ MESSAGE_1 = "msg-1"
 
 ACTION_1 = "act-1"
 
+#: Secret columns have DDL DEFAULT ''; tests never need to list keyed-search keys.
+LLM_PROFILE_INSERT_SQL = (
+    "INSERT INTO llm_profiles ("
+    "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+    "web_search_enabled, web_search_provider, created_at, updated_at"
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+)
+
 
 async def ensure_default_llm_profile(db: Any) -> str:
     """Stamp-29: analysis_tasks.llm_profile_id is NOT NULL; schema no longer bootstraps a default.
@@ -65,13 +73,21 @@ async def ensure_default_llm_profile(db: Any) -> str:
     if exists:
         return DEFAULT_LLM_PROFILE_ID
     await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, 'Test Ollama', 'ollama', 'http://localhost:11434', 'llama-test', '', "
-        "0, 'disabled', 1, 'auto', '', ?, ?)",
-        (DEFAULT_LLM_PROFILE_ID, NOW, NOW),
+        LLM_PROFILE_INSERT_SQL,
+        (
+            DEFAULT_LLM_PROFILE_ID,
+            "Test Ollama",
+            "ollama",
+            "http://localhost:11434",
+            "llama-test",
+            "",
+            0,
+            "disabled",
+            1,
+            "auto",
+            NOW,
+            NOW,
+        ),
     )
     return DEFAULT_LLM_PROFILE_ID
 
@@ -82,13 +98,21 @@ async def seed_database(db: Any) -> None:
     # ── LLM profile (not DDL-seeded; tests need a complete usable default) ──
 
     await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, ?, 'ollama', 'http://localhost:11434', 'llama-test', '', 0, 'disabled', "
-        "1, 'auto', '', ?, ?)",
-        (DEFAULT_LLM_PROFILE_ID, "Test Ollama", now, now),
+        LLM_PROFILE_INSERT_SQL,
+        (
+            DEFAULT_LLM_PROFILE_ID,
+            "Test Ollama",
+            "ollama",
+            "http://localhost:11434",
+            "llama-test",
+            "",
+            0,
+            "disabled",
+            1,
+            "auto",
+            now,
+            now,
+        ),
     )
     for staff_class in LLM_STAFF_CLASSES:
         await db.execute(

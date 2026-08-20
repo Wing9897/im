@@ -7,7 +7,12 @@ from typing import Any, NotRequired, TypedDict
 
 from server.db.database import Database
 from server.domain.llm_providers import ALL_LLM_PROVIDERS, ALLOWED_LLM_PROVIDERS
-from server.domain.web_search_providers import WEB_SEARCH_SECRET_COLUMNS, WEB_SEARCH_SECRET_WIRE_FIELDS
+from server.domain.web_search_providers import (
+    KEYED_WEB_SEARCH_PROVIDERS,
+    WEB_SEARCH_SECRET_WIRE_FIELDS,
+    empty_web_search_api_keys,
+    secret_provider_from_column,
+)
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.secrets import MASKED_SECRET, unprotect_text
 from server.util import parse_bool
@@ -40,10 +45,7 @@ class LlmConfig(TypedDict):
     json_mode: str
     web_search_enabled: bool
     web_search_provider: str
-    brave_search_api_key: str
-    tavily_search_api_key: str
-    perplexity_search_api_key: str
-    serper_search_api_key: str
+    web_search_api_keys: dict[str, str]
     profile_id: str
     timeout: NotRequired[str]
 
@@ -70,6 +72,28 @@ def normalize_wire_provider(raw: str | None) -> str:
     raise ValueError(f"Unknown LLM provider: {value or '(empty)'}")
 
 
+def _web_search_api_keys_from_row(row: Mapping[str, Any]) -> dict[str, str]:
+    return {
+        provider: unprotect_text(row.get(f"{provider}_search_api_key") or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
+    }
+
+
+def _empty_config() -> LlmConfig:
+    return {
+        "provider": "ollama",
+        "provider_raw": "ollama",
+        "model": "",
+        "api_key": "",
+        "base_url": DEFAULT_PROVIDER_BASE_URLS["ollama"],
+        "ollama_thinking_enabled": False,
+        "json_mode": "disabled",
+        "web_search_enabled": True,
+        "web_search_provider": "auto",
+        "web_search_api_keys": empty_web_search_api_keys(),
+        "profile_id": "",
+    }
+
+
 def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
     raw_provider = normalize_wire_provider(str(row.get("provider") or "ollama"))
     canonical = canonical_provider(raw_provider)
@@ -77,7 +101,6 @@ def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
     if not base_url:
         base_url = DEFAULT_PROVIDER_BASE_URLS.get(canonical, "")
     api_key = unprotect_text(row.get("api_key") or "")
-    search_keys = {column: unprotect_text(row.get(column) or "") for column in WEB_SEARCH_SECRET_COLUMNS}
     return {
         "provider": canonical,
         "provider_raw": raw_provider,
@@ -88,7 +111,7 @@ def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
         "json_mode": str(row.get("json_mode") or "disabled"),
         "web_search_enabled": bool(int(row.get("web_search_enabled") or 0)),
         "web_search_provider": str(row.get("web_search_provider") or "auto"),
-        **search_keys,
+        "web_search_api_keys": _web_search_api_keys_from_row(row),
         "profile_id": str(row["id"]),
     }
 
@@ -199,22 +222,7 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
     ``AiEngineTestBody`` (``provider``／``baseUrl``／``model``／``apiKey``／
     ``thinkingEnabled``／…).
     """
-    base = fallback or {
-        "provider": "ollama",
-        "provider_raw": "ollama",
-        "model": "",
-        "api_key": "",
-        "base_url": DEFAULT_PROVIDER_BASE_URLS["ollama"],
-        "ollama_thinking_enabled": False,
-        "json_mode": "disabled",
-        "web_search_enabled": True,
-        "web_search_provider": "auto",
-        "brave_search_api_key": "",
-        "tavily_search_api_key": "",
-        "perplexity_search_api_key": "",
-        "serper_search_api_key": "",
-        "profile_id": "",
-    }
+    base = fallback or _empty_config()
     raw_provider = normalize_wire_provider(str(draft.get("provider") or base["provider_raw"]))
     canonical = canonical_provider(raw_provider)
     base_url = str(draft.get("baseUrl") or base["base_url"] or "").strip()
@@ -235,12 +243,11 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
     else:
         web_search_enabled = bool(web_enabled) if not isinstance(web_enabled, str) else parse_bool(web_enabled)
     web_provider = str(draft.get("webSearchProvider") or base["web_search_provider"] or "auto")
-    search_keys = {}
+    search_keys = dict(base.get("web_search_api_keys") or empty_web_search_api_keys())
     for column, wire in WEB_SEARCH_SECRET_WIRE_FIELDS:
         draft_value = draft.get(wire)
-        search_keys[column] = (
-            str(base.get(column) or "") if draft_value in (None, MASKED_SECRET) else str(draft_value)
-        )
+        if draft_value not in (None, MASKED_SECRET):
+            search_keys[secret_provider_from_column(column)] = str(draft_value)
     return {
         "provider": canonical,
         "provider_raw": raw_provider,
@@ -251,9 +258,8 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
         "json_mode": json_mode,
         "web_search_enabled": web_search_enabled,
         "web_search_provider": web_provider,
-        "brave_search_api_key": search_keys["brave_search_api_key"],
-        "tavily_search_api_key": search_keys["tavily_search_api_key"],
-        "perplexity_search_api_key": search_keys["perplexity_search_api_key"],
-        "serper_search_api_key": search_keys["serper_search_api_key"],
+        "web_search_api_keys": {
+            provider: str(search_keys.get(provider) or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
+        },
         "profile_id": str(draft.get("llmProfileId") or draft.get("id") or base.get("profile_id") or ""),
     }

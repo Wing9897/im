@@ -19,7 +19,7 @@ Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `
 
 There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 45. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 45 is the wipe-only floor** (`SCHEMA_SEMVER` `0.1.0-beta.46`; prior stamps ≤44 hard-reject). This stamp extends `llm_profiles.web_search_provider` CHECK with `serper` (in addition to `tavily`／`perplexity`), and adds column-encrypted `serper_search_api_key` (same pattern as `brave_search_api_key`). Assistant `web.fetch` is first-party HTML fetch gated by tool web-search mode — **no extra column**. **Stamps 27–44 are absorbed into this floor** — do not keep a per-stamp migration narrative here. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 45 is the wipe-only floor** (`SCHEMA_SEMVER` `0.1.0-beta.46`; prior stamps ≤44 hard-reject). This stamp extends `llm_profiles.web_search_provider` CHECK with `serper` (in addition to `tavily`／`perplexity`), and adds column-encrypted `serper_search_api_key` (same pattern as `brave_search_api_key`). Wire names (`braveSearchApiKey` …) and Pydantic/OpenAPI fields are generated from `server/domain/web_search_providers.py` — do not hand-list them. Assistant `web.fetch` is first-party HTML fetch gated by tool web-search mode — **no extra column**. **Stamps 27–44 are absorbed into this floor** — do not keep a per-stamp migration narrative here. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
 ## Schema v45 explicit reset
 

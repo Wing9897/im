@@ -34,6 +34,7 @@ from server.domain.web_search_providers import (
     WEB_SEARCH_PROVIDER_CHECK_SQL,
     WEB_SEARCH_SECRET_COLUMNS,
     WEB_SEARCH_SECRET_WIRE_FIELDS,
+    WEB_SEARCH_SECRET_WIRE_NAMES,
 )
 
 
@@ -116,19 +117,14 @@ def test_web_search_providers_match_ddl_check_and_routing() -> None:
     assert set(ALL_WEB_SEARCH_PROVIDERS) == ALLOWED_WEB_SEARCH_PROVIDERS
     for provider in ALL_WEB_SEARCH_PROVIDERS:
         assert normalize_web_search_setting(provider) == provider
-    assert KEYED_WEB_SEARCH_PROVIDERS == ("brave", "tavily", "perplexity", "serper")
-    assert WEB_SEARCH_SECRET_COLUMNS == (
-        "brave_search_api_key",
-        "tavily_search_api_key",
-        "perplexity_search_api_key",
-        "serper_search_api_key",
-    )
-    assert WEB_SEARCH_SECRET_WIRE_FIELDS == (
-        ("brave_search_api_key", "braveSearchApiKey"),
-        ("tavily_search_api_key", "tavilySearchApiKey"),
-        ("perplexity_search_api_key", "perplexitySearchApiKey"),
-        ("serper_search_api_key", "serperSearchApiKey"),
-    )
+    from server.api.schemas.requests.llm_profiles import LlmProfileUpsertBody
+    from server.api.schemas.responses.llm_profiles import LlmProfileResponse
+
+    assert tuple(f"{provider}_search_api_key" for provider in KEYED_WEB_SEARCH_PROVIDERS) == WEB_SEARCH_SECRET_COLUMNS
+    assert tuple(wire for _, wire in WEB_SEARCH_SECRET_WIRE_FIELDS) == WEB_SEARCH_SECRET_WIRE_NAMES
+    for wire in WEB_SEARCH_SECRET_WIRE_NAMES:
+        assert wire in LlmProfileUpsertBody.model_fields
+        assert wire in LlmProfileResponse.model_fields
     for column in WEB_SEARCH_SECRET_COLUMNS:
         assert column in llm_ddl.DDL
         assert llm_ddl.DDL.count(column) == 1

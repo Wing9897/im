@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES
+from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_NAMES
 from server.secrets import MASKED_SECRET
 from server.tests.contract_helpers import assert_keys
+from server.tests.seed import LLM_PROFILE_INSERT_SQL
 
 PROFILE_KEYS = [
     "id",
@@ -18,10 +20,7 @@ PROFILE_KEYS = [
     "jsonMode",
     "webSearchEnabled",
     "webSearchProvider",
-    "braveSearchApiKey",
-    "tavilySearchApiKey",
-    "perplexitySearchApiKey",
-    "serperSearchApiKey",
+    *WEB_SEARCH_SECRET_WIRE_NAMES,
     "staffClasses",
     "staffInstances",
     "createdAt",
@@ -239,13 +238,21 @@ async def test_task_create_rejects_incomplete_profile(client, app):
     incomplete_id = "profile-incomplete"
     now = "2026-07-01T12:00:00+00:00"
     await app.state.db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, "
-        "created_at, updated_at"
-        ") VALUES (?, 'Incomplete', 'ollama', 'http://localhost:11434', '', '', 0, 'disabled', "
-        "1, 'auto', '', ?, ?)",
-        (incomplete_id, now, now),
+        LLM_PROFILE_INSERT_SQL,
+        (
+            incomplete_id,
+            "Incomplete",
+            "ollama",
+            "http://localhost:11434",
+            "",
+            "",
+            0,
+            "disabled",
+            1,
+            "auto",
+            now,
+            now,
+        ),
     )
     create = await client.post(
         "/api/v1/tasks",

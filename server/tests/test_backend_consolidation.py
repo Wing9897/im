@@ -173,6 +173,14 @@ def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
     for value in ALL_ANALYSIS_TIME_RANGES:
         assert repr(value) in TASK_CONFIG_SCHEMA_PROMPT
 
+    from server.domain.web_search_providers import ALL_WEB_SEARCH_PROVIDERS, KEYED_WEB_SEARCH_PROVIDERS
+
+    search_route_path = root / "web" / "src" / "domain" / "settings" / "assistantWebSearchRoute.ts"
+    fe_search_providers = _parse_ts_string_array(search_route_path, "ALL_WEB_SEARCH_PROVIDERS")
+    assert fe_search_providers == ALL_WEB_SEARCH_PROVIDERS
+    fe_keyed_search = _parse_ts_string_array(search_route_path, "KEYED_WEB_SEARCH_TOOL_PROVIDERS")
+    assert fe_keyed_search == KEYED_WEB_SEARCH_PROVIDERS
+
     fe_caps = _parse_ts_capability_booleans(mode_caps_path)
     assert set(fe_caps) == set(ALL_ANALYSIS_MODES)
     for spec in ANALYSIS_MODE_SPECS:

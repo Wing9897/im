@@ -6,12 +6,15 @@ import {
   isOfficialOpenaiBase,
   keyedWebSearchApiKeyField,
   keyedWebSearchApiKeysFromFields,
+  keyedWebSearchFieldMeta,
   llmHasNativeWebSearch,
   normalizeWebSearchProviderSetting,
   resolveAssistantWebSearchStatus,
   resolveWebSearchToolProvider,
   resolveWebSearchUiMode,
   settingsFromWebSearchUiMode,
+  webSearchProviderLabelKey,
+  webSearchToolStatusKey,
 } from "./assistantWebSearchRoute";
 
 describe("assistantWebSearchRoute", () => {
@@ -231,5 +234,16 @@ describe("assistantWebSearchRoute", () => {
     expect(keyedWebSearchApiKeysFromFields(emptyKeyedWebSearchApiKeyFields())).toEqual(
       emptyKeyedWebSearchApiKeys(),
     );
+  });
+
+  it("derives i18n keys from vendor ids without a hand-listed map", () => {
+    expect(webSearchProviderLabelKey("duckduckgo")).toBe("webSearch.providers.duckduckgo");
+    expect(webSearchToolStatusKey("brave")).toBe("webSearch.statusTool.brave");
+    expect(keyedWebSearchFieldMeta("serper")).toEqual({
+      id: "serper-search-api-key",
+      labelKey: "webSearch.keys.serper.label",
+      helpKey: "webSearch.keys.serper.help",
+      placeholderKey: "webSearch.keys.serper.placeholder",
+    });
   });
 });

@@ -5,7 +5,6 @@
 import { apiClient } from "./client";
 import type {
   AnalysisEventPage,
-  CalendarOccurrence,
   Message,
   QueueStatus,
   TaskAnalysisStats,
@@ -121,30 +120,6 @@ export async function fetchTimelineEvents({
     .map(asTimedAnalysisEvent)
     .filter((event): event is TimelineItem => event !== null)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
-}
-
-/**
- * RRULE + item DATE expand helper for tests / MCP-adjacent clients.
- * SPA time-window reads (timeline, board, notify scan) use ``fetchCalendarWindow``.
- */
-export function fetchCalendarOccurrences(
-  rangeStart: string,
-  rangeEnd: string,
-  opts?: { seriesId?: string; seriesIds?: string[]; includeItems?: boolean },
-): Promise<CalendarOccurrence[]> {
-  const query: Record<string, string | string[]> = {
-    rangeStart,
-    rangeEnd,
-  };
-  if (opts?.seriesIds !== undefined) {
-    query.seriesIds = opts.seriesIds;
-  } else if (opts?.seriesId !== undefined) {
-    query.seriesId = opts.seriesId;
-  }
-  if (opts?.includeItems === false) {
-    query.includeItems = "false";
-  }
-  return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/occurrences", query);
 }
 
 /** Fetches the current analysis queue status (pending count, processing batches, pause state). */
