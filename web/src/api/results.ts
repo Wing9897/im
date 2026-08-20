@@ -123,7 +123,10 @@ export async function fetchTimelineEvents({
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
-/** Fetches expanded recurring-series + optional item DATE rows within an ISO range. */
+/**
+ * RRULE + item DATE expand helper for tests / MCP-adjacent clients.
+ * SPA time-window reads (timeline, board, notify scan) use ``fetchCalendarWindow``.
+ */
 export function fetchCalendarOccurrences(
   rangeStart: string,
   rangeEnd: string,

@@ -1,7 +1,8 @@
-"""Unified calendar window (timeline / board SoT).
+"""Unified calendar window (display + notify-scan SoT).
 
 One GET merges analysis, user, recurring, and item_remind occurrences via
 ``query_window``. Intelligence pages and the board map keep ``GET /results/events``.
+User-events / recurring CRUD stay on their own routes for 我的日程 editors.
 """
 
 from __future__ import annotations

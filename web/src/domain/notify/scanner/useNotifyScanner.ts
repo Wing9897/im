@@ -96,15 +96,14 @@ export function useNotifyScanner(): void {
         const maxLead = getMaxLeadMinutes(settings.leadOffsetsMinutes);
         const { rangeStart, rangeEnd } = computeFetchRange(nowMs, maxLead);
 
-        const sources = await fetchReminderSourceRows(rangeStart, rangeEnd);
-        if (!sources || cancelled) {
+        const windowItems = await fetchReminderSourceRows(rangeStart, rangeEnd);
+        if (!windowItems || cancelled) {
           return;
         }
 
         const taskNameById = mergeCatalogTaskNames(
           catalogTaskNamesRef.current,
-          sources.analysisRows,
-          sources.calendarRows,
+          windowItems,
         );
         const seriesById = await seriesNotifyMap();
         if (cancelled) {
@@ -112,9 +111,7 @@ export function useNotifyScanner(): void {
         }
 
         const events = buildFilteredReminderEvents({
-          analysisRows: sources.analysisRows,
-          userRows: sources.userRows,
-          calendarRows: sources.calendarRows,
+          windowItems,
           taskNameById,
           globalEnabled: settings.enabled,
           quietHoursActive,

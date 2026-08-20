@@ -84,20 +84,6 @@ vi.mock("../api/results", () => ({
     totalCount: 1,
     hasMore: false,
   })),
-  fetchCalendarOccurrences: vi.fn(async () => [
-    {
-      id: "c1",
-      taskId: "t1",
-      title: "會議",
-      taskName: "T",
-      startTime: new Date().toISOString(),
-      endTime: new Date().toISOString(),
-      isAllDay: false,
-      location: null,
-      description: null,
-      rrule: "FREQ=DAILY",
-    },
-  ]),
   fetchQueueStatus: vi.fn(async () => ({
     pendingCount: 0,
     processingBatches: [],

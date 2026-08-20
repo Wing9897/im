@@ -92,7 +92,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`occurrences`／`holidays`／`imports`／`dismissals`／`user-events`／`recurring`／`importance`), worksets, items, llm, mcp, theme, ui-prefs, setup, access-keys, a2a, events SSE) |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`window`／`occurrences`／`holidays`／`imports`／`dismissals`／`user-events`／`recurring`／`importance`), worksets, items, llm, mcp, theme, ui-prefs, setup, access-keys, a2a, events SSE) |
 | `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
 | `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
 | `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; worksets in `serializer_domains/worksets.py`; shared by HTTP and non-HTTP callers) |
@@ -126,7 +126,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `agent/tool_args.py` | Coercion for LLM-supplied tool arguments (int / bool / optional / camelCase-or-snake_case key aliases) — the one implementation every `tools_*` module uses |
 | `web_search/` | Multi-provider clients (DuckDuckGo default, Brave optional) + shared `WebSearchExecutionService` (`execution.py`) used by assistant / agent `web.search` tool (agent ticks via AgentRuntime; count / master-switch as params) |
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
-| `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus user-event services (`user_events_read`／`user_events_write`／`user_events_normalize`) + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`occurrences`／`holidays`／`imports`／`dismissals`／`importance`／`user-events`／`recurring`). Retired `GET /api/v1/calendar/items` is 404. |
+| `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus user-event services (`user_events_read`／`user_events_write`／`user_events_normalize`) + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`window`／`occurrences`／`holidays`／`imports`／`dismissals`／`importance`／`user-events`／`recurring`). Retired `GET /api/v1/calendar/items` is 404. |
 | `services/task_writes.py` | Shared task and series write validation: trigger/calendar RRULE canonicalization, parent-agent invariant, and `HH:MM` clock normalization |
 | `services/task_policy.py` | HTTP-agnostic task write policy (`ALLOWED_MODES`, agent-policy fields, workset resolve, require-row); routes map `TaskWriteError` → 422 |
 | `services/task_crud.py` | Task CRUD façade (`task_crud_list` / `task_crud_mutate`) for REST catalog + mutations |
@@ -227,7 +227,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Month weather hook | `hooks/useMonthWeather` | Weather board widget + Timeline month grid |
 | Month holidays hook | `hooks/useMonthHolidays` | Timeline calendar overlay (same weather location) |
 | Map markers UI | `components/map/` | Map board embed + MapView |
-| Timed event merge | `domain/timeline/timedEventMerge` | Board calendar/gantt/events + timeline RRULE projectors |
+| Timed event merge | `domain/timeline/timedEventMerge` | Board calendar/gantt/events + timeline window projectors |
 | Source filter dialog | `components/SourceFilterDialog` | Board widgets + timeline/intelligence/voice toolbars |
 
 **Forbidden**: `hooks/` and `components/` must not import from `pages/` (enforced by `tests/smoke/architecture-invariants.test.ts`). Shared helpers that hooks or components need belong in `domain/` (or lower), not under a page folder. `board/` must not deep-import `pages/*` (also ESLint).
@@ -378,7 +378,7 @@ Three verbs — do **not** collapse them:
 
 #### Calendar on timeline (source vs item-linked kind)
 
-Timeline merge rows use wire `source`; item linkage and `user_events.kind` are orthogonal:
+Timeline window rows use wire `source`; item linkage and `user_events.kind` are orthogonal:
 
 | Timeline row | Meaning |
 |--------------|---------|
@@ -401,8 +401,8 @@ Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stam
 - Location may be inferred from context; global/online/unspecified places (and missing location) persist as coordinates `0,0`. Time fields are filled only when a schedulable time exists. Evidence style (`analysisStrategyMode`) still controls which items to emit.
 - Persistence: timed rows UPSERT on `(task_id, version, event_key)`; untimed rows `INSERT OR IGNORE` on `(task_id, version, content_hash)` with `semantic_hash` near-dedup.
 - Geocode runs when an item has a usable `location` and missing coordinates (not gated by legacy task mode).
-- Primary API: `GET /api/v1/results/events` (`hasTime`, `hasCoords`, `startDate`／`endDate`, sort, offset pagination — HTTP camelCase only).
-- UI keeps **/intelligence** and **/timeline** as separate pages sharing the Event API (map needs coords; timeline needs `startTime`). **/items** is a peer page (visible in simple mode) for trackable inventory. Timeline page-loads timed analysis events for its visible date window, then merges RRULE recurring occurrences, overlapping `user_events`, and active item remind DATE projections (`source=item_remind`) for selected worksets. Toolbar source filter: **全部** (`null`) = all sources; selecting a workset includes that workset’s user_events **and** items (no isolated items bucket); selecting a concrete **intel_event / agent** analysis task = that task’s analysis rows **plus** `user_events` with matching provenance `task_id`; selecting a **recurring series** = that series’ RRULE rows **plus** matching provenance. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId=null`) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__general__` as「一般」.
+- Time-window SoT: `GET /api/v1/calendar/window` for Timeline, Board calendar/gantt, and notify scan (server-merged analysis, RRULE occurrences, `user_events`, and `item_remind`). `/results/events` (`hasTime`, `hasCoords`, `startDate`／`endDate`, sort, offset pagination — HTTP camelCase only) is intel/map only. User-events／recurring CRUD stay for 我的日程 editors; `GET /api/v1/calendar/occurrences` is MCP／assistant／internal expand, not SPA time-window reads.
+- UI keeps **/intelligence** and **/timeline** as separate pages. **/items** is a peer page (visible in simple mode) for trackable inventory. Toolbar source filter: **全部** (`null`) = all sources; selecting a workset includes that workset’s user_events **and** items (no isolated items bucket); selecting a concrete **intel_event / agent** analysis task = that task’s analysis rows **plus** `user_events` with matching provenance `task_id`; selecting a **recurring series** = that series’ RRULE rows **plus** matching provenance. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId=null`) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__general__` as「一般」.
 
 ### Schema support matrix
 
@@ -439,7 +439,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
 | `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `intel_event` / `leaderboard` / `agent` |
-| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/window` for Timeline／Board display; `GET /api/v1/calendar/occurrences` still used by notify) | `recurring` only |
+| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/window` is SoT for time-window reads — Timeline／Board display and notify scan; `/results/events` is intel/map only; user-events／recurring CRUD stay for 我的日程 editors) | `recurring` only |
 
 - FE editor presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE **locally** in the client (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). They are **not** on the HTTP wire.
 - **Create/update/read SoT is `scheduleRrule` alone** — clients send and receive the canonical RRULE. Runtime registration reads `analysis_tasks.schedule_rrule` only (`schedule_trigger_from_rrule`).
@@ -530,7 +530,7 @@ Drift-prone routes use bodies from `server/api/schemas/requests/` and `response_
 
 ### Removed endpoints
 
-Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`); retired `GET /api/v1/channels/with-sources` is 404. Calendar display SoT: `GET /api/v1/calendar/window`; RRULE/item expand also remains on `GET /api/v1/calendar/occurrences` (notify). Imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
+Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`); retired `GET /api/v1/channels/with-sources` is 404. Calendar time-window SoT: `GET /api/v1/calendar/window` (display and notify scan); `/results/events` is intel/map only; user-events／recurring CRUD stay for 我的日程 editors. `GET /api/v1/calendar/occurrences` remains for MCP／assistant／internal RRULE expand (not SPA time-window reads). Imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
 
 ### Startup readiness (perf note)
 

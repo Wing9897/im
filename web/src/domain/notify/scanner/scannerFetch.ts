@@ -1,6 +1,5 @@
-import { fetchCalendarOccurrences, fetchTimelineEvents } from "../../../api/results";
+import { fetchCalendarWindow, type CalendarWindowItem } from "../../../api/calendarWindow";
 import { listRecurringSeries } from "../../../api/recurringSeries";
-import { listUserEventsPage } from "../../../api/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { AnalysisTask } from "../../../types/tasks";
 import { logWarn } from "../../../utils/logger";
@@ -28,6 +27,12 @@ type CalendarScanRow = {
   source?: string | null;
   notifyPref?: string | null;
 };
+
+function hasStartTime(
+  row: CalendarWindowItem,
+): row is CalendarWindowItem & { startTime: string } {
+  return Boolean(row.startTime);
+}
 
 export function worksetNotifyMap(
   worksets: readonly { id: string; notifyEnabled?: boolean | null }[],
@@ -87,24 +92,20 @@ export function splitCalendarRows(
   };
 }
 
+/** Time-window SoT: one ``GET /calendar/window`` for all reminder sources. */
 export async function fetchReminderSourceRows(
   rangeStart: string,
   rangeEnd: string,
-): Promise<{
-  analysisRows: Awaited<ReturnType<typeof fetchTimelineEvents>>;
-  userRows: Awaited<ReturnType<typeof listUserEventsPage>>["items"];
-  calendarRows: Awaited<ReturnType<typeof fetchCalendarOccurrences>>;
-} | null> {
+): Promise<CalendarWindowItem[] | null> {
   try {
-    const [analysisRows, userRows, calendarRows] = await Promise.all([
-      fetchTimelineEvents({
-        startDate: rangeStart,
-        endDate: rangeEnd,
-      }),
-      listUserEventsPage({ start: rangeStart, end: rangeEnd }).then((page) => page.items),
-      fetchCalendarOccurrences(rangeStart, rangeEnd),
-    ]);
-    return { analysisRows, userRows, calendarRows };
+    return await fetchCalendarWindow({
+      start: rangeStart,
+      end: rangeEnd,
+      includeAnalysis: true,
+      includeUser: true,
+      includeRecurring: true,
+      includeItems: true,
+    });
   } catch (error) {
     logWarn("[notify] failed to fetch reminder sources", error);
     return null;
@@ -113,16 +114,17 @@ export async function fetchReminderSourceRows(
 
 export function mergeCatalogTaskNames(
   catalogTaskNames: ReadonlyMap<string, string>,
-  analysisRows: ReadonlyArray<{ taskId?: string | null; taskName?: string | null }>,
-  calendarRows: ReadonlyArray<{ seriesId?: string | null; taskName?: string | null }>,
+  windowItems: ReadonlyArray<{
+    taskId?: string | null;
+    seriesId?: string | null;
+    taskName?: string | null;
+  }>,
 ): Map<string, string> {
   const taskNameById = new Map<string, string>(catalogTaskNames);
-  for (const row of analysisRows) {
+  for (const row of windowItems) {
     if (row.taskId && row.taskName) {
       taskNameById.set(row.taskId, row.taskName);
     }
-  }
-  for (const row of calendarRows) {
     if (row.seriesId && row.taskName) {
       taskNameById.set(row.seriesId, row.taskName);
     }
@@ -131,9 +133,7 @@ export function mergeCatalogTaskNames(
 }
 
 export function buildFilteredReminderEvents(opts: {
-  analysisRows: Parameters<typeof toTimedKeyEvents>[0];
-  userRows: Parameters<typeof userEventsToTimedKeyEvents>[0];
-  calendarRows: ReadonlyArray<CalendarScanRow>;
+  windowItems: readonly CalendarWindowItem[];
   taskNameById: Map<string, string>;
   globalEnabled: boolean;
   quietHoursActive: boolean;
@@ -141,11 +141,23 @@ export function buildFilteredReminderEvents(opts: {
   catalogTasks: readonly AnalysisTask[];
   seriesById: NotifySeriesLookup;
 }): TimedKeyEvent[] {
-  const calendarSplit = splitCalendarRows(opts.calendarRows);
+  const analysisRows: CalendarWindowItem[] = [];
+  const userRows: CalendarWindowItem[] = [];
+  const calendarRows: CalendarWindowItem[] = [];
+  for (const item of opts.windowItems) {
+    if (item.source === "analysis") {
+      analysisRows.push(item);
+    } else if (item.source === "user") {
+      userRows.push(item);
+    } else {
+      calendarRows.push(item);
+    }
+  }
+  const calendarSplit = splitCalendarRows(calendarRows);
   return filterEventsByNotify(
     mergeTimedKeyEventsById(
-      toTimedKeyEvents(opts.analysisRows, "event"),
-      userEventsToTimedKeyEvents(opts.userRows, opts.taskNameById),
+      toTimedKeyEvents(analysisRows, "event"),
+      userEventsToTimedKeyEvents(userRows.filter(hasStartTime), opts.taskNameById),
       calendarSplit.recurring,
       calendarSplit.items,
     ),
