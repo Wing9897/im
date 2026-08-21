@@ -191,11 +191,7 @@ class ConfigurableLlmClient:
         still leaves ``max_output_tokens`` unset unless a caller passes one.
         """
         messages = [{"role": "user", "content": self._TEST_PROMPT}]
-        probe_cap = (
-            self._GEMINI_PROBE_MAX_OUTPUT_TOKENS
-            if canonical_provider(self.provider) == "gemini"
-            else 1
-        )
+        probe_cap = self._GEMINI_PROBE_MAX_OUTPUT_TOKENS if canonical_provider(self.provider) == "gemini" else 1
         try:
             result = await self.complete(
                 messages,
