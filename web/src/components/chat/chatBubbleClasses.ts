@@ -1,7 +1,7 @@
 /** Shared chat bubble Tailwind classes (assistant + task-editor). */
 
 const BUBBLE_BASE =
-  "rounded-lg px-md py-sm text-body leading-relaxed text-text-primary whitespace-pre-wrap break-words";
+  "rounded-lg px-md py-sm text-body leading-relaxed text-text-primary break-words";
 
 export function userChatBubbleClass(maxWidthRem: 36 | 42 | "full" = 42): string {
   const width =
@@ -10,6 +10,7 @@ export function userChatBubbleClass(maxWidthRem: 36 | 42 | "full" = 42): string 
     width,
     "ml-auto self-end",
     BUBBLE_BASE,
+    "whitespace-pre-wrap",
     "bg-[color-mix(in_srgb,var(--accent)_18%,transparent)]",
   ].join(" ");
 }

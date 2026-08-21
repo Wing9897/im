@@ -17,6 +17,63 @@
   "toolCallsLabel": "Tools called",
   "toolStepsLabel": "Tool steps",
   "toolRunning": "Running…",
+  "toolNames": {
+    "calendar": {
+      "list_calendars": "List calendars",
+      "upcoming": "Upcoming schedule",
+      "recent": "Recent past schedule",
+      "window": "Schedule in window",
+      "get": "Read event",
+      "create_event": "Create event",
+      "create_recurring_series": "Create recurring series",
+      "update_recurring_series": "Update recurring series",
+      "delete_recurring_series": "Delete recurring series",
+      "update_event": "Update event",
+      "delete_event": "Delete event",
+      "mark_important": "Mark important",
+      "unmark_important": "Unmark important"
+    },
+    "items": {
+      "list": "List items",
+      "list_expiring": "Expiring items",
+      "create": "Create item",
+      "update": "Update item"
+    },
+    "messages": {
+      "search": "Search messages"
+    },
+    "worksets": {
+      "list": "List worksets"
+    },
+    "web": {
+      "search": "Web search",
+      "fetch": "Fetch page"
+    },
+    "intelligence": {
+      "search_events": "Search intel"
+    },
+    "tasks": {
+      "consult_advisor": "Consult task advisor"
+    }
+  },
+  "toolSummary": {
+    "ok": "Done",
+    "error": "Error: {error}",
+    "items": "{count} items",
+    "events": "{count} events",
+    "eventInWindow": "{count} in window",
+    "calendars": "{count} calendars",
+    "worksets": "{count} worksets",
+    "messages": "{count} messages",
+    "results": "{count} results",
+    "resultsVia": "{count} results via {provider}",
+    "dismissed": "Dismissed",
+    "deleted": "Deleted",
+    "taskConfigUpdated": "Task config updated",
+    "task": "Task {id}",
+    "pageChars": "{title} ({chars} chars)",
+    "pageTruncated": "{title} truncated ({chars} chars)"
+  },
   "sending": "Thinking…",
   "draft": {
     "label": "Message",

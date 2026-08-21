@@ -5,6 +5,7 @@ import { AiStaffAvatar } from "../aiStaff/AiStaffAvatar";
 import { captionClass } from "../ui";
 import { assistantChatBubbleClass } from "../chat/chatBubbleClasses";
 import { staffIdForAgentTool } from "./assistantToolStaff";
+import { formatToolResultSummary, localizeToolName } from "../../domain/assistant/formatToolSummary";
 
 export type { LiveToolStep };
 
@@ -24,12 +25,13 @@ function ToolStepLabel({
   name: string;
   attributeTaskAdvisor: boolean;
 }) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["assistant", "common"]);
   const staffId = attributeTaskAdvisor ? staffIdForAgentTool(name) : null;
+  const toolLabel = localizeToolName(name, t);
   if (!staffId) {
-    return <span className="font-medium text-text-primary">{name}</span>;
+    return <span className="font-medium text-text-primary">{toolLabel}</span>;
   }
-  const staffName = t(`aiStaff.${staffId}`);
+  const staffName = t(`common:aiStaff.${staffId}`);
   return (
     <span
       className="inline-flex items-center gap-1 font-medium text-text-primary"
@@ -38,7 +40,7 @@ function ToolStepLabel({
     >
       <AiStaffAvatar staffId={staffId} size="xs" label={staffName} />
       <span>{staffName}</span>
-      <span className="font-normal text-text-muted">· {name}</span>
+      <span className="font-normal text-text-muted">· {toolLabel}</span>
     </span>
   );
 }
@@ -66,7 +68,7 @@ export function AssistantLiveToolSteps({
             {step.status === "running" ? (
               <span className="text-text-muted"> — {t("toolRunning")}</span>
             ) : step.resultSummary ? (
-              <span> — {step.resultSummary}</span>
+              <span> — {formatToolResultSummary(step.name, step.resultSummary, t)}</span>
             ) : null}
           </li>
         ))}
@@ -126,7 +128,9 @@ export function AssistantToolSummary({
         {toolCalls.map((call, index) => (
           <li key={`${call.name}-${index}`}>
             <ToolStepLabel name={call.name} attributeTaskAdvisor={attributeTaskAdvisor} />
-            {call.resultSummary ? ` — ${call.resultSummary}` : null}
+            {call.resultSummary
+              ? ` — ${formatToolResultSummary(call.name, call.resultSummary, t)}`
+              : null}
           </li>
         ))}
       </ul>

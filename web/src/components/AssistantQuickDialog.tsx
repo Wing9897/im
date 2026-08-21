@@ -2,17 +2,21 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { Eraser } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { Button, TextArea, captionClass } from "./ui";
+import { Button } from "./ui";
 import { useErrorToast } from "../hooks/useErrorToast";
 import { useAssistantQuick } from "../hooks/useAssistantQuick";
 import { useAssistantSpacePtt } from "../hooks/useAssistantSpacePtt";
 import { useAssistantChat } from "../hooks/useAssistantChat";
 import { isTaskEditorPath } from "../domain/tasks/taskEditorDraftBridge";
 import { AssistantDirectBubbles } from "./assistant/AssistantDirectBubbles";
-import { AssistantMicButton } from "./assistant/AssistantMicButton";
+import { AssistantMarkdown } from "./assistant/AssistantMarkdown";
+import { AssistantComposerShell } from "./assistant/AssistantComposerShell";
 import { AssistantToolSummary } from "./assistant/AssistantToolSteps";
-import { WorksetTargetSelect } from "./assistant/WorksetTargetSelect";
 import { staffIdForAgentTool } from "./assistant/assistantToolStaff";
+import {
+  latestAssistantId,
+  shouldKeepVoiceTurn,
+} from "./assistant/assistantVoiceTurn";
 
 /**
  * Always-on voice host — Space PTT + subtitle flashes.
@@ -37,6 +41,8 @@ export function AssistantQuickDialog() {
   const [historyOpen, setHistoryOpen] = useState(false);
   /** Voice PTT turn stays visible through send after mic release (composer may be closed). */
   const [voiceTurn, setVoiceTurn] = useState(false);
+  const voiceSendStartedRef = useRef(false);
+  const voiceAssistantIdAtArmRef = useRef<string | null>(null);
   const historyRef = useRef<HTMLDivElement | null>(null);
   const {
     messages,
@@ -57,6 +63,8 @@ export function AssistantQuickDialog() {
     stopSpeaking,
     clearChat,
   } = useAssistantChat();
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
   useErrorToast(error);
 
   // Space PTT only when STT really works — never arm keys on desktop browser STT.
@@ -99,6 +107,9 @@ export function AssistantQuickDialog() {
       setHoldArmed(false);
       setShowReadyHint(false);
       setCaptionListening(false);
+      setVoiceTurn(false);
+      voiceSendStartedRef.current = false;
+      voiceAssistantIdAtArmRef.current = null;
       void stopListeningRef.current();
       return;
     }
@@ -124,12 +135,37 @@ export function AssistantQuickDialog() {
   }, [holdArmed, listening, voiceLive]);
 
   useEffect(() => {
-    if (listening || holdArmed) setVoiceTurn(true);
+    if (!(listening || holdArmed)) return;
+    setVoiceTurn((prev) => {
+      if (!prev) {
+        voiceAssistantIdAtArmRef.current = latestAssistantId(messagesRef.current);
+        voiceSendStartedRef.current = false;
+      }
+      return true;
+    });
   }, [holdArmed, listening]);
 
   useEffect(() => {
-    if (!sending && !listening && !holdArmed) setVoiceTurn(false);
-  }, [holdArmed, listening, sending]);
+    if (sending && voiceTurn) {
+      voiceSendStartedRef.current = true;
+    }
+  }, [sending, voiceTurn]);
+
+  useEffect(() => {
+    if (!voiceTurn) return;
+    const keep = shouldKeepVoiceTurn({
+      listening,
+      holdArmed,
+      sending,
+      sendStartedThisTurn: voiceSendStartedRef.current,
+      assistantIdWhenArmed: voiceAssistantIdAtArmRef.current,
+      latestAssistantId: latestAssistantId(messages),
+    });
+    if (!keep) {
+      setVoiceTurn(false);
+      voiceSendStartedRef.current = false;
+    }
+  }, [holdArmed, listening, messages, sending, voiceTurn]);
 
   useEffect(() => {
     if (!composerOpen) setHistoryOpen(false);
@@ -144,102 +180,86 @@ export function AssistantQuickDialog() {
   }, [historyOpen, messages.length, sending]);
 
   const composer: ReactNode = (
-    <div className="im-assistant-direct__composer" data-testid="assistant-caption-composer">
-      {historyOpen ? (
-        <div
-          ref={historyRef}
-          className="im-assistant-direct__composer-history im-auto-scrollbar"
-          data-testid="assistant-caption-history"
-          role="log"
-          aria-label={t("quick.historyPanelAria")}
-        >
-          {messages.length === 0 ? (
-            <p className="im-assistant-direct__composer-history-empty">{t("quick.historyEmpty")}</p>
-          ) : (
-            messages.map((message) => {
-              const advisorStep =
-                taskAdvisorPresence &&
-                message.role === "assistant" &&
-                message.toolCalls?.some((call) => staffIdForAgentTool(call.name) === "taskEditor");
-              return (
-                <div
-                  key={message.id}
-                  className="im-assistant-direct__composer-history-item"
-                  data-role={message.role}
-                  data-testid="assistant-caption-history-item"
-                >
-                  <span className="im-assistant-direct__composer-history-role">
-                    {message.role === "user"
-                      ? t("common:editor.you")
-                      : t("common:aiStaff.assistant")}
-                    {advisorStep ? (
-                      <span
-                        className="im-assistant-direct__composer-history-advisor"
-                        data-testid="assistant-caption-history-advisor"
-                      >
-                        {" · "}
-                        {t("common:aiStaff.taskEditor")}
-                      </span>
+    <AssistantComposerShell
+      variant="overlay"
+      draft={draft}
+      onDraftChange={setDraft}
+      sending={sending}
+      listening={listening}
+      worksetId={worksetId}
+      onWorksetIdChange={setWorksetId}
+      onSend={sendDraft}
+      sttAvailable={sttAvailable}
+      spacePttMode={spacePttMode}
+      startListening={startListening}
+      stopListening={stopListening}
+      onDraftKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeComposer();
+        }
+      }}
+      header={
+        historyOpen ? (
+          <div
+            ref={historyRef}
+            className="im-assistant-direct__composer-history im-auto-scrollbar"
+            data-testid="assistant-caption-history"
+            role="log"
+            aria-label={t("quick.historyPanelAria")}
+          >
+            {messages.length === 0 ? (
+              <p className="im-assistant-direct__composer-history-empty">{t("quick.historyEmpty")}</p>
+            ) : (
+              messages.map((message) => {
+                const advisorStep =
+                  taskAdvisorPresence &&
+                  message.role === "assistant" &&
+                  message.toolCalls?.some((call) => staffIdForAgentTool(call.name) === "taskEditor");
+                return (
+                  <div
+                    key={message.id}
+                    className="im-assistant-direct__composer-history-item"
+                    data-role={message.role}
+                    data-testid="assistant-caption-history-item"
+                  >
+                    <span className="im-assistant-direct__composer-history-role">
+                      {message.role === "user"
+                        ? t("common:editor.you")
+                        : t("common:aiStaff.assistant")}
+                      {advisorStep ? (
+                        <span
+                          className="im-assistant-direct__composer-history-advisor"
+                          data-testid="assistant-caption-history-advisor"
+                        >
+                          {" · "}
+                          {t("common:aiStaff.taskEditor")}
+                        </span>
+                      ) : null}
+                    </span>
+                    {message.role === "user" ? (
+                      <p className="im-assistant-direct__composer-history-text">{message.content}</p>
+                    ) : (
+                      <div className="im-assistant-direct__composer-history-text">
+                        <AssistantMarkdown text={message.content} />
+                      </div>
+                    )}
+                    {message.role === "assistant" &&
+                    message.toolCalls &&
+                    message.toolCalls.length > 0 ? (
+                      <AssistantToolSummary
+                        toolCalls={message.toolCalls}
+                        attributeTaskAdvisor={taskAdvisorPresence}
+                      />
                     ) : null}
-                  </span>
-                  <p className="im-assistant-direct__composer-history-text">{message.content}</p>
-                  {message.role === "assistant" &&
-                  message.toolCalls &&
-                  message.toolCalls.length > 0 ? (
-                    <AssistantToolSummary
-                      toolCalls={message.toolCalls}
-                      attributeTaskAdvisor={taskAdvisorPresence}
-                    />
-                  ) : null}
-                </div>
-              );
-            })
-          )}
-        </div>
-      ) : null}
-      <label className="sr-only" htmlFor="assistant-caption-draft">
-        {t("quick.draftLabel")}
-      </label>
-      <div className="im-assistant-direct__composer-target">
-        <label
-          className={`${captionClass} im-assistant-direct__composer-target-label`}
-          htmlFor="assistant-caption-calendar-task"
-        >
-          {t("targetWorkset.label")}
-        </label>
-        <WorksetTargetSelect
-          id="assistant-caption-calendar-task"
-          value={worksetId}
-          onChange={setWorksetId}
-          disabled={sending}
-          className="im-assistant-direct__composer-target-select"
-          data-testid="assistant-caption-calendar-task"
-        />
-      </div>
-      <div className="im-assistant-direct__composer-input-row">
-        <TextArea
-          id="assistant-caption-draft"
-          data-testid="assistant-caption-draft"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={
-            listening ? t("quick.placeholderListening") : t("quick.placeholderIdle")
-          }
-          rows={2}
-          className="im-assistant-direct__composer-input"
-          disabled={sending}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              closeComposer();
-              return;
-            }
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void sendDraft();
-            }
-          }}
-        />
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : null
+      }
+      afterDraft={
         <Button
           variant="ghost"
           size="icon"
@@ -252,20 +272,8 @@ export function AssistantQuickDialog() {
         >
           <Eraser size={14} strokeWidth={2.2} aria-hidden="true" />
         </Button>
-      </div>
-      <div className="im-assistant-direct__composer-actions">
-        {sttAvailable ? (
-          <AssistantMicButton
-            spacePttMode={spacePttMode}
-            listening={listening}
-            sending={sending}
-            startListening={startListening}
-            stopListening={stopListening}
-            size="sm"
-            className="im-assistant-direct__composer-mic"
-            testId="assistant-caption-ptt"
-          />
-        ) : null}
+      }
+      extraActions={
         <Button
           variant="secondary"
           size="sm"
@@ -275,17 +283,8 @@ export function AssistantQuickDialog() {
         >
           {historyOpen ? t("quick.hideHistory") : t("quick.showHistory")}
         </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          data-testid="assistant-caption-send"
-          onClick={() => void sendDraft()}
-          disabled={sending || !draft.trim()}
-        >
-          {sending ? t("quick.sendingBtn") : t("quick.send")}
-        </Button>
-      </div>
-    </div>
+      }
+    />
   );
 
   if (!captionActive) return null;

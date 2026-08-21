@@ -8,6 +8,14 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 Upgrade from **v1.0.5 is wipe-only stamp 1**. Live DDL matches the former stamp-45 shape; retired stamps (including 2–45) hard-reject with no in-place migration. Reset before opening this build: `uv run python scripts/reset_local_databases.py --apply`. See [SCHEMA-BASELINE](docs/SCHEMA-BASELINE.md).
 
+### Assistant
+
+- Assistant bubbles render a safe Markdown subset (headings, bold, lists, inline code, `[text](url)` links) instead of raw `**`; TTS speaks stripped plain text. Links open in a new tab (`rel="noopener"`); HTML is not parsed.
+- Caption PTT overlay keeps the current turn (user → sending → reply) through the listen-to-send gap; `AGENT_HIDE_MS` starts only after the reply exists.
+- Tool names and English wire summaries (`calendar.upcoming`, `3 items`) show localized labels in assistant chat and Agent tick extras. Server `summarize_tool_result` stays English.
+- Overlay history / bubble max-height is smaller; opening the system-bar composer no longer stacks a duplicate turn bubble over `/monitor`.
+- `/assistant` and the system-bar composer share one draft / workset / PTT / send shell (routes stay separate).
+
 ### Gemini / assistant
 
 - Settings AI test probe uses 64 `maxOutputTokens` for canonical `gemini` and profile `gemini_compatible` (Gemini 3 thought signatures make `maxOutputTokens=1` return empty `MAX_TOKENS`). Settings Test HTTP timeout is 90s (not the global chat timeout). Analysis / assistant `complete()` is unchanged.

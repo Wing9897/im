@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 
+import { plainTextForSpeech } from "../../domain/assistant/assistantMarkdown";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isElectronDesktop } from "../../electron/electronWindow";
@@ -155,12 +156,13 @@ export function useAssistantChatVoice({
     const settings = loadVoiceSettings();
     setTtsEnabled(settings.ttsEnabled);
     const tts = ttsRef.current;
-    if (!settings.ttsEnabled || !tts?.isAvailable() || !text.trim()) {
+    const spoken = plainTextForSpeech(text);
+    if (!settings.ttsEnabled || !tts?.isAvailable() || !spoken) {
       return;
     }
     setSpeaking(true);
     try {
-      await tts.speak(text, ttsSpeakOptionsFromVoiceSettings(settings));
+      await tts.speak(spoken, ttsSpeakOptionsFromVoiceSettings(settings));
     } catch {
       /* TTS failure must not block chat */
     } finally {

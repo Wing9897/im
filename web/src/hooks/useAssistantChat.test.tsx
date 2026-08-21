@@ -530,4 +530,45 @@ describe("useAssistantChat", () => {
     expect(chat().listening).toBe(false);
     expect(ports.stt.stop).toHaveBeenCalled();
   });
+
+  it("strips markdown markers before TTS speak", async () => {
+    const speak = vi.fn(async () => undefined);
+    const handlers = new Set<(ev: { type: string; text?: string; message?: string }) => void>();
+    mockCreateSpeechPorts.mockReturnValue({
+      stt: {
+        providerId: "browser",
+        isAvailable: () => true,
+        start: vi.fn(async () => undefined),
+        stop: vi.fn(async () => undefined),
+        subscribe: (handler: (ev: { type: string; text?: string; message?: string }) => void) => {
+          handlers.add(handler);
+          return () => handlers.delete(handler);
+        },
+      },
+      tts: {
+        providerId: "browser",
+        isAvailable: () => true,
+        speak,
+        cancel: vi.fn(),
+      },
+    });
+    mockStreamAgentChat.mockResolvedValue({
+      sessionId: "srv-tts",
+      message: "**星期六**",
+      toolCalls: [],
+    });
+
+    const chat = await mount();
+    await act(async () => {
+      chat().setDraft("今天星期幾");
+    });
+    await act(async () => {
+      await chat().sendDraft();
+    });
+
+    expect(speak).toHaveBeenCalled();
+    const spoken = String(speak.mock.calls[0]?.[0] ?? "");
+    expect(spoken).toBe("星期六");
+    expect(spoken).not.toContain("*");
+  });
 });

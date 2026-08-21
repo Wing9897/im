@@ -85,6 +85,20 @@ describe("messagesAfterDirectBaseline", () => {
       "a2",
     ]);
   });
+
+  it("keeps a second PTT turn's new assistant id after the first-turn baseline", () => {
+    const msgs = [
+      { id: "u1", role: "user" as const, content: "first" },
+      { id: "a1", role: "assistant" as const, content: "reply one" },
+      { id: "u2", role: "user" as const, content: "second" },
+      { id: "a2", role: "assistant" as const, content: "reply two" },
+    ];
+    const afterFirstHold = messagesAfterDirectBaseline(msgs, new Set());
+    expect(afterFirstHold.map((m) => m.id)).toEqual(["u1", "a1", "u2", "a2"]);
+    const afterSecondHold = messagesAfterDirectBaseline(msgs, new Set(["u1", "a1"]));
+    expect(afterSecondHold.map((m) => m.id)).toEqual(["u2", "a2"]);
+    expect(afterSecondHold.some((m) => m.id === "a2")).toBe(true);
+  });
 });
 
 describe("AssistantDirectBubbles", () => {
@@ -147,6 +161,20 @@ describe("AssistantDirectBubbles", () => {
 
     render({ active: true });
     expect(document.querySelector("[data-testid='assistant-direct-presence']")).toBeNull();
+  });
+
+  it("does not stack turn bubbles while the composer is open", () => {
+    const composer = createElement("div", { "data-testid": "assistant-caption-composer" });
+    armThenShowMessages(
+      [
+        { id: "u1", role: "user", content: "hello" },
+        { id: "a1", role: "assistant", content: "world" },
+      ],
+      { composer, active: true },
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-user-msg']")).toBeNull();
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")).toBeNull();
+    expect(document.querySelector("[data-testid='assistant-caption-composer']")).not.toBeNull();
   });
 
   it("shows dual staff presence only when taskAdvisorPresence is enabled", () => {
@@ -401,5 +429,92 @@ describe("AssistantDirectBubbles", () => {
     expect(portal?.querySelectorAll("[data-testid='assistant-direct-user-avatar']").length).toBeGreaterThanOrEqual(1);
     expect(portal?.querySelectorAll("[data-testid='ai-staff-avatar-assistant']").length).toBeGreaterThanOrEqual(1);
     expect(portal?.querySelectorAll(".im-assistant-direct__row").length).toBeGreaterThanOrEqual(2);
+  });
+
+  function laneOrder(): string[] {
+    const portal = document.querySelector("[data-testid='assistant-direct-bubbles']");
+    if (!portal) return [];
+    return [...portal.querySelectorAll("[data-testid]")]
+      .map((el) => el.getAttribute("data-testid") ?? "")
+      .filter((id) =>
+        id === "assistant-direct-user-msg" ||
+        id === "assistant-direct-sending" ||
+        id === "assistant-direct-msg",
+      );
+  }
+
+  it("keeps sending then reply through the listen-to-send gap and does not hide before reply", () => {
+    render({ listening: true, draft: "hello" });
+    render({ listening: false, sending: false, draft: "", messages: [] });
+    render({
+      listening: false,
+      sending: true,
+      messages: [{ id: "u1", role: "user", content: "hello" }],
+    });
+    expect(document.querySelector("[data-testid='assistant-direct-user-msg']")?.textContent).toBe(
+      "hello",
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-sending']")).not.toBeNull();
+    expect(laneOrder()).toEqual(["assistant-direct-user-msg", "assistant-direct-sending"]);
+
+    act(() => {
+      vi.advanceTimersByTime(AGENT_HIDE_MS + FADE_MS);
+    });
+    expect(document.querySelector("[data-testid='assistant-direct-sending']")).not.toBeNull();
+
+    render({
+      listening: false,
+      sending: false,
+      messages: [
+        { id: "u1", role: "user", content: "hello" },
+        { id: "a1", role: "assistant", content: "**星期六**" },
+      ],
+    });
+    const reply = document.querySelector("[data-testid='assistant-direct-msg']");
+    expect(reply?.textContent).toContain("星期六");
+    expect(reply?.textContent).not.toContain("*");
+    // User lane may already have independently faded (USER_HIDE_MS < AGENT_HIDE_MS).
+    expect(laneOrder().at(-1)).toBe("assistant-direct-msg");
+  });
+
+  it("shows the new assistant id after a second PTT turn", () => {
+    const turn1 = [
+      { id: "u1", role: "user", content: "first" },
+      { id: "a1", role: "assistant", content: "reply one" },
+    ];
+    armThenShowMessages(turn1);
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")?.textContent).toContain(
+      "reply one",
+    );
+
+    render({ listening: true, messages: turn1 });
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")).toBeNull();
+
+    render({
+      listening: false,
+      sending: true,
+      messages: [...turn1, { id: "u2", role: "user", content: "second" }],
+    });
+    expect(document.querySelector("[data-testid='assistant-direct-user-msg']")?.textContent).toBe(
+      "second",
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-sending']")).not.toBeNull();
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")).toBeNull();
+
+    render({
+      listening: false,
+      sending: false,
+      messages: [
+        ...turn1,
+        { id: "u2", role: "user", content: "second" },
+        { id: "a2", role: "assistant", content: "reply two" },
+      ],
+    });
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")?.textContent).toContain(
+      "reply two",
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")?.textContent).not.toContain(
+      "reply one",
+    );
   });
 });

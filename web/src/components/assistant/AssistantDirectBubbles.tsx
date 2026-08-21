@@ -4,6 +4,7 @@ import { Mic } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { captionClass } from "../ui";
 import { assistantChatBubbleClass } from "../chat/chatBubbleClasses";
+import { AssistantMarkdown } from "./AssistantMarkdown";
 import {
   resolveAssistantDisplayName,
   useAssistantIdentity,
@@ -121,7 +122,8 @@ export function AssistantDirectBubbles({
   const agentReply =
     agentFlash && agentFlash.key !== "sending" ? agentFlash : null;
   // Never stack a prior user bar under live STT (double bar of last transcript).
-  const showUserFlash = Boolean(userFlash) && !isListening;
+  const showUserFlash = Boolean(userFlash) && !isListening && !composer;
+  const showAgentReply = Boolean(agentReply) && !composer;
 
   return createPortal(
     <div
@@ -156,6 +158,20 @@ export function AssistantDirectBubbles({
                 <span className="im-assistant-direct__presence-name">{taskAdvisorName}</span>
               </span>
             ) : null}
+          </div>
+        ) : null}
+
+        {readyVisible ? (
+          <div
+            className={[
+              `${captionClass} im-assistant-direct__hint`,
+              readyFading ? "im-assistant-direct__item--fade" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            data-testid="assistant-direct-ready"
+          >
+            {t("direct.readyHint")}
           </div>
         ) : null}
 
@@ -201,20 +217,6 @@ export function AssistantDirectBubbles({
           </div>
         ) : null}
 
-        {readyVisible ? (
-          <div
-            className={[
-              `${captionClass} im-assistant-direct__hint`,
-              readyFading ? "im-assistant-direct__item--fade" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            data-testid="assistant-direct-ready"
-          >
-            {t("direct.readyHint")}
-          </div>
-        ) : null}
-
         {agentSending ? (
           <div className="im-assistant-direct__row">
             <DirectAssistantAvatar label={displayName} src={identity.avatarDataUrl} />
@@ -237,14 +239,14 @@ export function AssistantDirectBubbles({
           </div>
         ) : null}
 
-        {agentReply ? (
+        {showAgentReply && agentReply ? (
           <div className={rowClass(agentReply.fading)}>
             <DirectAssistantAvatar label={displayName} src={identity.avatarDataUrl} />
             <div
               className={`im-assistant-direct__bubble im-auto-scrollbar ${assistantChatBubbleClass("full")}`}
               data-testid="assistant-direct-msg"
             >
-              {agentReply.text}
+              <AssistantMarkdown text={agentReply.text} />
               {latestAssistant?.id === agentReply.key &&
               latestAssistant.toolCalls &&
               latestAssistant.toolCalls.length > 0 ? (

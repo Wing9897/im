@@ -178,7 +178,10 @@ describe("AgentDetailPage", () => {
       "Reconciled demos",
     );
     expect(container.querySelector('[data-testid="project-detail-tool-summary"]')?.textContent).toContain(
-      "calendar.upcoming",
+      "查近日日程",
+    );
+    expect(container.querySelector('[data-testid="project-detail-tool-summary"]')?.textContent).toContain(
+      "2 項",
     );
 
     // Tick log is collapsible and defaults open when an error exists.
