@@ -32,9 +32,18 @@ export function checkAiEngineStatus(): Promise<AiEngineHealthStatus> {
   return apiClient.get<AiEngineHealthStatus>("/api/v1/system/ai-engine/status");
 }
 
-/** Runs a minimal-token generation probe (about one completion token). */
+/**
+ * Settings Test only. A 64-token Gemini probe was ~13s live, but
+ * generateContent first-byte can still exceed the global 30s default
+ * (that abort maps to「請求逾時」). Chat / assistant keep 30s.
+ */
+export const AI_ENGINE_TEST_TIMEOUT_MS = 90_000;
+
+/** Runs a tiny generation probe against a profile-shaped draft (or bound slot). */
 export function testAiEngine(draft: AiEngineTestDraft): Promise<AiEngineTestResult> {
-  return apiClient.post<AiEngineTestResult>("/api/v1/system/ai-engine/test", draft);
+  return apiClient.post<AiEngineTestResult>("/api/v1/system/ai-engine/test", draft, {
+    timeoutMs: AI_ENGINE_TEST_TIMEOUT_MS,
+  });
 }
 
 /** Immediately aborts all in-progress analysis and pauses the analysis engine. */

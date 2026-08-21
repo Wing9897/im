@@ -11,6 +11,7 @@ import {
   restartCollector,
   checkAiEngineStatus,
   testAiEngine,
+  AI_ENGINE_TEST_TIMEOUT_MS,
   emergencyAbortAnalysis,
   setAnalysisPaused,
   requestDatabaseReset,
@@ -117,7 +118,7 @@ describe("system API", () => {
   // ─── testAiEngine ──────────────────────────────────────────────────
 
   describe("testAiEngine", () => {
-    it("posts draft settings for a minimal generation probe", async () => {
+    it("posts draft settings for a tiny generation probe", async () => {
       const draft = {
         provider: "gemini_compatible" as const,
         baseUrl: "https://generativelanguage.googleapis.com/v1beta",
@@ -138,7 +139,9 @@ describe("system API", () => {
 
       const result = await testAiEngine(draft);
 
-      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/system/ai-engine/test", draft);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/system/ai-engine/test", draft, {
+        timeoutMs: AI_ENGINE_TEST_TIMEOUT_MS,
+      });
       expect(result).toEqual(response);
     });
   });

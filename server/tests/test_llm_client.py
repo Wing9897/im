@@ -374,7 +374,27 @@ async def test_complete_attaches_provider_on_http_error() -> None:
     await client.close()
 
 
-async def test_test_completion_gemini_raises_output_floor() -> None:
+async def test_test_completion_gemini_uses_probe_floor() -> None:
+    """Settings Test uses canonical ``gemini`` (not the profile wire name)."""
+    client = ConfigurableLlmClient(
+        provider="gemini",
+        model="gemini-3.1-flash-lite",
+        api_key="test",
+        base_url="https://generativelanguage.googleapis.com/v1",
+        timeout_seconds=5,
+        allow_loopback=False,
+    )
+    client.complete = AsyncMock(return_value={"text": "ok", "prompt_tokens": 6, "completion_tokens": 1})
+    result = await client.test_completion()
+    assert result["success"] is True
+    called = client.complete.await_args
+    assert called is not None
+    assert ConfigurableLlmClient._GEMINI_PROBE_MAX_OUTPUT_TOKENS > 1
+    assert called.kwargs["max_output_tokens"] == ConfigurableLlmClient._GEMINI_PROBE_MAX_OUTPUT_TOKENS
+    await client.close()
+
+
+async def test_test_completion_gemini_compatible_alias_uses_probe_floor() -> None:
     client = ConfigurableLlmClient(
         provider="gemini_compatible",
         model="gemini-3.1-flash-lite",
@@ -390,6 +410,29 @@ async def test_test_completion_gemini_raises_output_floor() -> None:
     assert called is not None
     assert called.kwargs["max_output_tokens"] == ConfigurableLlmClient._GEMINI_PROBE_MAX_OUTPUT_TOKENS
     await client.close()
+
+
+async def test_test_completion_from_draft_gemini_uses_probe_floor(app) -> None:
+    client = await ConfigurableLlmClient.from_draft(
+        app.state.db,
+        {
+            "provider": "gemini_compatible",
+            "model": "gemini-3.1-flash-lite",
+            "baseUrl": "https://generativelanguage.googleapis.com/v1",
+            "apiKey": "draft-key",
+            "thinkingEnabled": False,
+        },
+    )
+    try:
+        assert client.provider == "gemini"
+        client.complete = AsyncMock(return_value={"text": "ok", "prompt_tokens": 6, "completion_tokens": 1})
+        result = await client.test_completion()
+        assert result["success"] is True
+        called = client.complete.await_args
+        assert called is not None
+        assert called.kwargs["max_output_tokens"] == ConfigurableLlmClient._GEMINI_PROBE_MAX_OUTPUT_TOKENS
+    finally:
+        await client.close()
 
 
 async def test_test_completion_ollama_keeps_one_token_probe() -> None:
