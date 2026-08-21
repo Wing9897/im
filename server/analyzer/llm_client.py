@@ -33,7 +33,7 @@ from server.analyzer.llm_client_handlers import (
     probe_ollama_bound,
     probe_openai_style_bound,
 )
-from server.analyzer.llm_config import load_agent_llm_config, load_llm_config
+from server.analyzer.llm_config import canonical_provider, load_agent_llm_config, load_llm_config
 from server.analyzer.llm_providers import LlmClientError
 from server.db.database import Database
 from server.outbound import validate_outbound_url
@@ -178,14 +178,24 @@ class ConfigurableLlmClient:
             raise
 
     _TEST_PROMPT = "Reply with exactly: ok"
-    #: Gemini 3 replies include a thought signature. ``maxOutputTokens=1`` returns
-    #: empty text + ``finishReason=MAX_TOKENS`` even for "ok".
+    #: Gemini 3 thought signatures consume the output budget. ``maxOutputTokens=1``
+    #: returns empty text + ``MAX_TOKENS``. 64 was live-proved STOP for flash-lite;
+    #: omitting the cap lets generation run past the Settings Test HTTP timeout.
     _GEMINI_PROBE_MAX_OUTPUT_TOKENS = 64
 
     async def test_completion(self) -> dict[str, Any]:
-        """Run a minimal-token generation probe (about one completion token)."""
+        """Run a tiny generation probe (prompt is ``Reply with exactly: ok``).
+
+        Gemini (canonical or ``gemini_compatible`` wire name) uses
+        ``_GEMINI_PROBE_MAX_OUTPUT_TOKENS``. Analysis / assistant ``complete()``
+        still leaves ``max_output_tokens`` unset unless a caller passes one.
+        """
         messages = [{"role": "user", "content": self._TEST_PROMPT}]
-        probe_cap = self._GEMINI_PROBE_MAX_OUTPUT_TOKENS if self.provider == "gemini_compatible" else 1
+        probe_cap = (
+            self._GEMINI_PROBE_MAX_OUTPUT_TOKENS
+            if canonical_provider(self.provider) == "gemini"
+            else 1
+        )
         try:
             result = await self.complete(
                 messages,

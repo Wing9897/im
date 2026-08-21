@@ -287,6 +287,7 @@ async def test_complete_gemini_thinking_off_sends_minimal_level() -> None:
     assert thinking == {"thinkingLevel": "MINIMAL"}
     assert "thinkingBudget" not in thinking
     assert "thinkingBudget" not in captured["json"]["generationConfig"]
+    assert "maxOutputTokens" not in captured["json"]["generationConfig"]
 
 
 async def test_complete_gemini_thinking_on_omits_thinking_config() -> None:
@@ -310,6 +311,30 @@ async def test_complete_gemini_thinking_on_omits_thinking_config() -> None:
     generation = captured["json"]["generationConfig"]
     assert "thinkingConfig" not in generation
     assert "thinkingBudget" not in generation
+
+
+async def test_complete_gemini_max_output_tokens_is_opt_in() -> None:
+    captured: dict[str, Any] = {}
+
+    def responder(method: str, url: str, **_kwargs: Any) -> _FakeResponse:
+        captured["json"] = _kwargs.get("json")
+        return _ok_gemini_response()
+
+    session = _FakeSession(responder)
+    await complete_gemini(
+        session,  # type: ignore[arg-type]
+        base_url="https://generativelanguage.googleapis.com/v1beta",
+        api_key="gem-key",
+        model="gemini-3.1-flash-lite",
+        messages=[{"role": "user", "content": "hi"}],
+        temperature=0.2,
+        json_mode=False,
+        max_output_tokens=2048,
+        thinking_enabled=False,
+    )
+    generation = captured["json"]["generationConfig"]
+    assert generation["maxOutputTokens"] == 2048
+    assert generation["thinkingConfig"] == {"thinkingLevel": "MINIMAL"}
 
 
 async def test_complete_openai_responses_web_search() -> None:
