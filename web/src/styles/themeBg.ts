@@ -43,6 +43,21 @@ export type FocalCacheEntry = {
 const THEME_BG_MODES = new Set<ThemeBgMode>(["none", "custom", "focal"]);
 const REFRESH_HOURS_SET = new Set<number>(FOCAL_REFRESH_HOUR_OPTIONS);
 
+const MISSING_STORAGE: Pick<Storage, "getItem" | "setItem" | "removeItem"> = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
+
+/**
+ * `localStorage` as a default-arg identifier throws ReferenceError after Vitest
+ * jsdom teardown; `typeof` is safe for an undeclared global.
+ */
+function themeStorage(): Pick<Storage, "getItem" | "setItem" | "removeItem"> {
+  if (typeof localStorage === "undefined") return MISSING_STORAGE;
+  return localStorage;
+}
+
 /** Escape a URL for use inside CSS ``url("...")``. */
 export function cssBackgroundImageUrl(url: string): string {
   const escaped = url.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -90,7 +105,7 @@ export function parseThemeBgMode(raw: string | null | undefined): ThemeBgMode | 
  */
 export function resolveThemeBgMode(
   themeId: string,
-  storage: Pick<Storage, "getItem"> = localStorage,
+  storage: Pick<Storage, "getItem"> = themeStorage(),
 ): ThemeBgMode {
   const id = resolveThemeId(themeId);
   const parsed = parseThemeBgMode(storage.getItem(storageBgModeKey(id)));
@@ -101,12 +116,12 @@ export function resolveThemeBgMode(
 
 export function saveThemeBgMode(themeId: string, mode: ThemeBgMode): void {
   const id = resolveThemeId(themeId);
-  localStorage.setItem(storageBgModeKey(id), mode);
+  themeStorage().setItem(storageBgModeKey(id), mode);
 }
 
 export function loadBgOpacity(themeId: string): number {
   const id = resolveThemeId(themeId);
-  const raw = parseFloat(localStorage.getItem(storageBgOpacityKey(id)) || "0.3");
+  const raw = parseFloat(themeStorage().getItem(storageBgOpacityKey(id)) || "0.3");
   if (!Number.isFinite(raw)) return 0.3;
   return Math.min(0.6, Math.max(0.05, raw));
 }
@@ -135,7 +150,7 @@ export function parseFocalRefreshHours(
 }
 
 export function loadFocalRefreshHours(
-  storage: Pick<Storage, "getItem"> = localStorage,
+  storage: Pick<Storage, "getItem"> = themeStorage(),
 ): FocalRefreshHours {
   return parseFocalRefreshHours(storage.getItem(THEME_FOCAL_REFRESH_HOURS_KEY));
 }
@@ -143,14 +158,14 @@ export function loadFocalRefreshHours(
 export function saveFocalRefreshHours(hours: FocalRefreshHours): void {
   const normalized = parseFocalRefreshHours(String(hours));
   if (normalized === 0) {
-    localStorage.removeItem(THEME_FOCAL_REFRESH_HOURS_KEY);
+    themeStorage().removeItem(THEME_FOCAL_REFRESH_HOURS_KEY);
     return;
   }
-  localStorage.setItem(THEME_FOCAL_REFRESH_HOURS_KEY, String(normalized));
+  themeStorage().setItem(THEME_FOCAL_REFRESH_HOURS_KEY, String(normalized));
 }
 
 export function loadFocalCache(
-  storage: Pick<Storage, "getItem"> = localStorage,
+  storage: Pick<Storage, "getItem"> = themeStorage(),
 ): FocalCacheEntry | null {
   const raw = storage.getItem(THEME_FOCAL_CACHE_KEY);
   if (!raw) return null;
@@ -187,11 +202,11 @@ export function loadFocalCache(
 }
 
 export function saveFocalCache(entry: FocalCacheEntry): void {
-  localStorage.setItem(THEME_FOCAL_CACHE_KEY, JSON.stringify(entry));
+  themeStorage().setItem(THEME_FOCAL_CACHE_KEY, JSON.stringify(entry));
 }
 
 export function clearFocalCache(
-  storage: Pick<Storage, "removeItem"> = localStorage,
+  storage: Pick<Storage, "removeItem"> = themeStorage(),
 ): void {
   storage.removeItem(THEME_FOCAL_CACHE_KEY);
 }

@@ -19,6 +19,7 @@ import {
   resolveThemeBgMode,
   saveFocalCache,
   saveFocalRefreshHours,
+  saveThemeBgMode,
   themeBgWashPct,
   utcDayIso,
   type FocalCacheEntry,
@@ -211,6 +212,26 @@ describe("focal idx cycle + refresh interval prefs", () => {
       imageUrl: "https://example.com/a.jpg",
     };
     expect(isFocalRefreshDue(legacy, 6, 1_000)).toBe(true);
+  });
+
+  it("no-ops when localStorage is gone (Vitest jsdom teardown)", () => {
+    vi.stubGlobal("localStorage", undefined);
+    try {
+      expect(resolveThemeBgMode("nord")).toBe("none");
+      expect(loadFocalCache()).toBeNull();
+      expect(loadFocalRefreshHours()).toBe(0);
+      expect(() =>
+        saveFocalCache({
+          day: "2026-08-12",
+          locale: "en",
+          imageUrl: "https://example.com/a.jpg",
+        }),
+      ).not.toThrow();
+      expect(() => saveFocalRefreshHours(12)).not.toThrow();
+      expect(() => saveThemeBgMode("nord", "focal")).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 
