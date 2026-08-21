@@ -4,7 +4,7 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
-- **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 三平台 Desktop 執行檔 → GitHub Release（不再用 `workflow_run`：skip 的 quality 會把 tag／package 整串跳過）。CLI 用該 tag 源碼。
+- **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 三平台 Desktop 執行檔直接掛到 GitHub Release（不走 Actions artifact，避免 storage quota）。CLI 用該 tag 源碼。
 
 ## [1.0.7] — 2026-08-21
 
