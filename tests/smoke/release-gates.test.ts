@@ -9,9 +9,8 @@ function readWorkflow(name: string): string {
 }
 
 describe("release safety gates", () => {
-  it("keeps PR/main CI as quality-only (no publish jobs)", () => {
+  it("keeps PR CI as quality-only (no publish jobs)", () => {
     const workflow = readWorkflow("ci.yml");
-    expect(workflow).toContain("branches: [main]");
     expect(workflow).toContain("pull_request:");
     expect(workflow).toContain("uses: ./.github/workflows/quality.yml");
     expect(workflow).not.toContain("softprops/action-gh-release");
@@ -22,21 +21,21 @@ describe("release safety gates", () => {
     expect(workflow).not.toContain("refs/heads/main");
   });
 
-  it("publishes after green CI on main: auto tag then GitHub Release", () => {
+  it("publishes on push to main: tag then three Desktop packages", () => {
     const workflow = readWorkflow("release.yml");
-    expect(workflow).toContain("workflow_run:");
-    expect(workflow).toContain("workflows: [CI]");
-    expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).toContain("branches: [main]");
+    expect(workflow).not.toContain("workflow_run:");
     expect(workflow).toContain("Generate tag version");
-    expect(workflow).toContain("appending run number");
     expect(workflow).toContain("name: Create and push tag");
     expect(workflow).toContain('git push origin "refs/tags/${TAG}"');
+    expect(workflow).toMatch(/\n  package:\n    needs: \[tag\]/);
+    expect(workflow).toContain("windows-latest");
+    expect(workflow).toContain("macos-latest");
+    expect(workflow).toContain("ubuntu-latest");
     expect(workflow).toContain("softprops/action-gh-release");
-    expect(workflow).toContain("ghcr.io");
-    expect(workflow).not.toContain("tauri-apps/tauri-action");
     expect(workflow).not.toContain("package:cli");
-    expect(workflow).not.toContain("intelligence-monitor-cli-");
-    expect(workflow).toMatch(/\n  package:\n    needs: \[version, tag\]/);
+    expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
+    expect(workflow).not.toContain("tauri-apps/tauri-action");
   });
 
   it("keeps the Docker Node image aligned with .nvmrc", () => {

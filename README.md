@@ -122,7 +122,7 @@ uv run python -m server
 
 GitHub Release **不附** CLI zip。無 Electron 的部署用 GHCR 映像。`npm run package:cli` 僅本機可選（從 Desktop sidecar 打 zip），不進 CI。
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **CI quality 綠** → **Release** 自動 bump、`git tag`、`git push`、打包三平台 **Desktop**、GitHub Release + GHCR。CLI 用該 tag 的源碼。PR 只跑 CI，不發版。tag 已存在則加 `-update.<run_number>`。發版流程**不** bot 回寫 `VERSION` 到 `main`。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **Release** 跑 quality → 打 tag → 打包 Windows／macOS／Linux Desktop → GitHub Release + GHCR。PR 只跑 **CI** quality。CLI 用該 tag 源碼。tag 已存在則加 `-update.<run_number>`。
 
 ### 容器（GHCR）
 
@@ -135,7 +135,7 @@ docker run --rm -p 18820:18820 -v im-data:/data intelligence-monitor:local
 docker compose up --build
 ```
 
-CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run workflow）推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
+CI 只在 **Release** workflow（`push main`）推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
 
 ### 測試
 
@@ -153,7 +153,7 @@ CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run wo
 |------|------|------|
 | **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 live 檢查（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包** | `dist:*` + `verify:desktop:full` | **push `main` 且 CI 綠** → 自動 tag + 三平台 Desktop → GitHub Release + GHCR。CLI = 該 tag 源碼 |
+| **發行／打包** | `dist:*` + `verify:desktop:full` | **push `main`** → quality → tag → 三平台 Desktop → GitHub Release + GHCR。CLI = 該 tag 源碼 |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -193,8 +193,7 @@ CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run wo
 | 觸發 | 行為 |
 |------|------|
 | **PR** | **CI**：只跑 `quality`。不發版 |
-| **push `main`** | **CI** `quality` 綠 → **Release** 自動 bump／`git tag`／`git push` → 三平台 Desktop → GitHub Release + GHCR。CLI 用該 tag 源碼 |
-| **Release → Run workflow** | 手動補發（先 quality，再同上） |
+| **push `main`** | **Release**：quality → bump／`git tag`／`git push` → 三平台 Desktop 執行檔 → GitHub Release + GHCR。CLI 用該 tag 源碼 |
 
 **版本權威（勿混用）：**
 - **產品 SemVer** = **git tags**（`v*`）／GitHub Release
@@ -203,7 +202,7 @@ CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run wo
 
 每次手動發版 bump（已有 `v*` tag 時）：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）。**無任何 `v*` tag 時不 bump**，直接用 `VERSION` 原樣作為首發。打包時把算出的版本注入工作區（不改分支歷史）。本機若要對齊檔案：`python scripts/bump_version.py --from-tags --write` 再 `npm run sync:version`（預設不寫盤）。
 
-一句話：**PR 只做 quality；push `main` 且 CI 綠就自動打 tag、打包、發 GitHub Release——不改 main 歷史；stamp／SCHEMA_SEMVER 另軌。**
+一句話：**PR 只做 quality；`git push` 到 `main` 就在同一條 Release 流水線打 tag、打包三平台 Desktop、發 GitHub Release；CLI 用該 tag 源碼。**
 
 本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 

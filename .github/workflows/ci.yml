@@ -1,12 +1,10 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
-# PR / main: quality only. Green CI on main starts Release (auto tag + GitHub Release).
+# PRs: quality only. Push to main runs Release (quality + tag + 3-platform Desktop).
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false

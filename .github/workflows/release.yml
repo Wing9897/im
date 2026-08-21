@@ -1,14 +1,10 @@
 name: Release
 
-run-name: ${{ github.event_name == 'workflow_run' && format('main {0}', github.event.workflow_run.head_sha) || 'manual' }}
-
-# push main → CI quality green → this workflow: tag + package + GitHub Release + GHCR
-# workflow_dispatch still works (runs quality first). Do not tag locally.
+# git push origin main → quality → git tag + push → win/mac/linux Desktop → GitHub Release + GHCR
+# CLI is source (clone the tag). No skipped jobs on this path.
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -27,35 +23,30 @@ permissions:
 
 env:
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
-  RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
 jobs:
   quality:
-    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/quality.yml
     permissions:
       contents: read
 
-  version:
+  tag:
     needs: [quality]
-    if: |
-      always() && (
-        (github.event_name == 'workflow_dispatch' && needs.quality.result == 'success') ||
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-      )
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     outputs:
-      version: ${{ steps.bump.outputs.version }}
-      tag_name: ${{ steps.bump.outputs.tag_name }}
+      version: ${{ steps.check.outputs.version }}
+      tag_name: ${{ steps.check.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ env.RELEASE_SHA }}
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Generate tag version
-        id: bump
+        id: check
         env:
           INPUT_VERSION: ${{ github.event.inputs.version || '' }}
         shell: bash
@@ -81,35 +72,21 @@ jobs:
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag_name=${tag}" >> "$GITHUB_OUTPUT"
-          echo "RELEASE_VERSION=${version} (tag ${tag}) @ ${RELEASE_SHA}"
-
-  tag:
-    needs: [version]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ env.RELEASE_SHA }}
-          fetch-depth: 0
-          persist-credentials: true
 
       - name: Create and push tag
         env:
-          TAG: ${{ needs.version.outputs.tag_name }}
+          TAG: ${{ steps.check.outputs.tag_name }}
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${TAG}" "${RELEASE_SHA}"
+          git tag "${TAG}" "${GITHUB_SHA}"
           git push origin "refs/tags/${TAG}"
-          echo "Pushed ${TAG} @ ${RELEASE_SHA}"
+          echo "Pushed ${TAG} @ ${GITHUB_SHA}"
 
   package:
-    needs: [version, tag]
+    needs: [tag]
     strategy:
       fail-fast: false
       matrix:
@@ -132,7 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ env.RELEASE_SHA }}
+          ref: ${{ github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -160,7 +137,7 @@ jobs:
 
       - name: Apply release version (workspace only)
         env:
-          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_VERSION: ${{ needs.tag.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
@@ -191,7 +168,7 @@ jobs:
       - name: Upload Desktop artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}-${{ env.RELEASE_SHA }}
+          name: ${{ matrix.artifact }}-${{ github.sha }}
           path: |
             desktop/release/*.exe
             desktop/release/*.dmg
@@ -204,19 +181,19 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [package, version, tag]
+    needs: [package, tag]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ env.RELEASE_SHA }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Download Desktop artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-release-${{ env.RELEASE_SHA }}"
+          pattern: "*-release-${{ github.sha }}"
           path: release-assets
           merge-multiple: true
 
@@ -263,26 +240,28 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ needs.version.outputs.tag_name }}
-          name: ${{ needs.version.outputs.tag_name }}
-          target_commitish: ${{ env.RELEASE_SHA }}
+          tag_name: ${{ needs.tag.outputs.tag_name }}
+          name: ${{ needs.tag.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           body: |
-            Automated release **${{ needs.version.outputs.tag_name }}** from `${{ env.RELEASE_SHA }}`.
+            Automated release **${{ needs.tag.outputs.tag_name }}** from `${{ github.sha }}`.
 
-            Desktop installers are attached. CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server` (or `intelligence-monitor`). Headless container: GHCR.
-          prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') || contains(needs.version.outputs.tag_name, 'update') }}
+            Desktop installers (Windows / macOS / Linux) are attached.
+            CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server`.
+            Container: GHCR.
+          prerelease: ${{ contains(needs.tag.outputs.tag_name, 'beta') || contains(needs.tag.outputs.tag_name, 'alpha') || contains(needs.tag.outputs.tag_name, 'rc') || contains(needs.tag.outputs.tag_name, 'update') }}
           fail_on_unmatched_files: true
           files: |
             staged/*
 
   container:
-    needs: [version, tag]
+    needs: [tag]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ env.RELEASE_SHA }}
+          ref: ${{ github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -290,7 +269,7 @@ jobs:
 
       - name: Apply release version (workspace only)
         env:
-          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_VERSION: ${{ needs.tag.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
@@ -318,8 +297,8 @@ jobs:
           images: ${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ needs.version.outputs.tag_name }}
-            type=raw,value=sha-${{ env.RELEASE_SHA }}
+            type=raw,value=${{ needs.tag.outputs.tag_name }}
+            type=raw,value=sha-${{ github.sha }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -335,7 +314,7 @@ jobs:
         run: |
           set -euo pipefail
           image="${{ steps.image.outputs.name }}"
-          tag="sha-${{ env.RELEASE_SHA }}"
+          tag="sha-${{ github.sha }}"
           docker pull "${image}:${tag}"
           cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
           cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }

@@ -181,7 +181,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
-- GitHub Actions: Ubuntu `quality` + build on PR／main（`ci.yml`）；**push `main` 且 CI 綠** 後 `release.yml` 自動 bump、`git tag`、`git push`（tag 已存在則 `-update.<run>`），再跑 win／mac／linux Desktop `package`（`desktop_verify` only — vitest already in `quality`）→ GitHub Release → GHCR。CLI 用該 tag 源碼（`uv run python -m server`）。不 bot commit main。
+- GitHub Actions: PR 跑 `ci.yml` quality；**push `main`** 跑 `release.yml`（quality → `git tag`／`git push` → win／mac／linux Desktop → GitHub Release → GHCR）。CLI 用該 tag 源碼。不 bot commit main。
 
 ## Security (outbound requests)
 
