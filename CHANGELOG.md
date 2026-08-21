@@ -10,7 +10,8 @@ Upgrade from **v1.0.5 is wipe-only stamp 1**. Live DDL matches the former stamp-
 
 ### Packaging / CI
 
-- `desktop_verify` / `_verify_common` put the repo root on `sys.path` before importing `server`, so `uv run python scripts/desktop_verify.py` works with uv `package = false` (CI `package` job).
+- `desktop_verify` / `_verify_common` put the repo root on `sys.path` before importing `server`, so `uv run python scripts/desktop_verify.py` works with uv `package = false` (Release `package` job).
+- Split GitHub Actions: `ci.yml` is quality-only on PR／`main` (no skipped publish jobs). `release.yml` publishes on **`git push` of `v*` tags**; `workflow_dispatch` pushes the next tag *before* packaging so a failed installer build does not hide the version. Release no longer shares a concurrency group with main CI.
 
 ### Assistant
 
