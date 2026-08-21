@@ -1,8 +1,13 @@
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from scripts import bump_version, desktop_verify
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_bump_version_handles_release_and_numbered_prerelease() -> None:
@@ -68,3 +73,22 @@ def test_desktop_verify_full_requires_windows_release_artifacts(
     monkeypatch.setattr(desktop_verify.sys, "platform", "win32")
 
     assert all(ok for _, ok, _ in desktop_verify.check_release_paths())
+
+
+def test_desktop_verify_script_imports_server_without_package_install() -> None:
+    """CI runs `uv run python scripts/desktop_verify.py` with uv `package = false`."""
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    proc = subprocess.run(
+        [sys.executable, str(_REPO_ROOT / "scripts" / "desktop_verify.py"), "--help"],
+        cwd=_REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    combined = f"{proc.stderr or ''}{proc.stdout or ''}"
+    assert proc.returncode == 0, combined
+    assert "No module named 'server'" not in combined
