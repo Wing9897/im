@@ -105,16 +105,24 @@ Telegram 來源使用 **StringSession**（`{DATA_DIR}/sessions/{source_id}.sessi
 | `npm run build:web` | 建置前端靜態檔（`web/dist/`） |
 | `npm run build:desktop` | 編譯 Desktop TypeScript |
 | `npm run build:server-sidecar` | 以 PyInstaller 打包內建 Python server（**須在目標 OS 上執行**；輸出 `desktop/server-runtime/`；亦為 headless CLI） |
-| `npm run package:cli` | 將已建置的 sidecar onedir 打成 `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`（須先 `build:server-sidecar` 或 `dist:*`） |
+| `npm run package:cli` | （可選、本機）將 sidecar onedir 打成 zip；**不是** GitHub Release 產物。CLI 發佈用源碼 |
 | `npm run dist:win` | 封裝 Windows 安裝程式（NSIS .exe；**第一等 Desktop 交付**） |
 | `npm run dist:mac` | 封裝 macOS（DMG／zip；**第一等 Desktop 交付**；須在 macOS 上執行） |
 | `npm run dist:linux` | 封裝 Linux（AppImage／deb；**第一等 Desktop 交付**；須在 Linux 上執行） |
 | `npm run dist:current` | 依本機 OS 封裝（`electron-builder --publish never`） |
 | `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`；與三平台 Desktop 同為第一等交付） |
 
-**CLI** = 無 Electron 的 headless server，與 `python -m server`／`intelligence-monitor`（`pyproject.toml` console script）同一入口；發佈物為各平台 PyInstaller zip（內含 `intelligence-monitor-server`）。
+**CLI** = 源碼執行，與 `python -m server`／`intelligence-monitor` 同一入口。clone 對應 tag 後：
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **CI quality 綠** → **Release** 自動 bump、`git tag`、`git push`、打包三平台 Desktop + CLI、GitHub Release + GHCR。PR 只跑 CI，不發版。tag 已存在則加 `-update.<run_number>`。發版流程**不** bot 回寫 `VERSION` 到 `main`。
+```bash
+uv sync --locked
+uv run python -m server
+# 或：uv run intelligence-monitor
+```
+
+GitHub Release **不附** CLI zip。無 Electron 的部署用 GHCR 映像。`npm run package:cli` 僅本機可選（從 Desktop sidecar 打 zip），不進 CI。
+
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **CI quality 綠** → **Release** 自動 bump、`git tag`、`git push`、打包三平台 **Desktop**、GitHub Release + GHCR。CLI 用該 tag 的源碼。PR 只跑 CI，不發版。tag 已存在則加 `-update.<run_number>`。發版流程**不** bot 回寫 `VERSION` 到 `main`。
 
 ### 容器（GHCR）
 
@@ -145,7 +153,7 @@ CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run wo
 |------|------|------|
 | **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 live 檢查（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | **push `main` 且 CI 綠** → 自動 tag + 三平台 Desktop + CLI → GitHub Release + GHCR |
+| **發行／打包** | `dist:*` + `verify:desktop:full` | **push `main` 且 CI 綠** → 自動 tag + 三平台 Desktop → GitHub Release + GHCR。CLI = 該 tag 源碼 |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -185,7 +193,7 @@ CI 只在 **Release** workflow（`main` CI 綠之後自動跑，或手動 Run wo
 | 觸發 | 行為 |
 |------|------|
 | **PR** | **CI**：只跑 `quality`。不發版 |
-| **push `main`** | **CI** `quality` 綠 → **Release** 自動 bump／`git tag`／`git push` → 三平台 package → GitHub Release + GHCR |
+| **push `main`** | **CI** `quality` 綠 → **Release** 自動 bump／`git tag`／`git push` → 三平台 Desktop → GitHub Release + GHCR。CLI 用該 tag 源碼 |
 | **Release → Run workflow** | 手動補發（先 quality，再同上） |
 
 **版本權威（勿混用）：**
