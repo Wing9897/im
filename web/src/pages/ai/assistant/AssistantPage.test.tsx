@@ -358,7 +358,8 @@ describe("AssistantPage", () => {
       }),
     );
     expect(container.textContent).toContain("未來 7 天有 1 件家庭事務。");
-    expect(container.textContent).toContain("calendar.window");
+    expect(container.textContent).toContain("查指定時段");
+    expect(container.textContent).toContain("時段內 1 件");
     expect(container.querySelector("[data-testid='assistant-tool-summary']")).toBeTruthy();
   });
 });

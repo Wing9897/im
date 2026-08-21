@@ -60,6 +60,7 @@ describe("AssistantToolSteps task advisor attribution", () => {
     });
 
     expect(host.querySelector("[data-testid='assistant-tool-step-staff']")).toBeNull();
-    expect(host.textContent).toContain("tasks.consult_advisor");
+    expect(host.textContent).toContain("諮詢任務顧問");
+    expect(host.textContent).toContain("完成");
   });
 });

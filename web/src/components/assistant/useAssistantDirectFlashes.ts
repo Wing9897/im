@@ -49,8 +49,8 @@ interface UseAssistantDirectFlashesResult {
  *
  * Until the user listens or sends once, message history is ignored (F5 /
  * always-on must show the ready hint — never replay the last session turn).
- * The user (STT transcript) and agent (sending / reply) lanes fade
- * independently, and the ready hint is a one-shot latch.
+ * Each new listen re-freezes current ids so only this turn's user → sending →
+ * reply may flash. AGENT_HIDE_MS starts only after a reply exists.
  */
 export function useAssistantDirectFlashes({
   messages,
@@ -73,10 +73,26 @@ export function useAssistantDirectFlashes({
     () => new Set(messages.map((m) => m.id)),
   );
 
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const listenEdgeRef = useRef(false);
+
   useLayoutEffect(() => {
     if (turnArmed) return;
     setFrozenIds(new Set(messages.map((m) => m.id)));
   }, [messages, turnArmed]);
+
+  useLayoutEffect(() => {
+    if (!isListening) {
+      listenEdgeRef.current = false;
+      return;
+    }
+    if (!listenEdgeRef.current) {
+      setFrozenIds(new Set(messagesRef.current.map((m) => m.id)));
+      setTurnArmed(true);
+    }
+    listenEdgeRef.current = true;
+  }, [isListening]);
 
   useEffect(() => {
     if (!isListening && !sending) return;
@@ -101,11 +117,8 @@ export function useAssistantDirectFlashes({
   const [readyFading, setReadyFading] = useState(false);
 
   const wasListeningRef = useRef(isListening);
-  const lastDraftWhileListeningRef = useRef("");
   const latestUserRef = useRef(latestUser);
-  const draftTextRef = useRef(draftText);
   latestUserRef.current = latestUser;
-  draftTextRef.current = draftText;
   const userHideTimerRef = useRef<number | null>(null);
   const userFadeTimerRef = useRef<number | null>(null);
   const agentHideTimerRef = useRef<number | null>(null);
@@ -142,7 +155,10 @@ export function useAssistantDirectFlashes({
     onReadyHintConsumedRef.current?.();
   };
 
-  const armUserFlash = (key: string, text: string, hideMs: number = USER_HIDE_MS) => {
+  const armUserFlashRef = useRef(
+    (_key: string, _text: string, _hideMs?: number) => undefined as void,
+  );
+  armUserFlashRef.current = (key, text, hideMs = USER_HIDE_MS) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     clearUserTimers();
@@ -164,7 +180,8 @@ export function useAssistantDirectFlashes({
     });
   };
 
-  const armAgentReplyFlash = (key: string, text: string) => {
+  const armAgentReplyFlashRef = useRef((_key: string, _text: string) => undefined as void);
+  armAgentReplyFlashRef.current = (key, text) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     clearAgentTimers();
@@ -186,13 +203,6 @@ export function useAssistantDirectFlashes({
     });
   };
 
-  // Track live STT text while holding.
-  useEffect(() => {
-    if (isListening && draftText) {
-      lastDraftWhileListeningRef.current = draftText;
-    }
-  }, [draftText, isListening]);
-
   // Mic flash: always on during STT; fade mic chrome on release (transcript stays).
   useEffect(() => {
     if (isListening) {
@@ -204,7 +214,6 @@ export function useAssistantDirectFlashes({
       // reuse last session’s draft snapshot as “live” text.
       clearUserTimers();
       setUserFlash(null);
-      lastDraftWhileListeningRef.current = "";
       setReadyVisible(false);
       clearReadyTimers();
       setReadyFading(false);
@@ -221,7 +230,7 @@ export function useAssistantDirectFlashes({
       // the composer/live STT bar (the “second flashing bar”).
       const committed = latestUserRef.current?.content?.trim();
       if (committed && latestUserRef.current?.id) {
-        armUserFlash(latestUserRef.current.id, committed, USER_HIDE_MS);
+        armUserFlashRef.current(latestUserRef.current.id, committed, USER_HIDE_MS);
       }
       micFadeTimerRef.current = window.setTimeout(() => {
         setMicFlash(false);
@@ -231,20 +240,24 @@ export function useAssistantDirectFlashes({
     }
 
     return clearMicTimers;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- armUserFlash identity is stable enough for mic release
   }, [isListening]);
 
+  const userFlashRef = useRef(userFlash);
+  userFlashRef.current = userFlash;
+
   // When user message lands after release (send path), refresh user flash text/key.
+  // Do not depend on userFlash itself — clearing the fade would re-arm forever.
   useEffect(() => {
-    if (isListening || micFlash) return;
+    if (isListening) return;
     if (!latestUser?.content?.trim()) return;
-    if (userFlash?.key === latestUser.id && userFlash.text === latestUser.content) return;
-    armUserFlash(latestUser.id, latestUser.content);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- flash when user msg id changes
-  }, [isListening, latestUser?.id, latestUser?.content, micFlash]);
+    const shown = userFlashRef.current;
+    if (shown?.key === latestUser.id && shown.text === latestUser.content) return;
+    armUserFlashRef.current(latestUser.id, latestUser.content);
+  }, [isListening, latestUser?.content, latestUser?.id]);
 
   // Agent lane: sending indicator vs reply — independent of user flash.
   // Hide / pause agent flash while the user is speaking.
+  // AGENT_HIDE_MS starts only once a reply exists — never while sending / waiting.
   useEffect(() => {
     if (isListening) {
       clearAgentTimers();
@@ -257,15 +270,14 @@ export function useAssistantDirectFlashes({
       return clearAgentTimers;
     }
     if (latestAssistant?.content?.trim()) {
-      armAgentReplyFlash(latestAssistant.id, latestAssistant.content);
+      armAgentReplyFlashRef.current(latestAssistant.id, latestAssistant.content);
       return clearAgentTimers;
     }
     // Soft failures roll back the assistant turn — clear a stuck "sending" flash.
     clearAgentTimers();
     setAgentFlash(null);
     return clearAgentTimers;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening, sending, latestAssistant?.id, latestAssistant?.content]);
+  }, [isListening, latestAssistant?.content, latestAssistant?.id, sending]);
 
   // Ready hint when idle in caption mode — one-shot latch (no re-arm after fade / hold).
   useEffect(() => {

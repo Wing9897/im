@@ -445,4 +445,35 @@ describe("AssistantQuick smoke", () => {
       "assistant-chrome-composer",
     ]);
   });
+
+  it("keeps overlay sending and reply across the listen-to-send gap", () => {
+    renderQuick();
+    chatMock.listening = true;
+    chatMock.draft = "hello";
+    renderQuick();
+    expect(document.querySelector("[data-testid='assistant-direct-listening']")).not.toBeNull();
+
+    chatMock.listening = false;
+    chatMock.draft = "";
+    chatMock.sending = false;
+    renderQuick();
+
+    chatMock.sending = true;
+    chatMock.messages = [{ id: "u1", role: "user", content: "hello" }];
+    renderQuick();
+    expect(document.querySelector("[data-testid='assistant-direct-sending']")).not.toBeNull();
+    expect(document.querySelector("[data-testid='assistant-direct-user-msg']")?.textContent).toBe(
+      "hello",
+    );
+
+    chatMock.sending = false;
+    chatMock.messages = [
+      { id: "u1", role: "user", content: "hello" },
+      { id: "a1", role: "assistant", content: "**星期六**" },
+    ];
+    renderQuick();
+    const reply = document.querySelector("[data-testid='assistant-direct-msg']");
+    expect(reply?.textContent).toContain("星期六");
+    expect(reply?.textContent).not.toContain("*");
+  });
 });

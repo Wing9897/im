@@ -3,15 +3,15 @@ import { Link } from "react-router-dom";
 import { Eraser, MessageSquare, Volume2, VolumeX } from "lucide-react";
 import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
 import { useTranslation } from "react-i18next";
-import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
+import { Button, SurfaceCard, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
 import { EmptyState } from "../../../components/common/EmptyState";
-import { WorksetTargetSelect } from "../../../components/assistant/WorksetTargetSelect";
-import { AssistantMicButton } from "../../../components/assistant/AssistantMicButton";
+import { AssistantComposerShell } from "../../../components/assistant/AssistantComposerShell";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { useAssistantSpacePtt } from "../../../hooks/useAssistantSpacePtt";
 import { useStickToBottom } from "../../../hooks/useStickToBottom";
 import { useAssistantChat } from "../../../hooks/useAssistantChat";
 import { useCollectorStatus } from "../../../context/CollectorStatusContext";
+import { AssistantMarkdown } from "../../../components/assistant/AssistantMarkdown";
 import {
   AssistantLiveToolSteps,
   AssistantToolSummary,
@@ -258,7 +258,7 @@ export function AssistantPage() {
                   testId={`assistant-msg-${msg.role}`}
                 >
                   <div className={assistantChatBubbleClass("full")}>
-                    {msg.content}
+                    <AssistantMarkdown text={msg.content} />
                     {msg.toolCalls && msg.toolCalls.length > 0 ? (
                       <AssistantToolSummary toolCalls={msg.toolCalls} />
                     ) : null}
@@ -281,73 +281,29 @@ export function AssistantPage() {
           ) : null}
         </div>
 
-        <div className="border-t border-surface-border px-md py-md">
-          <div className="mb-sm flex flex-wrap items-center gap-sm">
-            <label
-              className={`${captionClass} shrink-0 text-text-muted`}
-              htmlFor="assistant-calendar-workset"
-            >
-              {t("targetWorkset.label")}
-            </label>
-            <WorksetTargetSelect
-              id="assistant-calendar-workset"
-              value={worksetId}
-              onChange={setWorksetId}
-              disabled={sending}
-              className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs"
-              data-testid="assistant-calendar-workset"
-            />
-          </div>
-          <label className="sr-only" htmlFor="assistant-draft">
-            {t("draft.label")}
-          </label>
-          <TextArea
-            id="assistant-draft"
-            data-testid="assistant-draft"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={
-              listening ? t("draft.placeholderListening") : t("draft.placeholderIdle")
-            }
-            rows={3}
-            className="min-h-[88px]"
-            disabled={sending}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void sendDraft();
-              }
-            }}
-          />
-          <div className="mt-sm flex flex-wrap items-center justify-between gap-md">
-            <div className="flex flex-wrap items-center gap-sm">
-              {sttAvailable ? (
-                <AssistantMicButton
-                  spacePttMode={spacePttMode}
-                  listening={listening}
-                  sending={sending}
-                  startListening={startListening}
-                  stopListening={stopListening}
-                />
-              ) : null}
-              {ttsEnabled && ttsAvailable ? (
-                <span className={`${captionClass} inline-flex items-center gap-1 text-text-muted`}>
-                  <Volume2 className="size-3.5" aria-hidden />
-                  {t("ttsOnLabel")}
-                </span>
-              ) : null}
-            </div>
-            <Button
-              variant="primary"
-              size="md"
-              data-testid="assistant-send"
-              onClick={() => void sendDraft()}
-              disabled={sending || aiUnavailable || !draft.trim()}
-            >
-              {sending ? t("send.sending") : t("send.label")}
-            </Button>
-          </div>
-        </div>
+        <AssistantComposerShell
+          variant="page"
+          draft={draft}
+          onDraftChange={setDraft}
+          sending={sending}
+          listening={listening}
+          worksetId={worksetId}
+          onWorksetIdChange={setWorksetId}
+          onSend={sendDraft}
+          sttAvailable={sttAvailable}
+          spacePttMode={spacePttMode}
+          startListening={startListening}
+          stopListening={stopListening}
+          sendDisabled={aiUnavailable}
+          leadingActions={
+            ttsEnabled && ttsAvailable ? (
+              <span className={`${captionClass} inline-flex items-center gap-1 text-text-muted`}>
+                <Volume2 className="size-3.5" aria-hidden />
+                {t("ttsOnLabel")}
+              </span>
+            ) : null
+          }
+        />
       </SurfaceCard>
     </div>
   );

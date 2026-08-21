@@ -17,6 +17,63 @@
   "toolCallsLabel": "已呼叫工具",
   "toolStepsLabel": "工具步驟",
   "toolRunning": "執行中…",
+  "toolNames": {
+    "calendar": {
+      "list_calendars": "列出日曆",
+      "upcoming": "查近日日程",
+      "recent": "查近日已過日程",
+      "window": "查指定時段",
+      "get": "讀取日程",
+      "create_event": "建立日程",
+      "create_recurring_series": "建立週期日程",
+      "update_recurring_series": "更新週期日程",
+      "delete_recurring_series": "刪除週期日程",
+      "update_event": "更新日程",
+      "delete_event": "刪除日程",
+      "mark_important": "標為重要",
+      "unmark_important": "取消重要"
+    },
+    "items": {
+      "list": "列出物品",
+      "list_expiring": "查即將到期物品",
+      "create": "新增物品",
+      "update": "更新物品"
+    },
+    "messages": {
+      "search": "搜尋訊息"
+    },
+    "worksets": {
+      "list": "列出工作集"
+    },
+    "web": {
+      "search": "搜尋網頁",
+      "fetch": "讀取網頁"
+    },
+    "intelligence": {
+      "search_events": "搜尋情報"
+    },
+    "tasks": {
+      "consult_advisor": "諮詢任務顧問"
+    }
+  },
+  "toolSummary": {
+    "ok": "完成",
+    "error": "錯誤：{error}",
+    "items": "{count} 項",
+    "events": "{count} 件",
+    "eventInWindow": "時段內 {count} 件",
+    "calendars": "{count} 個日曆",
+    "worksets": "{count} 個工作集",
+    "messages": "{count} 則訊息",
+    "results": "{count} 筆結果",
+    "resultsVia": "{count} 筆結果（{provider}）",
+    "dismissed": "已關閉",
+    "deleted": "已刪除",
+    "taskConfigUpdated": "已更新任務設定",
+    "task": "任務 {id}",
+    "pageChars": "{title}（{chars} 字）",
+    "pageTruncated": "{title}（已截斷，{chars} 字）"
+  },
   "sending": "助手思考中…",
   "draft": {
     "label": "訊息",

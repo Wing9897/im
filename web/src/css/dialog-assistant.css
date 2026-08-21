@@ -69,7 +69,7 @@
   box-shadow: 0 2px 14px color-mix(in srgb, var(--text-primary) 5%, transparent);
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
-  max-height: min(40vh, 360px);
+  max-height: min(22vh, 180px);
   overflow-x: hidden;
   overflow-y: auto;
   transition: opacity 0.4s ease;
@@ -188,6 +188,10 @@
   text-align: center;
 }
 
+.im-assistant-direct:has(.im-assistant-direct__composer) .im-assistant-direct__bubble {
+  max-height: min(14vh, 120px);
+}
+
 .im-assistant-direct__composer {
   display: flex;
   flex-direction: column;
@@ -207,7 +211,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: min(36vh, 280px);
+  max-height: min(20vh, 160px);
   overflow-x: hidden;
   overflow-y: auto;
   padding: 2px 4px 10px 2px;
@@ -248,11 +252,15 @@
 
 .im-assistant-direct__composer-history-text {
   margin: 0;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: 13px;
   line-height: 1.45;
   color: var(--text-primary);
+}
+
+.im-assistant-direct__composer-history-item[data-role="user"]
+  .im-assistant-direct__composer-history-text {
+  white-space: pre-wrap;
 }
 
 .im-assistant-direct__composer-input-row {
