@@ -4,6 +4,8 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Release 主路徑改為 Actions → **Release → Run workflow**：workflow 自己 bump、`git tag`、`git push`，不必本機打 tag。`v*` tag push 僅作為既有 tag 的打包重試。
+
 ## [1.0.7] — 2026-08-21
 
 Upgrade from **v1.0.5 is wipe-only stamp 1**. Live DDL matches the former stamp-45 shape; retired stamps (including 2–45) hard-reject with no in-place migration. Reset before opening this build: `uv run python scripts/reset_local_databases.py --apply`. See [SCHEMA-BASELINE](docs/SCHEMA-BASELINE.md).

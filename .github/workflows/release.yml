@@ -1,12 +1,11 @@
 name: Release
 
-# Publish path:
-#   git tag vX.Y.Z && git push origin vX.Y.Z
-#   → quality → package win/mac/linux → GitHub Release + GHCR
-#
-# Optional shortcut (no local tag): Actions → Release → Run workflow
-#   → bump (or input version) → push tag first → same package/release path.
-# GITHUB_TOKEN tag pushes do not start a second run; this workflow continues.
+run-name: ${{ github.event_name == 'workflow_dispatch' && 'Auto tag + push' || github.ref_name }}
+
+# Canonical publish: Actions → Release → Run workflow
+#   quality → bump (or input version) → git tag + git push → package → GitHub Release + GHCR
+# Do not tag locally. GITHUB_TOKEN tag pushes do not start a second run; this workflow continues.
+# Tag-push (`v*`) only re-runs packaging for an existing tag (failed installer / retry).
 
 on:
   push:
@@ -15,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "SemVer without leading v (empty = bump from latest tag)"
+        description: "留空 = 從最新 tag 自動 bump。或填 SemVer（不要 v 前綴，例如 1.0.8）"
         required: false
         type: string
 
@@ -77,12 +76,15 @@ jobs:
     needs: [quality, version]
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: true
 
-      - name: Ensure git tag exists
+      - name: git tag + git push
         env:
           TAG: ${{ needs.version.outputs.tag_name }}
         shell: bash
@@ -91,15 +93,16 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
             echo "Tag ${TAG} already on origin."
             if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-              echo "Refusing to reuse an existing tag on workflow_dispatch." >&2
+              echo "Refusing to reuse an existing tag on Run workflow." >&2
               exit 1
             fi
+            echo "Tag-push retry: packing the existing tag."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "${TAG}" "${GITHUB_SHA}"
-          git push origin "${TAG}"
+          git push origin "refs/tags/${TAG}"
           echo "Pushed ${TAG} @ ${GITHUB_SHA}"
 
   package:
