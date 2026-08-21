@@ -4,7 +4,7 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
-- Release 主路徑改為 Actions → **Release → Run workflow**：workflow 自己 bump、`git tag`、`git push`，不必本機打 tag。`v*` tag push 僅作為既有 tag 的打包重試。
+- **push `main` 且 CI quality 綠** 後自動 bump、`git tag`、`git push`、打包並建立 GitHub Release（tag 已存在則 `vX.Y.Z-update.<run_number>`）。不必本機打 tag，亦不必 Run workflow。
 
 ## [1.0.7] — 2026-08-21
 
