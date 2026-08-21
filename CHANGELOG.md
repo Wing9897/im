@@ -22,6 +22,10 @@ Upgrade from **v1.0.5 is wipe-only stamp 1**. Live DDL matches the former stamp-
 - Profile `thinking_enabled` now reaches Gemini: off sends `generationConfig.thinkingConfig.thinkingLevel: MINIMAL` only; on omits the block. Never send `thinkingBudget` and `thinkingLevel` together.
 - Assistant toasts map Gemini `MAX_TOKENS` / no-candidates via `formatAnalysisErrorMessage` (zh-Hant SoT in `tasks.json`) instead of raw English.
 
+### Tests
+
+- Theme background helpers no-op when `localStorage` is gone after Vitest jsdom teardown; ModalDialog close timeout no-ops without `window`.
+
 ### API / product (carried from Unreleased)
 
 - `GET /api/v1/calendar/window` query range is `startTime`／`endTime` only (short `start`／`end` aliases removed).

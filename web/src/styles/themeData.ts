@@ -216,13 +216,18 @@ export function loadBgForTheme(themeId: string): string | null {
     cache && cache.day === utcDayIso() && cache.locale === locale
       ? cache.idx
       : 0;
-  void materializeFocalApplyUrl({ locale, idx }).then((applyUrl) => {
-    if (resolveThemeBgMode(id) !== "focal") return;
-    if (resolveThemeId(localStorage.getItem(STORAGE_KEY_THEME)) !== id) return;
-    if (applyUrl) {
-      applyBgImage(applyUrl, loadBgOpacity(id), "focal");
-    }
-  });
+  void materializeFocalApplyUrl({ locale, idx })
+    .then((applyUrl) => {
+      if (typeof localStorage === "undefined") return;
+      if (resolveThemeBgMode(id) !== "focal") return;
+      if (resolveThemeId(localStorage.getItem(STORAGE_KEY_THEME)) !== id) return;
+      if (applyUrl) {
+        applyBgImage(applyUrl, loadBgOpacity(id), "focal");
+      }
+    })
+    .catch((err: unknown) => {
+      console.warn("[theme] focal background apply failed", err);
+    });
 
   return url;
 }

@@ -1,6 +1,6 @@
-import { beforeEach, describe, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 
 import type { ChannelWithSource } from "../../../types";
 import { WallChannelPicker } from "./WallChannelPicker";
@@ -27,16 +27,17 @@ const channels: ChannelWithSource[] = [
   },
 ];
 
+let root: Root | null = null;
+
 function renderPicker(props: {
   channels: ChannelWithSource[];
   selectedChannelIds: string[];
   onChange: (ids: string[]) => void;
 }) {
   const container = document.createElement("div");
+  root = createRoot(container);
   act(() => {
-    createRoot(container).render(
-      wrapWithI18n(createElement(WallChannelPicker, props)),
-    );
+    root!.render(wrapWithI18n(createElement(WallChannelPicker, props)));
   });
   return container;
 }
@@ -44,6 +45,15 @@ function renderPicker(props: {
 describe("WallChannelPicker", () => {
   beforeEach(async () => {
     await ensureZhHantLocale();
+  });
+
+  afterEach(() => {
+    if (root) {
+      act(() => {
+        root!.unmount();
+      });
+      root = null;
+    }
   });
 
   it("opens dialog and toggles channel selection", () => {

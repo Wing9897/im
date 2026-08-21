@@ -108,6 +108,8 @@ export function ModalDialog({
   });
 
   const parkOrUnmount = () => {
+    // jsdom teardown can drop `window` while the close fallback timeout is pending.
+    if (typeof window === "undefined") return;
     setExiting(false);
     if (keepMounted) {
       setParked(true);
