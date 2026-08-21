@@ -35,7 +35,8 @@
     "changeEmojiAria": "更改 {name} 的 emoji"
   },
   "errors": {
-    "geminiNoCandidates": "Gemini 未回傳可用內容（可能被安全過濾或回應格式異常）。請檢查模型與提示後重試。"
+    "geminiNoCandidates": "Gemini 未回傳可用內容（可能被安全過濾或回應格式異常）。請檢查模型與提示後重試。",
+    "geminiMaxTokens": "Gemini 輸出因達到長度上限被截斷。請提高最大輸出 token，或縮短提示後重試。"
   },
   "detail": {
     "timeRange": "時間範圍：{range}",

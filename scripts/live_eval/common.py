@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -102,7 +102,7 @@ def msg_time(msg: dict[str, Any]) -> str:
 
 
 def iso_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def window_range() -> tuple[str, str]:
@@ -146,16 +146,15 @@ def tool_evidence(ticks_payload: dict[str, Any]) -> dict[str, Any]:
 def time_guess_notes(events: list[dict[str, Any]]) -> dict[str, Any]:
     with_time = [e for e in events if e.get("startTime")]
     without = [e for e in events if not e.get("startTime")]
-    samples = []
-    for event in events[:5]:
-        samples.append(
-            {
-                "title": event.get("title"),
-                "startTime": event.get("startTime"),
-                "sourceMessageTime": event.get("sourceMessageTime"),
-                "body": str(event.get("body") or "")[:160],
-            }
-        )
+    samples = [
+        {
+            "title": event.get("title"),
+            "startTime": event.get("startTime"),
+            "sourceMessageTime": event.get("sourceMessageTime"),
+            "body": str(event.get("body") or "")[:160],
+        }
+        for event in events[:5]
+    ]
     return {
         "withTime": len(with_time),
         "withoutTime": len(without),

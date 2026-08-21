@@ -14,6 +14,26 @@ import aiohttp
 #: Max chars retained on ``LlmClientError.response_body`` for failure forensics.
 LLM_RESPONSE_BODY_CAP = 4000
 
+#: Stable summary when Gemini hits the output cap with no usable reply text.
+#: Batch ``error_message`` stores this string; the UI maps it to zh-Hant copy.
+GEMINI_MAX_TOKENS_MESSAGE = (
+    "Gemini response was truncated (MAX_TOKENS). Increase max output tokens or shorten the prompt."
+)
+
+#: Gemini 3 thinking level used when the profile has thinking turned off.
+GEMINI_THINKING_LEVEL_MINIMAL = "MINIMAL"
+
+
+def gemini_thinking_config(*, thinking_enabled: bool) -> dict[str, Any] | None:
+    """Build Gemini 3 ``thinkingConfig`` (never mix with Gemini 2.5 ``thinkingBudget``).
+
+    Off → ``thinkingLevel: MINIMAL`` so default thinking cannot exhaust the
+    output budget. On → omit the block so the model uses its default thinking.
+    """
+    if thinking_enabled:
+        return None
+    return {"thinkingLevel": GEMINI_THINKING_LEVEL_MINIMAL}
+
 
 class LlmClientError(Exception):
     """Raised when an LLM HTTP request fails (or provider config is invalid)."""
@@ -239,8 +259,29 @@ def convert_messages_to_gemini(messages: list[dict]) -> list[dict]:
     return contents
 
 
+def _gemini_output_texts(parts: object) -> list[str]:
+    """Collect non-thought ``text`` parts; thinking traces are not reply content."""
+    texts: list[str] = []
+    if not isinstance(parts, list):
+        return texts
+    for part in parts:
+        if not isinstance(part, dict):
+            continue
+        if part.get("thought") is True:
+            continue
+        text_part = part.get("text")
+        if isinstance(text_part, str):
+            texts.append(text_part)
+    return texts
+
+
 def extract_gemini_text(data: dict[str, Any]) -> str:
-    """Pull reply text from generateContent JSON; never raise raw KeyError repr."""
+    """Pull reply text from generateContent JSON; never raise raw KeyError repr.
+
+    ``finishReason=MAX_TOKENS`` with truncated but non-empty output is returned
+    as-is so downstream JSON-mode / analysis parsing can still succeed. Empty
+    or thought-only MAX_TOKENS responses raise a dedicated truncation error.
+    """
     prompt_feedback = data.get("promptFeedback")
     if isinstance(prompt_feedback, dict):
         block_reason = prompt_feedback.get("blockReason")
@@ -260,21 +301,24 @@ def extract_gemini_text(data: dict[str, Any]) -> str:
         )
 
     first = candidates[0] if isinstance(candidates[0], dict) else {}
-    finish_reason = first.get("finishReason")
+    finish_reason = str(first.get("finishReason") or "")
     content = first.get("content") if isinstance(first.get("content"), dict) else {}
     parts = content.get("parts") if isinstance(content, dict) else None
-    texts: list[str] = []
-    if isinstance(parts, list):
-        texts.extend(part["text"] for part in parts if isinstance(part, dict) and isinstance(part.get("text"), str))
-    text = "".join(texts)
-    if not text.strip():
-        reason = finish_reason or "empty"
+    text = "".join(_gemini_output_texts(parts))
+    if text.strip():
+        return text
+    if finish_reason.upper() == "MAX_TOKENS":
         raise LlmClientError(
-            f"Gemini response has no usable candidates ({reason})",
+            GEMINI_MAX_TOKENS_MESSAGE,
             provider="gemini",
             response_body=str(data)[:LLM_RESPONSE_BODY_CAP],
         )
-    return text
+    reason = finish_reason or "empty"
+    raise LlmClientError(
+        f"Gemini response has no usable candidates ({reason})",
+        provider="gemini",
+        response_body=str(data)[:LLM_RESPONSE_BODY_CAP],
+    )
 
 
 async def complete_gemini(
@@ -287,6 +331,7 @@ async def complete_gemini(
     temperature: float,
     json_mode: bool,
     max_output_tokens: int | None = None,
+    thinking_enabled: bool = False,
     google_search: bool = False,
 ) -> dict:
     url = f"{base_url}/models/{model}:generateContent?key={api_key}"
@@ -295,6 +340,9 @@ async def complete_gemini(
         generation_config["maxOutputTokens"] = max_output_tokens
     if json_mode:
         generation_config["responseMimeType"] = "application/json"
+    thinking_config = gemini_thinking_config(thinking_enabled=thinking_enabled)
+    if thinking_config is not None:
+        generation_config["thinkingConfig"] = thinking_config
     payload: dict[str, Any] = {
         "contents": convert_messages_to_gemini(messages),
         "generationConfig": generation_config,

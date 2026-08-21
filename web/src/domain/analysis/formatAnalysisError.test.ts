@@ -22,6 +22,23 @@ describe("formatAnalysisErrorMessage", () => {
     expect(shown).toBe(String(i18n.t("tasks:errors.geminiNoCandidates")));
   });
 
+  it("maps MAX_TOKENS truncation to a distinct zh-Hant copy", () => {
+    const shown = formatAnalysisErrorMessage(
+      "Gemini response was truncated (MAX_TOKENS). Increase max output tokens or shorten the prompt.",
+      i18n.t.bind(i18n),
+    );
+    expect(shown).toBe(String(i18n.t("tasks:errors.geminiMaxTokens")));
+    expect(shown).not.toMatch(/MAX_TOKENS/);
+  });
+
+  it("maps legacy no-candidates MAX_TOKENS batches to the truncation copy", () => {
+    const shown = formatAnalysisErrorMessage(
+      "Gemini response has no usable candidates (MAX_TOKENS)",
+      i18n.t.bind(i18n),
+    );
+    expect(shown).toBe(String(i18n.t("tasks:errors.geminiMaxTokens")));
+  });
+
   it("maps Gemini blocked responses", () => {
     const shown = formatAnalysisErrorMessage(
       "Gemini blocked the request (SAFETY)",

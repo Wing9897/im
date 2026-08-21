@@ -9,6 +9,8 @@ import aiohttp
 import pytest
 
 from server.analyzer.llm_providers import (
+    GEMINI_MAX_TOKENS_MESSAGE,
+    GEMINI_THINKING_LEVEL_MINIMAL,
     LlmClientError,
     check_response,
     complete_gemini,
@@ -18,6 +20,7 @@ from server.analyzer.llm_providers import (
     convert_messages_to_gemini,
     extract_gemini_text,
     extract_openai_responses_text,
+    gemini_thinking_config,
     probe_gemini,
     probe_ollama,
     probe_openai_style,
@@ -241,6 +244,74 @@ async def test_complete_gemini_google_search_tool_flag() -> None:
     assert captured["json"]["tools"] == [{"google_search": {}}]
 
 
+def _ok_gemini_response() -> _FakeResponse:
+    return _FakeResponse(
+        200,
+        json_data={
+            "candidates": [{"content": {"parts": [{"text": "ok"}]}}],
+            "usageMetadata": {"promptTokenCount": 1, "candidatesTokenCount": 1},
+        },
+    )
+
+
+def test_gemini_thinking_config_off_is_minimal_without_budget() -> None:
+    config = gemini_thinking_config(thinking_enabled=False)
+    assert config is not None
+    assert config == {"thinkingLevel": GEMINI_THINKING_LEVEL_MINIMAL}
+    assert "thinkingBudget" not in config
+
+
+def test_gemini_thinking_config_on_omits_block() -> None:
+    assert gemini_thinking_config(thinking_enabled=True) is None
+
+
+async def test_complete_gemini_thinking_off_sends_minimal_level() -> None:
+    captured: dict[str, Any] = {}
+
+    def responder(method: str, url: str, **_kwargs: Any) -> _FakeResponse:
+        captured["json"] = _kwargs.get("json")
+        return _ok_gemini_response()
+
+    session = _FakeSession(responder)
+    await complete_gemini(
+        session,  # type: ignore[arg-type]
+        base_url="https://generativelanguage.googleapis.com/v1beta",
+        api_key="gem-key",
+        model="gemini-3.1-flash-lite",
+        messages=[{"role": "user", "content": "hi"}],
+        temperature=0.2,
+        json_mode=False,
+        thinking_enabled=False,
+    )
+    thinking = captured["json"]["generationConfig"]["thinkingConfig"]
+    assert thinking == {"thinkingLevel": "MINIMAL"}
+    assert "thinkingBudget" not in thinking
+    assert "thinkingBudget" not in captured["json"]["generationConfig"]
+
+
+async def test_complete_gemini_thinking_on_omits_thinking_config() -> None:
+    captured: dict[str, Any] = {}
+
+    def responder(method: str, url: str, **_kwargs: Any) -> _FakeResponse:
+        captured["json"] = _kwargs.get("json")
+        return _ok_gemini_response()
+
+    session = _FakeSession(responder)
+    await complete_gemini(
+        session,  # type: ignore[arg-type]
+        base_url="https://generativelanguage.googleapis.com/v1beta",
+        api_key="gem-key",
+        model="gemini-3.1-flash-lite",
+        messages=[{"role": "user", "content": "hi"}],
+        temperature=0.2,
+        json_mode=False,
+        thinking_enabled=True,
+    )
+    generation = captured["json"]["generationConfig"]
+    assert "thinkingConfig" not in generation
+    assert "thinkingBudget" not in generation
+
+
 async def test_complete_openai_responses_web_search() -> None:
     captured: dict[str, Any] = {}
 
@@ -307,6 +378,68 @@ def test_extract_gemini_text_empty_parts() -> None:
     with pytest.raises(LlmClientError, match="no usable candidates"):
         extract_gemini_text(
             {"candidates": [{"finishReason": "SAFETY", "content": {"parts": []}}]},
+        )
+
+
+def test_extract_gemini_text_max_tokens_empty_is_truncation_error() -> None:
+    with pytest.raises(LlmClientError, match="truncated \\(MAX_TOKENS\\)") as caught:
+        extract_gemini_text(
+            {"candidates": [{"finishReason": "MAX_TOKENS", "content": {"parts": []}}]},
+        )
+    assert str(caught.value) == GEMINI_MAX_TOKENS_MESSAGE
+    assert "no usable candidates" not in str(caught.value)
+    assert caught.value.provider == "gemini"
+
+
+def test_extract_gemini_text_max_tokens_truncated_text_is_kept() -> None:
+    truncated = '{"items":[{"title":"partial"}]}'
+    assert (
+        extract_gemini_text(
+            {
+                "candidates": [
+                    {
+                        "finishReason": "MAX_TOKENS",
+                        "content": {"parts": [{"text": truncated}]},
+                    }
+                ]
+            },
+        )
+        == truncated
+    )
+
+
+def test_extract_gemini_text_max_tokens_skips_thought_keeps_output() -> None:
+    assert (
+        extract_gemini_text(
+            {
+                "candidates": [
+                    {
+                        "finishReason": "MAX_TOKENS",
+                        "content": {
+                            "parts": [
+                                {"thought": True, "text": "internal reasoning"},
+                                {"text": '{"message":"ok"}'},
+                            ]
+                        },
+                    }
+                ]
+            },
+        )
+        == '{"message":"ok"}'
+    )
+
+
+def test_extract_gemini_text_max_tokens_thought_only_is_truncation_error() -> None:
+    with pytest.raises(LlmClientError, match="truncated \\(MAX_TOKENS\\)"):
+        extract_gemini_text(
+            {
+                "candidates": [
+                    {
+                        "finishReason": "MAX_TOKENS",
+                        "content": {"parts": [{"thought": True, "text": "used all tokens thinking"}]},
+                    }
+                ]
+            },
         )
 
 

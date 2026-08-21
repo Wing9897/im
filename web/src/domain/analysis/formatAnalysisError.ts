@@ -12,11 +12,23 @@ export function formatAnalysisErrorMessage(
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
+  if (isGeminiMaxTokensError(trimmed)) {
+    return String(t("tasks:errors.geminiMaxTokens"));
+  }
+
   if (isGeminiNoCandidatesError(trimmed)) {
     return String(t("tasks:errors.geminiNoCandidates"));
   }
 
   return trimmed;
+}
+
+function isGeminiMaxTokensError(message: string): boolean {
+  if (!/MAX_TOKENS/i.test(message)) return false;
+  return (
+    /gemini response was truncated/i.test(message) ||
+    /no usable candidates/i.test(message)
+  );
 }
 
 function isGeminiNoCandidatesError(message: string): boolean {

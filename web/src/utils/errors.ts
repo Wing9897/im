@@ -1,5 +1,13 @@
 import { ApiRequestError } from "../api/parseApiError";
+import { formatAnalysisErrorMessage } from "../domain/analysis/formatAnalysisError";
+import i18n from "../i18n";
 import { messageForErrorCode } from "../i18n/errorCodes";
+
+function localizeMessage(raw: string): string {
+  const byCode = messageForErrorCode(raw);
+  if (byCode) return byCode;
+  return formatAnalysisErrorMessage(raw, i18n.t.bind(i18n)) ?? raw;
+}
 
 /** Coerces an unknown error value into an Error instance. */
 export function toError(error: unknown): Error {
@@ -14,12 +22,13 @@ export function toErrorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) {
     const mapped = messageForErrorCode(error.errorCode);
     if (mapped) return mapped;
-    return error.message;
+    return localizeMessage(error.message);
   }
   if (error instanceof Error) {
-    const mapped = messageForErrorCode(error.message);
-    if (mapped) return mapped;
-    return error.message;
+    return localizeMessage(error.message);
+  }
+  if (typeof error === "string") {
+    return localizeMessage(error);
   }
   return String(error);
 }

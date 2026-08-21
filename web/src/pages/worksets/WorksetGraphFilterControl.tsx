@@ -35,7 +35,6 @@ import {
   WORKSET_GRAPH_FILTER_PARAM,
 } from "../../domain/worksets/worksetRoutes";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { spacing } from "../../styles/tokens";
 
 type WorksetGraphFilterRow = {
   id: string;

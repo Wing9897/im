@@ -150,8 +150,10 @@ def print_report(
         gaps.append("日曆寫入沒有 user_events（可能訊息無可排程行程，屬預期）")
     if not (items_result.get("itemsCreateCalls") or []):
         gaps.append("助理未成功 items.create")
-    for batch in queue.get("attentionBatches") or []:
-        gaps.append(f"attention: {batch.get('taskName')} {batch.get('errorMessage')}")
+    gaps.extend(
+        f"attention: {batch.get('taskName')} {batch.get('errorMessage')}"
+        for batch in queue.get("attentionBatches") or []
+    )
     if not gaps:
         print("  無明顯缺口")
     else:

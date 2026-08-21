@@ -95,6 +95,7 @@ async def complete_gemini_bound(
         temperature=temperature,
         json_mode=json_mode,
         max_output_tokens=max_output_tokens,
+        thinking_enabled=client.ollama_thinking_enabled,
         google_search=native_web_search == "gemini",
     )
 

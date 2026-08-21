@@ -76,6 +76,24 @@ describe("toErrorMessage", () => {
       "助手請求逾時，請稍後再試或縮短問題。",
     );
   });
+
+  it("maps Gemini MAX_TOKENS strings to zh-Hant analysis copy", async () => {
+    const { ensureZhHantLocale } = await import("../test/i18nHarness");
+    const i18n = (await import("../i18n")).default;
+    await ensureZhHantLocale();
+    const expected = String(i18n.t("tasks:errors.geminiMaxTokens"));
+    expect(
+      toErrorMessage(
+        new Error(
+          "Gemini response was truncated (MAX_TOKENS). Increase max output tokens or shorten the prompt.",
+        ),
+      ),
+    ).toBe(expected);
+    expect(
+      toErrorMessage("Gemini response has no usable candidates (MAX_TOKENS)"),
+    ).toBe(expected);
+    expect(expected).not.toMatch(/MAX_TOKENS/);
+  });
 });
 
 describe("handleCommandError", () => {
