@@ -34,6 +34,8 @@ describe("release safety gates", () => {
     expect(workflow).toContain("softprops/action-gh-release");
     expect(workflow).toContain("ghcr.io");
     expect(workflow).not.toContain("tauri-apps/tauri-action");
+    expect(workflow).not.toContain("package:cli");
+    expect(workflow).not.toContain("intelligence-monitor-cli-");
     expect(workflow).toMatch(/\n  package:\n    needs: \[version, tag\]/);
   });
 

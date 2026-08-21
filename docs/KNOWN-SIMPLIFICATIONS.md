@@ -181,7 +181,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
-- GitHub Actions: Ubuntu `quality` + build on PR／main（`ci.yml`）；**push `main` 且 CI 綠** 後 `release.yml` 自動 bump、`git tag`、`git push`（tag 已存在則 `-update.<run>`），再跑 win／mac／linux `package`（Desktop+CLI；`desktop_verify` only — vitest already in `quality`）→ GitHub Release → GHCR。不 bot commit main。
+- GitHub Actions: Ubuntu `quality` + build on PR／main（`ci.yml`）；**push `main` 且 CI 綠** 後 `release.yml` 自動 bump、`git tag`、`git push`（tag 已存在則 `-update.<run>`），再跑 win／mac／linux Desktop `package`（`desktop_verify` only — vitest already in `quality`）→ GitHub Release → GHCR。CLI 用該 tag 源碼（`uv run python -m server`）。不 bot commit main。
 
 ## Security (outbound requests)
 
@@ -189,10 +189,10 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 **Accepted limitation:** DNS rebinding between validate and TCP connect is not mitigated with IP pinning (local single-user deployments).
 
-## Release checklist (Desktop + CLI + container)
+## Release checklist (Desktop + source CLI + container)
 
-1. Merge／push to `main` and confirm `quality` + build pass; this never publishes
-2. Publish: push `main` and wait for CI quality to pass. Release then auto-bumps, `git tag`s, `git push`es, packages×3, and creates the GitHub Release (does **not** push commits to main). Do not tag locally.
+1. Merge／push to `main` and confirm `quality` + build pass
+2. Green CI on `main` auto-bumps, `git tag`s, packages Desktop×3, and creates the GitHub Release. CLI is that tag's source (`uv sync --locked` + `uv run python -m server`). Does **not** push commits to main.
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
 

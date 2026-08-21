@@ -1,9 +1,8 @@
-"""Package the headless server binary (CLI) for GitHub Release.
+"""Optional local zip of the Desktop sidecar onedir (not a GitHub Release artifact).
 
-CLI is the same entry as ``python -m server`` / the ``intelligence-monitor``
-console script in ``pyproject.toml``. The PyInstaller onedir produced by
-``scripts/build_server_sidecar.py`` is that binary (also used as the Desktop
-sidecar). This script zips it for distribution without Electron.
+CLI for users is source: clone the git tag, ``uv sync --locked``, then
+``uv run python -m server`` / ``intelligence-monitor``. This script remains for
+local experiments only.
 
 Requires a prior sidecar build under ``desktop/server-runtime/``.
 Output: ``dist/cli/intelligence-monitor-cli-<os>-<arch>.zip``.

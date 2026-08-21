@@ -118,17 +118,14 @@ jobs:
             dist: dist:win
             artifact: windows-release
             expect_desktop: "*.exe"
-            expect_cli: "intelligence-monitor-cli-windows-*.zip"
           - os: macos-latest
             dist: dist:mac
             artifact: macos-release
             expect_desktop: "*.dmg"
-            expect_cli: "intelligence-monitor-cli-macos-*.zip"
           - os: ubuntu-latest
             dist: dist:linux
             artifact: linux-release
             expect_desktop: "*.AppImage"
-            expect_cli: "intelligence-monitor-cli-linux-*.zip"
     name: package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -178,30 +175,20 @@ jobs:
       - name: Verify Desktop package
         run: npm run verify:desktop:full
 
-      - name: Package CLI zip
-        run: npm run package:cli
-
-      - name: Assert Desktop + CLI artifacts exist
+      - name: Assert Desktop artifacts exist
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
           desktop=(desktop/release/${{ matrix.expect_desktop }})
-          cli=(dist/cli/${{ matrix.expect_cli }})
           echo "Desktop matches: ${desktop[*]:-none}"
-          echo "CLI matches: ${cli[*]:-none}"
           if [[ ${#desktop[@]} -lt 1 ]]; then
             echo "Missing Desktop artifact matching desktop/release/${{ matrix.expect_desktop }}" >&2
             ls -la desktop/release || true
             exit 1
           fi
-          if [[ ${#cli[@]} -lt 1 ]]; then
-            echo "Missing CLI zip matching dist/cli/${{ matrix.expect_cli }}" >&2
-            ls -la dist/cli || true
-            exit 1
-          fi
 
-      - name: Upload Desktop + CLI artifacts
+      - name: Upload Desktop artifacts
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ env.RELEASE_SHA }}
@@ -214,7 +201,6 @@ jobs:
             desktop/release/*.yml
             desktop/release/*.yaml
             desktop/release/*.blockmap
-            dist/cli/intelligence-monitor-cli-*.zip
           if-no-files-found: error
 
   release:
@@ -227,7 +213,7 @@ jobs:
           ref: ${{ env.RELEASE_SHA }}
           fetch-depth: 0
 
-      - name: Download Desktop + CLI artifacts
+      - name: Download Desktop artifacts
         uses: actions/download-artifact@v8
         with:
           pattern: "*-release-${{ env.RELEASE_SHA }}"
@@ -269,9 +255,6 @@ jobs:
           require_name 'Intelligence Monitor Setup *.exe'
           require_name '*.dmg'
           require_name '*.AppImage'
-          require_name 'intelligence-monitor-cli-windows-*.zip'
-          require_name 'intelligence-monitor-cli-macos-*.zip'
-          require_name 'intelligence-monitor-cli-linux-*.zip'
           if [[ "$need_fail" -ne 0 ]]; then
             echo "Refusing to publish an incomplete GitHub Release." >&2
             exit 1
@@ -286,7 +269,7 @@ jobs:
           body: |
             Automated release **${{ needs.version.outputs.tag_name }}** from `${{ env.RELEASE_SHA }}`.
 
-            Product version authority is git tags. The repo `VERSION` file is for local/dev display and may lag.
+            Desktop installers are attached. CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server` (or `intelligence-monitor`). Headless container: GHCR.
           prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') || contains(needs.version.outputs.tag_name, 'update') }}
           fail_on_unmatched_files: true
           files: |
