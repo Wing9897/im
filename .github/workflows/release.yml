@@ -1,25 +1,24 @@
 name: Release
 
-run-name: ${{ github.event_name == 'workflow_dispatch' && 'Auto tag + push' || github.ref_name }}
+run-name: ${{ github.event_name == 'workflow_run' && format('main {0}', github.event.workflow_run.head_sha) || 'manual' }}
 
-# Canonical publish: Actions → Release → Run workflow
-#   quality → bump (or input version) → git tag + git push → package → GitHub Release + GHCR
-# Do not tag locally. GITHUB_TOKEN tag pushes do not start a second run; this workflow continues.
-# Tag-push (`v*`) only re-runs packaging for an existing tag (failed installer / retry).
+# push main → CI quality green → this workflow: tag + package + GitHub Release + GHCR
+# workflow_dispatch still works (runs quality first). Do not tag locally.
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
-        description: "留空 = 從最新 tag 自動 bump。或填 SemVer（不要 v 前綴，例如 1.0.8）"
+        description: "留空 = 從最新 tag bump。或填 SemVer（不要 v 前綴）"
         required: false
         type: string
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 permissions:
@@ -28,15 +27,22 @@ permissions:
 
 env:
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
+  RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
 jobs:
   quality:
+    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/quality.yml
     permissions:
       contents: read
 
   version:
     needs: [quality]
+    if: |
+      always() && (
+        (github.event_name == 'workflow_dispatch' && needs.quality.result == 'success') ||
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -45,24 +51,29 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ env.RELEASE_SHA }}
           fetch-depth: 0
 
-      - name: Resolve release version
+      - name: Generate tag version
         id: bump
         env:
           INPUT_VERSION: ${{ github.event.inputs.version || '' }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            tag="${GITHUB_REF_NAME}"
-            version="${tag#v}"
-          elif [[ -n "${INPUT_VERSION}" ]]; then
+          git fetch --tags origin
+          if [[ -n "${INPUT_VERSION}" ]]; then
             version="${INPUT_VERSION#v}"
-            tag="v${version}"
           else
             version="$(python3 scripts/bump_version.py --from-tags --print-only)"
+          fi
+          tag="v${version}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists, appending run number."
+            version="${version}-update.${GITHUB_RUN_NUMBER}"
             tag="v${version}"
+          else
+            echo "Tag ${tag} does not exist, creating it."
           fi
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.]+)?$ ]]; then
             echo "Invalid SemVer: ${version}" >&2
@@ -70,10 +81,10 @@ jobs:
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag_name=${tag}" >> "$GITHUB_OUTPUT"
-          echo "RELEASE_VERSION=${version} (tag ${tag}) @ ${GITHUB_SHA}"
+          echo "RELEASE_VERSION=${version} (tag ${tag}) @ ${RELEASE_SHA}"
 
   tag:
-    needs: [quality, version]
+    needs: [version]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -81,32 +92,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ env.RELEASE_SHA }}
           fetch-depth: 0
           persist-credentials: true
 
-      - name: git tag + git push
+      - name: Create and push tag
         env:
           TAG: ${{ needs.version.outputs.tag_name }}
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already on origin."
-            if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-              echo "Refusing to reuse an existing tag on Run workflow." >&2
-              exit 1
-            fi
-            echo "Tag-push retry: packing the existing tag."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${TAG}" "${GITHUB_SHA}"
+          git tag "${TAG}" "${RELEASE_SHA}"
           git push origin "refs/tags/${TAG}"
-          echo "Pushed ${TAG} @ ${GITHUB_SHA}"
+          echo "Pushed ${TAG} @ ${RELEASE_SHA}"
 
   package:
-    needs: [quality, version, tag]
+    needs: [version, tag]
     strategy:
       fail-fast: false
       matrix:
@@ -132,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.RELEASE_SHA }}
 
       - uses: actions/setup-node@v7
         with:
@@ -201,7 +204,7 @@ jobs:
       - name: Upload Desktop + CLI artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}-${{ github.sha }}
+          name: ${{ matrix.artifact }}-${{ env.RELEASE_SHA }}
           path: |
             desktop/release/*.exe
             desktop/release/*.dmg
@@ -221,13 +224,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.RELEASE_SHA }}
           fetch-depth: 0
 
       - name: Download Desktop + CLI artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-release-${{ github.sha }}"
+          pattern: "*-release-${{ env.RELEASE_SHA }}"
           path: release-assets
           merge-multiple: true
 
@@ -279,24 +282,24 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag_name }}
           name: ${{ needs.version.outputs.tag_name }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ env.RELEASE_SHA }}
           body: |
-            Automated release **${{ needs.version.outputs.tag_name }}** from `${{ github.sha }}`.
+            Automated release **${{ needs.version.outputs.tag_name }}** from `${{ env.RELEASE_SHA }}`.
 
             Product version authority is git tags. The repo `VERSION` file is for local/dev display and may lag.
-          prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') }}
+          prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') || contains(needs.version.outputs.tag_name, 'update') }}
           fail_on_unmatched_files: true
           files: |
             staged/*
 
   container:
-    needs: [quality, version, tag]
+    needs: [version, tag]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.RELEASE_SHA }}
 
       - uses: actions/setup-node@v7
         with:
@@ -333,7 +336,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.version.outputs.tag_name }}
-            type=raw,value=sha-${{ github.sha }}
+            type=raw,value=sha-${{ env.RELEASE_SHA }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -349,7 +352,7 @@ jobs:
         run: |
           set -euo pipefail
           image="${{ steps.image.outputs.name }}"
-          tag="sha-${{ github.sha }}"
+          tag="sha-${{ env.RELEASE_SHA }}"
           docker pull "${image}:${tag}"
           cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
           cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }

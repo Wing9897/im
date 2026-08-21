@@ -22,18 +22,19 @@ describe("release safety gates", () => {
     expect(workflow).not.toContain("refs/heads/main");
   });
 
-  it("publishes from Release Run workflow (auto git tag + push before package)", () => {
+  it("publishes after green CI on main: auto tag then GitHub Release", () => {
     const workflow = readWorkflow("release.yml");
+    expect(workflow).toContain("workflow_run:");
+    expect(workflow).toContain("workflows: [CI]");
     expect(workflow).toContain("workflow_dispatch:");
-    expect(workflow).toContain("uses: ./.github/workflows/quality.yml");
-    expect(workflow).toMatch(/\n  tag:\n    needs: \[quality, version\]/);
-    expect(workflow).toContain("name: git tag + git push");
-    expect(workflow).toMatch(/\n  package:\n    needs: \[quality, version, tag\]/);
-    expect(workflow).toContain("softprops/action-gh-release");
+    expect(workflow).toContain("Generate tag version");
+    expect(workflow).toContain("appending run number");
+    expect(workflow).toContain("name: Create and push tag");
     expect(workflow).toContain('git push origin "refs/tags/${TAG}"');
+    expect(workflow).toContain("softprops/action-gh-release");
     expect(workflow).toContain("ghcr.io");
-    expect(workflow).toContain("tags:");
-    expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
+    expect(workflow).not.toContain("tauri-apps/tauri-action");
+    expect(workflow).toMatch(/\n  package:\n    needs: \[version, tag\]/);
   });
 
   it("keeps the Docker Node image aligned with .nvmrc", () => {
