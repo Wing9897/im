@@ -22,17 +22,17 @@ describe("release safety gates", () => {
     expect(workflow).not.toContain("refs/heads/main");
   });
 
-  it("publishes from Release workflow on v* tags (tag exists before package)", () => {
+  it("publishes from Release Run workflow (auto git tag + push before package)", () => {
     const workflow = readWorkflow("release.yml");
-    expect(workflow).toContain("tags:");
-    expect(workflow).toContain('"v*.*.*"');
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).toContain("uses: ./.github/workflows/quality.yml");
     expect(workflow).toMatch(/\n  tag:\n    needs: \[quality, version\]/);
+    expect(workflow).toContain("name: git tag + git push");
     expect(workflow).toMatch(/\n  package:\n    needs: \[quality, version, tag\]/);
     expect(workflow).toContain("softprops/action-gh-release");
-    expect(workflow).toContain("git push origin");
+    expect(workflow).toContain('git push origin "refs/tags/${TAG}"');
     expect(workflow).toContain("ghcr.io");
+    expect(workflow).toContain("tags:");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
   });
 

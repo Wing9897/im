@@ -6,7 +6,7 @@ on:
   pull_request:
   workflow_dispatch:
 
-# PR / main: quality + build only. Publishing lives in release.yml (tag push).
+# PR / main: quality + build only. To publish: Actions → Release → Run workflow (auto tag + push).
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
