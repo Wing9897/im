@@ -15,14 +15,15 @@ from pathlib import Path
 from typing import Literal
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+ROOT = _SCRIPT_DIR.parent
+for _path in (ROOT, _SCRIPT_DIR):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
 from _verify_common import api, configure_stdout  # noqa: E402
 
 configure_stdout()
 
-ROOT = Path(__file__).resolve().parent.parent
 WEB_DIST = ROOT / "web" / "dist"
 DESKTOP_DIST = ROOT / "desktop" / "dist"
 SERVER_DIR = ROOT / "server"

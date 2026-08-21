@@ -12,9 +12,16 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
 
-from server.constants import SERVICE_PORT
+# uv `package = false` — `uv run python scripts/*.py` does not install this
+# repo, so put the root on sys.path before any `server.*` import.
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from server.constants import SERVICE_PORT  # noqa: E402
 
 FAILURES: list[str] = []
 
