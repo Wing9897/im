@@ -33,6 +33,9 @@ describe("release safety gates", () => {
     expect(workflow).toContain("macos-latest");
     expect(workflow).toContain("ubuntu-latest");
     expect(workflow).toContain("softprops/action-gh-release");
+    expect(workflow).toContain("name: Upload to GitHub Release");
+    expect(workflow).not.toContain("actions/upload-artifact");
+    expect(workflow).not.toContain("actions/download-artifact");
     expect(workflow).not.toContain("package:cli");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
     expect(workflow).not.toContain("tauri-apps/tauri-action");

@@ -85,6 +85,20 @@ jobs:
           git push origin "refs/tags/${TAG}"
           echo "Pushed ${TAG} @ ${GITHUB_SHA}"
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.check.outputs.tag_name }}
+          name: ${{ steps.check.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            Automated release **${{ steps.check.outputs.tag_name }}** from `${{ github.sha }}`.
+
+            Desktop installers (Windows / macOS / Linux) attach as each platform job finishes.
+            CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server`.
+            Container: GHCR.
+          prerelease: ${{ contains(steps.check.outputs.tag_name, 'beta') || contains(steps.check.outputs.tag_name, 'alpha') || contains(steps.check.outputs.tag_name, 'rc') || contains(steps.check.outputs.tag_name, 'update') }}
+
   package:
     needs: [tag]
     strategy:
@@ -165,11 +179,12 @@ jobs:
             exit 1
           fi
 
-      - name: Upload Desktop artifacts
-        uses: actions/upload-artifact@v7
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v3
         with:
-          name: ${{ matrix.artifact }}-${{ github.sha }}
-          path: |
+          tag_name: ${{ needs.tag.outputs.tag_name }}
+          fail_on_unmatched_files: false
+          files: |
             desktop/release/*.exe
             desktop/release/*.dmg
             desktop/release/*.zip
@@ -178,81 +193,39 @@ jobs:
             desktop/release/*.yml
             desktop/release/*.yaml
             desktop/release/*.blockmap
-          if-no-files-found: error
 
   release:
     needs: [package, tag]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-
-      - name: Download Desktop artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: "*-release-${{ github.sha }}"
-          path: release-assets
-          merge-multiple: true
-
-      - name: Stage and assert Release attachments
+      - name: Assert Release has three Desktop installers
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p staged
-          while IFS= read -r -d '' f; do
-            base="$(basename "$f")"
-            if [[ -e "staged/$base" ]]; then
-              parent="$(basename "$(dirname "$f")")"
-              base="${parent}-${base}"
-            fi
-            cp "$f" "staged/$base"
-          done < <(find release-assets -type f \
-            \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' \
-               -o -name '*.deb' -o -name '*.yml' -o -name '*.yaml' -o -name '*.blockmap' \) \
-            -print0)
-
-          echo "Staged files:"
-          ls -la staged
-
+          assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          echo "Release assets:"
+          echo "$assets"
           need_fail=0
-          require_name() {
+          require() {
             local pattern="$1"
-            local hit
-            hit="$(find staged -maxdepth 1 -type f -name "$pattern" | head -n 1 || true)"
-            if [[ -z "$hit" ]]; then
+            if ! echo "$assets" | grep -E -q "$pattern"; then
               echo "MISSING required Release attachment: $pattern" >&2
               need_fail=1
             else
-              echo "OK: $pattern → $hit"
+              echo "OK: $pattern"
             fi
           }
-          require_name 'Intelligence Monitor Setup *.exe'
-          require_name '*.dmg'
-          require_name '*.AppImage'
+          require 'Intelligence Monitor Setup .+\.exe$'
+          require '\.dmg$'
+          require '\.AppImage$'
           if [[ "$need_fail" -ne 0 ]]; then
-            echo "Refusing to publish an incomplete GitHub Release." >&2
+            echo "Refusing an incomplete GitHub Release." >&2
             exit 1
           fi
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ needs.tag.outputs.tag_name }}
-          name: ${{ needs.tag.outputs.tag_name }}
-          target_commitish: ${{ github.sha }}
-          body: |
-            Automated release **${{ needs.tag.outputs.tag_name }}** from `${{ github.sha }}`.
-
-            Desktop installers (Windows / macOS / Linux) are attached.
-            CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server`.
-            Container: GHCR.
-          prerelease: ${{ contains(needs.tag.outputs.tag_name, 'beta') || contains(needs.tag.outputs.tag_name, 'alpha') || contains(needs.tag.outputs.tag_name, 'rc') || contains(needs.tag.outputs.tag_name, 'update') }}
-          fail_on_unmatched_files: true
-          files: |
-            staged/*
 
   container:
     needs: [tag]
