@@ -190,7 +190,10 @@ export function SettingsAiProviderPage() {
         );
         requestAiStatusRefresh(true);
       } else {
-        showToast(result.error ?? t("provider.testFailedDefault"), "error");
+        showToast(
+          toErrorMessage(result.error ?? t("provider.testFailedDefault")),
+          "error",
+        );
       }
     } catch (error) {
       showToast(toErrorMessage(error), "error");

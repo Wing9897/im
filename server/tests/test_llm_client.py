@@ -372,3 +372,39 @@ async def test_complete_attaches_provider_on_http_error() -> None:
     assert caught.value.provider == "openai"
     assert caught.value.status_code == 429
     await client.close()
+
+
+async def test_test_completion_gemini_raises_output_floor() -> None:
+    client = ConfigurableLlmClient(
+        provider="gemini_compatible",
+        model="gemini-3.1-flash-lite",
+        api_key="test",
+        base_url="https://generativelanguage.googleapis.com/v1",
+        timeout_seconds=5,
+        allow_loopback=False,
+    )
+    client.complete = AsyncMock(return_value={"text": "ok", "prompt_tokens": 6, "completion_tokens": 1})
+    result = await client.test_completion()
+    assert result["success"] is True
+    called = client.complete.await_args
+    assert called is not None
+    assert called.kwargs["max_output_tokens"] == ConfigurableLlmClient._GEMINI_PROBE_MAX_OUTPUT_TOKENS
+    await client.close()
+
+
+async def test_test_completion_ollama_keeps_one_token_probe() -> None:
+    client = ConfigurableLlmClient(
+        provider="ollama",
+        model="llama",
+        api_key="",
+        base_url="http://127.0.0.1:11434",
+        timeout_seconds=5,
+        allow_loopback=True,
+    )
+    client.complete = AsyncMock(return_value={"text": "ok", "prompt_tokens": 6, "completion_tokens": 1})
+    result = await client.test_completion()
+    assert result["success"] is True
+    called = client.complete.await_args
+    assert called is not None
+    assert called.kwargs["max_output_tokens"] == 1
+    await client.close()

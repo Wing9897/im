@@ -1,6 +1,6 @@
 """Dev-only live pipeline eval: real Telegram + Gemini + Serper, no fake seed rows.
 
-Not a product path. Implementation: ``scripts/live_eval/pipeline.py``.
+Not a product path. Implementation: ``scripts/live_eval/`` (``pipeline.py`` + setup/poll/teardown).
 
 Environment:
   VERIFY_BASE / DESKTOP_VERIFY_BASE — API base (default http://127.0.0.1:18820)

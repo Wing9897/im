@@ -166,8 +166,7 @@ async def ensure_llm_profile(
     now = utc_now_iso()
     if provider is None:
         await db.execute(
-            "INSERT INTO llm_profiles (id, name, base_url, model, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO llm_profiles (id, name, base_url, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
             (profile_id, name, base_url, model, now, now),
         )
         return

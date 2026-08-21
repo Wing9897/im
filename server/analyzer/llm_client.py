@@ -178,12 +178,21 @@ class ConfigurableLlmClient:
             raise
 
     _TEST_PROMPT = "Reply with exactly: ok"
+    #: Gemini 3 replies include a thought signature. ``maxOutputTokens=1`` returns
+    #: empty text + ``finishReason=MAX_TOKENS`` even for "ok".
+    _GEMINI_PROBE_MAX_OUTPUT_TOKENS = 64
 
     async def test_completion(self) -> dict[str, Any]:
         """Run a minimal-token generation probe (about one completion token)."""
         messages = [{"role": "user", "content": self._TEST_PROMPT}]
+        probe_cap = self._GEMINI_PROBE_MAX_OUTPUT_TOKENS if self.provider == "gemini_compatible" else 1
         try:
-            result = await self.complete(messages, temperature=0, json_mode=False, max_output_tokens=1)
+            result = await self.complete(
+                messages,
+                temperature=0,
+                json_mode=False,
+                max_output_tokens=probe_cap,
+            )
             preview = str(result.get("text") or "").strip()[:80]
             return {
                 "success": True,

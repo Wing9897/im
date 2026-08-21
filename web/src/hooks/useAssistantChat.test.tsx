@@ -291,6 +291,28 @@ describe("useAssistantChat", () => {
     expect(chat().sending).toBe(false);
   });
 
+  it("maps Gemini MAX_TOKENS soft errors to zh-Hant copy instead of raw English", async () => {
+    mockStreamAgentChat.mockResolvedValue({
+      sessionId: "srv-gemini-cap",
+      message: "",
+      toolCalls: [],
+      error: "Gemini response has no usable candidates (MAX_TOKENS)",
+    });
+
+    const chat = await mount();
+    await act(async () => {
+      chat().setDraft("今天有什麼行程");
+    });
+    await act(async () => {
+      await chat().sendDraft();
+    });
+
+    expect(chat().messages).toEqual([]);
+    expect(chat().error).toBe("Gemini 輸出因達到長度上限被截斷。請提高最大輸出 token，或縮短提示後重試。");
+    expect(chat().error).not.toMatch(/MAX_TOKENS/);
+    expect(chat().sending).toBe(false);
+  });
+
   it("on task editor route with bridge, sends surface + currentTask and applies taskConfig", async () => {
     window.history.pushState({}, "", "/tasks/new");
     const applyTaskConfig = vi.fn();

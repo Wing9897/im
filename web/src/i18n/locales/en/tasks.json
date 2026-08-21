@@ -36,7 +36,8 @@
     "changeEmojiAria": "Change emoji for {name}"
   },
   "errors": {
-    "geminiNoCandidates": "Gemini returned no usable content (possibly safety-filtered or an unexpected response shape). Check the model and prompt, then retry."
+    "geminiNoCandidates": "Gemini returned no usable content (possibly safety-filtered or an unexpected response shape). Check the model and prompt, then retry.",
+    "geminiMaxTokens": "Gemini output was cut off after reaching the token limit. Increase max output tokens or shorten the prompt, then retry."
   },
   "detail": {
     "timeRange": "Time range: {range}",

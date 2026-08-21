@@ -171,7 +171,7 @@ export function useAssistantChatStream({
           // events — toast only; do not persist the failure as a sticky bubble.
           const toastText =
             messageForErrorCode(response.error) ??
-            (response.message?.trim() ? response.message : response.error);
+            toErrorMessage(response.message?.trim() ? response.message : response.error);
           setError(toastText);
           setDraft(content);
           draftRef.current = content;

@@ -47,7 +47,7 @@ WEB_BATCH_ID = "cal-ui-web-batch"
 async def _clean(db: Database) -> None:
     """Remove previous fixture rows (best-effort by title / known ids)."""
     await db.execute("DELETE FROM analysis_events WHERE id LIKE 'cal-ui-%'")
-    await db.execute("DELETE FROM analysis_batches WHERE id = ?", (BATCH_ID,))
+    await db.execute("DELETE FROM analysis_batches WHERE id IN (?, ?)", (BATCH_ID, WEB_BATCH_ID))
     await clean_calendar_fixtures(db, title_prefix=PREFIX, event_id_prefix="cal-ui-")
     await db.execute("DELETE FROM recurring_schedules WHERE name LIKE ?", (f"{PREFIX}%",))
     for tid in (INTEL_TASK_ID, WEB_TASK_ID, PROJECT_TASK_ID):
@@ -446,9 +446,7 @@ async def seed(db: Database) -> dict[str, int]:
         batch_id = BATCH_ID
         if spec["task_id"] != INTEL_TASK_ID:
             batch_id = WEB_BATCH_ID
-            await ensure_completed_batch(
-                db, batch_id=batch_id, task_id=WEB_TASK_ID, message_count=1
-            )
+            await ensure_completed_batch(db, batch_id=batch_id, task_id=WEB_TASK_ID, message_count=1)
         await insert_analysis_event(
             db,
             event_id=spec["id"],

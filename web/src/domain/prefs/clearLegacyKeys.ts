@@ -18,6 +18,7 @@ function removeImPrefixedKeys(storage: Storage): void {
  * localStorage and sessionStorage. Board layout is unaffected (server ui_prefs).
  *
  * Idempotent: subsequent boots see the version marker and skip.
+ * Sunset: keep this v6 first-launch wipe; do not delete until a later prefs-schema bump.
  */
 export function clearLegacyPrefsIfNeeded(): void {
   if (typeof window === "undefined") return;
