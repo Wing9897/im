@@ -5,6 +5,7 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 ## [Unreleased]
 
 - **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 三平台 Desktop 執行檔直接掛到 GitHub Release（不走 Actions artifact，避免 storage quota）。CLI 用該 tag 源碼。
+- Release 收尾檢查用 `GH_REPO` 讀 GitHub Release（不依賴 runner 工作區的 `.git`）；資產檔名空白會被 GitHub 改成點。
 
 ## [1.0.7] — 2026-08-21
 

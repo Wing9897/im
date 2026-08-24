@@ -203,6 +203,7 @@ jobs:
         env:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
@@ -219,7 +220,8 @@ jobs:
               echo "OK: $pattern"
             fi
           }
-          require 'Intelligence Monitor Setup .+\.exe$'
+          # GitHub sanitizes spaces in asset names to dots.
+          require 'Setup.+\.exe$'
           require '\.dmg$'
           require '\.AppImage$'
           if [[ "$need_fail" -ne 0 ]]; then
