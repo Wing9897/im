@@ -10,6 +10,7 @@ import type {
   ActiveAnalysisInput,
 } from "../types";
 import i18n from "../i18n";
+import { messageForErrorCode } from "../i18n/errorCodes";
 import { APP_LOG_KIND } from "../logging/appLogClient";
 import { getOsTimeMs } from "../utils/time";
 
@@ -160,13 +161,36 @@ export function toActiveAnalysisState(
   };
 }
 
-function aiHealthPayload(
+function isPythonHttpExceptionDump(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /^\d{3}:\s*\{/.test(value) || value.includes("{'error_code'");
+}
+
+function localizeAiHealthReason(
+  errorCode: string | null | undefined,
+  reason: string | null | undefined,
+): string | null {
+  const fromCode = messageForErrorCode(errorCode);
+  if (fromCode) return fromCode;
+  const fromReason = messageForErrorCode(reason);
+  if (fromReason) return fromReason;
+  if (!reason || isPythonHttpExceptionDump(reason)) return null;
+  return reason;
+}
+
+export function aiHealthPayload(
   health: AiEngineHealthStatus,
 ): Record<string, unknown> | undefined {
   if (!health) return undefined;
-  if (!health.reason && !health.provider) return undefined;
+  const errorCode =
+    (typeof health.errorCode === "string" && health.errorCode) ||
+    (messageForErrorCode(health.reason) ? health.reason : null) ||
+    null;
+  const reason = localizeAiHealthReason(health.errorCode, health.reason);
+  if (!reason && !health.provider && !errorCode) return undefined;
   return {
-    reason: health.reason ?? null,
+    errorCode,
+    reason: reason ?? null,
     provider: health.provider ?? null,
   };
 }

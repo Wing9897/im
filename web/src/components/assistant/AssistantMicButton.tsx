@@ -10,6 +10,8 @@ type AssistantMicButtonProps = {
   sending: boolean;
   startListening: () => void | Promise<void>;
   stopListening: (options?: { send?: boolean }) => void | Promise<void>;
+  /** Extra disable (e.g. AI engine / assistant slot not ready). */
+  disabled?: boolean;
   size?: "sm" | "md";
   className?: string;
   /** Default: ``assistant-ptt`` (full page). Quick uses ``assistant-caption-ptt``. */
@@ -26,6 +28,7 @@ export function AssistantMicButton({
   sending,
   startListening,
   stopListening,
+  disabled = false,
   size = "md",
   className,
   testId = "assistant-ptt",
@@ -72,7 +75,7 @@ export function AssistantMicButton({
       onPointerDown={onMicPointerDown}
       onPointerUp={onMicPointerUp}
       onClick={onMicClick}
-      disabled={sending}
+      disabled={sending || disabled}
     >
       <Mic className="mr-1 inline size-3.5" aria-hidden />
       {active ? activeLabel : idleLabel}

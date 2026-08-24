@@ -69,6 +69,8 @@ export function AssistantPage() {
   const { aiEngineStatus, requestAiStatusRefresh } = useCollectorStatus();
   const aiUnavailable = aiEngineStatus === "unavailable";
   const [assistantSlotReady, setAssistantSlotReady] = useState<boolean | null>(null);
+  const [profileCount, setProfileCount] = useState<number | null>(null);
+  const sendDisabled = aiUnavailable || assistantSlotReady === false;
 
   useEffect(() => {
     if (aiUnavailable) requestAiStatusRefresh(true);
@@ -91,6 +93,7 @@ export function AssistantPage() {
     Promise.all([listLlmProfiles(), listLlmGlobalSlots()])
       .then(([profiles, slots]) => {
         if (cancelled) return;
+        setProfileCount(profiles.length);
         const binding = slots.find((s) => s.slot === "assistant");
         const profileId = (binding?.profileId ?? "").trim();
         if (!profileId) {
@@ -101,7 +104,10 @@ export function AssistantPage() {
         setAssistantSlotReady(Boolean(profile && isLlmProfileComplete(profile)));
       })
       .catch(() => {
-        if (!cancelled) setAssistantSlotReady(null);
+        if (!cancelled) {
+          setAssistantSlotReady(null);
+          setProfileCount(null);
+        }
       });
     return () => {
       cancelled = true;
@@ -109,6 +115,7 @@ export function AssistantPage() {
   }, []);
 
   useAssistantSpacePtt({
+    enabled: !sendDisabled,
     sttAvailable,
     sending,
     listening,
@@ -132,6 +139,13 @@ export function AssistantPage() {
     liveToolSteps.length,
     messages[messages.length - 1]?.content,
   ]);
+
+  const profilesKnown = profileCount !== null;
+  const showCreateProfile = profileCount === 0;
+  const showSlotUnbound =
+    profilesKnown && profileCount > 0 && assistantSlotReady === false;
+  const showAiUnavailable =
+    aiUnavailable && profilesKnown && !showCreateProfile && !showSlotUnbound;
 
   return (
     <div
@@ -183,7 +197,26 @@ export function AssistantPage() {
           </div>
         </header>
 
-        {aiUnavailable ? (
+        {showCreateProfile ? (
+          <AlertBanner
+            variant="warning"
+            className="mx-md mt-sm text-caption"
+            data-testid="assistant-no-profile"
+          >
+            <span>
+              {t("noProfile.message")}{" "}
+              <Link
+                to="/ai/provider"
+                className="underline underline-offset-2"
+                data-testid="assistant-no-profile-link"
+              >
+                {t("noProfile.link")}
+              </Link>
+            </span>
+          </AlertBanner>
+        ) : null}
+
+        {showAiUnavailable ? (
           <AlertBanner
             variant="warning"
             className="mx-md mt-sm text-caption"
@@ -202,7 +235,7 @@ export function AssistantPage() {
           </AlertBanner>
         ) : null}
 
-        {assistantSlotReady === false ? (
+        {showSlotUnbound ? (
           <AlertBanner
             variant="warning"
             className="mx-md mt-sm text-caption"
@@ -234,11 +267,13 @@ export function AssistantPage() {
               illustration={<EmptyStateGlyph icon={MessageSquare} />}
               title={t("empty.title")}
               hint={
-                sttAvailable
-                  ? undefined
-                  : !isAssistantDirectModeSupported()
-                    ? t("common:speech.sttDesktopUnavailable")
-                    : t("stt.unavailable")
+                showCreateProfile
+                  ? t("noProfile.hint")
+                  : sttAvailable
+                    ? undefined
+                    : !isAssistantDirectModeSupported()
+                      ? t("common:speech.sttDesktopUnavailable")
+                      : t("stt.unavailable")
               }
             />
           ) : (
@@ -294,7 +329,7 @@ export function AssistantPage() {
           spacePttMode={spacePttMode}
           startListening={startListening}
           stopListening={stopListening}
-          sendDisabled={aiUnavailable}
+          sendDisabled={sendDisabled}
           leadingActions={
             ttsEnabled && ttsAvailable ? (
               <span className={`${captionClass} inline-flex items-center gap-1 text-text-muted`}>

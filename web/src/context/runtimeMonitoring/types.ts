@@ -66,7 +66,7 @@ export function buildAiHealthSignature(
   status: AiEngineStatus,
   health: AiEngineHealthStatus,
 ): string {
-  return `${status}|${health.reason ?? ""}|${health.provider ?? ""}`;
+  return `${status}|${health.errorCode ?? ""}|${health.reason ?? ""}|${health.provider ?? ""}`;
 }
 
 export function buildAiStatusCheckFailureLog(message: string): AppLogInput {

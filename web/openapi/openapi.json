@@ -7923,6 +7923,17 @@
               }
             ],
             "title": "Provider"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorcode"
           }
         },
         "additionalProperties": false,
@@ -8074,6 +8085,17 @@
               }
             ],
             "title": "Error"
+          },
+          "errorCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errorcode"
           }
         },
         "additionalProperties": false,

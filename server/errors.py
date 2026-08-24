@@ -79,6 +79,28 @@ def http_error(
     )
 
 
+def diagnostic_error_fields(exc: BaseException) -> tuple[str, str]:
+    """Return ``(error_code, message)`` for diagnostics without ``str(HTTPException)``.
+
+    ``str(HTTPException)`` dumps ``400: {'error_code': ...}``; health / test
+    probes must never put that on the wire.
+    """
+    if isinstance(exc, HTTPException):
+        detail = cast(Any, exc.detail)
+        fallback = _STATUS_TO_CODE.get(exc.status_code, INTERNAL_ERROR)
+        if isinstance(detail, dict):
+            code = detail.get("error_code")
+            code_str = code if isinstance(code, str) and code else fallback
+            message = detail.get("message")
+            if isinstance(message, str) and message:
+                return code_str, message
+        if isinstance(detail, str) and detail:
+            return fallback, detail
+        return fallback, str(detail)
+    text = str(exc).strip()
+    return INTERNAL_ERROR, text or type(exc).__name__
+
+
 def _body_from_http_exception(exc: HTTPException) -> dict[str, Any]:
     detail = cast(Any, exc.detail)
     message = detail.get("message") if isinstance(detail, dict) else None
