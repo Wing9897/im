@@ -1,9 +1,9 @@
 """aiosqlite connection wrapper with schema-fingerprint validation.
 
-Schema bootstrap／reject is delegated to ``server.db.schema_bootstrap``
-(wipe-only stamp 1 — first database version; no migration registry). Destructive rebuild remains an
-explicit reset operation (no auto-seed). See ``docs/ARCHITECTURE.md`` for the
-supported schema matrix.
+Schema create／migrate／reject is delegated to ``server.db.schema_bootstrap``
+(single entry: ``ensure_schema`` → ``ensure_supported_schema``). Destructive
+rebuild remains an explicit reset operation (no demo-data auto-seed, never silent wipe).
+See ``docs/SCHEMA-BASELINE.md`` for the supported schema matrix.
 """
 
 from __future__ import annotations
@@ -16,10 +16,9 @@ from typing import Any, Protocol, TypeVar
 
 import aiosqlite
 
-from server.db.schema import DDL
 from server.db.schema_bootstrap import (
-    CURRENT_SCHEMA_VERSION,
     SchemaEvolutionError,
+    apply_authoritative_ddl,
     ensure_supported_schema,
 )
 from server.db.sqlite_busy import is_sqlite_busy
@@ -105,18 +104,18 @@ class Database:
     async def ensure_schema(self) -> None:
         """Delegate all schema classification and stamping to one entry."""
         try:
-            await ensure_supported_schema(self.conn)
+            await ensure_supported_schema(self.conn, self._path)
         except SchemaEvolutionError as exc:
             raise SchemaBaselineError(str(exc)) from exc
 
-    async def _rebuild_file(self) -> None:
+    async def rebuild_current_schema(self) -> None:
         """Wipe all user data and recreate the current schema.
 
-        Uses an in-place DROP + DDL apply under the DB lock. Closing and
-        ``os.remove``-ing the file is unreliable on Windows (WinError 32 while
-        WAL/handles linger) and previously left ``_conn is None`` after a failed
-        delete so every subsequent request crashed with
-        ``Database.connect() must be called before use``.
+        Uses an in-place DROP + ``apply_authoritative_ddl`` under the DB lock.
+        Closing and ``os.remove``-ing the file is unreliable on Windows
+        (WinError 32 while WAL/handles linger) and previously left
+        ``_conn is None`` after a failed delete so every subsequent request
+        crashed with ``Database.connect() must be called before use``.
         """
         async with self._lock:
             if self._conn is None:
@@ -143,8 +142,7 @@ class Database:
             with suppress(Exception):
                 await conn.execute("DELETE FROM sqlite_sequence")
 
-            await conn.executescript(DDL)
-            await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
+            await apply_authoritative_ddl(conn)
             await conn.execute("PRAGMA foreign_keys=ON")
             await conn.commit()
             try:

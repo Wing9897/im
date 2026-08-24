@@ -51,6 +51,8 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         # Calendar surface unified under /api/v1/calendar/*.
         ("GET", "/api/v1/results/calendar", None),
         ("GET", "/api/v1/calendar/items", None),
+        # Retired public RRULE expand; SPA / MCP use /calendar/window or Python helpers.
+        ("GET", "/api/v1/calendar/occurrences", None),
         ("POST", "/api/v1/calendar-imports/preview", {}),
         ("POST", "/api/v1/calendar-imports/commit", {}),
         ("GET", "/api/v1/timeline/dismissals", None),

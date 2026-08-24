@@ -2,7 +2,20 @@
 
 from server.db.schema_domains.vocabulary import APP_LOG_LEVEL_CHECK_SQL
 
+SCHEMA_META_DDL = """
+CREATE TABLE IF NOT EXISTS schema_meta (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    schema_semver TEXT NOT NULL
+);
+"""
+
+# Keep the literal in sync with ``SCHEMA_SEMVER`` in schema_inspect.py (drift-tested).
+SCHEMA_META_SEED_SQL = "INSERT OR IGNORE INTO schema_meta (id, schema_semver) VALUES (1, '1.1.0');\n"
+
 DDL = f"""
+{SCHEMA_META_DDL}
+{SCHEMA_META_SEED_SQL}
+
 CREATE TABLE IF NOT EXISTS system_config (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL,

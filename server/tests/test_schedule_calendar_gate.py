@@ -59,8 +59,8 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
     assert all("analysisMode" not in item or not item.get("analysisMode") for item in occurrences)
 
 
-async def test_calendar_occurrences_http_excludes_ai_trigger_schedules(app, client) -> None:
-    """GET /calendar/occurrences must not surface AI schedule_rrule as occurrences."""
+async def test_calendar_window_http_excludes_ai_trigger_schedules(client, app) -> None:
+    """GET /calendar/window must not surface AI schedule_rrule as occurrences."""
     db = app.state.db
     now = utc_now_iso()
     ai_id = "gate-http-ai"
@@ -84,14 +84,17 @@ async def test_calendar_occurrences_http_excludes_ai_trigger_schedules(app, clie
     )
 
     response = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": "2026-07-01T00:00:00Z",
-            "rangeEnd": "2026-07-08T00:00:00Z",
+            "startTime": "2026-07-01T00:00:00Z",
+            "endTime": "2026-07-08T00:00:00Z",
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeItems": "false",
         },
     )
     assert response.status_code == 200
-    occurrences = response.json()
+    occurrences = response.json()["items"]
     series_ids = {str(occ["seriesId"]) for occ in occurrences}
     assert ai_id not in series_ids
     assert recurring_id in series_ids

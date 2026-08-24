@@ -42,7 +42,7 @@ import { MonitorModeProvider } from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetAnalysisStatusState, resetTaskCatalogState, taskCatalogState } from "../../test/context-mocks";
 import { emitResourceModified } from "../../domain/sse/resourceModified";
 import {
-  makeCalendarOccurrence,
+  makeCalendarWindowItem,
   renderTimelineDataHook,
   setupTimelineDataCalendarDom,
   teardownTimelineDataCalendarDom,
@@ -83,9 +83,16 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     mockFetchCalendarWindow.mockClear();
     mockFetchCalendarWindow.mockResolvedValue([
-      makeCalendarOccurrence({ id: "rec-new:a", seriesId: "rec-new", title: "每日", worksetId: SYSTEM_WORKSET_ID }),
-      makeCalendarOccurrence({
+      makeCalendarWindowItem({
+        id: "rec-new:a",
+        source: "recurring",
+        seriesId: "rec-new",
+        title: "每日",
+        worksetId: SYSTEM_WORKSET_ID,
+      }),
+      makeCalendarWindowItem({
         id: "rec-new:b",
+        source: "recurring",
         seriesId: "rec-new",
         title: "每日",
         worksetId: SYSTEM_WORKSET_ID,
@@ -128,16 +135,13 @@ describe("useTimelineData calendar refresh and errors", () => {
 
   it("merges source=item_remind calendar rows and refreshes on item SSE", async () => {
     mockFetchCalendarWindow.mockResolvedValue([
-      makeCalendarOccurrence({
+      makeCalendarWindowItem({
         id: "item:i1:remind",
-        taskId: "",
-        taskName: "",
+        source: "item_remind",
         title: "Milk",
         startTime: "2025-01-20T00:00:00",
         endTime: "2025-01-20T23:59:59",
         isAllDay: true,
-        rrule: "",
-        source: "item_remind",
         worksetId: SYSTEM_WORKSET_ID,
         itemId: "i1",
         itemDateKind: "remind",

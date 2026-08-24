@@ -234,14 +234,17 @@ async def test_item_remind_projection_inherits_expires_notify_pref(client):
     start = (today - timedelta(days=1)).isoformat()
     end = (today + timedelta(days=40)).isoformat()
     api = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": f"{start}T00:00:00Z",
-            "rangeEnd": f"{end}T23:59:59Z",
+            "startTime": f"{start}T00:00:00Z",
+            "endTime": f"{end}T23:59:59Z",
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeRecurring": "false",
         },
     )
     assert api.status_code == 200
-    remind = next(row for row in api.json() if row["id"] == f"item:{item_id}:remind")
+    remind = next(row for row in api.json()["items"] if row["id"] == f"item:{item_id}:remind")
     assert remind["notifyPref"] == "off"
 
 
@@ -258,16 +261,18 @@ async def test_calendar_occurrence_inherits_series_notify_pref(client):
     assert created.status_code == 201
     series_id = created.json()["id"]
     items = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": "2026-01-01T00:00:00Z",
-            "rangeEnd": "2027-01-01T00:00:00Z",
+            "startTime": "2026-01-01T00:00:00Z",
+            "endTime": "2027-01-01T00:00:00Z",
             "seriesId": series_id,
+            "includeAnalysis": "false",
+            "includeUser": "false",
             "includeItems": "false",
         },
     )
     assert items.status_code == 200
-    body = items.json()
+    body = items.json()["items"]
     assert body, "expected at least one occurrence in the year window"
     assert all(row["notifyPref"] == "off" for row in body)
     assert all(row["seriesId"] == series_id for row in body)

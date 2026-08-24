@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-1 first database / non-current hard-reject): ``test_schema_wipe_floor.py``.
+Floor SoT (stamp 2 + retired future-stamp hard-reject): ``test_schema_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -16,6 +16,7 @@ from server.db.schema import DDL
 from server.db.schema_bootstrap import (
     CURRENT_SCHEMA_FINGERPRINT,
     CURRENT_SCHEMA_VERSION,
+    SCHEMA_SEMVER,
     SchemaFingerprint,
     inspect_schema,
 )
@@ -27,7 +28,7 @@ from server.tests.schema_fixtures import (
     make_stamped_db,
 )
 
-_REQUIRED_TABLE_COUNT = 30
+_REQUIRED_TABLE_COUNT = 31
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 
@@ -50,7 +51,8 @@ async def test_fresh_database_creates_full_schema(tmp_path):
         }
 
         assert len(tables) == _REQUIRED_TABLE_COUNT
-        assert {"messages", "analysis_tasks"} <= tables
+        assert {"messages", "analysis_tasks", "schema_meta"} <= tables
+        assert await db.fetch_value("SELECT schema_semver FROM schema_meta WHERE id = 1") == SCHEMA_SEMVER
         assert "details" in app_log_columns
         assert "kind" in app_log_columns
         assert "idx_app_logs_time" in app_log_indexes
@@ -61,6 +63,24 @@ async def test_fresh_database_creates_full_schema(tmp_path):
             ("platform_id", "channels", "platform_id", "CASCADE"),
         }
         assert await db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION
+    finally:
+        await db.close()
+
+
+async def test_rebuild_current_schema_seeds_schema_meta(tmp_path):
+    path = str(tmp_path / "rebuild.db")
+    db = Database(path)
+    await db.connect()
+    try:
+        await db.ensure_schema()
+        await db.execute(
+            "INSERT INTO app_logs (id, time, level, category, kind, message) VALUES (?, ?, ?, ?, ?, ?)",
+            ("keep-me", "2026-01-01T00:00:00Z", "info", "schema-test", "system", "gone after rebuild"),
+        )
+        await db.rebuild_current_schema()
+        assert await db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION
+        assert await db.fetch_value("SELECT schema_semver FROM schema_meta WHERE id = 1") == SCHEMA_SEMVER
+        assert await db.fetch_value("SELECT COUNT(*) FROM app_logs") == 0
     finally:
         await db.close()
 
@@ -244,7 +264,7 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
 
 
 # Newer-than-supported stamps: ``test_newer_schema_version_is_rejected_without_changes``.
-# Prior wipe-floor hard-reject + lifespan reset log: ``test_schema_wipe_floor``.
+# Retired future-stamp hard-reject + lifespan log: ``test_schema_floor``.
 
 
 async def test_ddl_derived_fingerprint_matches_live_introspection():

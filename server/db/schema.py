@@ -1,4 +1,4 @@
-"""Stable aggregation point for the wipe-only SQLite baseline."""
+"""Stable aggregation point for the current SQLite baseline."""
 
 from server.db.schema_domains import (
     actions,

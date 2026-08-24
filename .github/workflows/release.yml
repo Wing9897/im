@@ -1,6 +1,6 @@
 name: Release
 
-# git push origin main → quality → git tag + push → win/mac/linux Desktop → GitHub Release + GHCR
+# git push origin main → quality → git tag + push → one Vite web/dist → win/mac/linux Desktop → GitHub Release + GHCR
 # CLI is source (clone the tag). No skipped jobs on this path.
 
 on:
@@ -99,22 +99,59 @@ jobs:
             Container: GHCR.
           prerelease: ${{ contains(steps.check.outputs.tag_name, 'beta') || contains(steps.check.outputs.tag_name, 'alpha') || contains(steps.check.outputs.tag_name, 'rc') || contains(steps.check.outputs.tag_name, 'update') }}
 
-  package:
+  web_dist:
     needs: [tag]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply release version (workspace only)
+        env:
+          RELEASE_VERSION: ${{ needs.tag.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
+
+      - name: Build web dist
+        run: npm run build:web
+
+      - name: Upload web dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 7
+          if-no-files-found: error
+
+  package:
+    needs: [tag, web_dist]
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            dist: dist:win
+            dist: dist:win:native
             artifact: windows-release
             expect_desktop: "*.exe"
           - os: macos-latest
-            dist: dist:mac
+            dist: dist:mac:native
             artifact: macos-release
             expect_desktop: "*.dmg"
           - os: ubuntu-latest
-            dist: dist:linux
+            dist: dist:linux:native
             artifact: linux-release
             expect_desktop: "*.AppImage"
     name: package (${{ matrix.os }})
@@ -157,6 +194,27 @@ jobs:
           set -euo pipefail
           printf '%s\n' "$RELEASE_VERSION" > VERSION
           node scripts/sync-version.mjs
+
+      - name: Download shared web dist
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+
+      - name: Assert shared web/dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f web/dist/index.html ]]; then
+            echo "Expected web/dist/index.html after downloading artifact web-dist" >&2
+            ls -la web/dist || true
+            exit 1
+          fi
+          if [[ ! -d web/dist/assets ]]; then
+            echo "Expected web/dist/assets directory after downloading artifact web-dist" >&2
+            ls -la web/dist || true
+            exit 1
+          fi
 
       - name: Build Desktop package
         env:

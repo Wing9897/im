@@ -10,7 +10,6 @@ from server.api.routes.calendar import (
     holidays,
     importance,
     imports,
-    occurrences,
     recurring,
     user_events,
     window,
@@ -18,7 +17,6 @@ from server.api.routes.calendar import (
 
 router = APIRouter(prefix="/api/v1/calendar", tags=["calendar"], dependencies=API_DEPS)
 router.include_router(window.router)
-router.include_router(occurrences.router)
 router.include_router(holidays.router)
 router.include_router(imports.router)
 router.include_router(dismissals.router)

@@ -35,7 +35,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "access_api_keys",
         # Device-scoped assistant sessions live in ui_prefs.
         "assistant_sessions",
-        # Board / notify / timeline / assistant voice-io live in ui_prefs (wipe-only).
+        # Board / notify / timeline / assistant voice-io live in ui_prefs.
         "ops_board_layout",
         "ops_board_widget_state",
         "voice_reminder_settings",

@@ -25,7 +25,7 @@ def _ddl_origin_values() -> frozenset[str]:
 
 
 def test_user_event_origins_match_ddl_check() -> None:
-    """Python SoT must equal the wipe-only DDL CHECK set (no silent drift)."""
+    """Python SoT must equal the current DDL CHECK set (no silent drift)."""
     assert _ddl_origin_values() == ALLOWED_USER_EVENT_ORIGINS
     assert USER_EVENT_ORIGIN_CHECK_SQL in calendar_ddl.DDL
     assert len(ALL_USER_EVENT_ORIGINS) == len(set(ALL_USER_EVENT_ORIGINS))

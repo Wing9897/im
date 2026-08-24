@@ -22,7 +22,7 @@ interface UseTimelineDataOptions {
   selectedSources: SourceFilterSelection;
   /** Current view mode — span fetching only triggers in "gantt" mode. */
   viewMode: "calendar" | "gantt";
-  /** Start of the visible date range (calendar occurrences are fetched around it). */
+  /** Start of the visible date range (calendar window is fetched around it). */
   rangeStart: Date;
   /** End of the visible date range. */
   rangeEnd: Date;

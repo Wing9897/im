@@ -14,21 +14,6 @@ export { asTimedAnalysisEvent } from "./timelineItem";
 /** Ranked topic returned by `/results/trending`. */
 export type TrendingTopic = components["schemas"]["TrendingTopicResponse"];
 
-/** An expanded RRULE occurrence for a recurring task */
-export type CalendarOccurrence = Omit<
-  components["schemas"]["CalendarOccurrenceResponse"],
-  "dismissed"
-> & {
-  /** Older local fixtures may omit the server-defaulted marker. */
-  dismissed?: boolean;
-  /** User/agent important marker (❗). */
-  important?: boolean;
-  /** Finite RRULE series final occurrence (UNTIL/COUNT) — month「+N 结束」. */
-  isLastOccurrence?: boolean;
-  /** Entity card glyph (NULL = product logo). */
-  emoji?: string | null;
-};
-
 /** Queue status from GET `/results/queue`. */
 export type QueueStatus = components["schemas"]["ResultsQueueResponse"];
 

@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CalendarWindowItem } from "../../api/calendarWindow";
-import type { AnalysisEvent, CalendarOccurrence } from "../../types";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { resolveTimelineFilterPlan } from "./timelineFilterPlan";
 import {
-  calendarOccurrenceToBoardEvent,
   fetchBoardEventsList,
-  mergeWithCalendarOccurrences,
+  filterTimelineWindowEvents,
   userEventToBoardEvent,
   userEventToTimelineItem,
+  windowItemToBoardEvent,
 } from "./timedEventMerge";
 import { getGeneralWorksetLabel } from "./userEvents";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: vi.fn(),
@@ -43,54 +43,26 @@ function makeWindowItem(
   };
 }
 
-/** Local AnalysisEvent fixture for merge tests (not timelineTestHelpers.makeEvent). */
-function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
-  return {
-    id: "evt-1",
-    seriesId: "task-a",
-    version: 1,
-    batchId: "b1",
-    title: "分析事件",
-    body: "",
-    startTime: "2026-07-22T09:00:00.000Z",
-    endTime: "2026-07-22T10:00:00.000Z",
-    location: null,
-    latitude: null,
-    longitude: null,
-    participants: [],
-    sourceMessageId: null,
-    sourcePlatform: null,
-    sourceChannelName: null,
-    sourceMessageTime: null,
-    analysisTimeRange: null,
-    batchSourceChannelNames: [],
-    taskName: "事件任務",
-    createdAt: "2026-07-22T09:00:00.000Z",
-    updatedAt: "2026-07-22T09:00:00.000Z",
-    ...overrides,
-  };
-}
-
-function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
-  return {
+function makeRecurringWindowItem(
+  overrides: Partial<CalendarWindowItem> = {},
+): CalendarWindowItem {
+  return makeWindowItem({
     id: "cal-task:20260722T090000Z",
+    source: "recurring",
+    title: "週會",
     seriesId: "cal-task",
     taskName: "週期任務",
-    title: "週會",
     startTime: "2026-07-22T09:00:00.000Z",
     endTime: "2026-07-22T09:30:00.000Z",
-    isAllDay: false,
     timezone: "Asia/Taipei",
-    location: null,
-    description: "RRULE 展開",
-    rrule: "FREQ=WEEKLY",
+    body: "RRULE 展開",
     ...overrides,
-  };
+  });
 }
 
-describe("calendarOccurrenceToBoardEvent", () => {
-  it("marks source as calendar and keeps seriesId for filtering", () => {
-    const event = calendarOccurrenceToBoardEvent(makeOccurrence({ worksetId: "ws-cal" }));
+describe("windowItemToBoardEvent", () => {
+  it("marks source as recurring and keeps seriesId for filtering", () => {
+    const event = windowItemToBoardEvent(makeRecurringWindowItem({ worksetId: "ws-cal" }));
     expect(event.source).toBe("recurring");
     expect(event.seriesId).toBe("cal-task");
     expect(event.worksetId).toBe("ws-cal");
@@ -100,77 +72,176 @@ describe("calendarOccurrenceToBoardEvent", () => {
   });
 
   it("keeps parent itemId on recurring linked calendars", () => {
-    const event = calendarOccurrenceToBoardEvent(
-      makeOccurrence({ itemId: "item-9" }),
-    );
+    const event = windowItemToBoardEvent(makeRecurringWindowItem({ itemId: "item-9" }));
     expect(event.source).toBe("recurring");
     expect(event.itemId).toBe("item-9");
   });
 
-  it("preserves the all-day flag on adapted occurrences", () => {
-    const event = calendarOccurrenceToBoardEvent(makeOccurrence({ isAllDay: true }));
+  it("preserves the all-day flag on adapted window rows", () => {
+    const event = windowItemToBoardEvent(makeRecurringWindowItem({ isAllDay: true }));
     expect(event.isAllDay).toBe(true);
     expect(event.source).toBe("recurring");
   });
+
+  it("projects item_remind rows with a remind title and no seriesId", () => {
+    const event = windowItemToBoardEvent(
+      makeWindowItem({
+        id: "item:i1:remind",
+        source: "item_remind",
+        title: "Milk",
+        itemId: "i1",
+        itemDateKind: "remind",
+        isAllDay: true,
+      }),
+    );
+    expect(event.source).toBe("item_remind");
+    expect(event.seriesId).toBeNull();
+    expect(event.itemId).toBe("i1");
+    expect(event.itemDateKind).toBe("remind");
+    expect(event.worksetId).toBe(SYSTEM_WORKSET_ID);
+    expect(event.title).toContain("Milk");
+  });
 });
 
-describe("mergeWithCalendarOccurrences", () => {
-  it("appends calendar occurrences after timed events", () => {
-    const merged = mergeWithCalendarOccurrences([makeEvent()], [makeOccurrence()]);
-    expect(merged).toHaveLength(2);
-    expect(merged[1].id).toBe("cal-task:20260722T090000Z");
-    expect(merged[1].source).toBe("recurring");
-  });
+describe("filterTimelineWindowEvents", () => {
+  const catalog = [
+    { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" },
+    { id: "web-1", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-A" },
+  ];
 
-  it("skips occurrence with the same id", () => {
-    const merged = mergeWithCalendarOccurrences(
-      [makeEvent({ id: "cal-task:20260722T090000Z" })],
-      [makeOccurrence()],
-    );
-    expect(merged).toHaveLength(1);
-  });
-
-  it("skips occurrence with the same seriesId and startTime", () => {
-    const merged = mergeWithCalendarOccurrences(
-      [makeEvent({ id: "other-id", seriesId: "cal-task", startTime: "2026-07-22T09:00:00.000Z" })],
-      [makeOccurrence()],
-    );
-    expect(merged).toHaveLength(1);
-    expect(merged[0].id).toBe("other-id");
-  });
-
-  it("deduplicates equivalent occurrence timestamps with different ISO precision", () => {
-    const merged = mergeWithCalendarOccurrences(
-      [makeEvent({ id: "other-id", seriesId: "cal-task", startTime: "2026-07-22T09:00:00Z" })],
-      [makeOccurrence({ startTime: "2026-07-22T09:00:00.000Z" })],
-    );
-    expect(merged).toHaveLength(1);
-  });
-
-  it("does not treat user_event taskId provenance as a recurring seriesId", () => {
-    const userTimed = userEventToBoardEvent({
-      id: "ue-provenance",
-      title: "分析任务溯源事件",
-      body: "",
-      startTime: "2026-07-22T09:00:00.000Z",
-      endTime: "2026-07-22T09:30:00.000Z",
-      location: null,
-      origin: "manual",
-      source: "user",
-      taskId: "cal-task",
-      kind: "normal",
-      worksetId: "ws-1",
-      createdAt: "2026-07-21T00:00:00Z",
-      updatedAt: "2026-07-21T00:00:00Z",
-      isAllDay: true,
-      timezone: "Asia/Taipei",
+  it("keeps analysis + user + recurring in the all-sources view", () => {
+    const plan = resolveTimelineFilterPlan(null, catalog);
+    const events = [
+      windowItemToBoardEvent(
+        makeWindowItem({ id: "a-1", source: "analysis", title: "分析", taskId: "evt-1" }),
+      ),
+      windowItemToBoardEvent(
+        makeWindowItem({
+          id: "ue-provenance",
+          source: "user",
+          title: "分析任务溯源事件",
+          origin: "manual",
+          taskId: "cal-task",
+          worksetId: "ws-1",
+        }),
+      ),
+      windowItemToBoardEvent(makeRecurringWindowItem()),
+    ];
+    const filtered = filterTimelineWindowEvents({
+      selectedSources: null,
+      filterPlan: plan,
+      events,
     });
-    const merged = mergeWithCalendarOccurrences([userTimed], [makeOccurrence()]);
     // seriesId (recurring) and taskId (analysis provenance) are separate namespaces.
-    expect(merged).toHaveLength(2);
-    expect(merged.map((item) => item.id).sort()).toEqual(
-      ["cal-task:20260722T090000Z", "ue-provenance"].sort(),
+    expect(filtered.map((item) => item.id).sort()).toEqual(
+      ["a-1", "cal-task:20260722T090000Z", "ue-provenance"].sort(),
     );
+    expect(filtered.find((item) => item.id === "cal-task:20260722T090000Z")?.source).toBe(
+      "recurring",
+    );
+  });
+
+  it("keeps agent analysis events when that task is selected (no items)", () => {
+    const plan = resolveTimelineFilterPlan({ taskIds: ["web-1"], worksetIds: [] }, catalog);
+    expect(plan).toMatchObject({
+      fetchAnalysis: true,
+      fetchItems: false,
+      analysisTaskIds: ["web-1"],
+    });
+    const events = [
+      windowItemToBoardEvent(
+        makeWindowItem({
+          id: "web-hit",
+          source: "analysis",
+          title: "Pricing spike",
+          taskId: "web-1",
+        }),
+      ),
+      windowItemToBoardEvent(makeRecurringWindowItem()),
+      windowItemToBoardEvent(
+        makeWindowItem({
+          id: "item:i1:remind",
+          source: "item_remind",
+          title: "Milk",
+          itemId: "i1",
+          itemDateKind: "remind",
+        }),
+      ),
+    ];
+    const filtered = filterTimelineWindowEvents({
+      selectedSources: { taskIds: ["web-1"], worksetIds: [] },
+      filterPlan: plan,
+      events,
+    });
+    expect(filtered.map((e) => e.id)).toEqual(["web-hit"]);
+    expect(filtered.every((e) => e.source !== "item_remind")).toBe(true);
+  });
+
+  it("keeps source=item_remind rows when items are in the plan", () => {
+    const plan = resolveTimelineFilterPlan(null, catalog);
+    const events = [
+      windowItemToBoardEvent(makeRecurringWindowItem()),
+      windowItemToBoardEvent(
+        makeWindowItem({
+          id: "item:i1:remind",
+          source: "item_remind",
+          title: "Milk",
+          startTime: "2025-01-20T00:00:00",
+          endTime: "2025-01-20T23:59:59",
+          isAllDay: true,
+          timezone: "floating",
+          itemId: "i1",
+          itemDateKind: "remind",
+        }),
+      ),
+    ];
+    const filtered = filterTimelineWindowEvents({
+      selectedSources: null,
+      filterPlan: plan,
+      events,
+    });
+    const item = filtered.find((e) => e.source === "item_remind");
+    expect(item?.id).toBe("item:i1:remind");
+    expect(item?.itemId).toBe("i1");
+    expect(item?.itemDateKind).toBe("remind");
+    expect(item?.dismissed).toBe(false);
+    expect(item?.startTime).toBe("2025-01-20T00:00:00");
+  });
+
+  it("returns empty for an explicit empty selection", () => {
+    const plan = resolveTimelineFilterPlan({ taskIds: [], worksetIds: [] }, catalog);
+    expect(
+      filterTimelineWindowEvents({
+        selectedSources: { taskIds: [], worksetIds: [] },
+        filterPlan: plan,
+        events: [
+          windowItemToBoardEvent(
+            makeWindowItem({ id: "a-1", source: "analysis", title: "分析", taskId: "evt-1" }),
+          ),
+          windowItemToBoardEvent(makeRecurringWindowItem()),
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it("filters recurring rows by selected workset", () => {
+    const selection = { taskIds: [] as string[], worksetIds: ["ws-A"] };
+    const plan = resolveTimelineFilterPlan(selection, catalog);
+    const filtered = filterTimelineWindowEvents({
+      selectedSources: selection,
+      filterPlan: plan,
+      events: [
+        windowItemToBoardEvent(
+          makeRecurringWindowItem({ id: "cal-1:a", seriesId: "cal-1", worksetId: "ws-A" }),
+        ),
+        windowItemToBoardEvent(
+          makeRecurringWindowItem({ id: "cal-2:b", seriesId: "cal-2", worksetId: "ws-B" }),
+        ),
+      ],
+    });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].seriesId).toBe("cal-1");
+    expect(filtered[0].source).toBe("recurring");
   });
 });
 

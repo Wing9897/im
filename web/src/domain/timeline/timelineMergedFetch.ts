@@ -11,13 +11,8 @@
 
 import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
 import type { TimelineFilterPlan } from "./timelineFilterPlan";
-import {
-  fetchMergedTimedEvents,
-  mergeTimelineFilterSources,
-} from "./timedEventMerge";
+import { fetchMergedTimedEvents } from "./timedEventMerge";
 import type { TimelineItem } from "../../types";
-
-export { mergeTimelineFilterSources };
 
 /** Padding (days) around the visible range so the 42-day month grid is covered. */
 export const TIMELINE_CALENDAR_FETCH_PADDING_DAYS = 7;

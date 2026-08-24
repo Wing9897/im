@@ -1497,23 +1497,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calendar/occurrences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Calendar Occurrences */
-        get: operations["list_calendar_occurrences_api_v1_calendar_occurrences_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/calendar/holidays": {
         parameters: {
             query?: never;
@@ -2975,81 +2958,6 @@ export interface components {
             code: string;
             /** Message */
             message: string;
-        };
-        /**
-         * CalendarOccurrenceResponse
-         * @description RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``.
-         */
-        CalendarOccurrenceResponse: {
-            /** Id */
-            id: string;
-            /**
-             * Seriesid
-             * @default
-             */
-            seriesId: string;
-            /**
-             * Taskname
-             * @default
-             */
-            taskName: string;
-            /** Title */
-            title: string;
-            /** Starttime */
-            startTime: string;
-            /** Endtime */
-            endTime: string;
-            /**
-             * Isallday
-             * @default false
-             */
-            isAllDay: boolean;
-            /** Timezone */
-            timezone?: string | null;
-            /** Location */
-            location?: string | null;
-            /** Description */
-            description?: string | null;
-            /**
-             * Rrule
-             * @default
-             */
-            rrule: string;
-            /**
-             * Dismissed
-             * @default false
-             */
-            dismissed: boolean;
-            /**
-             * Important
-             * @default false
-             */
-            important: boolean;
-            /**
-             * Islastoccurrence
-             * @default false
-             */
-            isLastOccurrence: boolean;
-            /**
-             * Source
-             * @default recurring
-             * @enum {string}
-             */
-            source: "recurring" | "item_remind";
-            /** Worksetid */
-            worksetId?: string | null;
-            /** Itemid */
-            itemId?: string | null;
-            /** Itemdatekind */
-            itemDateKind?: "remind" | null;
-            /**
-             * Notifypref
-             * @default inherit
-             * @enum {string}
-             */
-            notifyPref: "inherit" | "off";
-            /** Emoji */
-            emoji?: string | null;
         };
         /**
          * CalendarWindowItemResponse
@@ -8944,42 +8852,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarWindowResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_calendar_occurrences_api_v1_calendar_occurrences_get: {
-        parameters: {
-            query?: {
-                rangeStart?: string | null;
-                rangeEnd?: string | null;
-                seriesId?: string | null;
-                seriesIds?: string[] | null;
-                /** @description Include trackable-item remind DATE projections (source=item_remind). */
-                includeItems?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarOccurrenceResponse"][];
                 };
             };
             /** @description Validation Error */

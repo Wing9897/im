@@ -4,7 +4,6 @@
  */
 
 export {
-  calendarOccurrenceToBoardEvent,
   sortEventsByTimeDesc,
   userEventToBoardEvent,
   userEventToTimelineItem,
@@ -12,11 +11,7 @@ export {
   withResolvedUserEventTaskNames,
 } from "./timedEventProject";
 
-export {
-  filterTimelineWindowEvents,
-  mergeTimelineFilterSources,
-  mergeWithCalendarOccurrences,
-} from "./timedEventMergeCore";
+export { filterTimelineWindowEvents } from "./timedEventMergeCore";
 
 export type {
   FetchMergedTimedEventsOpts,
