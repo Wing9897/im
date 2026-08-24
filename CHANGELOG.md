@@ -6,7 +6,7 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 - Retired public `GET /api/v1/calendar/occurrences` (404). Time-window reads stay on `GET /api/v1/calendar/window`; Agent／MCP expand via Python `query_window`／`expand_active_calendar_occurrences`.
 - Schema stamp **2** (`SCHEMA_SEMVER` `1.1.0`) adds `schema_meta`. Stamp-1 databases backup once then walk `SCHEMA_MIGRATIONS` `1→2`. Empty DBs create current DDL (seeded `schema_meta` row, same as the 1→2 step) and stamp 2. Future stamps (retired 3–45 while CURRENT=2) hard-reject with “update the application”; pre-cut stamp-2 lookalikes and corrupt fingerprints still require explicit reset. Never silent wipe.
-- **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 一次 Vite（`web_dist`，Actions artifact `web-dist` 僅 `web/dist`、保留 7 天）→ 三平台 Desktop 共用該包，安裝程式仍直接掛到 GitHub Release（安裝包不走 Actions artifact）。CLI 用該 tag 源碼。
+- **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 一次 Vite（`web_dist`，暫存 `web-dist.tar.gz` 到 GitHub Release 供三平台下載，收尾刪除；不走 Actions artifact，因私有倉配額已滿）→ 三平台 Desktop 共用該包，安裝程式直接掛到 GitHub Release。CLI 用該 tag 源碼。
 - Release 收尾檢查用 `GH_REPO` 讀 GitHub Release（不依賴 runner 工作區的 `.git`）；資產檔名空白會被 GitHub 改成點。
 
 ## [1.0.7] — 2026-08-21

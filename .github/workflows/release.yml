@@ -2,6 +2,7 @@ name: Release
 
 # git push origin main → quality → git tag + push → one Vite web/dist → win/mac/linux Desktop → GitHub Release + GHCR
 # CLI is source (clone the tag). No skipped jobs on this path.
+# web/dist is staged as a GitHub Release asset (not Actions artifacts — private-repo quota).
 
 on:
   push:
@@ -128,13 +129,27 @@ jobs:
       - name: Build web dist
         run: npm run build:web
 
-      - name: Upload web dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist
-          path: web/dist
-          retention-days: 7
-          if-no-files-found: error
+      - name: Stage web dist on GitHub Release
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f web/dist/index.html ]]; then
+            echo "Expected web/dist/index.html after build:web" >&2
+            ls -la web/dist || true
+            exit 1
+          fi
+          if [[ ! -d web/dist/assets ]]; then
+            echo "Expected web/dist/assets after build:web" >&2
+            ls -la web/dist || true
+            exit 1
+          fi
+          tar -C web/dist -czf web-dist.tar.gz .
+          gh release upload "$TAG" web-dist.tar.gz --clobber
+          echo "Staged web-dist.tar.gz on ${TAG}"
 
   package:
     needs: [tag, web_dist]
@@ -196,22 +211,24 @@ jobs:
           node scripts/sync-version.mjs
 
       - name: Download shared web dist
-        uses: actions/download-artifact@v4
-        with:
-          name: web-dist
-          path: web/dist
-
-      - name: Assert shared web/dist
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p web/dist
+          gh release download "$TAG" --pattern web-dist.tar.gz --clobber
+          tar -xzf web-dist.tar.gz -C web/dist
+          rm -f web-dist.tar.gz
           if [[ ! -f web/dist/index.html ]]; then
-            echo "Expected web/dist/index.html after downloading artifact web-dist" >&2
+            echo "Expected web/dist/index.html after downloading Release asset web-dist.tar.gz" >&2
             ls -la web/dist || true
             exit 1
           fi
           if [[ ! -d web/dist/assets ]]; then
-            echo "Expected web/dist/assets directory after downloading artifact web-dist" >&2
+            echo "Expected web/dist/assets directory after downloading Release asset web-dist.tar.gz" >&2
             ls -la web/dist || true
             exit 1
           fi
@@ -265,6 +282,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          gh release delete-asset "$TAG" web-dist.tar.gz --yes
           assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
           echo "Release assets:"
           echo "$assets"
