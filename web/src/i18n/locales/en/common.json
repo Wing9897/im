@@ -162,6 +162,9 @@
     "agent_timeout": "Assistant request timed out. Please try again or shorten your question.",
     "ai_engine_unreachable": "AI engine unreachable (for example Ollama is not running or the port is wrong). A successful Settings AI test still may not support long assistant chats.",
     "ai_engine_failed": "The AI engine could not complete this request. Check the provider status and the logs page, then try again.",
+    "NO_LLM_PROFILE": "No AI profile yet. Create one under AI provider settings.",
+    "ASSISTANT_SLOT_UNBOUND": "The assistant slot has no AI profile bound. Bind one under AI provider settings.",
+    "LLM_PROFILE_INCOMPLETE": "The bound AI profile is incomplete. Finish it under AI provider settings.",
     "Backend unreachable": "Cannot reach the backend service",
     "Request timed out": "Request timed out. Please try again later.",
     "Request cancelled": "Request cancelled"

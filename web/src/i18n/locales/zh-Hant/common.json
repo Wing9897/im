@@ -161,6 +161,9 @@
     "agent_timeout": "助手請求逾時，請稍後再試或縮短問題。",
     "ai_engine_unreachable": "AI 引擎無法連線（例如本機 Ollama 未啟動或埠號錯誤）。設定頁「AI 測試」成功仍可能無法支援助手長對話。",
     "ai_engine_failed": "AI 引擎無法完成這次請求。請檢查供應商狀態與日誌頁，然後再試一次。",
+    "NO_LLM_PROFILE": "尚未建立任何 AI 設定檔，請先到 AI 供應商頁面建立設定檔。",
+    "ASSISTANT_SLOT_UNBOUND": "助手全局槽位尚未綁定 AI 設定檔，請到 AI 供應商頁面綁定。",
+    "LLM_PROFILE_INCOMPLETE": "已綁定的 AI 設定檔不完整，請到 AI 供應商頁面補齊後再試。",
     "Backend unreachable": "無法連線到後端服務",
     "Request timed out": "請求逾時，請稍後再試",
     "Request cancelled": "請求已取消"

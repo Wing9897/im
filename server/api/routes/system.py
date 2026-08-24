@@ -131,11 +131,13 @@ async def ai_engine_status(request: Request) -> AiEngineHealthStatusResponse:
             status="available",
             reason=None,
             provider=health.get("provider"),
+            errorCode=None,
         )
     return AiEngineHealthStatusResponse(
         status="unavailable",
         reason=health.get("error"),
         provider=health.get("provider"),
+        errorCode=health.get("error_code"),
     )
 
 
@@ -156,6 +158,7 @@ async def ai_engine_test(request: Request, body: AiEngineTestBody | None = None)
         completionTokens=int(result.get("completion_tokens") or 0),
         preview=result.get("preview"),
         error=result.get("error"),
+        errorCode=result.get("error_code"),
     )
 
 

@@ -15,11 +15,15 @@ import logging
 from typing import Any
 
 from server.analyzer.llm_client import ConfigurableLlmClient
-from server.analyzer.llm_config import load_llm_config_for_profile
+from server.analyzer.llm_config import (
+    load_llm_config_for_profile,
+    resolve_assistant_diagnostic_profile_id,
+)
 from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.analyzer.prompt import AssembledPrompt
 from server.config import get_config, get_config_int
 from server.db.database import Database
+from server.errors import diagnostic_error_fields
 from server.prompts import CHAT_ASSISTANT_SYSTEM_PROMPT
 from server.prompts.locale import normalize_ui_locale, output_language_directive
 from server.util import is_openai_json_mode_enabled
@@ -74,11 +78,17 @@ class AnalysisEngine:
         self._clients.clear()
         self._config_hashes.clear()
 
+    @staticmethod
+    def _setup_diagnostic(exc: BaseException) -> dict[str, str]:
+        code, message = diagnostic_error_fields(exc)
+        return {"error_code": code, "error": message}
+
     async def health_check(self) -> dict:
         try:
-            client = await self._ensure_client(None)
+            profile_id = await resolve_assistant_diagnostic_profile_id(self._db)
+            client = await self._ensure_client(profile_id)
         except Exception as exc:  # noqa: BLE001 — diagnostics endpoint never raises
-            return {"status": "error", "provider": "", "model": "", "error": str(exc)}
+            return {"status": "error", "provider": "", "model": "", **self._setup_diagnostic(exc)}
         return await client.health_check()
 
     async def test_completion(self, draft: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -96,7 +106,8 @@ class AnalysisEngine:
             }
 
         try:
-            client = await self._ensure_client(None)
+            profile_id = await resolve_assistant_diagnostic_profile_id(self._db)
+            client = await self._ensure_client(profile_id)
         except Exception as exc:  # noqa: BLE001 — diagnostics endpoint never raises
             return {
                 "success": False,
@@ -105,7 +116,7 @@ class AnalysisEngine:
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "preview": None,
-                "error": str(exc),
+                **self._setup_diagnostic(exc),
             }
         result = await client.test_completion()
         return {

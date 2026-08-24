@@ -18,7 +18,7 @@ export type AssistantComposerShellProps = {
   spacePttMode: SpacePttMode;
   startListening: () => void | Promise<void>;
   stopListening: (options?: { send?: boolean }) => void | Promise<void>;
-  /** Extra send disable (e.g. AI engine unavailable on the page). */
+  /** Extra send disable (e.g. AI engine unavailable or assistant slot unbound). */
   sendDisabled?: boolean;
   onDraftKeyDown?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
   /** Overlay history panel above the workset row. */
@@ -64,6 +64,12 @@ export function AssistantComposerShell({
   const placeholder = listening
     ? t(overlay ? "quick.placeholderListening" : "draft.placeholderListening")
     : t(overlay ? "quick.placeholderIdle" : "draft.placeholderIdle");
+  const blockedHint = sendDisabled ? t("send.disabledHint") : undefined;
+
+  const trySend = () => {
+    if (sending || sendDisabled) return;
+    void onSend();
+  };
 
   const worksetRow = (
     <div
@@ -119,7 +125,7 @@ export function AssistantComposerShell({
         if (event.defaultPrevented) return;
         if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
-          void onSend();
+          trySend();
         }
       }}
     />
@@ -132,6 +138,7 @@ export function AssistantComposerShell({
       sending={sending}
       startListening={startListening}
       stopListening={stopListening}
+      disabled={sendDisabled}
       size={overlay ? "sm" : "md"}
       className={overlay ? "im-assistant-direct__composer-mic" : undefined}
       testId={overlay ? "assistant-caption-ptt" : "assistant-ptt"}
@@ -143,8 +150,10 @@ export function AssistantComposerShell({
       variant="primary"
       size={overlay ? "sm" : "md"}
       data-testid={overlay ? "assistant-caption-send" : "assistant-send"}
-      onClick={() => void onSend()}
+      onClick={trySend}
       disabled={sending || sendDisabled || !draft.trim()}
+      title={blockedHint}
+      aria-label={blockedHint}
     >
       {sending
         ? t(overlay ? "quick.sendingBtn" : "send.sending")

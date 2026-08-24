@@ -88,6 +88,11 @@
     "message": "助手全局槽位尚未綁定完整的 AI 設定檔。",
     "link": "前往 AI 設定"
   },
+  "noProfile": {
+    "message": "尚未建立任何 AI 設定檔。請先建立設定檔並綁定助手槽位。",
+    "link": "前往建立 AI 設定檔",
+    "hint": "請到 AI 供應商頁面建立設定檔，再回來使用助手。"
+  },
   "mic": {
     "holdToTalk": "按住說話",
     "releaseToStop": "放開即送出",
@@ -101,7 +106,8 @@
   "ttsOnLabel": "朗讀已開",
   "send": {
     "label": "送出",
-    "sending": "送出中…"
+    "sending": "送出中…",
+    "disabledHint": "請先看上方提示，再到 AI 設定處理。"
   },
   "quick": {
     "stopSpeaking": "停止朗讀",

@@ -199,6 +199,32 @@ describe("AssistantPage", () => {
     expect(link?.getAttribute("href")).toBe("/ai/provider");
   });
 
+  it("tells first-run users to create an AI profile instead of dumping JSON", async () => {
+    collectorStatusState.aiEngineStatus = "unavailable";
+    mockListLlmProfiles.mockResolvedValue([]);
+    mockListLlmGlobalSlots.mockResolvedValue(
+      boundAssistantSlots.map((row) => ({ ...row, profileId: null })),
+    );
+    await renderPage();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const banner = container.querySelector("[data-testid='assistant-no-profile']");
+    expect(banner).toBeTruthy();
+    expect(banner?.textContent).toContain("尚未建立任何 AI 設定檔");
+    const link = container.querySelector(
+      "[data-testid='assistant-no-profile-link']",
+    ) as HTMLAnchorElement | null;
+    expect(link?.getAttribute("href")).toBe("/ai/provider");
+    expect(container.textContent).toContain("請到 AI 供應商頁面建立設定檔");
+    expect(container.querySelector("[data-testid='assistant-ai-unavailable']")).toBeNull();
+    expect(container.querySelector("[data-testid='assistant-slot-unbound']")).toBeNull();
+    expect(container.textContent).not.toContain("error_code");
+    expect(container.textContent).not.toContain("Ollama");
+  });
+
   it("keeps composer usable and has no dedicated LLM profile section", async () => {
     await renderPage();
 
@@ -231,6 +257,30 @@ describe("AssistantPage", () => {
     ) as HTMLAnchorElement | null;
     expect(link?.getAttribute("href")).toBe("/ai/provider");
     expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
+
+    const draft = container.querySelector<HTMLTextAreaElement>("[data-testid='assistant-draft']");
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        "value",
+      )!.set!;
+      setter.call(draft!, "你好");
+      draft!.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    const send = container.querySelector<HTMLButtonElement>("[data-testid='assistant-send']");
+    expect(send?.disabled).toBe(true);
+    expect(send?.getAttribute("title")).toContain("AI 設定");
+    expect(send?.getAttribute("aria-label")).toContain("AI 設定");
+
+    await act(async () => {
+      draft!.dispatchEvent(
+        new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }),
+      );
+      await Promise.resolve();
+    });
+    expect(mockStreamAgentChat).not.toHaveBeenCalled();
   });
 
   it("puts chrome inside the card and omits OpsControlBar", async () => {

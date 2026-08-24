@@ -4,6 +4,8 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- AI engine status/test no longer stringify HTTPException; empty-DB and unbound-assistant diagnostics return stable `errorCode` (`NO_LLM_PROFILE` / `ASSISTANT_SLOT_UNBOUND` / `LLM_PROFILE_INCOMPLETE`) mapped by frontend i18n, with assistant empty-state copy pointing at `/ai/provider`.
+- Assistant composer `sendDisabled` also covers an unbound/incomplete assistant slot; Enter and PTT honor the same gate, with a send-button hint pointing at the existing `/ai/provider` banners.
 - Retired public `GET /api/v1/calendar/occurrences` (404). Time-window reads stay on `GET /api/v1/calendar/window`; Agent／MCP expand via Python `query_window`／`expand_active_calendar_occurrences`.
 - Schema stamp **2** (`SCHEMA_SEMVER` `1.1.0`) adds `schema_meta`. Stamp-1 databases backup once then walk `SCHEMA_MIGRATIONS` `1→2`. Empty DBs create current DDL (seeded `schema_meta` row, same as the 1→2 step) and stamp 2. Future stamps (retired 3–45 while CURRENT=2) hard-reject with “update the application”; pre-cut stamp-2 lookalikes and corrupt fingerprints still require explicit reset. Never silent wipe.
 - **push `main`** 直接跑 Release：quality → `git tag` + `git push` → 一次 Vite（`web_dist`，暫存 `web-dist.tar.gz` 到 GitHub Release 供三平台下載，收尾刪除；不走 Actions artifact，因私有倉配額已滿）→ 三平台 Desktop 共用該包，安裝程式直接掛到 GitHub Release。CLI 用該 tag 源碼。

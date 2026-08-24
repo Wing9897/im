@@ -2423,6 +2423,8 @@ export interface components {
             reason?: string | null;
             /** Provider */
             provider?: string | null;
+            /** Errorcode */
+            errorCode?: string | null;
         };
         /**
          * AiEngineTestBody
@@ -2467,6 +2469,8 @@ export interface components {
             preview?: string | null;
             /** Error */
             error?: string | null;
+            /** Errorcode */
+            errorCode?: string | null;
         };
         /**
          * AnalysisAbortResponse

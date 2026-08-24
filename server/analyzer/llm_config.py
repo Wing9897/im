@@ -26,6 +26,13 @@ PROVIDER_ALIASES: dict[str, str] = {
 WIRE_PROVIDERS = frozenset(ALL_LLM_PROVIDERS)
 assert WIRE_PROVIDERS == ALLOWED_LLM_PROVIDERS
 
+#: Diagnostic tokens for health / test (not HTTP 400 dumps). Chat still
+#: hard-fails on an unbound assistant slot via ``require_slot_profile_id``.
+NO_LLM_PROFILE = "NO_LLM_PROFILE"
+ASSISTANT_SLOT_UNBOUND = "ASSISTANT_SLOT_UNBOUND"
+LLM_PROFILE_INCOMPLETE = "LLM_PROFILE_INCOMPLETE"
+NO_LLM_PROFILE_MESSAGE = "No LLM profile configured; create an AI profile first"
+
 #: Fallback base URLs when a profile leaves ``base_url`` empty.
 DEFAULT_PROVIDER_BASE_URLS: dict[str, str] = {
     "ollama": "http://localhost:11434",
@@ -127,9 +134,43 @@ async def fetch_first_profile_id(db: Database) -> str:
         return str(row["id"])
     raise http_error(
         400,
-        "No LLM profile configured; create an AI profile first",
+        NO_LLM_PROFILE_MESSAGE,
         error_code=VALIDATION_ERROR,
     )
+
+
+async def resolve_assistant_diagnostic_profile_id(db: Database) -> str:
+    """Profile id for health / test probes (assistant slot, never ``__default__``).
+
+    Raises ``HTTPException`` with a stable diagnostic ``error_code``:
+
+    - no rows in ``llm_profiles`` → ``NO_LLM_PROFILE`` (same message as
+      :func:`fetch_first_profile_id`)
+    - assistant global slot unbound or pointing at a missing row →
+      ``ASSISTANT_SLOT_UNBOUND``
+    - bound row incomplete → ``LLM_PROFILE_INCOMPLETE`` plus the existing
+      incompleteness reason
+
+    Does not auto-seed profiles. Chat still hard-fails on an unbound slot.
+    """
+    from server.analyzer.llm_profile_completeness import profile_incompleteness_reason
+    from server.llm_global_slots import get_slot_profile_id, slot_unbound_message
+
+    count = int(await db.fetch_value("SELECT COUNT(*) FROM llm_profiles") or 0)
+    if count == 0:
+        raise http_error(400, NO_LLM_PROFILE_MESSAGE, error_code=NO_LLM_PROFILE)
+
+    slot_id = await get_slot_profile_id(db, "assistant")
+    if not slot_id:
+        raise http_error(400, slot_unbound_message("assistant"), error_code=ASSISTANT_SLOT_UNBOUND)
+
+    row = await db.fetch_one("SELECT * FROM llm_profiles WHERE id = ?", (slot_id,))
+    if row is None:
+        raise http_error(400, slot_unbound_message("assistant"), error_code=ASSISTANT_SLOT_UNBOUND)
+    reason = profile_incompleteness_reason(row)
+    if reason is not None:
+        raise http_error(400, reason, error_code=LLM_PROFILE_INCOMPLETE)
+    return slot_id
 
 
 async def require_complete_profile_row(db: Database, profile_id: str) -> Mapping[str, Any]:

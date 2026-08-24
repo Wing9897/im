@@ -52,8 +52,64 @@ async def test_collector_status_adapter_source_id(client, app):
 async def test_ai_engine_status(client):
     resp = await client.get("/api/v1/system/ai-engine/status")
     body = resp.json()
-    assert_keys(body, ["status", "reason", "provider"], "AiEngineHealthStatusResponse")
+    assert_keys(body, ["status", "reason", "provider", "errorCode"], "AiEngineHealthStatusResponse")
     assert body["status"] in ("available", "unavailable")
+
+
+async def _wipe_llm_profiles(app) -> None:
+    db = app.state.db
+    await db.execute("DELETE FROM analysis_tasks")
+    await db.execute("DELETE FROM llm_staff_instances")
+    await db.execute("DELETE FROM llm_profiles")
+
+
+def _assert_stable_ai_setup_error(body: dict, error_code: str) -> None:
+    reason = body.get("reason") or ""
+    assert "400:" not in reason
+    assert "{'error_code'" not in reason
+    assert body["errorCode"] == error_code
+
+
+async def test_ai_engine_status_empty_db_returns_no_llm_profile(client, app):
+    await _wipe_llm_profiles(app)
+    resp = await client.get("/api/v1/system/ai-engine/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "unavailable"
+    _assert_stable_ai_setup_error(body, "NO_LLM_PROFILE")
+    assert "create an AI profile" in (body["reason"] or "")
+
+    probe = await client.post("/api/v1/system/ai-engine/test", json={})
+    assert probe.status_code == 200
+    probe_body = probe.json()
+    assert probe_body["success"] is False
+    assert probe_body["errorCode"] == "NO_LLM_PROFILE"
+    assert "400:" not in (probe_body.get("error") or "")
+    assert "create an AI profile" in (probe_body.get("error") or "")
+
+
+async def test_ai_engine_status_unbound_assistant_slot(client, app):
+    await app.state.db.execute("UPDATE system_config SET value = '' WHERE key = 'llm_global_slot_assistant'")
+    resp = await client.get("/api/v1/system/ai-engine/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "unavailable"
+    _assert_stable_ai_setup_error(body, "ASSISTANT_SLOT_UNBOUND")
+
+
+async def test_ai_engine_status_incomplete_bound_profile(client, app):
+    from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
+
+    await app.state.db.execute(
+        "UPDATE llm_profiles SET model = '' WHERE id = ?",
+        (DEFAULT_LLM_PROFILE_ID,),
+    )
+    resp = await client.get("/api/v1/system/ai-engine/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "unavailable"
+    _assert_stable_ai_setup_error(body, "LLM_PROFILE_INCOMPLETE")
+    assert "model" in (body["reason"] or "").lower()
 
 
 async def test_ai_engine_test_contract(client):
@@ -71,6 +127,7 @@ async def test_ai_engine_test_contract(client):
             "completionTokens",
             "preview",
             "error",
+            "errorCode",
         ],
         "AiEngineTestResultResponse",
     )

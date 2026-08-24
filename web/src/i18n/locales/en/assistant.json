@@ -88,6 +88,11 @@
     "message": "The assistant global slot has no complete AI profile bound yet.",
     "link": "Open AI settings"
   },
+  "noProfile": {
+    "message": "No AI profile yet. Create a profile and bind the assistant slot.",
+    "link": "Create an AI profile",
+    "hint": "Go to AI provider settings, create a profile, then return to the assistant."
+  },
   "mic": {
     "holdToTalk": "Hold to talk",
     "releaseToStop": "Release to send",
@@ -101,7 +106,8 @@
   "ttsOnLabel": "Speech on",
   "send": {
     "label": "Send",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "disabledHint": "See the notice above, then open AI settings."
   },
   "quick": {
     "stopSpeaking": "Stop speaking",

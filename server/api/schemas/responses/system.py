@@ -26,6 +26,9 @@ class AiEngineHealthStatusResponse(BaseModel):
     status: Literal["available", "unavailable"]
     reason: str | None = None
     provider: str | None = None
+    #: Stable setup token (``NO_LLM_PROFILE`` / ``ASSISTANT_SLOT_UNBOUND`` /
+    #: ``LLM_PROFILE_INCOMPLETE``). Connectivity failures leave this null.
+    errorCode: str | None = None
 
 
 class AiEngineTestResultResponse(BaseModel):
@@ -41,6 +44,7 @@ class AiEngineTestResultResponse(BaseModel):
     completionTokens: int
     preview: str | None = None
     error: str | None = None
+    errorCode: str | None = None
 
 
 class CollectorAdapterStatusResponse(BaseModel):

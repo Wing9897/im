@@ -176,6 +176,50 @@ describe("appRuntimeShared", () => {
     expect(entry.kind).toBe("runtime.ai_status");
     expect(entry.messageKey).toBe("logs:templates.runtimeAiConnected");
   });
+
+  it("maps NO_LLM_PROFILE to i18n and never dumps HTTPException JSON", async () => {
+    const { ensureZhHantLocale } = await import("../test/i18nHarness");
+    await ensureZhHantLocale();
+    const { buildAiHealthStatusLog } = await import("./appRuntimeShared");
+    const dump =
+      "400: {'error_code': 'VALIDATION_ERROR', 'message': 'No LLM profile configured; create an AI profile first', 'details': None}";
+    const entry = buildAiHealthStatusLog("unavailable", {
+      status: "unavailable",
+      reason: dump,
+      provider: null,
+      errorCode: "NO_LLM_PROFILE",
+    });
+    const payload = JSON.stringify(entry.payload ?? {});
+    expect(payload).not.toContain("400:");
+    expect(payload).not.toContain("VALIDATION_ERROR");
+    expect(payload).not.toContain("{'error_code'");
+    expect(entry.payload).toMatchObject({
+      errorCode: "NO_LLM_PROFILE",
+      provider: null,
+    });
+    expect(String(entry.payload?.reason)).toContain("設定檔");
+  });
+
+  it("maps a reason token without errorCode and drops exception dumps", async () => {
+    const { ensureZhHantLocale } = await import("../test/i18nHarness");
+    await ensureZhHantLocale();
+    const { aiHealthPayload } = await import("./appRuntimeShared");
+    const fromToken = aiHealthPayload({
+      status: "unavailable",
+      reason: "NO_LLM_PROFILE",
+      provider: null,
+    });
+    expect(fromToken?.errorCode).toBe("NO_LLM_PROFILE");
+    expect(String(fromToken?.reason)).toContain("設定檔");
+
+    const fromDump = aiHealthPayload({
+      status: "unavailable",
+      reason:
+        "400: {'error_code': 'VALIDATION_ERROR', 'message': 'No LLM profile configured; create an AI profile first', 'details': None}",
+      provider: null,
+    });
+    expect(fromDump).toBeUndefined();
+  });
 });
 
 
