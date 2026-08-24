@@ -29,7 +29,7 @@ def _ddl_timeline_source_values() -> frozenset[str]:
 
 
 def test_timeline_sources_match_ddl_check() -> None:
-    """Python SoT must equal the wipe-only DDL CHECK set (no silent drift)."""
+    """Python SoT must equal the current DDL CHECK set (no silent drift)."""
     assert _ddl_timeline_source_values() == ALLOWED_TIMELINE_SOURCES
     assert TIMELINE_SOURCE_CHECK_SQL in calendar_ddl.DDL
     assert len(ALL_TIMELINE_SOURCES) == len(set(ALL_TIMELINE_SOURCES))

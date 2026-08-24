@@ -12,7 +12,7 @@
 - **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；本機通知掃描情報事件與日程
-- **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
+- **本地優先** — SQLite（**schema v2**；`SCHEMA_FLOOR` 1＋`SCHEMA_MIGRATIONS` 含 `1→2`；stamp 1 會自動升級；未來 stamp 須升級應用）、憑證加密、本機綁定；Electron 開箱即用
 
 架構與契約細節見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
@@ -72,7 +72,7 @@ npm ci
 npm run dev
 ```
 
-> **Schema stamp 不符／升級後無法啟動？** 本專案是 **wipe-only**（無 in-place migration）。先停掉 `npm run dev`／Electron／獨立 server，再於倉庫根執行：
+> **Schema stamp 不符／升級後無法啟動？** 空庫直接建當前 DDL。stamp **1** 會先備份再加法遷移到 2。**未來 stamp**（含已退役 3–45）請先升級應用；壞庫才是備份後 reset。先停掉 `npm run dev`／Electron／獨立 server，再於倉庫根執行：
 >
 > ```bash
 > uv run python scripts/reset_local_databases.py          # dry-run：列出將刪除的檔案
@@ -122,7 +122,7 @@ uv run python -m server
 
 GitHub Release **不附** CLI zip。無 Electron 的部署用 GHCR 映像。`npm run package:cli` 僅本機可選（從 Desktop sidecar 打 zip），不進 CI。
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **Release** 跑 quality → 打 tag → 打包 Windows／macOS／Linux Desktop → GitHub Release + GHCR。PR 只跑 **CI** quality。CLI 用該 tag 源碼。tag 已存在則加 `-update.<run_number>`。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版（全自動）**：`git push` 到 `main` → **Release** 跑 quality → 打 tag → **一次** Vite（三平台共用 `web/dist`）→ 打包 Windows／macOS／Linux Desktop → GitHub Release + GHCR。安裝包不上 Actions artifact。PR 只跑 **CI** quality。CLI 用該 tag 源碼。tag 已存在則加 `-update.<run_number>`。
 
 ### 容器（GHCR）
 
@@ -153,7 +153,7 @@ CI 只在 **Release** workflow（`push main`）推送到 `ghcr.io/<owner>/<repo>
 |------|------|------|
 | **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 live 檢查（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包** | `dist:*` + `verify:desktop:full` | **push `main`** → quality → tag → 三平台 Desktop → GitHub Release + GHCR。CLI = 該 tag 源碼 |
+| **發行／打包** | `dist:*` + `verify:desktop:full` | **push `main`** → quality → tag → 一次 Vite → 三平台 Desktop 共用 `web/dist` → GitHub Release + GHCR。CLI = 該 tag 源碼 |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -193,16 +193,16 @@ CI 只在 **Release** workflow（`push main`）推送到 `ghcr.io/<owner>/<repo>
 | 觸發 | 行為 |
 |------|------|
 | **PR** | **CI**：只跑 `quality`。不發版 |
-| **push `main`** | **Release**：quality → bump／`git tag`／`git push` → 三平台 Desktop 執行檔 → GitHub Release + GHCR。CLI 用該 tag 源碼 |
+| **push `main`** | **Release**：quality → bump／`git tag`／`git push` → 一次 Vite（共用 `web/dist`）→ 三平台 Desktop 執行檔 → GitHub Release + GHCR。CLI 用該 tag 源碼 |
 
 **版本權威（勿混用）：**
 - **產品 SemVer** = **git tags**（`v*`）／GitHub Release
-- **schema stamp**（`PRAGMA user_version`）與公開 **`SCHEMA_SEMVER`** = SQLite wipe-only 契約，**不必**等於產品 tag
+- **schema stamp**（`PRAGMA user_version`）與公開 **`SCHEMA_SEMVER`** = SQLite 契約（地板 + `SCHEMA_MIGRATIONS`），**不必**等於產品 tag
 - 根目錄 **`VERSION`** = 本機／展示／打包注入用，可能落後 tag；CI **不會** bot commit／push 回寫到 main
 
 每次手動發版 bump（已有 `v*` tag 時）：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）。**無任何 `v*` tag 時不 bump**，直接用 `VERSION` 原樣作為首發。打包時把算出的版本注入工作區（不改分支歷史）。本機若要對齊檔案：`python scripts/bump_version.py --from-tags --write` 再 `npm run sync:version`（預設不寫盤）。
 
-一句話：**PR 只做 quality；`git push` 到 `main` 就在同一條 Release 流水線打 tag、打包三平台 Desktop、發 GitHub Release；CLI 用該 tag 源碼。**
+一句話：**PR 只做 quality；`git push` 到 `main` 就在同一條 Release 流水線打 tag、Vite 一次、三平台共用 `web/dist` 打包 Desktop、發 GitHub Release；CLI 用該 tag 源碼。**
 
 本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 
@@ -282,15 +282,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v1**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `1.0.0`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode、`notify_pref`）由 `server/domain/` Python SoT 生成並配 drift 測試；`notify_pref` 為 `inherit`／`off`（`"follow"`／`"on"` 為 422）；內建工作集 id `__general__`；`worksets.notify_enabled`／`external_enabled` 默認開（工作集頁樞紐；內建「一般」兩檔都可關）；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；任務／日程／物品圖標為實體 `emoji` 欄；時間窗 SoT 為 `GET /api/v1/calendar/window`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-1 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v2**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `1.1.0`；stamp 2 新增 `schema_meta`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode、`notify_pref`）由 `server/domain/` Python SoT 生成並配 drift 測試；`notify_pref` 為 `inherit`／`off`（`"follow"`／`"on"` 為 422）；內建工作集 id `__general__`；`worksets.notify_enabled`／`external_enabled` 默認開（工作集頁樞紐；內建「一般」兩檔都可關）；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；任務／日程／物品圖標為實體 `emoji` 欄；時間窗 SoT 為 `GET /api/v1/calendar/window`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-2 庫。
 
-**Wipe-only：** stamp **1** 是第一個資料庫版本。任何其他非空 stamp／fingerprint 不符（含已退役的 stamp 2–45）時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**地板 + 加法遷移：** stamp **1** 是 `SCHEMA_FLOOR`。`FLOOR ≤ v < CURRENT` 走加法遷移（生產 `SCHEMA_MIGRATIONS` 含 `target=2`）。**未來 stamp**（含 CURRENT=2 時已退役的 3–45）啟動 hard-reject，請升級應用；壞庫／fingerprint 不符才備份後 reset。**絕不**靜默刪庫重建。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v1-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與地板規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v2-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`、`uv run python scripts/seed_items_finance_demo.py`、`uv run python scripts/seed_trace_correct_demo.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

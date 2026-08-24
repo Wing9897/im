@@ -5,9 +5,9 @@ Dry-run by default. ``--apply`` removes each known database and its SQLite
 session files, connection settings, directories, Docker volumes, or other data.
 It does **not** auto-seed demo data — run seed scripts manually when needed.
 
-Restart after ``--apply`` creates a fresh wipe-only schema at the current stamp
+Restart after ``--apply`` creates a fresh schema at the current stamp
 (SoT: ``server/db/schema_inspect.py`` ``CURRENT_SCHEMA_VERSION`` /
-``SCHEMA_SEMVER``; presently stamp 1 / ``1.0.0``, the first database version).
+``SCHEMA_SEMVER``; presently stamp 2 / ``1.1.0``; stamp 1 auto-upgrades).
 
 ``npm run dev`` / ``npm run dev:server`` start Python without Electron env
 overrides, so the active DB is ``server.paths.default_db_path()``

@@ -94,14 +94,17 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
 
     # Unified REST calendar path includes the same projection.
     api = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": start.isoformat().replace("+00:00", "Z"),
-            "rangeEnd": end.isoformat().replace("+00:00", "Z"),
+            "startTime": start.isoformat().replace("+00:00", "Z"),
+            "endTime": end.isoformat().replace("+00:00", "Z"),
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeRecurring": "false",
         },
     )
     assert api.status_code == 200
-    api_items = [row for row in api.json() if row.get("source") == "item_remind"]
+    api_items = [row for row in api.json()["items"] if row.get("source") == "item_remind"]
 
     assert {row["id"] for row in api_items} >= {
         f"item:{item_id}:remind",
@@ -147,15 +150,18 @@ async def test_item_occurrence_dismiss_source_item(client, app):
     start = datetime.now(UTC) - timedelta(days=1)
     end = datetime.now(UTC) + timedelta(days=40)
     api = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": start.isoformat().replace("+00:00", "Z"),
-            "rangeEnd": end.isoformat().replace("+00:00", "Z"),
+            "startTime": start.isoformat().replace("+00:00", "Z"),
+            "endTime": end.isoformat().replace("+00:00", "Z"),
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeRecurring": "false",
             "includeItems": "true",
         },
     )
     assert api.status_code == 200
-    row = next(r for r in api.json() if r["id"] == event_id)
+    row = next(r for r in api.json()["items"] if r["id"] == event_id)
     assert row["source"] == "item_remind"
     assert row["dismissed"] is True
 
@@ -166,13 +172,16 @@ async def test_item_occurrence_dismiss_source_item(client, app):
     assert restored.status_code == 204
 
     api2 = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": start.isoformat().replace("+00:00", "Z"),
-            "rangeEnd": end.isoformat().replace("+00:00", "Z"),
+            "startTime": start.isoformat().replace("+00:00", "Z"),
+            "endTime": end.isoformat().replace("+00:00", "Z"),
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeRecurring": "false",
         },
     )
-    row2 = next(r for r in api2.json() if r["id"] == event_id)
+    row2 = next(r for r in api2.json()["items"] if r["id"] == event_id)
     assert row2["dismissed"] is False
 
 

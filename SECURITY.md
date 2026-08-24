@@ -7,7 +7,8 @@ There are no backports to earlier tags.
 
 Product SemVer is **not** tied to the database contract: integer schema stamp
 (`PRAGMA user_version`) and public `schemaSemver` (`SCHEMA_SEMVER`) identify the
-wipe-only SQLite baseline and may differ from the product tag. The repo-root
+current SQLite contract (floor + additive migrations) and may differ from the
+product tag. The repo-root
 `VERSION` file is for local／display packaging and may lag tags — it is not a
 release authority and is not rewritten by CI bots.
 

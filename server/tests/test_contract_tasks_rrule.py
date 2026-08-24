@@ -192,16 +192,18 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
 
     # Series anchors at create-time wall clock; query a window after dtstart.
     cal = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": "2026-08-01T00:00:00Z",
-            "rangeEnd": "2026-09-30T23:59:59Z",
+            "startTime": "2026-08-01T00:00:00Z",
+            "endTime": "2026-09-30T23:59:59Z",
             "seriesId": series_id,
+            "includeAnalysis": "false",
+            "includeUser": "false",
             "includeItems": "false",
         },
     )
     assert cal.status_code == 200, cal.text
-    body = cal.json()
+    body = cal.json()["items"]
     assert len(body) >= 1
     assert all(occ.get("itemId") == item_id for occ in body)
 
@@ -240,15 +242,18 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_occurrences(cl
     assert row["workset_id"] == "__general__"
 
     occurrences = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": "2026-07-31T16:00:00Z",
-            "rangeEnd": "2026-08-31T15:59:59Z",
-            "seriesIds": [series_id],
+            "startTime": "2026-07-31T16:00:00Z",
+            "endTime": "2026-08-31T15:59:59Z",
+            "seriesId": series_id,
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeItems": "false",
         },
     )
     assert occurrences.status_code == 200
-    body = occurrences.json()
+    body = occurrences.json()["items"]
     # Series DTSTART is "today" (manual_anchor); August window length therefore
     # depends on the wall clock — require a non-empty expand, not a fixed day count.
     assert len(body) >= 1

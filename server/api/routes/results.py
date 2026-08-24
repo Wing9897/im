@@ -3,7 +3,7 @@
 Result queries always join ``analysis_tasks`` on the task's *current* version,
 so results invalidated by a version bump silently disappear from every list.
 
-Calendar occurrences live under ``/api/v1/calendar/occurrences``.
+Calendar time-window reads live under ``GET /api/v1/calendar/window``.
 """
 
 from __future__ import annotations

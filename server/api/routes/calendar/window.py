@@ -14,24 +14,17 @@ from fastapi import APIRouter, Request
 from server.agent.tool_limits import CALENDAR_RESULT_HARD_CAP
 from server.api.deps import get_db
 from server.api.query_aliases import qalias
+from server.api.routes.calendar.range import parse_range_param
 from server.api.schemas.responses import CalendarWindowItemResponse, CalendarWindowResponse
 from server.calendar.query import query_window
 from server.calendar.query_fetch import _FETCH_CAP
 from server.errors import VALIDATION_ERROR, http_error
-from server.time_iso import parse_iso
 
 router = APIRouter(tags=["calendar"])
 
 #: UI month/gantt windows need the fetch cap, not the agent tool cap (100).
 _WINDOW_HARD_CAP = _FETCH_CAP
 _WINDOW_DEFAULT_LIMIT = _FETCH_CAP
-
-
-def _parse_range_param(value: str, name: str, *, end_of_day: bool = False):
-    parsed = parse_iso(value, end_of_day=end_of_day)
-    if parsed is None:
-        raise http_error(422, f"Invalid {name}: {value}", error_code=VALIDATION_ERROR)
-    return parsed
 
 
 def _window_item_wire(row: dict[str, Any]) -> dict[str, Any]:
@@ -64,8 +57,8 @@ async def list_calendar_window(
             "startTime and endTime are required (ISO-8601)",
             error_code=VALIDATION_ERROR,
         )
-    _parse_range_param(str(start_time), "startTime")
-    _parse_range_param(str(end_time), "endTime", end_of_day=True)
+    parse_range_param(str(start_time), "startTime")
+    parse_range_param(str(end_time), "endTime", end_of_day=True)
     resolved_limit = _WINDOW_DEFAULT_LIMIT if limit is None else int(limit)
     try:
         result = await query_window(

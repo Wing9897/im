@@ -28,15 +28,38 @@ describe("release safety gates", () => {
     expect(workflow).toContain("Generate tag version");
     expect(workflow).toContain("name: Create and push tag");
     expect(workflow).toContain('git push origin "refs/tags/${TAG}"');
-    expect(workflow).toMatch(/\n  package:\n    needs: \[tag\]/);
+    expect(workflow).toMatch(/\n  web_dist:\n/);
+    expect(workflow).toMatch(/\n  package:\n    needs: \[tag, web_dist\]/);
     expect(workflow).toContain("windows-latest");
     expect(workflow).toContain("macos-latest");
     expect(workflow).toContain("ubuntu-latest");
+    expect(workflow).toContain("dist:win:native");
+    expect(workflow).toContain("dist:mac:native");
+    expect(workflow).toContain("dist:linux:native");
     expect(workflow).toContain("softprops/action-gh-release");
     expect(workflow).toContain("name: Upload to GitHub Release");
+    expect(workflow).toContain("desktop/release/*.exe");
     expect(workflow).toContain("GH_REPO: ${{ github.repository }}");
-    expect(workflow).not.toContain("actions/upload-artifact");
-    expect(workflow).not.toContain("actions/download-artifact");
+    expect(workflow).toContain("actions/upload-artifact");
+    expect(workflow).toContain("actions/download-artifact");
+    expect(workflow).toMatch(/name:\s*web-dist/);
+    expect(workflow).toContain("path: web/dist");
+    expect(workflow).toContain("retention-days: 7");
+
+    const artifactSteps = workflow
+      .split(/uses:\s*/)
+      .filter(
+        (chunk) =>
+          chunk.startsWith("actions/upload-artifact") ||
+          chunk.startsWith("actions/download-artifact"),
+      );
+    expect(artifactSteps.length).toBe(2);
+    for (const step of artifactSteps) {
+      const block = step.split("\n").slice(0, 12).join("\n");
+      expect(block).toContain("web/dist");
+      expect(block).not.toContain("desktop/release");
+    }
+
     expect(workflow).not.toContain("package:cli");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
     expect(workflow).not.toContain("tauri-apps/tauri-action");
@@ -55,5 +78,17 @@ describe("release safety gates", () => {
     expect(pkg.scripts["test:all"]).not.toContain("concurrently");
     expect(pkg.scripts["test:coverage"]).not.toContain("concurrently");
     expect(pkg.scripts["verify:desktop:fast"]).toMatch(/^npm run build && /);
+    expect(pkg.scripts["dist:win"]).toMatch(/^npm run build:web && /);
+    expect(pkg.scripts["dist:mac"]).toMatch(/^npm run build:web && /);
+    expect(pkg.scripts["dist:linux"]).toMatch(/^npm run build:web && /);
+    expect(pkg.scripts["dist:win:native"]).toBe(
+      "npm run dist:win --workspace desktop",
+    );
+    expect(pkg.scripts["dist:mac:native"]).toBe(
+      "npm run dist:mac --workspace desktop",
+    );
+    expect(pkg.scripts["dist:linux:native"]).toBe(
+      "npm run dist:linux --workspace desktop",
+    );
   });
 });

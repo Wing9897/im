@@ -17,7 +17,6 @@ import {
   MonitorModeProvider,
 } from "../../context/MonitorModeContext";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
-import type { CalendarOccurrence } from "../../types";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useTimelineData } from "./useTimelineData";
 
@@ -27,25 +26,6 @@ export const TIMELINE_CALENDAR_TEST_RANGE = {
   start: new Date("2025-01-01T00:00:00Z"),
   end: new Date("2025-02-01T00:00:00Z"),
 } as const;
-
-export function makeCalendarOccurrence(
-  overrides: Partial<CalendarOccurrence> = {},
-): CalendarOccurrence {
-  return {
-    id: "cal-1:20250115T090000Z",
-    seriesId: "cal-1",
-    taskName: "Weekly Standup",
-    title: "Weekly Standup",
-    startTime: "2025-01-15T09:00:00Z",
-    endTime: "2025-01-15T10:00:00Z",
-    isAllDay: false,
-    location: null,
-    description: "Team sync",
-    rrule: "FREQ=WEEKLY;BYDAY=WE",
-    source: "recurring",
-    ...overrides,
-  };
-}
 
 export function makeCalendarWindowItem(
   overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">,

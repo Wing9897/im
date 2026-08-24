@@ -39,7 +39,7 @@ def _ddl_notify_values(ddl: str, label: str) -> frozenset[str]:
 
 
 def test_notify_prefs_match_ddl_check() -> None:
-    """Python SoT must equal the wipe-only DDL CHECK set (no silent drift)."""
+    """Python SoT must equal the current DDL CHECK set (no silent drift)."""
     calendar_matches = _ddl_notify_matches(calendar_ddl.DDL, "calendar")
     tasks_matches = _ddl_notify_matches(tasks_ddl.DDL, "tasks")
     calendar_values = _ddl_notify_values(calendar_ddl.DDL, "calendar")

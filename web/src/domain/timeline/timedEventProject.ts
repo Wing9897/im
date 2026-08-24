@@ -4,7 +4,7 @@ import { formatItemOccurrenceTitle } from "../items/itemCalendarProjection";
 import { getEventTimestamp } from "../intelligence/mapFilters";
 import { resolveUserEventTaskName } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
+import type { AnalysisEvent, TimelineItem } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
 
 export function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
@@ -108,55 +108,6 @@ export function withResolvedUserEventTaskNames(
         }
       : event,
   );
-}
-
-/** Projects an expanded RRULE / item calendar row into the board timed-event contract. */
-export function calendarOccurrenceToBoardEvent(
-  occurrence: CalendarOccurrence,
-): AnalysisEvent {
-  const isItem = occurrence.source === "item_remind";
-  const bareTitle = occurrence.title || "";
-  const seriesId = isItem ? null : occurrence.seriesId || null;
-  return {
-    id: occurrence.id,
-    taskId: null,
-    seriesId,
-    version: 1,
-    batchId: "",
-    title: isItem
-      ? formatItemOccurrenceTitle(occurrence.itemDateKind, bareTitle)
-      : bareTitle,
-    body: occurrence.description ?? "",
-    startTime: occurrence.startTime,
-    endTime: occurrence.endTime,
-    location: occurrence.location ?? null,
-    latitude: null,
-    longitude: null,
-    participants: [],
-    sourceMessageId: null,
-    sourcePlatform: null,
-    sourceChannelName: null,
-    sourceMessageTime: null,
-    analysisTimeRange: null,
-    batchSourceChannelNames: [],
-    taskName: isItem ? null : occurrence.taskName || null,
-    createdAt: occurrence.startTime,
-    updatedAt: occurrence.startTime,
-    source: isItem ? "item_remind" : "recurring",
-    isAllDay: occurrence.isAllDay,
-    timezone: occurrence.timezone ?? null,
-    dismissed: Boolean(occurrence.dismissed),
-    important: Boolean(occurrence.important),
-    isLastOccurrence: isItem ? undefined : Boolean(occurrence.isLastOccurrence),
-    // Keep worksetId for source-filter alignment with Timeline (RRULE + items).
-    worksetId: isItem
-      ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
-      : occurrence.worksetId?.trim() || undefined,
-    itemId: occurrence.itemId?.trim() || null,
-    // Server projects remind only.
-    itemDateKind: isItem ? "remind" : undefined,
-    emoji: occurrence.emoji ?? null,
-  };
 }
 
 function emptyAnalysisFields(): Pick<

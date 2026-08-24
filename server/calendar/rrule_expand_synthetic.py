@@ -62,8 +62,8 @@ def expand_series_occurrences(
 ) -> list[dict[str, Any]]:
     """Expand a single recurring series RRULE inside [range_start, range_end].
 
-    Returns CalendarOccurrence dicts (camelCase). Any parse failure returns []
-    so one bad series never breaks the whole request.
+    Returns camelCase dicts for the calendar window (``CalendarWindowItemResponse``).
+    Any parse failure returns [] so one bad series never breaks the whole request.
 
     Recurrence calendar days and ``HH:MM`` clocks are interpreted in the host
     system timezone; wire ``startTime`` / ``endTime`` are UTC.

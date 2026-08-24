@@ -483,15 +483,18 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
     assert imported_user["icsUid"] == "single-1@example.test"
 
     occurrences = await client.get(
-        "/api/v1/calendar/occurrences",
+        "/api/v1/calendar/window",
         params={
-            "rangeStart": "2026-08-01T00:00:00Z",
-            "rangeEnd": "2026-08-31T23:59:59Z",
+            "startTime": "2026-08-01T00:00:00Z",
+            "endTime": "2026-08-31T23:59:59Z",
             "seriesId": ids["series-1@example.test"],
+            "includeAnalysis": "false",
+            "includeUser": "false",
+            "includeItems": "false",
         },
     )
     assert occurrences.status_code == 200
-    assert [item["startTime"] for item in occurrences.json()] == [
+    assert [item["startTime"] for item in occurrences.json()["items"]] == [
         "2026-08-03T01:00:00Z",
         "2026-08-11T01:00:00Z",
         "2026-08-17T01:00:00Z",

@@ -1,4 +1,4 @@
-"""Shared SQLite fixtures for schema lifecycle tests (wipe-floor + fingerprint)."""
+"""Shared SQLite fixtures for schema lifecycle tests (floor + migrate + fingerprint)."""
 
 from __future__ import annotations
 
@@ -73,9 +73,26 @@ async def make_stamped_db(
     version: int,
     log_rows: list[tuple[str, str, str, str]] | None = None,
 ) -> None:
-    """DDL + log rows + stamped ``user_version`` (shared by wipe-floor / newer-reject)."""
+    """DDL + log rows + stamped ``user_version`` (shared by floor / migrate / newer-reject)."""
     await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
     await stamp_user_version(path, version)
+
+
+async def make_pre_schema_meta_db(
+    path: str,
+    *,
+    version: int,
+    log_rows: list[tuple[str, str, str, str]] | None = None,
+) -> None:
+    """Current DDL minus ``schema_meta`` (live stamp-1 shape, or a stamp-2 lookalike)."""
+    await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
+    conn = await aiosqlite.connect(path)
+    try:
+        await conn.execute("DROP TABLE IF EXISTS schema_meta")
+        await conn.execute(f"PRAGMA user_version={version}")
+        await conn.commit()
+    finally:
+        await conn.close()
 
 
 async def make_lookalike_db(path: str, *, version: int, defect: str) -> None:

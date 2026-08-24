@@ -11,6 +11,7 @@ be a subset of live FastAPI OpenAPI paths (live ⊇ committed).
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 from pathlib import Path
@@ -21,6 +22,14 @@ from starlette.routing import Mount, Route
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _API_DIR = _REPO_ROOT / "web" / "src" / "api"
 _OPENAPI_PATH = _REPO_ROOT / "web" / "openapi" / "openapi.json"
+_ROUTES_DIR = _REPO_ROOT / "server" / "api" / "routes"
+_ROUTES_MODULE = "server.api.routes"
+
+#: Modules under ``server/api/routes`` that define ``router = APIRouter(...)``
+#: but are intentionally left unmounted. Helpers with no router (e.g.
+#: ``calendar/range.py``) never match the scan. Empty after the retired
+#: occurrences module was deleted — do not allowlist leftovers.
+_UNMOUNTED_ROUTER_ALLOWLIST: frozenset[str] = frozenset()
 
 _PATH_LITERAL = re.compile(r"""['"`](/api/v1/[^'"`]+)['"`]""")
 _TEMPLATE_SEGMENT = re.compile(r"\$\{[^}]+\}")
@@ -50,8 +59,6 @@ _EXTERNAL_ONLY_PATHS = frozenset(
         "/api/v1/a2a/agent",
         # External HTTP ingest (Webhook / scripts); no in-app UI caller.
         "/api/v1/messages/batch",
-        # MCP / assistant / internal RRULE expand — SPA time-window SoT is /calendar/window.
-        "/api/v1/calendar/occurrences",
     }
 )
 
@@ -221,3 +228,229 @@ def test_live_openapi_paths_contain_committed(app: FastAPI):
         assert any(p.startswith(prefix) or p == prefix.rstrip("/") for p in live_paths), (
             f"Live FastAPI missing required prefix {prefix!r}"
         )
+
+
+def _repo_rel(path: Path) -> str:
+    return path.relative_to(_REPO_ROOT).as_posix()
+
+
+def _route_py_files() -> list[Path]:
+    return sorted(
+        path
+        for path in _ROUTES_DIR.rglob("*.py")
+        if "__pycache__" not in path.parts
+    )
+
+
+def _is_api_router_call(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if isinstance(func, ast.Name):
+        return func.id == "APIRouter"
+    return isinstance(func, ast.Attribute) and func.attr == "APIRouter"
+
+
+def _assigns_router_apirouter(tree: ast.AST) -> bool:
+    """True when the module binds ``router = APIRouter(...)`` (not other names)."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and _is_api_router_call(node.value):
+            if any(isinstance(target, ast.Name) and target.id == "router" for target in node.targets):
+                return True
+        if (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "router"
+            and node.value is not None
+            and _is_api_router_call(node.value)
+        ):
+            return True
+    return False
+
+
+def _parse_route_file(path: Path) -> ast.Module:
+    return ast.parse(path.read_text(encoding="utf-8"), filename=_repo_rel(path))
+
+
+def _resolve_routes_module(dotted: str) -> Path | None:
+    """Map ``server.api.routes[.foo.bar]`` to a file under ``server/api/routes``."""
+    if dotted == _ROUTES_MODULE:
+        rel_parts: tuple[str, ...] = ()
+    elif dotted.startswith(_ROUTES_MODULE + "."):
+        rel_parts = tuple(dotted[len(_ROUTES_MODULE) + 1 :].split("."))
+    else:
+        return None
+    base = _ROUTES_DIR.joinpath(*rel_parts) if rel_parts else _ROUTES_DIR
+    py_file = base.with_suffix(".py")
+    init_file = base / "__init__.py"
+    if py_file.is_file():
+        return py_file
+    if init_file.is_file():
+        return init_file
+    return None
+
+
+def _file_package_parts(path: Path) -> tuple[str, ...]:
+    return path.relative_to(_ROUTES_DIR).parent.parts
+
+
+def _import_from_module(path: Path, node: ast.ImportFrom) -> str | None:
+    if node.level == 0:
+        return node.module
+    parts = list(_file_package_parts(path))
+    climb = node.level - 1
+    if climb:
+        if climb > len(parts):
+            return None
+        parts = parts[:-climb]
+    if node.module:
+        parts.extend(node.module.split("."))
+    return _ROUTES_MODULE + (("." + ".".join(parts)) if parts else "")
+
+
+def _imported_route_files(path: Path, tree: ast.AST) -> dict[str, Path]:
+    """Local name → route module file for imports under ``server.api.routes``.
+
+    Includes imports nested in ``all_routers()`` (lazy package loads).
+    """
+    mapping: dict[str, Path] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                local = alias.asname or alias.name.rsplit(".", 1)[-1]
+                resolved = _resolve_routes_module(alias.name)
+                if resolved is not None:
+                    mapping[local] = resolved
+            continue
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        source = _import_from_module(path, node)
+        if source is None:
+            continue
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            local = alias.asname or alias.name
+            if alias.name == "router":
+                resolved = _resolve_routes_module(source)
+            else:
+                resolved = _resolve_routes_module(f"{source}.{alias.name}") or _resolve_routes_module(source)
+            if resolved is not None:
+                mapping[local] = resolved
+    return mapping
+
+
+def _include_router_targets(tree: ast.AST, imported: dict[str, Path]) -> list[Path]:
+    found: list[Path] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not (isinstance(func, ast.Attribute) and func.attr == "include_router"):
+            continue
+        if not node.args:
+            continue
+        arg = node.args[0]
+        if isinstance(arg, ast.Attribute) and isinstance(arg.value, ast.Name) and arg.attr == "router":
+            target = imported.get(arg.value.id)
+            if target is not None:
+                found.append(target)
+        elif isinstance(arg, ast.Name):
+            target = imported.get(arg.id)
+            if target is not None:
+                found.append(target)
+    return found
+
+
+def _all_routers_seed_files() -> list[Path]:
+    """Files whose ``.router`` / ``*_router`` ``all_routers()`` mounts."""
+    init_path = _ROUTES_DIR / "__init__.py"
+    tree = _parse_route_file(init_path)
+    imported = _imported_route_files(init_path, tree)
+    seeds: list[Path] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute) or not isinstance(node.value, ast.Name):
+            continue
+        if node.attr != "router" and not node.attr.endswith("_router"):
+            continue
+        target = imported.get(node.value.id)
+        if target is not None:
+            seeds.append(target)
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for seed in seeds:
+        if seed not in seen:
+            seen.add(seed)
+            unique.append(seed)
+    return unique
+
+
+def _reexported_router_files(path: Path, tree: ast.AST) -> list[Path]:
+    """``from ... import router`` re-exports (tasks/_router, sources/common)."""
+    found: list[Path] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        source = _import_from_module(path, node)
+        if source is None:
+            continue
+        for alias in node.names:
+            if alias.name != "router":
+                continue
+            resolved = _resolve_routes_module(source)
+            if resolved is not None:
+                found.append(resolved)
+    return found
+
+
+def _mounted_router_files() -> set[Path]:
+    """Route modules reached from ``all_routers()`` via include_router / re-export."""
+    queued = list(_all_routers_seed_files())
+    mounted: set[Path] = set()
+    while queued:
+        path = queued.pop()
+        if path in mounted:
+            continue
+        mounted.add(path)
+        tree = _parse_route_file(path)
+        imported = _imported_route_files(path, tree)
+        queued.extend(_reexported_router_files(path, tree))
+        queued.extend(_include_router_targets(tree, imported))
+    return mounted
+
+
+def test_apirouter_modules_are_mounted_or_allowlisted():
+    """Orphan ``APIRouter`` modules under routes/ cannot sit unmounted.
+
+    OpenAPI inventory only sees routers FastAPI already included. A leftover
+    like ``calendar/occurrences.py`` was 404-green while still on disk.
+    Nested routers (``tasks/_router.py``, calendar leaves) count as mounted
+    when an ancestor ``include_router``s them or re-exports their ``router``.
+    """
+    defined: dict[str, Path] = {}
+    for path in _route_py_files():
+        if _assigns_router_apirouter(_parse_route_file(path)):
+            defined[_repo_rel(path)] = path
+
+    assert defined, "router scan found no APIRouter modules — scan is broken"
+    assert "server/api/routes/calendar/range.py" not in defined
+    assert "server/api/routes/calendar/window.py" in defined
+    assert "server/api/routes/tasks/_router.py" in defined
+
+    mounted = {_repo_rel(path) for path in _mounted_router_files()}
+    assert "server/api/routes/calendar/window.py" in mounted
+    assert "server/api/routes/tasks/_router.py" in mounted
+    assert "server/api/routes/sources/common.py" in mounted
+
+    unknown_allow = sorted(_UNMOUNTED_ROUTER_ALLOWLIST - set(defined))
+    assert not unknown_allow, (
+        "_UNMOUNTED_ROUTER_ALLOWLIST entries that do not define router = APIRouter(...):\n"
+        + "\n".join(unknown_allow)
+    )
+
+    orphans = sorted(rel for rel in defined if rel not in mounted and rel not in _UNMOUNTED_ROUTER_ALLOWLIST)
+    assert not orphans, (
+        "APIRouter modules under server/api/routes/ are not mounted via all_routers() "
+        "or an ancestor include_router. Mount them, delete them, or add to "
+        "_UNMOUNTED_ROUTER_ALLOWLIST with a reason:\n" + "\n".join(orphans)
+    )

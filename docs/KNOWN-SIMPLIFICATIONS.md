@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler (wipe-only schema): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (schema floor 1 / current stamp 2): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -53,7 +53,7 @@ Scheduler (wipe-only schema): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See 
 
 ## Sources
 
-Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`; retired `/channels/with-sources` → 404). Calendar time-window SoT: `GET /api/v1/calendar/window` (display + notify); `GET /api/v1/calendar/occurrences` remains for MCP／assistant／tests. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
+Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Channel list: `GET /api/v1/channels` (`ChannelWithSource[]`; retired `/channels/with-sources` → 404). Calendar time-window SoT: `GET /api/v1/calendar/window` (display + notify). Retired `GET /api/v1/calendar/occurrences` is 404; Agent／MCP expand via Python helpers. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
 
 **FE board kit:** shared list/card/layout hooks live under `web/src/pages/sources/board/` (`SourceCard*`, `SourceTabLayout`, `useSourceListTab*`, …). Platform folders (`rss/`／`telegram/`／…) stay in place — not a whole-tree Sources rewrite.
 
@@ -66,11 +66,11 @@ Still update sources routes／OpenAPI／pipeline／UI when adding — registry i
 
 ## Schema baseline
 
-Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
+Pointer only — stamp / semver / floor + `1→2` registry SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
 
 ## LLM simplifications (intentional)
 
-Still in force under wipe-floor **1** / `SCHEMA_SEMVER` `1.0.0`. Do **not** restore without a new contract:
+Still in force under schema floor **1** / current stamp **2** / `SCHEMA_SEMVER` `1.1.0`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -133,7 +133,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v1 | Wipe-only floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) (support matrix, explicit reset, stamp-1 first database). Product note: [`CHANGELOG.md` Unreleased](../CHANGELOG.md#unreleased). Unique here: `schema_domains/vocabulary.py` is a re-export hub only (no assembly); `item_id` FK is `ON DELETE SET NULL`. |
+| Schema stamp v2 | Floor + `1→2` SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) (support matrix, stamp-1 backup-then-walk, future-stamp reject, explicit reset). Product note: [`CHANGELOG.md` Unreleased](../CHANGELOG.md#unreleased). Unique here: `schema_domains/vocabulary.py` is a re-export hub only (no assembly); `item_id` FK is `ON DELETE SET NULL`. |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
@@ -192,7 +192,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 ## Release checklist (Desktop + source CLI + container)
 
 1. Merge／push to `main` and confirm `quality` + build pass
-2. Green CI on `main` auto-bumps, `git tag`s, packages Desktop×3, and creates the GitHub Release. CLI is that tag's source (`uv sync --locked` + `uv run python -m server`). Does **not** push commits to main.
+2. Push `main`: Release runs quality, auto-bumps, `git tag`s, packages Desktop×3, and creates the GitHub Release. CLI is that tag's source (`uv sync --locked` + `uv run python -m server`). Does **not** push commits to main.
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
 
@@ -200,7 +200,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 Email collectors validate `imap_host` with the same public-IP DNS policy as HTTP/MQTT outbound via `server.outbound.validate_imap_host` (default ports 993/143). Poll uses synchronous `imap-tools` inside `asyncio.to_thread`; UID cursors live in encrypted `sources.credentials.folder_cursors`, with matching per-folder UIDVALIDITY in `folder_uidvalidities`. A missing or changed UIDVALIDITY resets only that folder's cursor.
 
-Email channel IDs use the host-qualified shape `host:port/username/folder` (`email_channel_platform_id`). The one-shot data migration that remapped legacy `username/folder` keys was retired with a pre-wipe-floor / prior stamp; fresh installs write host-qualified keys from the start.
+Email channel IDs use the host-qualified shape `host:port/username/folder` (`email_channel_platform_id`). The one-shot data migration that remapped legacy `username/folder` keys was retired with a prior stamp; fresh installs write host-qualified keys from the start.
 
 ## Collector status: polling vs long-lived adapters
 

@@ -48,7 +48,7 @@ LLM provider slots / `assistant_llm_*` on settings: use `/api/v1/llm/profiles` a
 |--------|------|-------------|
 | GET | `/api/v1/results/benefits` | Intelligence `/api/v1/results/events` |
 | GET | `/api/v1/results/schedule` | Calendar `/api/v1/calendar/*` |
-| GET | `/api/v1/results/calendar` | `/api/v1/calendar/window` (SPA) / `/api/v1/calendar/occurrences` (MCP) |
+| GET | `/api/v1/results/calendar` | `/api/v1/calendar/window` |
 | GET | `/api/v1/viewer/results/leaderboard` | Viewer `/api/v1/viewer/*` live routes |
 | GET | `/api/v1/viewer/results/benefits` | — |
 | GET | `/api/v1/viewer/results/timeline` | — |
@@ -58,6 +58,7 @@ LLM provider slots / `assistant_llm_*` on settings: use `/api/v1/llm/profiles` a
 | Method | Path | Replacement |
 |--------|------|-------------|
 | GET | `/api/v1/calendar/items` | Trackable items `/api/v1/items*` + window `source=item_remind` |
+| GET | `/api/v1/calendar/occurrences` | `/api/v1/calendar/window` (SPA／notify) or Python `query_window`／`expand_active_calendar_occurrences` (Agent／MCP) |
 | POST | `/api/v1/calendar-imports/preview` | `POST /api/v1/calendar/imports/preview` |
 | POST | `/api/v1/calendar-imports/commit` | `POST /api/v1/calendar/imports/commit` |
 | * | `/api/v1/timeline/dismissals` | `/api/v1/calendar/dismissals` |
@@ -72,7 +73,7 @@ LLM provider slots / `assistant_llm_*` on settings: use `/api/v1/llm/profiles` a
 | POST | `/api/v1/setup/pair` | — |
 | POST | `/api/v1/setup/login-with-api-key` | Automation keys stay Bearer-only |
 | POST | `/api/v1/system/reset/runtime` | `POST /api/v1/system/reset/database` |
-| GET | `/api/v1/system/schema/status` | Wipe-only: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) |
+| GET | `/api/v1/system/schema/status` | Schema contract: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md) |
 | POST | `/api/v1/system/schema/upgrade` | Explicit reset: `python scripts/reset_local_databases.py --apply` |
 
 ## Collector accounts (hard-cut)

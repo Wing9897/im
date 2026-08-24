@@ -12,7 +12,7 @@ from fastapi import APIRouter, Request
 from server import __version__
 from server.api.schemas.responses import HealthResponse
 from server.constants import DEFAULT_BIND_HOST, HOST_ENV
-from server.db.schema_bootstrap import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
+from server.db.schema_inspect import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
 
 router = APIRouter(tags=["health"])
 

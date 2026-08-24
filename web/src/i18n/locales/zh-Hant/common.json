@@ -367,7 +367,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 1／SemVer 1.0.0（第一個資料庫版本）；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 2／SemVer 1.1.0（SCHEMA_FLOOR 1；stamp 1 會經 SCHEMA_MIGRATIONS 自動升級）。未來 stamp：請升級應用。壞庫：請先備份，再執行 {script} 重置後重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

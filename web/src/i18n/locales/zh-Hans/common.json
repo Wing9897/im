@@ -367,7 +367,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 1／SemVer 1.0.0（第一个数据库版本）；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 2／SemVer 1.1.0（SCHEMA_FLOOR 1；stamp 1 会经 SCHEMA_MIGRATIONS 自动升级）。未来 stamp：请升级应用。坏库：请先备份，再执行 {script} 重置后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

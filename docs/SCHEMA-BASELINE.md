@@ -1,34 +1,36 @@
-# Schema baseline (wipe-only)
+# Schema baseline (stamp 2)
 
-Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`. Table inventory and calendar semantics stay in [`ARCHITECTURE.md` Database](ARCHITECTURE.md#database).
+Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap, additive walk, and rejection policy: `server/db/schema_bootstrap.py` + runner `server/db/schema_migrate.py` + production steps `server/db/schema_steps.py`. Table inventory, calendar semantics, `system_config` policy, and product-shape notes live in [`ARCHITECTURE.md` Database](ARCHITECTURE.md#database).
 
-**Stamp 1 is the first database version** (`SCHEMA_SEMVER` = `1.0.0`). There is no lineage from retired pre-cut stamps (including former 2–45 / `0.1.0-beta.*`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-1 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Stamp 1 is the schema floor** (`SCHEMA_FLOOR` = 1). **Stamp 2 is current** (`CURRENT_SCHEMA_VERSION` = 2, `SCHEMA_SEMVER` = `1.1.0`) and adds `schema_meta`. There is no lineage from retired pre-cut stamps (former 3–45 / `0.1.0-beta.*`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-2 fingerprint. Existing stamp-1 files backup once and walk the production `SCHEMA_MIGRATIONS` step `1→2`. Pre-cut stamp-2 files that do not match the new fingerprint (for example missing `schema_meta`) still reject — they are not treated as already migrated. Retired numbers **3–45** are **future stamps** while CURRENT=2 and hard-reject with “update the application” (reset is a last resort). Corrupt / lookalike fingerprints hard-reject with `python scripts/reset_local_databases.py --apply`. Startup never silently deletes or rebuilds a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
-**Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
+**Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
 ## Version support
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **1** (current, exact fingerprint) | Full runtime (`schemaSemver` = `1.0.0`) |
-| **0** (empty / exact-current unstamped) | Create or stamp current DDL |
-| **Any other non-empty schema** (including retired stamps 2–45) | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
+| **2** (current, exact fingerprint) | Full runtime (`schemaSemver` = `1.1.0`) |
+| **1** (floor, missing `schema_meta`) | Backup once, then additive `1→2` (`CREATE TABLE schema_meta` + seed `id=1` / `schema_semver`) |
+| **0** (empty / exact-current unstamped) | Create or stamp current DDL (no fake-chain replay) |
+| **FLOOR ≤ v < CURRENT** | Backup once, then additive step walk; validate the **current** fingerprint |
+| **v > CURRENT** (including retired stamps 3–45 while CURRENT=2) | Hard reject — update the application; reset is a last resort; no automatic deletion |
 
-## Wipe-floor invariant
+## Floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator on stamp 1. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+Production `SCHEMA_MIGRATIONS` is `(target=2,)`. There is no empty registry, wipe-only current baseline, `_data_migrations` ledger, schema-upgrade route/UI, or `down()`. `test_schema_floor.py` hard-rejects retired stamps 27/45 and lookalike stamp-2 files missing `schema_meta`. `test_schema_migrate.py` proves the live `1→2` walk plus an injected test-only chain (3→10).
 
-A future in-place (additive) migration must be introduced deliberately as a new contract starting at stamp **2**; do not keep a dormant fake migration chain or a per-stamp history of retired numbers.
+Do not revive retired stamps 3–45 as a migration chain. The next real DDL change appends stamp **3**.
 
-## Schema v1 explicit reset
+## Schema v2 explicit reset
 
-There is no automatic deletion or in-place conversion from any other stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
+There is no automatic deletion. Future stamps are not converted. Stamp-1 files upgrade in place after a sidecar backup. Before resetting a **corrupt** or **future** database, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first. Additive migration of `FLOOR ≤ v < CURRENT` makes its own `*.pre-stamp-{target}.{yyyymmddhhmmss}.db` copy beside the live file.
 
 Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v1-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v2-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -41,23 +43,18 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v1 database (no auto-seed). Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
-
-**Schema v1 contents:** Tool web-search providers are `duckduckgo`／`brave`／`tavily`／`perplexity`／`serper` (plus `auto` for native). Tavily／Perplexity／Serper keys live on `llm_profiles` like Brave. Missing keyed-search keys fail closed (no silent DuckDuckGo fallback). `web.fetch` reads 1–2 public HTML pages per turn when tool search is on. Card glyphs live on entity columns: `analysis_tasks.emoji`, `user_events.emoji`, `recurring_schedules.emoji`, and existing `items.emoji` (NULL = product logo). Retired `ui_prefs` keys `schedule_emojis`／`task_emojis`; HTTP `/api/v1/ui-prefs/schedule/emojis` and `/api/v1/ui-prefs/tasks/emojis` are 404. `GET /api/v1/calendar/window` is SoT for time-window reads (Timeline／Board display and notify scan; tagged occurrences `source`: `analysis`｜`user`｜`recurring`｜`item_remind`). Intelligence/map keep `GET /api/v1/results/events`. User-events／recurring CRUD stay for 我的日程 editors. Write tables stay split (`analysis_events` vs `user_events`); recurring series still RRULE-expand rather than materializing every instance. Builtin workset id is `__general__` (`SYSTEM_WORKSET_ID`; display name 「一般」). `analysis_tasks`／`items`／`user_events`／`recurring_schedules.workset_id` TEXT NOT NULL DEFAULT `__general__`; `delete_workset` reassigns to `__general__` (no SET NULL; no `__user__` alias). `user_events.notify_pref` and `recurring_schedules.notify_pref` TEXT NOT NULL DEFAULT `'off'` (align create-omit and `DEFAULT_CALENDAR_NOTIFY_PREF`). `analysis_tasks.notify_pref` DEFAULT `'inherit'`. Worksets DDL lives in `schema_domains/worksets.py` and precedes `tasks` in `DDL_PARTS` (`analysis_tasks.workset_id` FK). `worksets.external_enabled` INTEGER NOT NULL DEFAULT 1 (MCP/A2A shared visibility; empty set fail-closed). `worksets.notify_enabled` and `external_enabled` are owned by the Worksets page hub (builtin 「一般」 can turn both off). Retired `system_config` keys `mcp_workset_scope`／`mcp_workset_ids`. Remaining `ui_prefs` keys are `notify_settings`／`notify_fired`／`notify_trigger_history` plus board／assistant／timeline annotations (retired `voice_reminder_*`; no in-place remap). HTTP SoT is `/api/v1/ui-prefs/notify/{settings,fired,history}` — retired `/api/v1/ui-prefs/voice-reminder/*` is 404. Wire `notifyPref` is `inherit`／`off` only; `"follow"` and `"on"` are 422 (no synonym). `notify_pref` CHECK is `inherit`／`off` on `user_events`／`recurring_schedules`／`analysis_tasks` (entity checkbox; no force-on). `analysis_tasks.output_analysis_events` defaults ON as the all-mode intelligence hard gate (non-agent create omits → on; batches skip `store_results` when off). **every** DB enum CHECK is generated from a Python domain SoT (`server/domain/`) with a drift test — LLM `provider`／`staff_class`／`json_mode`／`web_search_provider`, calendar `kind`／`direction`／`origin`, timeline `source`, `action_type` + action-history `status`, `trigger_mode`, batch／source／item `status`, `analysis_time_range`, app log `level`, nullable `analysis_strategy_mode`, and `notify_pref`. No `llm_profiles.is_default`／make-default APIs; no `assistant` in `llm_staff_instances`; global slots (assistant／liaison／taskEditor) hard-bound. Fresh DDL seeds **zero** profiles (no bootstrap `__default__`). Task create／update／activate need a complete usable profile; assistant／A2A／task advisor resolve require their bound slot. Analysis modes are only `leaderboard`／`intel_event`／`agent` — recurring is **not** an analysis mode. Categories remain soft templates; free-form item details live in `notes`. Assistant must call `items.list_expiring` for expiry questions (no invention). Board widget type remains `"actions"` (HTTP outbound `/api/v1/actions*`, not the SPA `/notify` page).
-
-**`system_config` policy:** scalars and small non-LLM secrets only. LLM connection settings live in `llm_profiles` (column-encrypted keys). Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
-
-**Not planned:** merging `analysis_events` with `user_events`; hard per-category schemas; stock/qty ledgers; restoring CalDAV; renaming HTTP `/api/v1/actions*` to SPA `/notify`.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v2 database (schema_meta is seeded by DDL; no demo-data auto-seed). Restoring an old stamped database does not upgrade a **future** stamp—it restores the original unsupported state. Restoring a stamp-1 file starts the backup-then-walk to 2.
 
 ## Schema support matrix
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v1 DDL, validate its full fingerprint, then stamp 1 | Schema creation and v1 stamp |
-| Unstamped current, version 0 | Require the exact v1 fingerprint and stamp 1 | Stamp only |
-| Current, version 1 | Validate the exact v1 fingerprint on every startup | None |
-| Any other non-empty schema | Hard-reject with explicit reset command | None |
-| Incomplete/lookalike version 0 or prior | Reject with table/column/index/foreign-key mismatch categories | None |
-| Unsupported or future version | Reject; newer files are never downgraded | None |
+| Empty, version 0 | Create current DDL (including seeded `schema_meta`), validate its full fingerprint, then stamp 2 | Schema creation and v2 stamp |
+| Unstamped current, version 0 | Require the exact v2 fingerprint and stamp 2 | Stamp only |
+| Current, version 2 | Validate the exact v2 fingerprint on every startup | None |
+| Stamp 1 (floor) | Copy db + WAL/SHM sidecars, apply `target=2`, then validate the current fingerprint | Additive `schema_meta` (same seeded row as fresh DDL) + stamp 2; one backup |
+| FLOOR ≤ v < CURRENT | Copy db + WAL/SHM sidecars, walk each `MigrationStep`, then validate the current fingerprint | Additive DDL + stamp; one backup for the whole upgrade |
+| Future version (`v > CURRENT`, including retired 3–45 while CURRENT=2) | Hard-reject: update the application | None |
+| Incomplete/lookalike version 0 or current (including stamp-2 missing `schema_meta`) | Reject with table/column/index/foreign-key mismatch categories; backup then reset | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 1. A future in-place migration must be introduced as an explicit new contract.
+Single entry: `Database.ensure_schema` → `ensure_supported_schema`. Explicit rebuild is `Database.rebuild_current_schema` (user reset only). Business code continues to touch only `Database`.

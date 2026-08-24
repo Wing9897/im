@@ -1,18 +1,21 @@
-"""Wipe-only schema bootstrap and validation (no migration registry).
+"""Schema bootstrap: create current DDL, walk FLOOR..CURRENT-1, or hard-reject.
 
-Stamp **1** is the first database version. The current stamp
-(``CURRENT_SCHEMA_VERSION``) is the sole supported floor. There is no
-``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
-upgrade route — including from retired pre-cut stamps (2–45). Empty databases
-are created from the authoritative domain DDL aggregated by ``schema.py``.
-Exact unstamped current fingerprints are stamped (``PRAGMA user_version`` =
-current stamp). Every other non-empty schema is rejected without mutation →
-``python scripts/reset_local_databases.py --apply`` (does **not** auto-seed).
+Stamp **1** is the schema floor (``SCHEMA_FLOOR``). Empty databases are created
+from the authoritative domain DDL aggregated by ``schema.py``. Exact unstamped
+current fingerprints are stamped (``PRAGMA user_version`` = current stamp).
+``FLOOR <= version < CURRENT`` backs up once and applies additive
+``SCHEMA_MIGRATIONS`` steps from :mod:`server.db.schema_steps`. Future stamps
+(``version > CURRENT``, including retired 3–45 while CURRENT=2) refuse with an
+update-the-app message. Pre-cut stamp-2 files that do not match the current
+fingerprint hard-reject. Corrupt / lookalike fingerprints hard-reject with the
+explicit reset command. Startup never silently deletes or rebuilds a database.
 
 Product SemVer / git tags are decoupled from ``SCHEMA_SEMVER`` / ``user_version``.
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import aiosqlite
 
@@ -20,31 +23,27 @@ from server.db.schema import DDL
 from server.db.schema_inspect import (
     CURRENT_SCHEMA_FINGERPRINT,
     CURRENT_SCHEMA_VERSION,
+    SCHEMA_FLOOR,
     SCHEMA_SEMVER,
-    ColumnSignature,
-    ForeignKeyGroupSignature,
-    IndexSignature,
     SchemaEvolutionError,
     SchemaFingerprint,
     _fingerprint_mismatch_categories,
     _require_current_structure,
     inspect_schema,
 )
+from server.db.schema_migrate import MigrationStep, apply_migrations
+from server.db.schema_steps import SCHEMA_MIGRATIONS
 
 RESET_COMMAND = "python scripts/reset_local_databases.py --apply"
 
 __all__ = [
     "CURRENT_SCHEMA_FINGERPRINT",
     "CURRENT_SCHEMA_VERSION",
-    "RESET_COMMAND",
+    "SCHEMA_MIGRATIONS",
     "SCHEMA_SEMVER",
-    "ColumnSignature",
-    "ForeignKeyGroupSignature",
-    "IndexSignature",
     "SchemaEvolutionError",
     "SchemaFingerprint",
-    "_fingerprint_mismatch_categories",
-    "_require_current_structure",
+    "apply_authoritative_ddl",
     "ensure_supported_schema",
     "inspect_schema",
 ]
@@ -54,16 +53,37 @@ def _reset_required(message: str) -> SchemaEvolutionError:
     return SchemaEvolutionError(f"{message}. Reset required: {RESET_COMMAND}")
 
 
-async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
-    """Create the current stamp or validate it; never migrate or silently wipe data."""
+def _future_stamp_required(version: int) -> SchemaEvolutionError:
+    return SchemaEvolutionError(
+        f"Unsupported database schema version {version}; "
+        f"this application supports stamp {CURRENT_SCHEMA_VERSION}. "
+        f"Update the application. Reset is a last resort: {RESET_COMMAND}"
+    )
+
+
+async def apply_authoritative_ddl(conn: aiosqlite.Connection) -> None:
+    """Create current tables from DDL (including ``schema_meta`` seed) and stamp.
+
+    Does not commit. Shared by empty-DB bootstrap and explicit rebuild.
+    """
+    await conn.executescript(DDL)
+    created = await inspect_schema(conn)
+    _require_current_structure(created)
+    await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
+
+
+async def ensure_supported_schema(
+    conn: aiosqlite.Connection,
+    db_path: str | Path,
+    *,
+    migrations: tuple[MigrationStep, ...] | None = None,
+) -> None:
+    """Create the current stamp, migrate FLOOR..CURRENT-1, or reject without wipe."""
     fingerprint = await inspect_schema(conn)
     version = fingerprint.version
 
     if not fingerprint.tables and version == 0:
-        await conn.executescript(DDL)
-        created = await inspect_schema(conn)
-        _require_current_structure(created)
-        await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
+        await apply_authoritative_ddl(conn)
         await conn.commit()
         return
 
@@ -79,16 +99,29 @@ async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
         await conn.commit()
         return
 
-    if version > CURRENT_SCHEMA_VERSION:
-        raise _reset_required(
-            f"Unsupported database schema version {version}; "
-            f"stamp {CURRENT_SCHEMA_VERSION} is the first database (wipe-only)"
+    if SCHEMA_FLOOR <= version < CURRENT_SCHEMA_VERSION:
+        await apply_migrations(
+            conn,
+            version,
+            CURRENT_SCHEMA_VERSION,
+            db_path=db_path,
+            migrations=SCHEMA_MIGRATIONS if migrations is None else migrations,
         )
+        migrated = await inspect_schema(conn)
+        try:
+            _require_current_structure(migrated)
+        except SchemaEvolutionError as exc:
+            raise _reset_required(str(exc)) from exc
+        return
+
+    if version > CURRENT_SCHEMA_VERSION:
+        raise _future_stamp_required(version)
     if version == 0:
         categories = _fingerprint_mismatch_categories(fingerprint)
         detail = ", ".join(categories) if categories else "unknown structure"
         raise _reset_required(f"Unstamped database fingerprint mismatch: {detail}")
     raise _reset_required(
         f"Unsupported database schema version {version}; "
-        f"stamp {CURRENT_SCHEMA_VERSION} is the first database (wipe-only)"
+        f"database is corrupt or unrecognized "
+        f"(schema floor {SCHEMA_FLOOR}, current stamp {CURRENT_SCHEMA_VERSION})"
     )

@@ -81,7 +81,7 @@ _COMPACT_OCCURRENCE_FIELDS = (
     "body",
 )
 #: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
-#: Empty ``seriesId`` (shared CalendarOccurrence wire; not an RRULE series).
+#: Empty ``seriesId`` (shared ``CalendarWindowItemResponse`` window item; not an RRULE series).
 _COMPACT_ITEM_FIELDS = (
     "id",
     "seriesId",

@@ -1,6 +1,6 @@
 """Constrained public-page fetch for assistant / agent ``web.fetch``.
 
-Search stays in ``providers.py``. This module only reads 1–2 HTML pages when
+Search stays in ``providers.py`` (facade) and per-engine modules. This module only reads 1–2 HTML pages when
 snippets are not enough. It reuses ``validate_outbound_url`` (HTTP/HTTPS, no
 loopback / private / link-local / unique-local / metadata).
 """

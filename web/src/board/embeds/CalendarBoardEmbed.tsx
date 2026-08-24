@@ -22,7 +22,7 @@ interface CalendarBoardEmbedProps {
 
 /**
  * Compact month calendar or today's event list for the ops board.
- * Consumes AnalysisEvent rows directly — no CalendarOccurrence round-trip
+ * Consumes AnalysisEvent rows directly from the calendar window projection
  * (avoids seriesId←taskId and analysis/user→recurring remaps).
  */
 export function CalendarBoardEmbed({

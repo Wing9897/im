@@ -241,12 +241,27 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     return match![1];
   }
 
-  /**
-   * Wipe-only bootstrap (schema_bootstrap.py): no MigrationStep registry.
-   * Non-current stamps hard-reject; narrative ceiling is current - 1.
-   */
-  function readHardRejectCeiling(current: number): number {
-    return current - 1;
+  function readSchemaFloor(): number {
+    const inspectPath = path.resolve(ROOT_DIR, "server", "db", "schema_inspect.py");
+    const source = fs.readFileSync(inspectPath, "utf-8");
+    const match = source.match(/^SCHEMA_FLOOR\s*=\s*(\d+)\s*$/m);
+    expect(match, `SCHEMA_FLOOR not found in ${relFromRoot(inspectPath)}`).toBeTruthy();
+    return Number(match![1]);
+  }
+
+  function readProductionRegistryTargets(): number[] {
+    const stepsPath = path.resolve(ROOT_DIR, "server", "db", "schema_steps.py");
+    const source = fs.readFileSync(stepsPath, "utf-8");
+    expect(source, `SCHEMA_MIGRATIONS not found in ${relFromRoot(stepsPath)}`).toMatch(
+      /SCHEMA_MIGRATIONS/,
+    );
+    const targets = [...source.matchAll(/MigrationStep\(\s*target\s*=\s*(\d+)/g)].map((match) =>
+      Number(match[1]),
+    );
+    expect(targets, `production SCHEMA_MIGRATIONS targets missing in ${relFromRoot(stepsPath)}`).toEqual(
+      [2],
+    );
+    return targets;
   }
 
   it("ARCHITECTURE.md states the current baseline (not an older one)", () => {
@@ -268,28 +283,28 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     );
   });
 
-  it("README.md states the current wipe-only baseline and hard-reject policy", () => {
+  it("README.md states the floor, stamp-2 registry, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
-    const hardRejectCeiling = readHardRejectCeiling(current);
+    const floor = readSchemaFloor();
+    expect(readProductionRegistryTargets()).toEqual([2]);
     const readmePath = path.resolve(ROOT_DIR, "README.md");
     const content = fs.readFileSync(readmePath, "utf-8");
 
     expect(content).toMatch(new RegExp(String.raw`\*\*schema v${current}\*\*`, "i"));
-    if (hardRejectCeiling >= 1) {
-      expect(content).toMatch(
-        new RegExp(String.raw`v1[–-]v${hardRejectCeiling}[^\r\n]*hard-reject`, "i"),
-      );
-    } else {
-      // Empty registry at stamp 1: legacy / non-current stamps hard-reject (must reset).
-      expect(content).toMatch(/hard-reject/i);
-      expect(content).toMatch(/reset/i);
-    }
+    expect(content).toMatch(/SCHEMA_FLOOR/);
+    expect(content).toMatch(/SCHEMA_MIGRATIONS/);
+    expect(content).toMatch(new RegExp(String.raw`\b${floor}\b`));
+    expect(content).toMatch(/未來 stamp|future stamp/i);
+    expect(content).toMatch(/升級應用|update the application/i);
+    expect(content).toMatch(/hard-reject/i);
+    expect(content).toMatch(/reset/i);
   });
 
-  it("desktop schema hint states the current wipe-only baseline", () => {
+  it("desktop schema hint states the floor, stamp-2 baseline, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
-    const hardRejectCeiling = readHardRejectCeiling(current);
+    const floor = readSchemaFloor();
+    expect(readProductionRegistryTargets()).toEqual([2]);
     const hintPath = path.resolve(ROOT_DIR, "desktop", "shell-i18n.ts");
     const content = fs.readFileSync(hintPath, "utf-8");
 
@@ -302,21 +317,18 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     expect(content).toMatch(
       new RegExp(String.raw`SHELL_SCHEMA_SEMVER\s*=\s*'${semver.replace(/\./g, "\\.")}'`),
     );
+    expect(content).toMatch(new RegExp(String.raw`SHELL_SCHEMA_FLOOR\s*=\s*${floor}`));
     expect(content).toContain(semver);
-    if (hardRejectCeiling >= 1) {
-      expect(content).toMatch(
-        new RegExp(
-          String.raw`v1[–-]v\$\{ceiling\}|v1[–-]v${hardRejectCeiling}[^\r\n]*hard-rejected`,
-        ),
-      );
-    } else {
-      expect(content).toMatch(/must be reset|舊庫須重置|旧库须重置/i);
-    }
+    expect(content).toMatch(/SCHEMA_MIGRATIONS/);
+    expect(content).toMatch(/update the application|升級應用|升级应用/i);
+    expect(content).toMatch(/reset|重置/i);
   });
 
-  it("web boot unavailableHint states the current wipe-only baseline", () => {
+  it("web boot unavailableHint states the floor, stamp-2 baseline, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
+    const floor = readSchemaFloor();
+    expect(readProductionRegistryTargets()).toEqual([2]);
     for (const locale of ["en", "zh-Hant", "zh-Hans"] as const) {
       const localePath = path.resolve(
         ROOT_DIR,
@@ -328,10 +340,13 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
         "common.json",
       );
       const content = fs.readFileSync(localePath, "utf-8");
-      expect(content, localePath).toMatch(
-        new RegExp(String.raw`wipe-only stamp ${current}`),
-      );
+      expect(content, localePath).toMatch(new RegExp(String.raw`stamp ${current}`));
       expect(content, localePath).toContain(semver);
+      expect(content, localePath).toMatch(/SCHEMA_FLOOR|SCHEMA_MIGRATIONS/);
+      expect(content, localePath).toMatch(new RegExp(String.raw`\b${floor}\b`));
+      expect(content, localePath).toMatch(/future stamp|未來 stamp|未来 stamp/i);
+      expect(content, localePath).toMatch(/update the application|升級應用|升级应用/i);
+      expect(content, localePath).toMatch(/reset|重置/);
     }
   });
 });

@@ -277,7 +277,7 @@ async def reset_database(request: Request) -> SystemMessageResponse:
         await scheduler.pause()
     if collector is not None:
         await collector.shutdown()
-    await db._rebuild_file()  # noqa: SLF001 — deliberate full reset
+    await db.rebuild_current_schema()
     # Sidecar files live on disk (not in SQLite); wipe leftovers so post-reset
     # login cannot reuse stale auth / encryption / shell connection state.
     try:

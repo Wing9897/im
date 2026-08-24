@@ -1,7 +1,7 @@
 """FastAPI application factory + lifespan startup sequence.
 
 Startup order:
-    1. Database connect + create/validate the wipe-only current schema.
+    1. Database connect + create/validate/migrate the current schema.
     2. Probe stored secrets.
     3. Start orphan recovery, scheduler and collector when secrets are usable.
 
@@ -170,12 +170,7 @@ async def _lifespan_impl(
         # process and the SQLite file lock alive — which in turn blocks the
         # explicit-reset recovery path.
         if isinstance(exc, SchemaBaselineError):
-            logger.exception(
-                "This database cannot be upgraded in place. "
-                "Reset the local database, then re-collect: python scripts/reset_local_databases.py --apply "
-                "(database: %s)",
-                db_path,
-            )
+            logger.exception("%s (database: %s)", exc, db_path)
         if injected_db is None:
             await db.close()
         raise

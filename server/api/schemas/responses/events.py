@@ -7,7 +7,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from server.api.schemas.notify_pref import CoercedNotifyPref
-from server.domain.timeline_sources import SOURCE_RECURRING, TimelineSource
+from server.domain.timeline_sources import TimelineSource
 from server.domain.user_event_directions import UserEventDirection
 from server.domain.user_event_kinds import UserEventKind
 from server.domain.user_event_origins import UserEventOrigin
@@ -149,34 +149,6 @@ class TimelineImportanceResponse(BaseModel):
     source: TimelineSource
     eventId: str
     markedAt: str
-
-
-class CalendarOccurrenceResponse(BaseModel):
-    """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``."""
-
-    id: str
-    #: Recurring series id for ``source=recurring``; empty for item DATE projections.
-    seriesId: str = ""
-    taskName: str = ""
-    title: str
-    startTime: str
-    endTime: str
-    isAllDay: bool = False
-    timezone: str | None = None
-    location: str | None = None
-    description: str | None = None
-    rrule: str = ""
-    dismissed: bool = False
-    important: bool = False
-    # True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
-    isLastOccurrence: bool = False
-    source: Literal["recurring", "item_remind"] = SOURCE_RECURRING
-    worksetId: str | None = None
-    itemId: str | None = None
-    itemDateKind: Literal["remind"] | None = None
-    #: Item remind projections inherit the linked expires calendar override.
-    notifyPref: CoercedNotifyPref = "inherit"
-    emoji: str | None = None
 
 
 class CalendarWindowItemResponse(BaseModel):

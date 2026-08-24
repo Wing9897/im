@@ -42,8 +42,8 @@ describe("system API", () => {
         status: "ok",
         version: "1.0.0",
         runtimeReady: true,
-        schemaVersion: 1,
-        schemaSemver: "1.0.0",
+        schemaVersion: 2,
+        schemaSemver: "1.1.0",
         secretsReady: true,
         bindHost: "0.0.0.0",
       };

@@ -16,25 +16,21 @@
  */
 
 import { RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import { startOfDay } from "../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import { useMonthHolidays } from "../../hooks/useMonthHolidays";
-import { useMonthWeather } from "../../hooks/useMonthWeather";
-import { getOsTimeMs } from "../../utils/time";
-import { useMonthDateReveal } from "./calendar/useMonthDateReveal";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
-import { TimelinePageProvider, type TimelinePageContextValue } from "./TimelinePageContext";
+import { TimelinePageProvider } from "./TimelinePageContext";
 import { TimelinePageDialogs } from "./TimelinePageDialogs";
 import { useTimelineFullscreen } from "./useTimelineFullscreen";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
+import { useTimelinePageContextValue } from "./useTimelinePageContextValue";
+import { useTimelinePageDeepLinks } from "./useTimelinePageDeepLinks";
 import { useTimelinePageDialogs } from "./useTimelinePageDialogs";
+import { useTimelinePageOverlays } from "./useTimelinePageOverlays";
 
 /** Fill main canvas height; do not use 100vh (that overflows titlebar/topbar and scrolls the whole page).
  * No overflow-hidden on the fill — canvas/main clip via `:has(.timeline-page-fill)`;
@@ -51,7 +47,6 @@ const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export function TimelinePage() {
   const { t } = useTranslation("timeline");
-  const [searchParams, setSearchParams] = useSearchParams();
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks } = useTaskCatalog();
   useErrorToast(data.pageError);
@@ -61,161 +56,21 @@ export function TimelinePage() {
     selectedEvent: selection.selectedEvent,
     setSelectedEvent: selection.setSelectedEvent,
   });
-  const createLinkHandled = useRef(false);
-  const eventLinkHandled = useRef<string | null>(null);
-  const eventDayJumped = useRef<string | null>(null);
-  const weatherEnabled = sources.viewMode === "calendar";
-  const weatherDays = useMemo(() => {
-    if (!weatherEnabled) return [] as Date[];
-    if (navigation.timeScale === "week") return navigation.weekDays;
-    if (navigation.timeScale === "day") return [navigation.rangeStart];
-    return navigation.monthDays;
-  }, [
-    weatherEnabled,
-    navigation.timeScale,
-    navigation.weekDays,
-    navigation.rangeStart,
-    navigation.monthDays,
-  ]);
-  const {
-    weatherByDate,
-    loading: weatherLoading,
-    refresh: refreshWeather,
-  } = useMonthWeather(weatherEnabled, weatherDays);
-  const {
-    holidaysByDate,
-    loading: holidaysLoading,
-    refresh: refreshHolidays,
-  } = useMonthHolidays(weatherEnabled, weatherDays);
-  const overlayLoading = weatherLoading || holidaysLoading;
-  const datesReveal = useMonthDateReveal();
-  const showMonthDatesReveal =
-    sources.viewMode === "calendar" && navigation.timeScale === "month";
-
-  // Deep-link from workset detail: /timeline?newEvent=1&worksetId=…
-  useEffect(() => {
-    const wantsNew = searchParams.get("newEvent") === "1";
-    if (!wantsNew) {
-      createLinkHandled.current = false;
-      return;
-    }
-    if (createLinkHandled.current) return;
-    createLinkHandled.current = true;
-    const wid = searchParams.get("worksetId")?.trim() || null;
-    const itemId = searchParams.get("itemId")?.trim() || null;
-    dialogs.openCreateDialog({ worksetId: wid, itemId });
-    const next = new URLSearchParams(searchParams);
-    next.delete("newEvent");
-    next.delete("worksetId");
-    next.delete("itemId");
-    setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, dialogs]);
-
-  // Deep-link from workset summary: /timeline?eventId=…&at=…
-  useEffect(() => {
-    const eventId = searchParams.get("eventId")?.trim();
-    if (!eventId) {
-      eventLinkHandled.current = null;
-      eventDayJumped.current = null;
-      return;
-    }
-
-    if (eventDayJumped.current !== eventId) {
-      const atRaw = searchParams.get("at")?.trim();
-      if (atRaw) {
-        const atMs = getOsTimeMs(atRaw);
-        if (Number.isFinite(atMs)) {
-          sources.goToDay(startOfDay(new Date(atMs)));
-        }
-      }
-      eventDayJumped.current = eventId;
-    }
-
-    if (eventLinkHandled.current === eventId) return;
-    if (data.initialLoading) return;
-
-    const match =
-      data.events.find((row) => row.id === eventId) ??
-      filters.filteredEvents.find((row) => row.id === eventId) ??
-      null;
-
-    eventLinkHandled.current = eventId;
-    const next = new URLSearchParams(searchParams);
-    next.delete("eventId");
-    next.delete("at");
-    setSearchParams(next, { replace: true });
-
-    if (match) {
-      selection.setSelectedEvent(match);
-    }
-  }, [
-    searchParams,
-    setSearchParams,
-    data.initialLoading,
-    data.events,
-    filters.filteredEvents,
+  const overlays = useTimelinePageOverlays({
+    viewMode: sources.viewMode,
+    navigation,
+  });
+  useTimelinePageDeepLinks({ sources, data, filters, selection, dialogs });
+  const contextValue = useTimelinePageContextValue({
     sources,
+    data,
+    navigation,
+    filters,
     selection,
-  ]);
-
-  const contextValue: TimelinePageContextValue = useMemo(
-    () => ({
-      selectedEvent: selection.selectedEvent,
-      onSelectEvent: selection.setSelectedEvent,
-      editStartTime: selection.editStartTime,
-      editEndTime: selection.editEndTime,
-      setEditStartTime: selection.setEditStartTime,
-      setEditEndTime: selection.setEditEndTime,
-      onSaveTimeOverride: selection.saveTimeOverride,
-      onResetTimeOverride: selection.resetTimeOverride,
-      onSetEventStatus: sources.setEventStatus,
-      eventStatuses: sources.eventStatuses,
-      onEditUserEvent: dialogs.openEditDialog,
-      onEditItemEvent: dialogs.openEditItem,
-      onDismissTimelineEvent: dialogs.handleDismissTimelineEvent,
-      onRestoreTimelineEvent: dialogs.handleRestoreTimelineEvent,
-      onToggleImportantEvent: dialogs.handleToggleImportantEvent,
-      onCreateOnDay: (day) => dialogs.openCreateDialog({ day }),
-      userEventActionBusy: dialogs.userEventActionBusy,
-      showDismissed: filters.showDismissed,
-      showOngoing: filters.showOngoing,
-      showEnding: filters.showEnding,
-      weatherByDate,
-      holidaysByDate,
-      monthDatesRevealed: datesReveal.revealed,
-      taskSpans: data.taskSpans,
-      selectedGanttTaskId: gantt.selectedGanttTaskId,
-      onSelectGanttTask: gantt.handleSelectGanttTask,
-      spansInitialLoading: data.spansInitialLoading,
-      spansIsRefreshing: data.spansIsRefreshing,
-      spansError: data.spansError,
-      onRetrySpans: data.fetchSpans,
-      selectedGanttSpan: gantt.selectedGanttSpan,
-      onCloseGanttPanel: () => gantt.setSelectedGanttTaskId(null),
-      ganttColumns: navigation.ganttColumns,
-      timelineEvents: filters.showDismissed
-        ? data.timelineEvents
-        : data.timelineEvents.filter((event) => !event.dismissed),
-      timelineEventsInitialLoading: data.timelineEventsInitialLoading,
-      timelineEventsIsRefreshing: data.timelineEventsIsRefreshing,
-      timelineEventsError: data.timelineEventsError,
-      onRetryTimelineEvents: data.retryTimelineEvents,
-    }),
-    [
-      sources,
-      data,
-      navigation.ganttColumns,
-      gantt,
-      selection,
-      dialogs,
-      filters.showDismissed,
-      filters.showOngoing,
-      filters.showEnding,
-      weatherByDate,
-      holidaysByDate,
-      datesReveal.revealed,
-    ],
-  );
+    gantt,
+    dialogs,
+    overlays,
+  });
 
   return (
     <TimelinePageProvider value={contextValue}>
@@ -256,14 +111,14 @@ export function TimelinePage() {
                 data.initialLoading ? t("view.loading") : t("view.refreshing")
               }
             >
-              {weatherEnabled ? (
+              {overlays.weatherEnabled ? (
                 <PillButton
                   type="button"
                   onClick={() => {
-                    void refreshWeather();
-                    void refreshHolidays();
+                    void overlays.refreshWeather();
+                    void overlays.refreshHolidays();
                   }}
-                  disabled={overlayLoading}
+                  disabled={overlays.overlayLoading}
                   title={t("calendar.weatherRefresh")}
                   aria-label={t("calendar.weatherRefresh")}
                   data-testid="timeline-weather-refresh"
@@ -272,7 +127,7 @@ export function TimelinePage() {
                     size={16}
                     strokeWidth={2.5}
                     aria-hidden="true"
-                    className={overlayLoading ? "animate-spin" : undefined}
+                    className={overlays.overlayLoading ? "animate-spin" : undefined}
                   />
                 </PillButton>
               ) : null}
@@ -284,12 +139,12 @@ export function TimelinePage() {
                 showEnding={filters.showEnding}
                 setShowEnding={filters.setShowEnding}
                 monthDateReveal={
-                  showMonthDatesReveal
+                  overlays.showMonthDatesReveal
                     ? {
-                        persisted: datesReveal.persisted,
-                        onPersistedChange: datesReveal.onPersistedChange,
-                        onPointerEnter: datesReveal.onPointerEnter,
-                        onPointerLeave: datesReveal.onPointerLeave,
+                        persisted: overlays.datesReveal.persisted,
+                        onPersistedChange: overlays.datesReveal.onPersistedChange,
+                        onPointerEnter: overlays.datesReveal.onPointerEnter,
+                        onPointerLeave: overlays.datesReveal.onPointerLeave,
                       }
                     : null
                 }
