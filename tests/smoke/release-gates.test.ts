@@ -40,25 +40,12 @@ describe("release safety gates", () => {
     expect(workflow).toContain("name: Upload to GitHub Release");
     expect(workflow).toContain("desktop/release/*.exe");
     expect(workflow).toContain("GH_REPO: ${{ github.repository }}");
-    expect(workflow).toContain("actions/upload-artifact");
-    expect(workflow).toContain("actions/download-artifact");
-    expect(workflow).toMatch(/name:\s*web-dist/);
-    expect(workflow).toContain("path: web/dist");
-    expect(workflow).toContain("retention-days: 7");
-
-    const artifactSteps = workflow
-      .split(/uses:\s*/)
-      .filter(
-        (chunk) =>
-          chunk.startsWith("actions/upload-artifact") ||
-          chunk.startsWith("actions/download-artifact"),
-      );
-    expect(artifactSteps.length).toBe(2);
-    for (const step of artifactSteps) {
-      const block = step.split("\n").slice(0, 12).join("\n");
-      expect(block).toContain("web/dist");
-      expect(block).not.toContain("desktop/release");
-    }
+    expect(workflow).not.toContain("actions/upload-artifact");
+    expect(workflow).not.toContain("actions/download-artifact");
+    expect(workflow).toContain("web-dist.tar.gz");
+    expect(workflow).toContain("gh release upload");
+    expect(workflow).toContain("gh release download");
+    expect(workflow).toContain('gh release delete-asset "$TAG" web-dist.tar.gz --yes');
 
     expect(workflow).not.toContain("package:cli");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");
