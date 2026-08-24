@@ -27,7 +27,7 @@ export type AssistantComposerShellProps = {
   afterDraft?: ReactNode;
   /** Page TTS caption next to the mic. */
   leadingActions?: ReactNode;
-  /** Overlay history toggle before Send. */
+  /** Overlay flash/persist toggle before Send. */
   extraActions?: ReactNode;
 };
 

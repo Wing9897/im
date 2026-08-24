@@ -217,7 +217,7 @@ describe("AssistantQuick smoke", () => {
     expect(startListening).not.toHaveBeenCalled();
   });
 
-  it("toggles composer history next to send", () => {
+  it("toggles flash vs persist next to send", () => {
     chatMock.messages = [
       { id: "u1", role: "user", content: "hello history" },
       { id: "a1", role: "assistant", content: "hi back" },
@@ -230,6 +230,9 @@ describe("AssistantQuick smoke", () => {
       '[data-testid="assistant-caption-history-toggle"]',
     ) as HTMLButtonElement;
     expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute("data-mode")).toBe("flash");
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    expect(toggle.textContent).toBe("閃現");
 
     act(() => {
       toggle.click();
@@ -239,10 +242,40 @@ describe("AssistantQuick smoke", () => {
     expect(history?.className).toContain("im-auto-scrollbar");
     expect(history?.textContent).toContain("hello history");
     expect(history?.textContent).toContain("hi back");
+    expect(toggle.getAttribute("data-mode")).toBe("persist");
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(toggle.textContent).toBe("持續");
 
     act(() => {
       toggle.click();
     });
+    expect(document.querySelector('[data-testid="assistant-caption-history"]')).toBeNull();
+    expect(toggle.getAttribute("data-mode")).toBe("flash");
+  });
+
+  it("flashes a sent turn above the composer in flash mode", () => {
+    renderQuick();
+    openComposerViaChrome();
+    chatMock.sending = true;
+    renderQuick();
+    expect(document.querySelector('[data-testid="assistant-caption-history"]')).toBeNull();
+    expect(document.querySelector('[data-testid="assistant-direct-sending"]')).not.toBeNull();
+
+    chatMock.messages = [{ id: "u1", role: "user", content: "hello flash" }];
+    renderQuick();
+    expect(document.querySelector('[data-testid="assistant-direct-user-msg"]')?.textContent).toBe(
+      "hello flash",
+    );
+
+    chatMock.sending = false;
+    chatMock.messages = [
+      { id: "u1", role: "user", content: "hello flash" },
+      { id: "a1", role: "assistant", content: "flash reply" },
+    ];
+    renderQuick();
+    expect(document.querySelector('[data-testid="assistant-direct-msg"]')?.textContent).toContain(
+      "flash reply",
+    );
     expect(document.querySelector('[data-testid="assistant-caption-history"]')).toBeNull();
   });
 

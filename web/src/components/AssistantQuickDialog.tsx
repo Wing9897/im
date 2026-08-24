@@ -22,7 +22,8 @@ import {
  * Always-on voice host — Space PTT + subtitle flashes.
  * Text composer includes the same hold/toggle mic as `/assistant`
  * (mic works while the draft is focused; Space does not).
- * History replay is owned by AssistantDirectBubbles (frozen until first listen/send).
+ * Flash vs persist: current-turn overlay (AGENT_HIDE_MS) or a pinned composer
+ * transcript. History replay in flashes is frozen until first listen/send.
  */
 export function AssistantQuickDialog() {
   const { t } = useTranslation(["assistant", "common"]);
@@ -38,7 +39,8 @@ export function AssistantQuickDialog() {
   } = useAssistantQuick();
   const [holdArmed, setHoldArmed] = useState(false);
   const [showReadyHint, setShowReadyHint] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  /** Persist: keep composer transcript. Flash: current turn then auto-hide. */
+  const [persistTranscript, setPersistTranscript] = useState(false);
   /** Voice PTT turn stays visible through send after mic release (composer may be closed). */
   const [voiceTurn, setVoiceTurn] = useState(false);
   const voiceSendStartedRef = useRef(false);
@@ -168,16 +170,11 @@ export function AssistantQuickDialog() {
   }, [holdArmed, listening, messages, sending, voiceTurn]);
 
   useEffect(() => {
-    if (!composerOpen) setHistoryOpen(false);
-    // Do not auto-focus the draft: keep Space PTT live until the user clicks to type.
-  }, [composerOpen]);
-
-  useEffect(() => {
-    if (!historyOpen) return;
+    if (!persistTranscript) return;
     const el = historyRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [historyOpen, messages.length, sending]);
+  }, [persistTranscript, messages.length, sending]);
 
   const composer: ReactNode = (
     <AssistantComposerShell
@@ -200,7 +197,7 @@ export function AssistantQuickDialog() {
         }
       }}
       header={
-        historyOpen ? (
+        persistTranscript ? (
           <div
             ref={historyRef}
             className="im-assistant-direct__composer-history im-auto-scrollbar"
@@ -278,10 +275,15 @@ export function AssistantQuickDialog() {
           variant="secondary"
           size="sm"
           data-testid="assistant-caption-history-toggle"
-          aria-pressed={historyOpen}
-          onClick={() => setHistoryOpen((open) => !open)}
+          data-mode={persistTranscript ? "persist" : "flash"}
+          aria-pressed={persistTranscript}
+          aria-label={
+            persistTranscript ? t("quick.persistMode") : t("quick.flashMode")
+          }
+          title={persistTranscript ? t("quick.persistMode") : t("quick.flashMode")}
+          onClick={() => setPersistTranscript((persist) => !persist)}
         >
-          {historyOpen ? t("quick.hideHistory") : t("quick.showHistory")}
+          {persistTranscript ? t("quick.persistMode") : t("quick.flashMode")}
         </Button>
       }
     />
@@ -306,6 +308,7 @@ export function AssistantQuickDialog() {
       showReadyHint={voiceLive && !composerOpen && sttAvailable && showReadyHint}
       onReadyHintConsumed={() => setShowReadyHint(false)}
       composer={composerOpen ? composer : undefined}
+      persistTranscript={persistTranscript}
       taskAdvisorPresence={showTaskAdvisorPresence}
     />
   );

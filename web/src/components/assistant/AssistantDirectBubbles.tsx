@@ -47,6 +47,12 @@ type AssistantDirectBubblesProps = {
   /** Optional composer row rendered under the bubble stack. */
   composer?: ReactNode;
   /**
+   * Persist mode: keep the composer transcript visible and skip current-turn
+   * flash bubbles (they would duplicate the history panel). Flash mode still
+   * shows user/reply lanes above the composer, then AGENT_HIDE_MS / USER_HIDE_MS.
+   */
+  persistTranscript?: boolean;
+  /**
    * Task create/edit only: add task-advisor next to the assistant in presence
    * chrome and attribute ``tasks.consult_advisor`` steps to the advisor.
    * Assistant-only presence still shows whenever ``composer`` is open.
@@ -78,6 +84,7 @@ export function AssistantDirectBubbles({
   onReadyHintConsumed,
   active = false,
   composer,
+  persistTranscript = false,
   taskAdvisorPresence = false,
 }: AssistantDirectBubblesProps) {
   const { t } = useTranslation(["assistant", "common"]);
@@ -121,9 +128,12 @@ export function AssistantDirectBubbles({
   const agentSending = agentFlash?.key === "sending";
   const agentReply =
     agentFlash && agentFlash.key !== "sending" ? agentFlash : null;
+  // Persist + composer: history panel owns the transcript. Flash mode (or
+  // voice with composer closed) still shows the current-turn lanes.
+  const hideTurnBubbles = persistTranscript && Boolean(composer);
   // Never stack a prior user bar under live STT (double bar of last transcript).
-  const showUserFlash = Boolean(userFlash) && !isListening && !composer;
-  const showAgentReply = Boolean(agentReply) && !composer;
+  const showUserFlash = Boolean(userFlash) && !isListening && !hideTurnBubbles;
+  const showAgentReply = Boolean(agentReply) && !hideTurnBubbles;
 
   return createPortal(
     <div
