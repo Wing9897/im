@@ -491,6 +491,9 @@
     "presetKeyInsights": "关键情报",
     "presetScheduleEvents": "行程提取",
     "stepEventsTitle": "等第一次分析完成",
-    "stepEventsBody": "任务启用后，分析结果会写入情报事件；有时间的事件也会出现在时间规划。"
+    "stepEventsBody": "任务启用后，分析结果会写入情报事件；有时间的事件也会出现在时间规划。",
+    "stepAiTitle": "建立 AI 设定档并绑定助手槽",
+    "stepAiBody": "可选。打开 AI 供应商页面，建立设定档，再绑定助手全局槽。不会自动种子默认档。",
+    "openAiProvider": "AI 供应商"
   }
 }

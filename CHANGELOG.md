@@ -4,6 +4,8 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Pipeline first-run checklist adds an optional step: create an AI profile and bind the assistant global slot (link to `/ai/provider`; no `__default__` seed).
+- Release container job no longer uses Docker `type=gha` cache (avoids GitHub Actions cache quota failures); staged `web-dist.tar.gz` is deleted with `if: always()` so a failed package job still cleans the tag.
 - System-bar composer toggle is 閃現 / 持續 (flash then `AGENT_HIDE_MS`, vs pinned transcript) instead of 顯示對話 hiding the whole overlay chat; `/assistant` history is unchanged.
 - AI engine status/test no longer stringify HTTPException; empty-DB and unbound-assistant diagnostics return stable `errorCode` (`NO_LLM_PROFILE` / `ASSISTANT_SLOT_UNBOUND` / `LLM_PROFILE_INCOMPLETE`) mapped by frontend i18n, with assistant empty-state copy pointing at `/ai/provider`.
 - Assistant composer `sendDisabled` also covers an unbound/incomplete assistant slot; Enter and PTT honor the same gate, with a send-button hint pointing at the existing `/ai/provider` banners.

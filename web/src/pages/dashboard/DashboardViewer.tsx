@@ -161,6 +161,7 @@ export function DashboardViewer() {
       {!loading && !error && pipeline.showChecklist && isTaskView ? (
         <PipelineGuideChecklist
           state={pipeline.state}
+          assistantSlotReady={pipeline.assistantSlotReady}
           compact={tasks.length > 0}
         />
       ) : null}

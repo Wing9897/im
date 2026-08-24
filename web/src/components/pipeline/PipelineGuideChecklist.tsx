@@ -12,19 +12,32 @@ const PRESET_SCHEDULE_EVENTS = "schedule-events";
 
 interface PipelineGuideChecklistProps {
   state: PipelineReadinessState;
+  assistantSlotReady?: boolean;
   compact?: boolean;
 }
 
-function stepDone(state: PipelineReadinessState, step: 1 | 2 | 3): boolean {
+type PipelineGuideStep = 1 | 2 | 3 | 4;
+
+function stepDone(
+  state: PipelineReadinessState,
+  assistantSlotReady: boolean,
+  step: PipelineGuideStep,
+): boolean {
   if (step === 1) return state !== "no_sources";
   if (step === 2) return state === "no_events" || state === "complete";
-  return state === "complete";
+  if (step === 3) return state === "complete";
+  return assistantSlotReady;
 }
 
-function stepCurrent(state: PipelineReadinessState, step: 1 | 2 | 3): boolean {
+function stepCurrent(
+  state: PipelineReadinessState,
+  assistantSlotReady: boolean,
+  step: PipelineGuideStep,
+): boolean {
   if (step === 1) return state === "no_sources";
   if (step === 2) return state === "no_active_task";
-  return state === "no_events";
+  if (step === 3) return state === "no_events";
+  return !assistantSlotReady;
 }
 
 function StepMark({
@@ -63,6 +76,7 @@ function StepMark({
 
 export function PipelineGuideChecklist({
   state,
+  assistantSlotReady = false,
   compact = false,
 }: PipelineGuideChecklistProps) {
   const { t } = useTranslation("common");
@@ -71,7 +85,11 @@ export function PipelineGuideChecklist({
   const steps = (
     <ol className="m-0 flex w-full max-w-[420px] list-none flex-col gap-md p-0 text-left">
       <li className="flex min-w-0 items-start gap-sm">
-        <StepMark done={stepDone(state, 1)} current={stepCurrent(state, 1)} index={1} />
+        <StepMark
+          done={stepDone(state, assistantSlotReady, 1)}
+          current={stepCurrent(state, assistantSlotReady, 1)}
+          index={1}
+        />
         <div className="min-w-0 flex-1">
           <div className="text-body font-medium text-text-primary">
             {t("pipelineGuide.stepSourceTitle")}
@@ -93,7 +111,11 @@ export function PipelineGuideChecklist({
         </div>
       </li>
       <li className="flex min-w-0 items-start gap-sm">
-        <StepMark done={stepDone(state, 2)} current={stepCurrent(state, 2)} index={2} />
+        <StepMark
+          done={stepDone(state, assistantSlotReady, 2)}
+          current={stepCurrent(state, assistantSlotReady, 2)}
+          index={2}
+        />
         <div className="min-w-0 flex-1">
           <div className="text-body font-medium text-text-primary">
             {t("pipelineGuide.stepTaskTitle")}
@@ -129,7 +151,11 @@ export function PipelineGuideChecklist({
         </div>
       </li>
       <li className="flex min-w-0 items-start gap-sm">
-        <StepMark done={stepDone(state, 3)} current={stepCurrent(state, 3)} index={3} />
+        <StepMark
+          done={stepDone(state, assistantSlotReady, 3)}
+          current={stepCurrent(state, assistantSlotReady, 3)}
+          index={3}
+        />
         <div className="min-w-0 flex-1">
           <div className="text-body font-medium text-text-primary">
             {t("pipelineGuide.stepEventsTitle")}
@@ -137,6 +163,33 @@ export function PipelineGuideChecklist({
           <p className="mt-xs text-caption leading-relaxed text-text-secondary">
             {t("pipelineGuide.stepEventsBody")}
           </p>
+        </div>
+      </li>
+      <li className="flex min-w-0 items-start gap-sm">
+        <StepMark
+          done={stepDone(state, assistantSlotReady, 4)}
+          current={stepCurrent(state, assistantSlotReady, 4)}
+          index={4}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="text-body font-medium text-text-primary">
+            {t("pipelineGuide.stepAiTitle")}
+          </div>
+          <p className="mt-xs text-caption leading-relaxed text-text-secondary">
+            {t("pipelineGuide.stepAiBody")}
+          </p>
+          {!assistantSlotReady ? (
+            <div className="mt-sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                data-testid="pipeline-guide-ai-provider"
+                onClick={() => navigate("/ai/provider")}
+              >
+                {t("pipelineGuide.openAiProvider")}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </li>
     </ol>

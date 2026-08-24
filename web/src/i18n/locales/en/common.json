@@ -493,6 +493,9 @@
     "presetKeyInsights": "Key insights",
     "presetScheduleEvents": "Extract schedule",
     "stepEventsTitle": "Wait for the first analysis",
-    "stepEventsBody": "After the task is active, results appear as intel events; timed ones also show on Timeline."
+    "stepEventsBody": "After the task is active, results appear as intel events; timed ones also show on Timeline.",
+    "stepAiTitle": "Create an AI profile and bind the assistant slot",
+    "stepAiBody": "Optional. Open AI provider, create a profile, then bind the assistant global slot. Nothing is auto-seeded.",
+    "openAiProvider": "AI provider"
   }
 }

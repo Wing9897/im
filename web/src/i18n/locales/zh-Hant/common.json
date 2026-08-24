@@ -491,6 +491,9 @@
     "presetKeyInsights": "關鍵情報",
     "presetScheduleEvents": "行程提取",
     "stepEventsTitle": "等第一次分析完成",
-    "stepEventsBody": "任務啟用後，分析結果會寫入情報事件；有時間的事件也會出現在時間規劃。"
+    "stepEventsBody": "任務啟用後，分析結果會寫入情報事件；有時間的事件也會出現在時間規劃。",
+    "stepAiTitle": "建立 AI 設定檔並綁定助手槽",
+    "stepAiBody": "可選。打開 AI 供應商頁面，建立設定檔，再綁定助手全局槽。不會自動種子預設檔。",
+    "openAiProvider": "AI 供應商"
   }
 }
