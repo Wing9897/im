@@ -6,6 +6,8 @@ import urllib.error
 import urllib.parse
 from typing import Any
 
+from server.db.schema_inspect import CURRENT_SCHEMA_VERSION
+
 from .common import (
     BASE,
     MISSING_BEARER_ZH,
@@ -27,7 +29,6 @@ from .common import (
     msg_time,
     save_state,
 )
-from server.db.schema_inspect import CURRENT_SCHEMA_VERSION  # noqa: E402
 
 
 def preflight() -> dict[str, Any]:
@@ -44,10 +45,7 @@ def preflight() -> dict[str, Any]:
 
     stamp = health.get("schemaVersion")
     if stamp != CURRENT_SCHEMA_VERSION:
-        die(
-            f"schemaVersion 不是 {CURRENT_SCHEMA_VERSION}（實際 {stamp}）。"
-            f"本評估假設當前 schema stamp。"
-        )
+        die(f"schemaVersion 不是 {CURRENT_SCHEMA_VERSION}（實際 {stamp}）。本評估假設當前 schema stamp。")
 
     print(f"[preflight] health ok stamp={stamp} version={health.get('version')} base={BASE}")
 
