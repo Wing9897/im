@@ -5,10 +5,11 @@ import { MODE_BADGE_TONE } from "../../../components/task/analysisModeBadgeTone"
 import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
 import { Badge, Button } from "../../../components/ui";
 import { pageTitleClass } from "../../../components/ui/pageTypography";
+import type { TaskEmployeeId } from "../../../domain/tasks/taskEmployee";
 
 type Props = {
   name: string;
-  employeeId: string;
+  employeeId: TaskEmployeeId;
   employeeName: string;
   retractBusy: boolean;
   onBack: () => void;
