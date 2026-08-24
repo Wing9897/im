@@ -34,6 +34,7 @@ describe("release safety gates", () => {
     expect(workflow).toContain("ubuntu-latest");
     expect(workflow).toContain("softprops/action-gh-release");
     expect(workflow).toContain("name: Upload to GitHub Release");
+    expect(workflow).toContain("GH_REPO: ${{ github.repository }}");
     expect(workflow).not.toContain("actions/upload-artifact");
     expect(workflow).not.toContain("actions/download-artifact");
     expect(workflow).not.toContain("package:cli");
