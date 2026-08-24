@@ -35,6 +35,5 @@ _EXPECTED_TARGETS = tuple(range(SCHEMA_FLOOR + 1, CURRENT_SCHEMA_VERSION + 1))
 _ACTUAL_TARGETS = tuple(step.target for step in SCHEMA_MIGRATIONS)
 if _ACTUAL_TARGETS != _EXPECTED_TARGETS:
     raise SchemaEvolutionError(
-        f"SCHEMA_MIGRATIONS targets {_ACTUAL_TARGETS} != expected {_EXPECTED_TARGETS} "
-        "(programming error)"
+        f"SCHEMA_MIGRATIONS targets {_ACTUAL_TARGETS} != expected {_EXPECTED_TARGETS} (programming error)"
     )
