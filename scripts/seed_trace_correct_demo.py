@@ -2,7 +2,8 @@
 
 Prefix: ``[demo]`` on titles so they are easy to spot and delete later.
 Writes the live app SQLite (Windows: ``%APPDATA%\\Intelligence Monitor\\intelligence_monitor.db``).
-Requires current stamp 2 (``SCHEMA_SEMVER`` ``1.1.0``); stamp-1 files auto-upgrade; reset first if the file is a future or corrupt stamp.
+Requires current stamp 2 (``SCHEMA_SEMVER`` ``1.1.0``); stamp-1 files
+auto-upgrade; reset first if the file is a future or corrupt stamp.
 
 Covers:
   - Intelligence detail: analysis_events with and without ``source_message_id``

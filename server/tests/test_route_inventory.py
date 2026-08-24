@@ -235,11 +235,7 @@ def _repo_rel(path: Path) -> str:
 
 
 def _route_py_files() -> list[Path]:
-    return sorted(
-        path
-        for path in _ROUTES_DIR.rglob("*.py")
-        if "__pycache__" not in path.parts
-    )
+    return sorted(path for path in _ROUTES_DIR.rglob("*.py") if "__pycache__" not in path.parts)
 
 
 def _is_api_router_call(node: ast.AST) -> bool:
@@ -254,9 +250,12 @@ def _is_api_router_call(node: ast.AST) -> bool:
 def _assigns_router_apirouter(tree: ast.AST) -> bool:
     """True when the module binds ``router = APIRouter(...)`` (not other names)."""
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and _is_api_router_call(node.value):
-            if any(isinstance(target, ast.Name) and target.id == "router" for target in node.targets):
-                return True
+        if (
+            isinstance(node, ast.Assign)
+            and _is_api_router_call(node.value)
+            and any(isinstance(target, ast.Name) and target.id == "router" for target in node.targets)
+        ):
+            return True
         if (
             isinstance(node, ast.AnnAssign)
             and isinstance(node.target, ast.Name)
@@ -444,8 +443,7 @@ def test_apirouter_modules_are_mounted_or_allowlisted():
 
     unknown_allow = sorted(_UNMOUNTED_ROUTER_ALLOWLIST - set(defined))
     assert not unknown_allow, (
-        "_UNMOUNTED_ROUTER_ALLOWLIST entries that do not define router = APIRouter(...):\n"
-        + "\n".join(unknown_allow)
+        "_UNMOUNTED_ROUTER_ALLOWLIST entries that do not define router = APIRouter(...):\n" + "\n".join(unknown_allow)
     )
 
     orphans = sorted(rel for rel in defined if rel not in mounted and rel not in _UNMOUNTED_ROUTER_ALLOWLIST)
