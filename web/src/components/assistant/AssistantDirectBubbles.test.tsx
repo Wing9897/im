@@ -163,7 +163,7 @@ describe("AssistantDirectBubbles", () => {
     expect(document.querySelector("[data-testid='assistant-direct-presence']")).toBeNull();
   });
 
-  it("does not stack turn bubbles while the composer is open", () => {
+  it("flashes the current turn while the composer is open (flash mode)", () => {
     const composer = createElement("div", { "data-testid": "assistant-caption-composer" });
     armThenShowMessages(
       [
@@ -171,6 +171,24 @@ describe("AssistantDirectBubbles", () => {
         { id: "a1", role: "assistant", content: "world" },
       ],
       { composer, active: true },
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-user-msg']")?.textContent).toBe(
+      "hello",
+    );
+    expect(document.querySelector("[data-testid='assistant-direct-msg']")?.textContent).toBe(
+      "world",
+    );
+    expect(document.querySelector("[data-testid='assistant-caption-composer']")).not.toBeNull();
+  });
+
+  it("hides turn bubbles when persistTranscript is on with the composer", () => {
+    const composer = createElement("div", { "data-testid": "assistant-caption-composer" });
+    armThenShowMessages(
+      [
+        { id: "u1", role: "user", content: "hello" },
+        { id: "a1", role: "assistant", content: "world" },
+      ],
+      { composer, active: true, persistTranscript: true },
     );
     expect(document.querySelector("[data-testid='assistant-direct-user-msg']")).toBeNull();
     expect(document.querySelector("[data-testid='assistant-direct-msg']")).toBeNull();
