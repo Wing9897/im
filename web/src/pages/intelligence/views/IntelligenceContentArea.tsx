@@ -7,7 +7,7 @@ import { getMapSyncCapHint } from "../intelligenceFeedConfig";
 import type { useIntelligenceFeed } from "../useIntelligenceFeed";
 import { MapPlaceholder } from "./MapPlaceholder";
 import { IntelligenceListPane } from "./IntelligenceListPane";
-import type { PipelineReadinessState } from "../../../domain/pipeline/pipelineReadiness";
+import type { PipelineReadiness } from "../../../domain/pipeline/pipelineReadiness";
 
 const LazyMapView = React.lazy(() => import("../map/MapView").then((m) => ({ default: m.MapView })));
 
@@ -57,7 +57,7 @@ interface IntelligenceContentAreaProps {
     resetViewTrigger: number;
     onResetView: () => void;
   };
-  pipeline: { showChecklist: boolean; state: PipelineReadinessState };
+  pipeline: Pick<PipelineReadiness, "showChecklist" | "state" | "assistantSlotReady">;
   notIntelBusy: boolean;
   onNotIntel: (item: AnalysisEvent) => void;
 }
@@ -138,6 +138,7 @@ function IntelligenceContentAreaComponent({
             resetFilters={feed.resetFilters}
             showPipelineGuide={pipeline.showChecklist}
             pipelineState={pipeline.state}
+            assistantSlotReady={pipeline.assistantSlotReady}
             notIntelBusy={notIntelBusy}
             onNotIntel={onNotIntel}
           />

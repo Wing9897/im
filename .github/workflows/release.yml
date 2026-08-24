@@ -159,15 +159,12 @@ jobs:
         include:
           - os: windows-latest
             dist: dist:win:native
-            artifact: windows-release
             expect_desktop: "*.exe"
           - os: macos-latest
             dist: dist:mac:native
-            artifact: macos-release
             expect_desktop: "*.dmg"
           - os: ubuntu-latest
             dist: dist:linux:native
-            artifact: linux-release
             expect_desktop: "*.AppImage"
     name: package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -271,10 +268,21 @@ jobs:
 
   release:
     needs: [package, tag]
+    if: always() && needs.tag.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Delete staged web-dist.tar.gz
+        if: always()
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: gh release delete-asset "$TAG" web-dist.tar.gz --yes || true
+
       - name: Assert Release has three Desktop installers
+        if: needs.package.result == 'success'
         env:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -282,7 +290,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release delete-asset "$TAG" web-dist.tar.gz --yes
           assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
           echo "Release assets:"
           echo "$assets"
@@ -358,8 +365,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Deploy smoke (healthcheck)
         run: |

@@ -19,11 +19,32 @@ export interface PipelineReadinessInput {
    * or active analysis tasks are wiped so the checklist can return.
    */
   everCompleted: boolean;
+  /**
+   * Optional checklist step only: a complete AI profile is bound to the
+   * assistant global slot. Never gates `state` / `showChecklist`.
+   */
+  assistantSlotReady?: boolean;
 }
 
 export interface PipelineReadiness {
   state: PipelineReadinessState;
   showChecklist: boolean;
+  assistantSlotReady: boolean;
+}
+
+/**
+ * Optional onboarding: assistant global slot points at a complete profile.
+ * Unbound / blank ids stay unbound — never invent `__default__`.
+ */
+export function isAssistantOnboardingDone(input: {
+  slots: readonly { slot: string; profileId?: string | null }[];
+  profiles: readonly { id: string; complete: boolean }[];
+}): boolean {
+  const id = (
+    input.slots.find((s) => s.slot === "assistant")?.profileId ?? ""
+  ).trim();
+  if (!id) return false;
+  return input.profiles.some((p) => p.id === id && p.complete);
 }
 
 export function countActiveAnalysisTasks(
@@ -48,20 +69,21 @@ export function pipelineReadiness(input: PipelineReadinessInput): PipelineReadin
   const sourceCount = Math.max(0, input.sourceCount);
   const activeAnalysisTaskCount = Math.max(0, input.activeAnalysisTaskCount);
   const analysisEventCount = Math.max(0, input.analysisEventCount);
+  const assistantSlotReady = input.assistantSlotReady === true;
 
   if (sourceCount <= 0) {
-    return { state: "no_sources", showChecklist: true };
+    return { state: "no_sources", showChecklist: true, assistantSlotReady };
   }
   if (activeAnalysisTaskCount <= 0) {
-    return { state: "no_active_task", showChecklist: true };
+    return { state: "no_active_task", showChecklist: true, assistantSlotReady };
   }
   if (analysisEventCount > 0) {
-    return { state: "complete", showChecklist: false };
+    return { state: "complete", showChecklist: false, assistantSlotReady };
   }
   if (input.everCompleted) {
-    return { state: "complete", showChecklist: false };
+    return { state: "complete", showChecklist: false, assistantSlotReady };
   }
-  return { state: "no_events", showChecklist: true };
+  return { state: "no_events", showChecklist: true, assistantSlotReady };
 }
 
 /** Persist “ever completed” only while the pipeline still has sources + tasks. */

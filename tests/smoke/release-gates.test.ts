@@ -40,12 +40,15 @@ describe("release safety gates", () => {
     expect(workflow).toContain("name: Upload to GitHub Release");
     expect(workflow).toContain("desktop/release/*.exe");
     expect(workflow).toContain("GH_REPO: ${{ github.repository }}");
+    expect(workflow).not.toContain("upload-artifact");
     expect(workflow).not.toContain("actions/upload-artifact");
     expect(workflow).not.toContain("actions/download-artifact");
+    expect(workflow).not.toContain("type=gha");
     expect(workflow).toContain("web-dist.tar.gz");
     expect(workflow).toContain("gh release upload");
     expect(workflow).toContain("gh release download");
-    expect(workflow).toContain('gh release delete-asset "$TAG" web-dist.tar.gz --yes');
+    expect(workflow).toContain('gh release delete-asset "$TAG" web-dist.tar.gz --yes || true');
+    expect(workflow).toContain("if: always()");
 
     expect(workflow).not.toContain("package:cli");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");

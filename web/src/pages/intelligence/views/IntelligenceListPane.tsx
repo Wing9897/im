@@ -46,6 +46,7 @@ interface IntelligenceListPaneProps {
   resetFilters: () => void;
   showPipelineGuide?: boolean;
   pipelineState?: PipelineReadinessState;
+  assistantSlotReady?: boolean;
   notIntelBusy?: boolean;
   onNotIntel?: (item: AnalysisEvent) => void;
 }
@@ -72,6 +73,7 @@ function IntelligenceListPaneComponent({
   resetFilters,
   showPipelineGuide = false,
   pipelineState = "no_sources",
+  assistantSlotReady = false,
   notIntelBusy,
   onNotIntel,
 }: IntelligenceListPaneProps) {
@@ -99,7 +101,12 @@ function IntelligenceListPaneComponent({
 
   if (items.length === 0) {
     if (showPipelineGuide && !hasActiveFilters) {
-      return <PipelineGuideChecklist state={pipelineState} />;
+      return (
+        <PipelineGuideChecklist
+          state={pipelineState}
+          assistantSlotReady={assistantSlotReady}
+        />
+      );
     }
     const copy = getIntelligenceEmptyCopy(
       {

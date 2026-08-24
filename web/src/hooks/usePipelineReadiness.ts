@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { listLlmGlobalSlots, listLlmProfiles } from "../api/llmProfiles";
 import { fetchEvents } from "../api/results";
 import { listSources } from "../api/sources";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
 import { PIPELINE_EVER_COMPLETED_KEY } from "../domain/prefs";
 import {
   countActiveAnalysisTasks,
+  isAssistantOnboardingDone,
   nextPipelineEverCompleted,
   pipelineReadiness,
   type PipelineReadiness,
 } from "../domain/pipeline/pipelineReadiness";
+import { isLlmProfileComplete } from "../domain/settings/llmProfileCompleteness";
 import { usePersistedState } from "./usePersistedState";
 
-const IDLE: PipelineReadiness = { state: "no_sources", showChecklist: false };
+const IDLE: PipelineReadiness = {
+  state: "no_sources",
+  showChecklist: false,
+  assistantSlotReady: false,
+};
 
 /**
  * Live pipeline checklist state for Tasks and Intelligence (not Timeline).
@@ -26,6 +33,7 @@ export function usePipelineReadiness(): PipelineReadiness & { loading: boolean }
   );
   const [sourceCount, setSourceCount] = useState(0);
   const [eventCount, setEventCount] = useState(0);
+  const [assistantSlotReady, setAssistantSlotReady] = useState(false);
   const [countsLoading, setCountsLoading] = useState(true);
 
   const activeAnalysisTaskCount = useMemo(
@@ -53,6 +61,24 @@ export function usePipelineReadiness(): PipelineReadiness & { loading: boolean }
       .finally(() => {
         if (!cancelled) setCountsLoading(false);
       });
+
+    void Promise.all([listLlmProfiles(), listLlmGlobalSlots()])
+      .then(([profiles, slots]) => {
+        if (cancelled) return;
+        setAssistantSlotReady(
+          isAssistantOnboardingDone({
+            slots,
+            profiles: profiles.map((profile) => ({
+              id: profile.id,
+              complete: isLlmProfileComplete(profile),
+            })),
+          }),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setAssistantSlotReady(false);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -85,8 +111,16 @@ export function usePipelineReadiness(): PipelineReadiness & { loading: boolean }
       activeAnalysisTaskCount,
       analysisEventCount: eventCount,
       everCompleted,
+      assistantSlotReady,
     });
-  }, [loading, sourceCount, activeAnalysisTaskCount, eventCount, everCompleted]);
+  }, [
+    loading,
+    sourceCount,
+    activeAnalysisTaskCount,
+    eventCount,
+    everCompleted,
+    assistantSlotReady,
+  ]);
 
   return { ...readiness, loading };
 }

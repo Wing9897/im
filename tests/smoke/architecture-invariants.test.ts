@@ -604,6 +604,14 @@ describe("Retired dual-track paths stay absent", () => {
     expect(fs.existsSync(path.resolve(ROOT_DIR, "server", "db", "schema_domains"))).toBe(true);
   });
 
+  it("server/api/routes/calendar/occurrences.py does not exist", () => {
+    expect(
+      fs.existsSync(
+        path.resolve(ROOT_DIR, "server", "api", "routes", "calendar", "occurrences.py"),
+      ),
+    ).toBe(false);
+  });
+
   it("no product web/desktop file calls /api/v1/accounts", () => {
     scanWebDesktopForPatterns(
       [/\/api\/v1\/accounts\b/],
