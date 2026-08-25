@@ -15,6 +15,9 @@
     "intel_event": "情報任務分析員",
     "agent": "專案經理"
   },
+  "editor": {
+    "you": "你"
+  },
   "ui": {
     "listSep": "、",
     "loading": "載入中…",

@@ -4,6 +4,9 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Desktop tray right-click adds an interface-language radio submenu (自動 / 繁體中文 / 简体中文 / English) that hot-swaps the shell and Web UI, plus global AI analysis pause/resume and a confirmed emergency abort.
+- Ops board (canvas) no longer shows the left-edge sidebar `>` chevron; pages mode still uses the overlay toggle. Switch back via 頁面 / 畫布 or the command palette.
+- Caption overlay sits 20px from the window bottom (not 12% up) and uses `--text-primary` with `color-mix(--surface-card 86%, transparent)` (~80–90% opacity, denser than photo-BG `--surface-panel`) for glass contrast; persist history labels `editor.you` as 你 / You.
 - Pipeline first-run checklist adds an optional step: create an AI profile and bind the assistant global slot (link to `/ai/provider`; no `__default__` seed).
 - Release container job no longer uses Docker `type=gha` cache (avoids GitHub Actions cache quota failures); staged `web-dist.tar.gz` is deleted with `if: always()` so a failed package job still cleans the tag.
 - System-bar composer toggle is 閃現 / 持續 (flash then `AGENT_HIDE_MS`, vs pinned transcript) instead of 顯示對話 hiding the whole overlay chat; `/assistant` history is unchanged.

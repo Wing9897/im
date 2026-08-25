@@ -1,6 +1,9 @@
 /**
  * Unit tests for AssistantDirectBubbles (independent user STT + agent fades).
  */
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -428,13 +431,39 @@ describe("AssistantDirectBubbles", () => {
     expect(document.querySelector("[data-testid='assistant-direct-ready']")).toBeNull();
   });
 
-  it("uses center-bottom subtitle layout class on the portal root", () => {
+  it("uses near-bottom overlay class on the portal root", () => {
     render({
       showReadyHint: true,
       messages: [],
     });
     const rootEl = document.querySelector("[data-testid='assistant-direct-bubbles']");
     expect(rootEl?.classList.contains("im-assistant-direct")).toBe(true);
+  });
+
+  it("pins overlay near the window bottom with panel contrast tokens", () => {
+    const css = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), "../../css/dialog-assistant.css"),
+      "utf8",
+    );
+    expect(css).toMatch(
+      /\.im-assistant-direct\s*\{[^}]*bottom:\s*calc\(20px \+ env\(safe-area-inset-bottom/s,
+    );
+    expect(css).not.toMatch(/bottom:\s*max\(24px,\s*calc\(12%/);
+    expect(css).toMatch(
+      /\.im-assistant-direct__presence-name\s*\{[^}]*color:\s*var\(--text-primary\)/s,
+    );
+    expect(css).toMatch(
+      /--im-assistant-overlay-fill:\s*color-mix\(in srgb, var\(--surface-card\) 86%, transparent\)/,
+    );
+    expect(css).toMatch(
+      /\.im-assistant-direct__bubble\s*\{[^}]*background:\s*var\(--im-assistant-overlay-fill\)/s,
+    );
+    expect(css).toMatch(
+      /\.im-assistant-direct__composer\s*\{[^}]*background:\s*var\(--im-assistant-overlay-fill\)/s,
+    );
+    expect(css).toMatch(
+      /\.im-assistant-direct__composer-history-role\s*\{[^}]*color:\s*var\(--text-primary\)/s,
+    );
   });
 
   it("renders per-message rows with user and assistant avatars", () => {

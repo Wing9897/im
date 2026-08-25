@@ -162,6 +162,9 @@ vi.mock('../tray', () => ({
   createTray: mockCreateTray,
   destroyTray: mockDestroyTray,
   updateTrayStatus: vi.fn(),
+  refreshTrayLocale: vi.fn(),
+  setTrayLocalePreference: vi.fn(),
+  setTrayAnalysisState: vi.fn(),
 }));
 
 vi.mock('../menu', () => ({

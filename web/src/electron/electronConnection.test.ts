@@ -16,9 +16,12 @@ import {
   getElectronConnection,
   relaunchAfterDestructiveReset,
   resetDesktopConnectionAfterLogout,
+  subscribeDesktopAnalysisTrayCommand,
+  subscribeDesktopNotificationLocale,
   syncDesktopConnectionOnBoot,
   webModeToDesktop,
 } from "./electronConnection";
+import { getAppLocalePreference, setAppLocalePreference } from "../i18n/locale";
 
 describe("electronConnection bridge", () => {
   beforeEach(() => {
@@ -255,5 +258,60 @@ describe("electronConnection bridge", () => {
     await expect(ensureDesktopClientMode("http://192.168.1.10:18820")).rejects.toThrow(
       "disk full",
     );
+  });
+
+  it("subscribeDesktopNotificationLocale applies tray preference and pushes current preference", async () => {
+    const setNotificationLocale = vi.fn();
+    const setUiLocalePreference = vi.fn();
+    const getPendingUiLocalePreference = vi.fn().mockResolvedValue("en");
+    let applyLocale: ((preference: string) => void) | undefined;
+    window.electronConnection = {
+      getConnection: vi.fn(),
+      setConnection: vi.fn(),
+      restartShell: vi.fn(),
+      setNotificationLocale,
+      setUiLocalePreference,
+      getPendingUiLocalePreference,
+      onApplyUiLocalePreference: (callback) => {
+        applyLocale = callback;
+        return () => {
+          applyLocale = undefined;
+        };
+      },
+    };
+
+    const unsub = subscribeDesktopNotificationLocale();
+    await getPendingUiLocalePreference.mock.results[0]?.value;
+
+    expect(setUiLocalePreference).toHaveBeenCalled();
+    expect(getAppLocalePreference()).toBe("en");
+
+    applyLocale?.("zh-Hans");
+    expect(getAppLocalePreference()).toBe("zh-Hans");
+
+    unsub();
+    setAppLocalePreference("zh-Hant");
+  });
+
+  it("subscribeDesktopAnalysisTrayCommand forwards pause / resume / abort", () => {
+    let emit: ((command: string) => void) | undefined;
+    window.electronConnection = {
+      getConnection: vi.fn(),
+      setConnection: vi.fn(),
+      restartShell: vi.fn(),
+      onAnalysisTrayCommand: (callback) => {
+        emit = callback;
+        return () => {
+          emit = undefined;
+        };
+      },
+    };
+    const onCommand = vi.fn();
+    const unsub = subscribeDesktopAnalysisTrayCommand(onCommand);
+    emit?.("pause");
+    emit?.("nope");
+    emit?.("abort");
+    expect(onCommand.mock.calls).toEqual([["pause"], ["abort"]]);
+    unsub();
   });
 });

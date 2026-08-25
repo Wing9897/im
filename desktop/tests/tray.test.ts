@@ -7,6 +7,9 @@ const mockSetContextMenu = vi.fn();
 const mockTrayOn = vi.fn();
 const mockTrayDestroy = vi.fn();
 const mockBuildFromTemplate = vi.fn();
+const mockShowMessageBox = vi.fn<(...args: unknown[]) => Promise<{ response: number }>>(
+  async () => ({ response: 1 }),
+);
 
 let trayConstructorIcon: any = null;
 let capturedTemplate: any[] = [];
@@ -17,6 +20,7 @@ vi.mock('electron', () => {
     trayConstructorIcon = icon;
     this.setToolTip = mockSetToolTip;
     this.setContextMenu = mockSetContextMenu;
+    this.setIgnoreDoubleClickEvents = vi.fn();
     this.on = mockTrayOn;
     this.destroy = mockTrayDestroy;
   }
@@ -37,21 +41,79 @@ vi.mock('electron', () => {
       quit: vi.fn(),
     },
     BrowserWindow: vi.fn(),
+    dialog: {
+      showMessageBox: (...args: unknown[]) => mockShowMessageBox(...args),
+    },
   };
 });
 
-import { createTray, updateTrayStatus, destroyTray, refreshTrayLocale } from '../tray';
+import {
+  createTray,
+  updateTrayStatus,
+  destroyTray,
+  refreshTrayLocale,
+  setTrayLocalePreference,
+  setTrayAnalysisState,
+} from '../tray';
 import { app, nativeImage } from 'electron';
 import { setShellLocale, resetShellLocaleForTests } from '../shell-i18n';
 
 // --- Helpers ---
 
-function createMockWindow() {
+function createMockWindow(
+  options: {
+    visible?: boolean;
+    focused?: boolean;
+    minimized?: boolean;
+    destroyed?: boolean;
+  } = {},
+) {
+  const {
+    visible = true,
+    focused = true,
+    minimized = false,
+    destroyed = false,
+  } = options;
+  const listeners: Record<string, Array<() => void>> = {};
   return {
     show: vi.fn(),
     hide: vi.fn(),
     focus: vi.fn(),
+    restore: vi.fn(),
+    isVisible: vi.fn(() => visible),
+    isFocused: vi.fn(() => focused),
+    isMinimized: vi.fn(() => minimized),
+    isDestroyed: vi.fn(() => destroyed),
+    on: vi.fn((event: string, handler: () => void) => {
+      (listeners[event] ??= []).push(handler);
+    }),
+    emit(event: string) {
+      for (const handler of listeners[event] ?? []) handler();
+    },
   } as any;
+}
+
+function invokeTrayClick(): void {
+  const clickCall = mockTrayOn.mock.calls.find((call: any[]) => call[0] === 'click');
+  expect(clickCall).toBeDefined();
+  clickCall![1]();
+}
+
+function topLevelLabels(): string[] {
+  return capturedTemplate
+    .filter((item: any) => item.type !== 'separator')
+    .map((item: any) => item.label);
+}
+
+function submenuFor(label: string): any[] {
+  const item = capturedTemplate.find((entry: any) => entry.label === label);
+  expect(item).toBeDefined();
+  return item.submenu as any[];
+}
+
+async function flushDialog(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 // --- Tests ---
@@ -84,29 +146,30 @@ describe('Tray Module', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - Stopped');
     });
 
-    it('context menu contains items: Show Window, Restart Server, Quit', () => {
+    it('context menu contains Show Window, language, analysis, Restart Server, Quit', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
 
       expect(mockBuildFromTemplate).toHaveBeenCalledTimes(1);
-
-      // Find meaningful menu items (skip separators)
-      const labels = capturedTemplate
-        .filter((item: any) => item.type !== 'separator')
-        .map((item: any) => item.label);
-
-      expect(labels).toEqual(['Show Window', 'Restart Server', 'Quit']);
+      expect(topLevelLabels()).toEqual([
+        'Show Window',
+        'Interface language',
+        'AI analysis',
+        'Restart Server',
+        'Quit',
+      ]);
     });
 
     it('omits Restart Server when showRestartServer is false', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win, { showRestartServer: false });
 
-      const labels = capturedTemplate
-        .filter((item: any) => item.type !== 'separator')
-        .map((item: any) => item.label);
-
-      expect(labels).toEqual(['Show Window', 'Quit']);
+      expect(topLevelLabels()).toEqual([
+        'Show Window',
+        'Interface language',
+        'AI analysis',
+        'Quit',
+      ]);
     });
 
     it('"Show Window" menu item click calls win.show() and win.focus()', () => {
@@ -158,20 +221,71 @@ describe('Tray Module', () => {
       expect(app.quit).toHaveBeenCalled();
     });
 
-    it('double-click on tray icon shows and focuses window', () => {
-      const win = createMockWindow();
+    it('left-click hides a visible focused window to the tray', () => {
+      const win = createMockWindow({ visible: true, focused: true });
       createTray('resources/icon.ico', win);
 
-      // Find the 'double-click' event registration
+      invokeTrayClick();
+
+      expect(win.hide).toHaveBeenCalled();
+      expect(win.show).not.toHaveBeenCalled();
+    });
+
+    it('left-click shows and focuses a hidden window', () => {
+      const win = createMockWindow({ visible: false, focused: false });
+      createTray('resources/icon.ico', win);
+
+      invokeTrayClick();
+
+      expect(win.show).toHaveBeenCalled();
+      expect(win.focus).toHaveBeenCalled();
+      expect(win.hide).not.toHaveBeenCalled();
+    });
+
+    it('left-click focuses a visible unfocused window instead of hiding', () => {
+      const win = createMockWindow({ visible: true, focused: false });
+      createTray('resources/icon.ico', win);
+
+      invokeTrayClick();
+
+      expect(win.show).toHaveBeenCalled();
+      expect(win.focus).toHaveBeenCalled();
+      expect(win.hide).not.toHaveBeenCalled();
+    });
+
+    it('left-click restores a minimized window', () => {
+      const win = createMockWindow({ visible: true, focused: false, minimized: true });
+      createTray('resources/icon.ico', win);
+
+      invokeTrayClick();
+
+      expect(win.restore).toHaveBeenCalled();
+      expect(win.show).toHaveBeenCalled();
+      expect(win.focus).toHaveBeenCalled();
+      expect(win.hide).not.toHaveBeenCalled();
+    });
+
+    it('left-click hides when the window just blurred (tray stole focus)', () => {
+      const win = createMockWindow({ visible: true, focused: false });
+      createTray('resources/icon.ico', win);
+      win.emit('blur');
+
+      invokeTrayClick();
+
+      expect(win.hide).toHaveBeenCalled();
+      expect(win.show).not.toHaveBeenCalled();
+    });
+
+    it('does not require double-click to restore the window', () => {
+      const win = createMockWindow({ visible: false, focused: false });
+      createTray('resources/icon.ico', win);
+
       const doubleClickCall = mockTrayOn.mock.calls.find(
-        (call: any[]) => call[0] === 'double-click'
+        (call: any[]) => call[0] === 'double-click',
       );
-      expect(doubleClickCall).toBeDefined();
+      expect(doubleClickCall).toBeUndefined();
 
-      // Invoke the double-click handler
-      const handler = doubleClickCall![1];
-      handler();
-
+      invokeTrayClick();
       expect(win.show).toHaveBeenCalled();
       expect(win.focus).toHaveBeenCalled();
     });
@@ -264,10 +378,118 @@ describe('Tray Module', () => {
       refreshTrayLocale();
 
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - 已停止');
-      const labels = capturedTemplate
-        .filter((item: any) => item.type !== 'separator')
-        .map((item: any) => item.label);
-      expect(labels).toEqual(['显示窗口', '重新启动服务器', '退出']);
+      expect(topLevelLabels()).toEqual([
+        '显示窗口',
+        '界面语言',
+        'AI 分析',
+        '重新启动服务器',
+        '退出',
+      ]);
+    });
+  });
+
+  describe('language submenu', () => {
+    it('exposes auto / zh-Hant / zh-Hans / en radio items', () => {
+      const win = createMockWindow();
+      createTray('resources/icon.ico', win);
+
+      const radios = submenuFor('Interface language');
+      expect(radios.map((item) => item.label)).toEqual([
+        'Auto',
+        '繁體中文',
+        '简体中文',
+        'English',
+      ]);
+      expect(radios.every((item) => item.type === 'radio')).toBe(true);
+      expect(radios.map((item) => item.checked)).toEqual([false, true, false, false]);
+    });
+
+    it('clicking a language radio reports the preference', () => {
+      const win = createMockWindow();
+      const onLocalePreference = vi.fn();
+      createTray('resources/icon.ico', win, { onLocalePreference });
+
+      const radios = submenuFor('Interface language');
+      radios[0].click();
+      expect(onLocalePreference).toHaveBeenCalledWith('auto');
+
+      radios[3].click();
+      expect(onLocalePreference).toHaveBeenCalledWith('en');
+    });
+
+    it('setTrayLocalePreference updates the checked radio', () => {
+      const win = createMockWindow();
+      createTray('resources/icon.ico', win);
+      setTrayLocalePreference('en');
+
+      const radios = submenuFor('Interface language');
+      expect(radios.map((item) => item.checked)).toEqual([false, false, false, true]);
+    });
+  });
+
+  describe('analysis submenu', () => {
+    it('pauses and resumes via onAnalysisCommand when enabled', () => {
+      const win = createMockWindow();
+      const onAnalysisCommand = vi.fn();
+      createTray('resources/icon.ico', win, { onAnalysisCommand });
+      setTrayAnalysisState({ paused: false, enabled: true });
+
+      const items = submenuFor('AI analysis');
+      expect(items[0].label).toBe('Pause analysis');
+      expect(items[0].enabled).toBe(true);
+      items[0].click();
+      expect(onAnalysisCommand).toHaveBeenCalledWith('pause');
+
+      setTrayAnalysisState({ paused: true, enabled: true });
+      const resumed = submenuFor('AI analysis');
+      expect(resumed[0].label).toBe('Resume analysis');
+      resumed[0].click();
+      expect(onAnalysisCommand).toHaveBeenCalledWith('resume');
+    });
+
+    it('grays out analysis actions when not authenticated', () => {
+      const win = createMockWindow();
+      const onAnalysisCommand = vi.fn();
+      createTray('resources/icon.ico', win, { onAnalysisCommand });
+
+      const items = submenuFor('AI analysis');
+      expect(items[0].enabled).toBe(false);
+      expect(items[1].enabled).toBe(false);
+      items[0].click();
+      items[1].click();
+      expect(onAnalysisCommand).not.toHaveBeenCalled();
+      expect(mockShowMessageBox).not.toHaveBeenCalled();
+    });
+
+    it('confirms emergency abort before invoking the handler', async () => {
+      const win = createMockWindow();
+      const onAnalysisCommand = vi.fn();
+      createTray('resources/icon.ico', win, { onAnalysisCommand });
+      setTrayAnalysisState({ paused: false, enabled: true });
+      mockShowMessageBox.mockResolvedValueOnce({ response: 0 });
+
+      submenuFor('AI analysis')[1].click();
+      await flushDialog();
+
+      expect(mockShowMessageBox).toHaveBeenCalled();
+      const callArgs = mockShowMessageBox.mock.calls[0] ?? [];
+      const options = callArgs[callArgs.length - 1] as { buttons: string[] };
+      expect(options.buttons[0]).toBe('Emergency abort');
+      expect(onAnalysisCommand).toHaveBeenCalledWith('abort');
+    });
+
+    it('does not abort when the confirmation is cancelled', async () => {
+      const win = createMockWindow();
+      const onAnalysisCommand = vi.fn();
+      createTray('resources/icon.ico', win, { onAnalysisCommand });
+      setTrayAnalysisState({ paused: false, enabled: true });
+      mockShowMessageBox.mockResolvedValueOnce({ response: 1 });
+
+      submenuFor('AI analysis')[1].click();
+      await flushDialog();
+
+      expect(mockShowMessageBox).toHaveBeenCalled();
+      expect(onAnalysisCommand).not.toHaveBeenCalled();
     });
   });
 });

@@ -4,7 +4,9 @@ import {
   getProductName,
   getShellCopy,
   getShellLocale,
+  isShellLocalePreference,
   normalizeShellLocale,
+  normalizeShellLocalePreference,
   onShellLocaleChange,
   resetShellLocaleForTests,
   setShellLocale,
@@ -21,6 +23,11 @@ describe('shell-i18n', () => {
     expect(normalizeShellLocale('zh-Hant')).toBe('zh-Hant');
     expect(normalizeShellLocale('fr')).toBe('zh-Hant');
     expect(normalizeShellLocale(null)).toBe('zh-Hant');
+    expect(isShellLocalePreference('auto')).toBe(true);
+    expect(isShellLocalePreference('en')).toBe(true);
+    expect(isShellLocalePreference('fr')).toBe(false);
+    expect(normalizeShellLocalePreference('auto')).toBe('auto');
+    expect(normalizeShellLocalePreference('nope')).toBe('zh-Hant');
   });
 
   it('keeps product name English', () => {
@@ -46,6 +53,10 @@ describe('shell-i18n', () => {
     expect(seen).toEqual(['en', 'zh-Hans']);
     expect(getShellCopy('en').showWindow).toBe('Show Window');
     expect(getShellCopy('zh-Hant').showWindow).toBe('顯示視窗');
+    expect(getShellCopy('zh-Hant').languageMenu).toBe('介面語言');
+    expect(getShellCopy('zh-Hans').languageAuto).toBe('自动');
+    expect(getShellCopy('en').pauseAnalysis).toBe('Pause analysis');
+    expect(getShellCopy('zh-Hant').emergencyAbort).toBe('緊急中止…');
   });
 
   it('includes analysis notification copy', () => {

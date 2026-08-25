@@ -17,12 +17,14 @@ import { CommandPalette } from "./components/CommandPalette";
 import { ShortcutHelpDialog } from "./components/ShortcutHelpDialog";
 import { AssistantQuickDialog } from "./components/AssistantQuickDialog";
 import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
+import { DesktopTrayAnalysisBridge } from "./components/analysis/DesktopTrayAnalysisBridge";
 import { RecentDayInboxDrawer } from "./components/notify/RecentDayInboxDrawer";
 import { NotifyFlashHost } from "./components/notify/NotifyFlashHost";
 import { CommandPaletteProvider } from "./hooks/useCommandPalette";
 import { AssistantQuickProvider } from "./hooks/useAssistantQuick";
 import { AssistantChatProvider } from "./hooks/useAssistantChat";
 import { isElectronDesktop } from "./electron/electronWindow";
+import { subscribeDesktopNotificationLocale } from "./electron/electronConnection";
 import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
 import { prefetchRoute } from "./routing/prefetchRoute";
 import { useFocalBackgroundAutoRefresh } from "./hooks/useFocalBackgroundAutoRefresh";
@@ -37,8 +39,9 @@ import { useNotifyScanner } from "./domain/notify/scanner/useNotifyScanner";
  *   `shellVisibilityProps` (Tailwind `hidden` + `inert`). Do NOT unmount the
  *   inactive shell (loses deep-link / scroll / widget state).
  * - Pages pane is painted after board so a failed hide cannot steal sidebar clicks.
- * - Left nav is a surface overlay (portal drawer) at shell level for all pages;
- *   page canvas is always full-bleed. Overlay sidebar is a translucent panel
+ * - Left nav is a surface overlay (portal drawer) in pages mode only. Ops board
+ *   (canvas) stays full-bleed — no edge `>` chevron, no overlay. Switch back via
+ *   MonitorModeSwitch / command palette. Overlay sidebar is a translucent panel
  *   (color-mix of --surface-card); the scrim is a light dim with no blur so
  *   the main canvas stays sharp. Do not clone wallpaper onto the drawer.
  * - Leave board immersive when leaving canvas; board poll must stay gated to canvas
@@ -169,7 +172,7 @@ function AppShellBody() {
           </div>
         </div>
       </div>
-      <AppSidebar />
+      {isCanvas ? null : <AppSidebar />}
     </div>
   );
 }
@@ -189,6 +192,7 @@ function AppShell() {
                       <CommandPalette />
                       <ShortcutHelpDialog />
                       <AssistantQuickDialog />
+                      <DesktopTrayAnalysisBridge />
                       <CalendarImportHost />
                       <RecentDayInboxDrawer />
                       <NotifyFlashHost />
@@ -205,6 +209,8 @@ function AppShell() {
 }
 
 function App() {
+  useEffect(() => subscribeDesktopNotificationLocale(), []);
+
   return (
     <ErrorBoundary>
       <AppBootGate>

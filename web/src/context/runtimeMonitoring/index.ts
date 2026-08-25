@@ -6,7 +6,7 @@ import {
   hasDeviceSession,
   subscribeConnection,
 } from "../../domain/connection/connectionStore";
-import { subscribeDesktopNotificationAuth, subscribeDesktopNotificationLocale } from "../../electron/electronConnection";
+import { subscribeDesktopNotificationAuth } from "../../electron/electronConnection";
 import { handleSseEvent, setupEventListeners } from "./eventListeners";
 import { setupIntervalMonitor } from "./intervalMonitor";
 import {
@@ -115,7 +115,6 @@ export function useRuntimeMonitoring({
 
   // Desktop main-process notification SSE needs the same access token (Bearer).
   useEffect(() => subscribeDesktopNotificationAuth(), []);
-  useEffect(() => subscribeDesktopNotificationLocale(), []);
 
   useSSE({ onEvent: handleEvent, enabled: sseEnabled });
 

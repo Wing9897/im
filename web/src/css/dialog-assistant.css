@@ -1,10 +1,10 @@
 /* Caption assistant / direct composer chrome. */
 
-/* Caption assistant — center-bottom subtitle bubbles + translucent composer. */
+/* Caption assistant — near-bottom subtitle bubbles + frosted composer. */
 .im-assistant-direct {
   position: fixed;
   left: 50%;
-  bottom: max(24px, calc(12% + env(safe-area-inset-bottom, 0px)));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 1900;
   width: min(560px, calc(100vw - 32px));
@@ -14,6 +14,9 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  /* Overlay chrome only: denser than photo-BG --surface-panel (~63%).
+     Same color-mix recipe as --surface-inset (86% card ≈ 80–90% opacity). */
+  --im-assistant-overlay-fill: color-mix(in srgb, var(--surface-card) 86%, transparent);
 }
 
 .im-assistant-direct__stack {
@@ -43,7 +46,7 @@
 .im-assistant-direct__presence-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   white-space: nowrap;
 }
 
@@ -64,11 +67,12 @@
 }
 
 .im-assistant-direct__bubble {
-  border-color: color-mix(in srgb, var(--surface-border) 12%, transparent) !important;
-  background: color-mix(in srgb, var(--surface-raised) 10%, transparent) !important;
-  box-shadow: 0 2px 14px color-mix(in srgb, var(--text-primary) 5%, transparent);
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  border-color: color-mix(in srgb, var(--surface-border) 88%, transparent) !important;
+  background: var(--im-assistant-overlay-fill) !important;
+  color: var(--text-primary);
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--text-primary) 8%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
   max-height: min(22vh, 180px);
   overflow-x: hidden;
   overflow-y: auto;
@@ -77,8 +81,8 @@
 }
 
 .im-assistant-direct__bubble--user {
-  border-color: color-mix(in srgb, var(--accent) 12%, transparent) !important;
-  background: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--surface-border)) !important;
+  background: color-mix(in srgb, var(--accent) 18%, var(--im-assistant-overlay-fill)) !important;
 }
 
 .im-assistant-direct__item--fade {
@@ -98,9 +102,9 @@
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--surface-border) 18%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 10%, transparent);
-  color: var(--text-secondary);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 70%, transparent);
+  background: var(--im-assistant-overlay-fill);
+  color: var(--text-primary);
 }
 
 .im-assistant-direct__user-avatar img {
@@ -123,15 +127,15 @@
   align-items: center;
   gap: 8px;
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--surface-border));
+  background: var(--im-assistant-overlay-fill);
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--text-primary) 5%, transparent);
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--text-primary) 8%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
 }
 
 .im-assistant-direct__listening svg {
@@ -178,13 +182,13 @@
 
 .im-assistant-direct__hint {
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 10%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  background: var(--im-assistant-overlay-fill);
   padding: 8px 12px;
-  color: var(--text-secondary);
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--text-primary) 4%, transparent);
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  color: var(--text-primary);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--text-primary) 8%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
   text-align: center;
 }
 
@@ -199,11 +203,11 @@
   width: 100%;
   pointer-events: auto;
   border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 14%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 10%, transparent);
-  box-shadow: 0 4px 24px color-mix(in srgb, var(--text-primary) 8%, transparent);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  background: var(--im-assistant-overlay-fill);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.2);
   padding: 10px 12px 12px;
 }
 
@@ -233,21 +237,21 @@
   gap: 4px;
   min-width: 0;
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 12%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 70%, transparent);
+  background: var(--surface-inset);
   padding: 8px 10px;
 }
 
 .im-assistant-direct__composer-history-item[data-role="user"] {
-  border-color: color-mix(in srgb, var(--accent) 14%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--surface-border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--im-assistant-overlay-fill));
 }
 
 .im-assistant-direct__composer-history-role {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .im-assistant-direct__composer-history-text {
@@ -275,8 +279,9 @@
   flex: 1 1 auto;
   min-width: 0;
   resize: none;
-  border-color: color-mix(in srgb, var(--surface-border) 18%, transparent) !important;
-  background: color-mix(in srgb, var(--surface-raised) 12%, transparent) !important;
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--surface-border) 70%, transparent) !important;
+  background: var(--surface-inset) !important;
 }
 
 .im-assistant-direct__composer-clear {
@@ -293,7 +298,7 @@
 .im-assistant-direct__composer-target-label {
   flex-shrink: 0;
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .im-assistant-direct__composer-target-select {

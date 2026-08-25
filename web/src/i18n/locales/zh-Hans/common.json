@@ -15,6 +15,9 @@
     "intel_event": "情报任务分析员",
     "agent": "项目经理"
   },
+  "editor": {
+    "you": "你"
+  },
   "ui": {
     "listSep": "、",
     "loading": "载入中…",

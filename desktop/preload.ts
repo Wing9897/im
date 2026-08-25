@@ -15,6 +15,11 @@ const CONNECTION_CHANNELS = {
   restartShell: 'connection:restart-shell',
   setNotificationAuth: 'connection:set-notification-auth',
   setNotificationLocale: 'connection:set-notification-locale',
+  setUiLocalePreference: 'connection:set-ui-locale-preference',
+  applyUiLocalePreference: 'connection:apply-ui-locale-preference',
+  getPendingUiLocalePreference: 'connection:get-pending-ui-locale-preference',
+  setAnalysisTrayState: 'connection:set-analysis-tray-state',
+  applyAnalysisTrayCommand: 'connection:apply-analysis-tray-command',
 } as const;
 
 const CALENDAR_IMPORT_CHANNELS = {
@@ -69,6 +74,27 @@ contextBridge.exposeInMainWorld('electronConnection', {
   /** Push UI locale for native analysis notification copy. */
   setNotificationLocale: (locale: string) =>
     ipcRenderer.send(CONNECTION_CHANNELS.setNotificationLocale, locale),
+  /** Push stored UI locale preference (auto / zh-Hant / zh-Hans / en). */
+  setUiLocalePreference: (preference: string) =>
+    ipcRenderer.send(CONNECTION_CHANNELS.setUiLocalePreference, preference),
+  onApplyUiLocalePreference: (callback: (preference: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, preference: string) => {
+      callback(preference);
+    };
+    ipcRenderer.on(CONNECTION_CHANNELS.applyUiLocalePreference, listener);
+    return () => ipcRenderer.removeListener(CONNECTION_CHANNELS.applyUiLocalePreference, listener);
+  },
+  getPendingUiLocalePreference: () =>
+    ipcRenderer.invoke(CONNECTION_CHANNELS.getPendingUiLocalePreference) as Promise<string | null>,
+  setAnalysisTrayState: (state: { paused: boolean; enabled: boolean }) =>
+    ipcRenderer.send(CONNECTION_CHANNELS.setAnalysisTrayState, state),
+  onAnalysisTrayCommand: (callback: (command: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, command: string) => {
+      callback(command);
+    };
+    ipcRenderer.on(CONNECTION_CHANNELS.applyAnalysisTrayCommand, listener);
+    return () => ipcRenderer.removeListener(CONNECTION_CHANNELS.applyAnalysisTrayCommand, listener);
+  },
 });
 
 /** .ics / intelligencemonitor://calendar/import → calendar import wizard. */
