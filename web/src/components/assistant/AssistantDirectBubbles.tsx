@@ -2,7 +2,6 @@ import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Mic } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { captionClass } from "../ui";
 import { assistantChatBubbleClass } from "../chat/chatBubbleClasses";
 import { AssistantMarkdown } from "./AssistantMarkdown";
 import {
@@ -174,7 +173,7 @@ export function AssistantDirectBubbles({
         {readyVisible ? (
           <div
             className={[
-              `${captionClass} im-assistant-direct__hint`,
+              "text-caption leading-normal im-assistant-direct__hint",
               readyFading ? "im-assistant-direct__item--fade" : "",
             ]
               .filter(Boolean)
@@ -240,7 +239,7 @@ export function AssistantDirectBubbles({
                 />
               ) : null}
               <div
-                className={`${captionClass} text-text-muted`}
+                className="text-caption leading-normal im-assistant-direct__hint"
                 data-testid="assistant-direct-sending"
               >
                 {t("quick.sending")}

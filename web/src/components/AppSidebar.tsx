@@ -26,6 +26,7 @@ import type { LucideIcon } from "lucide-react";
 import { useSidebarCollapsed } from "../hooks/useSidebarCollapsed";
 import { useSidebarRailMode } from "../hooks/useSidebarRailMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
+import { useMonitorMode } from "../context/MonitorModeContext";
 import {
   isSidebarItemActive,
   MAIN_SIDEBAR_PREFETCH_PATHS,
@@ -65,6 +66,10 @@ const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
 /**
  * Global left navigation — overlay drawer (matches 通知 RecentDayInboxDrawer:
  * OverlayPortal + light scrim + translucent im-dialog-drawer). Does not push page layout.
+ *
+ * Pages + canvas: this overlay is for pages mode. On ops board (canvas) the
+ * component returns null so the left-edge `>` chevron never sits on the
+ * immersive canvas. App.tsx also skips mounting it in canvas.
  */
 export function AppSidebar() {
   const location = useLocation();
@@ -74,6 +79,7 @@ export function AppSidebar() {
   const { collapsed, setCollapsed, toggleCollapsed } = useSidebarCollapsed();
   const { mode, setMode } = useSidebarRailMode();
   const { simpleMode } = useSimpleMode();
+  const { monitorMode } = useMonitorMode();
   const overlayOpen = !collapsed;
 
   const visibleGroups = visibleSidebarGroups(simpleMode);
@@ -85,14 +91,24 @@ export function AppSidebar() {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!overlayOpen) return;
+    if (monitorMode === "canvas") {
+      setCollapsed(true);
+    }
+  }, [monitorMode, setCollapsed]);
+
+  useEffect(() => {
+    if (monitorMode === "canvas" || !overlayOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setCollapsed(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [overlayOpen, setCollapsed]);
+  }, [monitorMode, overlayOpen, setCollapsed]);
+
+  if (monitorMode === "canvas") {
+    return null;
+  }
 
   const chevronLabel = overlayOpen
     ? tCommon("ui.collapseSidebar")

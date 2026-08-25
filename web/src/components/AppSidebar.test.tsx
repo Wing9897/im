@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { getTasksPageLabel } from "../domain/tasks/taskPageCopy";
 import { SIMPLE_MODE_STORAGE_KEY } from "../domain/ui/simpleMode";
 import { SimpleModeProvider } from "../context/SimpleModeContext";
+import { MONITOR_MODE_KEY, MonitorModeProvider } from "../context/MonitorModeContext";
 import { SIDEBAR_COLLAPSED_KEY } from "../hooks/useSidebarCollapsed";
 import { SIDEBAR_RAIL_MODE_KEY } from "../hooks/useSidebarRailMode";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../test/i18nHarness";
@@ -32,7 +33,7 @@ vi.mock("react-router-dom", () => ({
       },
       props.children,
     ),
-  useLocation: () => ({ pathname: mockPathname }),
+  useLocation: () => ({ pathname: mockPathname, search: "", hash: "" }),
   useNavigate: () => mockNavigate,
 }));
 
@@ -78,7 +79,13 @@ describe("AppSidebar", () => {
   function mountSidebar() {
     act(() => {
       root.render(
-        wrapWithI18n(createElement(SimpleModeProvider, null, createElement(AppSidebar))),
+        wrapWithI18n(
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(SimpleModeProvider, null, createElement(AppSidebar)),
+          ),
+        ),
       );
     });
   }
@@ -371,5 +378,16 @@ describe("AppSidebar", () => {
     });
     expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("0");
     expect(document.documentElement.style.getPropertyValue("--app-sidebar-width")).toBe("");
+  });
+
+  it("hides the left-edge chevron on ops board (canvas)", () => {
+    window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "0");
+    mountSidebar();
+    expect(document.body.querySelector("[data-testid='sidebar-edge-toggle']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='sidebar-edge-peek']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("1");
   });
 });

@@ -82,7 +82,7 @@ export function AssistantComposerShell({
       <label
         className={
           overlay
-            ? `${captionClass} im-assistant-direct__composer-target-label`
+            ? "text-caption leading-normal im-assistant-direct__composer-target-label"
             : `${captionClass} shrink-0 text-text-muted`
         }
         htmlFor={worksetFieldId}

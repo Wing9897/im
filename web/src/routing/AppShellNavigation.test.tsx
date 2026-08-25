@@ -10,6 +10,7 @@ import {
   type AnalysisStatusContextValue,
 } from "../context/AnalysisStatusContext";
 import { SimpleModeProvider } from "../context/SimpleModeContext";
+import { MonitorModeProvider, MONITOR_MODE_KEY } from "../context/MonitorModeContext";
 
 function PathnameProbe() {
   const { pathname } = useLocation();
@@ -64,45 +65,49 @@ describe("App shell navigation", () => {
               SimpleModeProvider,
               null,
               createElement(
-                "div",
-                {
-                  className: "flex min-h-0 min-w-0 flex-1 overflow-hidden",
-                  "data-testid": "shell-body",
-                },
+                MonitorModeProvider,
+                null,
                 createElement(
-                  "main",
+                  "div",
                   {
-                    className:
-                      "im-auto-scrollbar im-page-canvas flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto",
-                    "data-testid": "app-shell-page-canvas",
+                    className: "flex min-h-0 min-w-0 flex-1 overflow-hidden",
+                    "data-testid": "shell-body",
                   },
-                  createElement(PathnameProbe),
                   createElement(
-                    Routes,
-                    null,
-                    createElement(Route, {
-                      path: "/monitor",
-                      element: createElement(StubPage, { label: "monitor" }),
-                    }),
-                    createElement(Route, {
-                      path: "/tasks/*",
-                      element: createElement(StubPage, { label: "tasks" }),
-                    }),
-                    createElement(Route, {
-                      path: "/intelligence",
-                      element: createElement(StubPage, { label: "intelligence" }),
-                    }),
-                    createElement(Route, {
-                      path: "/sources",
-                      element: createElement(StubPage, { label: "sources" }),
-                    }),
-                    createElement(Route, {
-                      path: "/ai/*",
-                      element: createElement(StubPage, { label: "ai" }),
-                    }),
+                    "main",
+                    {
+                      className:
+                        "im-auto-scrollbar im-page-canvas flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto",
+                      "data-testid": "app-shell-page-canvas",
+                    },
+                    createElement(PathnameProbe),
+                    createElement(
+                      Routes,
+                      null,
+                      createElement(Route, {
+                        path: "/monitor",
+                        element: createElement(StubPage, { label: "monitor" }),
+                      }),
+                      createElement(Route, {
+                        path: "/tasks/*",
+                        element: createElement(StubPage, { label: "tasks" }),
+                      }),
+                      createElement(Route, {
+                        path: "/intelligence",
+                        element: createElement(StubPage, { label: "intelligence" }),
+                      }),
+                      createElement(Route, {
+                        path: "/sources",
+                        element: createElement(StubPage, { label: "sources" }),
+                      }),
+                      createElement(Route, {
+                        path: "/ai/*",
+                        element: createElement(StubPage, { label: "ai" }),
+                      }),
+                    ),
                   ),
+                  createElement(AppSidebar),
                 ),
-                createElement(AppSidebar),
               ),
             ),
           ),
@@ -191,5 +196,12 @@ describe("App shell navigation", () => {
     const body = container.querySelector("[data-testid='shell-body']");
     expect(body?.contains(sidebar)).toBe(false);
     expect(body?.querySelector("main")).toBeTruthy();
+  });
+
+  it("does not render the left-edge chevron in canvas (ops board)", () => {
+    window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
+    renderShell("/monitor", { overlayOpen: false });
+    expect(document.body.querySelector("[data-testid='sidebar-edge-toggle']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
   });
 });

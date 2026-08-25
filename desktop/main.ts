@@ -19,10 +19,24 @@ import {
   withDesktopQuery,
   type ConnectionConfig,
 } from './connection';
-import { registerConnectionIpc, unregisterConnectionIpc } from './connection-ipc';
+import {
+  registerConnectionIpc,
+  requestRendererAnalysisCommand,
+  requestRendererLocalePreference,
+  setConnectionIpcShellWindow,
+  setTrayIpcSinks,
+  unregisterConnectionIpc,
+} from './connection-ipc';
 import { ProcessManager } from './process-manager';
 import { resolveFrontendDistPath, resolveServerCwd, validatePaths } from './paths';
-import { createTray, destroyTray, updateTrayStatus, refreshTrayLocale } from './tray';
+import {
+  createTray,
+  destroyTray,
+  refreshTrayLocale,
+  setTrayAnalysisState,
+  setTrayLocalePreference,
+  updateTrayStatus,
+} from './tray';
 import { buildApplicationMenu, refreshApplicationMenu } from './menu';
 import { initAnalysisNotifications, stopAnalysisNotifications } from './notifications';
 import { registerWindowControls, unregisterWindowControls } from './window-controls';
@@ -185,6 +199,7 @@ function createWindow(loadUrl: string, retryOnFail: boolean): BrowserWindow {
   });
 
   setCalendarImportMainWindow(win);
+  setConnectionIpcShellWindow(win);
   return win;
 }
 
@@ -257,6 +272,10 @@ async function handleAppReady(): Promise<void> {
 
   activeConnection = loadConnection(app.getPath('userData'));
   registerConnectionIpc(() => app.getPath('userData'));
+  setTrayIpcSinks({
+    onUiLocalePreference: setTrayLocalePreference,
+    onAnalysisTrayState: setTrayAnalysisState,
+  });
   registerCalendarImportIpc();
   registerCalendarImportProtocolClient(devMode);
 
@@ -324,6 +343,12 @@ async function handleAppReady(): Promise<void> {
         }
       }
     },
+    onLocalePreference: (pref) => {
+      requestRendererLocalePreference(pref);
+    },
+    onAnalysisCommand: (command) => {
+      requestRendererAnalysisCommand(command);
+    },
   });
 
   // Set initial tray status — server is already running at this point (host production)
@@ -370,5 +395,6 @@ app.on('will-quit', () => {
   unregisterConnectionIpc();
   unregisterCalendarImportIpc();
   setCalendarImportMainWindow(null);
+  setConnectionIpcShellWindow(null);
   destroyTray();
 });

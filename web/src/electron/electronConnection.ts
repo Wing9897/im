@@ -25,7 +25,7 @@ import {
   subscribeConnection,
   type ConnectionMode,
 } from "../domain/connection/connectionStore";
-import { getAppLocale, onAppLocaleChange } from "../i18n/locale";
+import { getAppLocale, getAppLocalePreference, onAppLocaleChange, setAppLocalePreference, type AppLocalePreference } from "../i18n/locale";
 
 export type DesktopConnectionMode = "host" | "client";
 
@@ -35,6 +35,10 @@ export interface DesktopConnectionConfig {
   serverUrl?: string;
 }
 
+export type DesktopUiLocalePreference = AppLocalePreference;
+export type DesktopAnalysisTrayCommand = "pause" | "resume" | "abort";
+export type DesktopAnalysisTrayState = { paused: boolean; enabled: boolean };
+
 export interface ElectronConnectionApi {
   getConnection: () => Promise<DesktopConnectionConfig>;
   setConnection: (config: DesktopConnectionConfig) => Promise<DesktopConnectionConfig>;
@@ -43,6 +47,12 @@ export interface ElectronConnectionApi {
   setNotificationAuth?: (token: string | null) => void;
   /** Push UI locale for native notification copy. */
   setNotificationLocale?: (locale: string) => void;
+  /** Push stored UI locale preference for tray radio items. */
+  setUiLocalePreference?: (preference: string) => void;
+  onApplyUiLocalePreference?: (callback: (preference: string) => void) => () => void;
+  getPendingUiLocalePreference?: () => Promise<string | null>;
+  setAnalysisTrayState?: (state: DesktopAnalysisTrayState) => void;
+  onAnalysisTrayCommand?: (callback: (command: string) => void) => () => void;
 }
 
 declare global {
@@ -212,13 +222,75 @@ export function syncDesktopNotificationLocale(locale?: string): void {
   api.setNotificationLocale(locale ?? getAppLocale());
 }
 
-/** Keep Desktop notification locale in sync with UI language changes. */
+function isUiLocalePreference(value: unknown): value is AppLocalePreference {
+  return value === "auto" || value === "zh-Hant" || value === "zh-Hans" || value === "en";
+}
+
+function applyUiLocalePreferenceFromShell(preference: unknown): void {
+  if (!isUiLocalePreference(preference)) return;
+  setAppLocalePreference(preference);
+}
+
+/** Push stored UI locale preference so the tray radio matches LanguageSwitcher. */
+export function syncDesktopUiLocalePreference(preference?: AppLocalePreference): void {
+  const api = getElectronConnection();
+  if (!api?.setUiLocalePreference) return;
+  api.setUiLocalePreference(preference ?? getAppLocalePreference());
+}
+
+function isAnalysisTrayCommand(value: unknown): value is DesktopAnalysisTrayCommand {
+  return value === "pause" || value === "resume" || value === "abort";
+}
+
+/** Keep Desktop notification locale + tray language radio in sync with UI language. */
 export function subscribeDesktopNotificationLocale(): () => void {
   const api = getElectronConnection();
-  if (!api?.setNotificationLocale) return () => {};
+  if (!api?.setNotificationLocale && !api?.onApplyUiLocalePreference) return () => {};
+
   syncDesktopNotificationLocale();
-  return onAppLocaleChange((locale) => {
+  syncDesktopUiLocalePreference();
+
+  const unsubLocale = onAppLocaleChange((locale) => {
     syncDesktopNotificationLocale(locale);
+    syncDesktopUiLocalePreference();
+  });
+
+  const unsubApply = api.onApplyUiLocalePreference
+    ? api.onApplyUiLocalePreference((preference) => {
+        applyUiLocalePreferenceFromShell(preference);
+      })
+    : () => {};
+
+  void api.getPendingUiLocalePreference?.()
+    .then((preference) => {
+      applyUiLocalePreferenceFromShell(preference);
+    })
+    .catch(() => {
+      /* ignore — renderer can still apply later via onApply */
+    });
+
+  return () => {
+    unsubLocale();
+    unsubApply();
+  };
+}
+
+/** Push pause/enabled snapshot so the tray can label and gray-out analysis items. */
+export function syncDesktopAnalysisTrayState(state: DesktopAnalysisTrayState): void {
+  const api = getElectronConnection();
+  if (!api?.setAnalysisTrayState) return;
+  api.setAnalysisTrayState(state);
+}
+
+/** Listen for tray pause / resume / abort and drain nothing (commands are live-only). */
+export function subscribeDesktopAnalysisTrayCommand(
+  onCommand: (command: DesktopAnalysisTrayCommand) => void,
+): () => void {
+  const api = getElectronConnection();
+  if (!api?.onAnalysisTrayCommand) return () => {};
+  return api.onAnalysisTrayCommand((command) => {
+    if (!isAnalysisTrayCommand(command)) return;
+    onCommand(command);
   });
 }
 

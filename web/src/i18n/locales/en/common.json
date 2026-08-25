@@ -15,6 +15,9 @@
     "intel_event": "Intel task analyst",
     "agent": "Project Manager"
   },
+  "editor": {
+    "you": "You"
+  },
   "ui": {
     "listSep": ", ",
     "loading": "Loading…",

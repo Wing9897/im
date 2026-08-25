@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createElement, act } from "react";
+import { createElement, act, Fragment } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import {
@@ -150,9 +150,25 @@ function ShellFixture() {
         "data-shell-pane": "pages",
         ...shellVisibilityProps(isCanvas),
       },
-      createElement("nav", { "data-testid": "app-sidebar", "aria-label": "側欄" }, "sidebar"),
       createElement("main", null, "pages"),
     ),
+    // Pages-only overlay nav (matches App.tsx). Canvas must not paint the edge `>`.
+    isCanvas
+      ? null
+      : createElement(
+          Fragment,
+          null,
+          createElement(
+            "button",
+            {
+              type: "button",
+              "data-testid": "sidebar-edge-toggle",
+              "aria-label": "展開側欄",
+            },
+            ">",
+          ),
+          createElement("nav", { "data-testid": "app-sidebar", "aria-label": "側欄" }, "sidebar"),
+        ),
   );
 }
 
@@ -252,6 +268,7 @@ describe("monitor mode + board smoke", () => {
     renderShell();
     expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="app-sidebar"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="sidebar-edge-toggle"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="app-shell-canvas"]')).toBeNull();
     expect(
       container.querySelector('[data-testid="app-shell-pages-pane"]')?.hasAttribute("hidden"),
@@ -290,6 +307,8 @@ describe("monitor mode + board smoke", () => {
     await flushEffects();
 
     expect(container.querySelector('[data-testid="app-shell-canvas"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="app-sidebar"]')).toBeNull();
+    expect(container.querySelector('[data-testid="sidebar-edge-toggle"]')).toBeNull();
     // Pages shell stays mounted (warm routes) but is hidden in canvas mode.
     expect(
       container.querySelector('[data-testid="app-shell-pages-pane"]')?.hasAttribute("hidden"),

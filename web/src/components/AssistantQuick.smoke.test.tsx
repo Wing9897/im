@@ -242,6 +242,8 @@ describe("AssistantQuick smoke", () => {
     expect(history?.className).toContain("im-auto-scrollbar");
     expect(history?.textContent).toContain("hello history");
     expect(history?.textContent).toContain("hi back");
+    expect(history?.textContent).not.toContain("editor.you");
+    expect(history?.textContent).toMatch(/你|You/);
     expect(toggle.getAttribute("data-mode")).toBe("persist");
     expect(toggle.getAttribute("aria-pressed")).toBe("true");
     expect(toggle.textContent).toBe("持續");
