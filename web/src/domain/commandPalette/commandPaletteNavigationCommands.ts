@@ -1,5 +1,6 @@
 import {
   BellRing,
+  Bookmark,
   CalendarClock,
   CalendarDays,
   Database,
@@ -74,6 +75,15 @@ export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
     keywords: ["card"],
   },
   { id: "timeline", labelKey: "timeline", labelNs: "nav", to: "/timeline", icon: CalendarDays, groupId: "navigation" },
+  {
+    id: "subscriptions",
+    labelKey: "subscriptions",
+    labelNs: "nav",
+    to: "/subscriptions/mine",
+    icon: Bookmark,
+    groupId: "navigation",
+    keywords: ["subscribe", "calendar", "訂閱", "订阅"],
+  },
   { id: "notify", labelKey: "notify", labelNs: "nav", to: "/notify", icon: BellRing, groupId: "navigation" },
   {
     id: "notify-voice",

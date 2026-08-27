@@ -1,4 +1,5 @@
 import type { TimelineItem } from "../../types";
+import { isSubscribedTimelineSource } from "../calendarShare/subscribedCalendars";
 
 /**
  * One Gantt lane: a non-recurring event, or all RRULE occurrences of one series.
@@ -13,15 +14,23 @@ export type GanttEventRowModel = {
 };
 
 function isRecurringSeries(event: TimelineItem): event is TimelineItem & { seriesId: string } {
-  return (
-    event.source === "recurring" &&
-    typeof event.seriesId === "string" &&
-    event.seriesId.length > 0
-  );
+  if (typeof event.seriesId !== "string" || event.seriesId.length === 0) return false;
+  return event.source === "recurring" || isSubscribedTimelineSource(event.source);
 }
 
-function seriesRowId(seriesId: string): string {
-  return `recurring:${seriesId}`;
+/**
+ * Local series keep `recurring:{seriesId}`. Subscribed series namespace by
+ * `subscribed:{handle}/{slug}` so remote uids never merge with local series
+ * (or with another calendar that reused the same uid).
+ */
+function seriesBucketKey(event: TimelineItem & { seriesId: string }): string {
+  const source = event.source ?? "";
+  if (isSubscribedTimelineSource(source)) return `${source}:${event.seriesId}`;
+  return event.seriesId;
+}
+
+function seriesRowId(bucketKey: string): string {
+  return `recurring:${bucketKey}`;
 }
 
 function rowLabel(occurrences: TimelineItem[]): string {
@@ -37,25 +46,27 @@ function sortOccurrences(occurrences: TimelineItem[]): TimelineItem[] {
 
 /**
  * Group flat timeline events into Gantt rows.
- * - `source === "recurring"` with `seriesId` → one row per series (many bars)
- * - everything else → one row per event
+ * - `source === "recurring"` with `seriesId` → one row per local series (many bars)
+ * - `subscribed:{handle}/{slug}` with `seriesId` → one row per remote series
+ * - everything else (including subscribed one-offs) → one row per event
  *
  * Input order is preserved for first-seen series / singleton placement.
  * Rows then follow active-then-dismissed ordering (row dismissed iff all bars are).
  */
 export function groupRecurringGanttRows(events: TimelineItem[]): GanttEventRowModel[] {
   const seriesBuckets = new Map<string, TimelineItem[]>();
-  const order: Array<{ kind: "series"; seriesId: string } | { kind: "single"; event: TimelineItem }> =
+  const order: Array<{ kind: "series"; bucketKey: string } | { kind: "single"; event: TimelineItem }> =
     [];
 
   for (const event of events) {
     if (isRecurringSeries(event)) {
-      const existing = seriesBuckets.get(event.seriesId);
+      const bucketKey = seriesBucketKey(event);
+      const existing = seriesBuckets.get(bucketKey);
       if (existing) {
         existing.push(event);
       } else {
-        seriesBuckets.set(event.seriesId, [event]);
-        order.push({ kind: "series", seriesId: event.seriesId });
+        seriesBuckets.set(bucketKey, [event]);
+        order.push({ kind: "series", bucketKey });
       }
       continue;
     }
@@ -64,9 +75,9 @@ export function groupRecurringGanttRows(events: TimelineItem[]): GanttEventRowMo
 
   const rows: GanttEventRowModel[] = order.map((entry) => {
     if (entry.kind === "series") {
-      const occurrences = sortOccurrences(seriesBuckets.get(entry.seriesId)!);
+      const occurrences = sortOccurrences(seriesBuckets.get(entry.bucketKey)!);
       return {
-        rowId: seriesRowId(entry.seriesId),
+        rowId: seriesRowId(entry.bucketKey),
         label: rowLabel(occurrences),
         occurrences,
         dismissed: occurrences.every((item) => Boolean(item.dismissed)),

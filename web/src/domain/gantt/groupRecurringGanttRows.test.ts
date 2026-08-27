@@ -191,4 +191,79 @@ describe("groupRecurringGanttRows", () => {
     expect(rows[0]!.occurrences.map((item) => item.id)).toEqual(["a:earlier", "a:later"]);
     expect(rows[1]!.rowId).toBe("recurring:task-b");
   });
+
+  it("merges subscribed occurrences with the same seriesId into one row", () => {
+    const rows = groupRecurringGanttRows([
+      makeEvent({
+        id: "Alice/Work:weekly:2025-01-15T09:00:00Z",
+        seriesId: "series-weekly",
+        title: "Standup",
+        source: "subscribed:Alice/Work",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "Alice/Work:weekly:2025-01-22T09:00:00Z",
+        seriesId: "series-weekly",
+        title: "Standup",
+        source: "subscribed:Alice/Work",
+        startTime: "2025-01-22T09:00:00Z",
+        endTime: "2025-01-22T10:00:00Z",
+      }),
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.rowId).toBe("recurring:subscribed:Alice/Work:series-weekly");
+    expect(rows[0]!.occurrences).toHaveLength(2);
+    expect(rows[0]!.label).toBe("Standup");
+  });
+
+  it("keeps subscribed one-offs as singleton rows when seriesId is missing", () => {
+    const rows = groupRecurringGanttRows([
+      makeEvent({
+        id: "Alice/Work:one-a",
+        seriesId: null,
+        title: "Busy A",
+        source: "subscribed:Alice/Work",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "Alice/Work:one-b",
+        seriesId: null,
+        title: "Busy B",
+        source: "subscribed:Alice/Work",
+        startTime: "2025-01-15T11:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      }),
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.rowId)).toEqual(["Alice/Work:one-a", "Alice/Work:one-b"]);
+  });
+
+  it("does not mix a local series with a subscribed series that reuse the same seriesId string", () => {
+    const rows = groupRecurringGanttRows([
+      makeEvent({
+        id: "local:1",
+        seriesId: "series-weekly",
+        title: "Local",
+        source: "recurring",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "Alice/Work:weekly:2025-01-15T09:00:00Z",
+        seriesId: "series-weekly",
+        title: "Remote",
+        source: "subscribed:Alice/Work",
+        startTime: "2025-01-15T11:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      }),
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.rowId)).toEqual([
+      "recurring:series-weekly",
+      "recurring:subscribed:Alice/Work:series-weekly",
+    ]);
+  });
 });
+

@@ -18,7 +18,12 @@ _KEY_FILE_ENV = "INTELLIGENCE_MONITOR_SECRET_KEY_FILE"
 
 MASKED_SECRET = "********"
 #: system_config secret keys only. Profile api_key / brave keys are column-encrypted.
-SECRET_CONFIG_KEYS = frozenset()
+SECRET_CONFIG_KEYS = frozenset(
+    {
+        "calendar_share_access_token",
+        "calendar_share_refresh_token",
+    }
+)
 
 
 class SecretProtectionError(RuntimeError):

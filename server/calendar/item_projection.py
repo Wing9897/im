@@ -21,7 +21,7 @@ from typing import Any, Literal
 from server.db.database import Database
 from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
-from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
+from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row, fetch_item_rows
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 ItemDateKind = Literal["remind"]
@@ -109,6 +109,20 @@ def build_item_occurrence(
     return item
 
 
+def project_item_remind(row: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Emit the remind occurrence for an active item, if one exists.
+
+    Not window-clipped: calendar-share publish uploads the item's actual remind
+    day rather than a display-window scan.
+    """
+    if str(row.get("status") or "") != "active":
+        return None
+    remind_day = remind_day_for_item(row)
+    if remind_day is None:
+        return None
+    return build_item_occurrence(row, kind="remind", day=remind_day)
+
+
 def project_item_row(
     row: Mapping[str, Any],
     *,
@@ -121,13 +135,24 @@ def project_item_row(
     for list filters; they are not projected as special calendar kinds (use
     linked user-events / recurring series for timeline dates instead).
     """
-    if str(row.get("status") or "") != "active":
+    occ = project_item_remind(row)
+    if occ is None:
         return []
-    out: list[dict[str, Any]] = []
-    remind_day = remind_day_for_item(row)
-    if remind_day is not None and range_start <= remind_day <= range_end:
-        out.append(build_item_occurrence(row, kind="remind", day=remind_day))
-    return out
+    day = remind_day_for_item(row)
+    if day is None or not (range_start <= day <= range_end):
+        return []
+    return [occ]
+
+
+async def fetch_item_reminds_for_workset(db: Database, *, workset_id: str) -> list[dict[str, Any]]:
+    """All derived remind occurrences for active items in a workset (no date cap)."""
+    rows = await fetch_item_rows(db, workset_id=workset_id, status="active")
+    items: list[dict[str, Any]] = []
+    for row in rows:
+        occ = project_item_remind(row)
+        if occ is not None:
+            items.append(occ)
+    return items
 
 
 def _window_dates(range_start: datetime, range_end: datetime) -> tuple[str, str, date, date]:

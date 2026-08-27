@@ -1,0 +1,50 @@
+{
+  "root": "Subscriptions",
+  "tabsAria": "Subscription sections",
+  "tabs": {
+    "mine": "My subscriptions",
+    "search": "Find calendars"
+  },
+  "needLogin": "Sign in to calendar share under Account → Identity before adding subscriptions.",
+  "loginLink": "Go to sign-in",
+  "filter": {
+    "title": "Subscriptions",
+    "local": "Local",
+    "empty": "No subscriptions yet.",
+    "selectAll": "Select all",
+    "clearAll": "Clear",
+    "selectAllLocalAria": "Select all local sources",
+    "clearLocalAria": "Clear local sources",
+    "selectAllSubscribeAria": "Select all subscriptions",
+    "clearSubscribeAria": "Clear subscriptions",
+    "browseAria": "Subscribed calendars"
+  },
+  "mine": {
+    "title": "Subscribed calendars",
+    "help": "Removing a calendar unsubscribes it on the calendar server. Timeline visibility still uses the source filter.",
+    "empty": "No subscriptions yet.",
+    "searchCta": "Find calendars",
+    "openTimeline": "Timeline",
+    "remove": "Remove"
+  },
+  "search": {
+    "title": "Search public calendars",
+    "help": "Search public busy/details calendars, or paste handle/slug. Calendars granted only to you appear after you sign in.",
+    "queryPlaceholder": "handle or slug",
+    "submit": "Search",
+    "searching": "Searching…",
+    "noResults": "No matching calendars.",
+    "already": "Subscribed",
+    "add": "Subscribe",
+    "adding": "Adding…",
+    "pathTitle": "Subscribe by path",
+    "pathHelp": "Paste handle/slug, e.g. DemoPub/Open. You cannot subscribe to the handle you publish as.",
+    "pathPlaceholder": "handle/slug",
+    "invalidPath": "Use handle/slug.",
+    "rejectOwn": "You cannot subscribe to your own calendar."
+  },
+  "visibility": {
+    "busy": "Busy",
+    "details": "Details"
+  }
+}

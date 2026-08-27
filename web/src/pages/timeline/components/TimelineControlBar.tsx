@@ -1,11 +1,12 @@
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
+import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
+import type { SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
 
 type TimelineTaskOption = {
   id: string;
@@ -42,6 +43,9 @@ type TimelineControlBarProps = {
   /** Show compact spinner in the sticky toolbar (avoids layout jump). */
   showLoadingIndicator?: boolean;
   loadingLabel?: string;
+  subscribeCalendars?: SubscribeCalendarOption[];
+  selectedSubscribeKeys?: SubscribedCalendarSelection;
+  onChangeSubscribeKeys?: (next: SubscribedCalendarSelection) => void;
   children?: ReactNode;
 };
 
@@ -63,6 +67,9 @@ export function TimelineControlBar({
   onToggleFullscreen,
   showLoadingIndicator = false,
   loadingLabel,
+  subscribeCalendars,
+  selectedSubscribeKeys = null,
+  onChangeSubscribeKeys,
   children,
 }: TimelineControlBarProps) {
   const { t } = useTranslation("timeline");
@@ -90,7 +97,7 @@ export function TimelineControlBar({
       className="im-timeline-toolbar !mb-lg overflow-x-auto"
     >
       <div className="shrink-0" data-testid="timeline-source-filter">
-        <SourceFilterDialog
+        <TimelineSourceFilterDialog
           tasks={filterOptions}
           worksets={worksets}
           expandTasks={expandTasks}
@@ -98,6 +105,9 @@ export function TimelineControlBar({
           onChange={setSelectedSources}
           ariaLabelPrefix={t("toolbar.sourceFilterAria")}
           variant="toolbar"
+          subscribeCalendars={subscribeCalendars}
+          selectedSubscribeKeys={selectedSubscribeKeys}
+          onChangeSubscribeKeys={onChangeSubscribeKeys}
         />
       </div>
 

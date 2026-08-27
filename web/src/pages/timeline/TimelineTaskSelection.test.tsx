@@ -25,6 +25,9 @@ vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
+vi.mock("../../api/calendarShare", async () =>
+  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+
 vi.mock("../../api/tasks", () => ({
   fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
 }));
@@ -48,6 +51,8 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../test/context-mocks";
+import { resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 // --- Test harness component ---
@@ -80,6 +85,8 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
+    resetCalendarShareApiMocks();
+    resetCalendarShareCatalogForTests();
     resetTaskCatalogState([
       makeTimelineTask("task-a", "任務 A"),
       makeTimelineTask("task-b", "任務 B"),
@@ -95,6 +102,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
     }
     root = null;
     container.remove();
+    resetCalendarShareCatalogForTests();
   });
 
   async function renderHookAsync() {

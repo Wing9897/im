@@ -1,0 +1,50 @@
+{
+  "root": "订阅",
+  "tabsAria": "订阅分页",
+  "tabs": {
+    "mine": "我的订阅",
+    "search": "搜索订阅"
+  },
+  "needLogin": "请先到账户 → 身份登录日历分享服务，才能加入订阅。",
+  "loginLink": "前往登录",
+  "filter": {
+    "title": "订阅",
+    "local": "本地",
+    "empty": "尚未订阅日历。",
+    "selectAll": "全选",
+    "clearAll": "清空",
+    "selectAllLocalAria": "全选本地",
+    "clearLocalAria": "清空本地",
+    "selectAllSubscribeAria": "全选订阅",
+    "clearSubscribeAria": "清空订阅",
+    "browseAria": "已订阅日历"
+  },
+  "mine": {
+    "title": "已订阅日历",
+    "help": "移除会在服务器上取消订阅。时间规划上的显示开关在来源筛选里。",
+    "empty": "尚未订阅日历。",
+    "searchCta": "搜索订阅",
+    "openTimeline": "时间规划",
+    "remove": "移除"
+  },
+  "search": {
+    "title": "搜索公开日历",
+    "help": "搜索公开 busy／详情日历，或直接粘贴 handle/slug。授权给你但未公开的日历，登录后才会出现。",
+    "queryPlaceholder": "handle 或 slug",
+    "submit": "搜索",
+    "searching": "搜索中…",
+    "noResults": "没有符合的日历。",
+    "already": "已订阅",
+    "add": "订阅",
+    "adding": "加入中…",
+    "pathTitle": "用路径订阅",
+    "pathHelp": "粘贴 handle/slug，例如 DemoPub/Open。不能订阅自己正在上传的账号。",
+    "pathPlaceholder": "handle/slug",
+    "invalidPath": "请使用 handle/slug 格式。",
+    "rejectOwn": "不能订阅自己的日历。"
+  },
+  "visibility": {
+    "busy": "忙碌",
+    "details": "详情"
+  }
+}

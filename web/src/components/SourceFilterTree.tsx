@@ -6,13 +6,12 @@
  * this file is presentational (search box + tree + tri-state checkboxes).
  */
 
-import { ChevronRight } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { TextField } from "./ui";
+import { Button, TextField } from "./ui";
+import { TriStateCheckbox } from "./TriStateCheckbox";
 import type { FilterTreeRow } from "../domain/tasks/sourceFilterSelection";
-import type { TriCheckState } from "../domain/tasks/sourceFilterDialogDraft";
 import {
   resolveGroupCheckState,
   visibleChildrenForSourceFilterRow,
@@ -33,7 +32,86 @@ type SourceFilterTreeProps = {
   allSourcesSelected: boolean;
   onToggleTask: (taskId: string) => void;
   onToggleWorkset: (worksetId: string) => void;
+  /** Timeline owns a shared hint + search above 本機 / 訂閱 columns. */
+  hideHint?: boolean;
+  hideSearch?: boolean;
+  /** Column wrapper scrolls; skip the inner max-height list scroller. */
+  embedded?: boolean;
 };
+
+/** Column identity: icon mark with localized name (sr-only + title), not a selectable row. */
+export function SourceFilterSectionHeading({
+  icon: Icon,
+  label,
+  testId,
+}: {
+  icon: LucideIcon;
+  label: string;
+  testId?: string;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-sm" data-testid={testId} role="presentation">
+      <span
+        className="h-px min-w-4 flex-1 bg-[color-mix(in_srgb,var(--text-primary)_18%,var(--surface-border))]"
+        aria-hidden="true"
+      />
+      <h3 className="m-0 inline-flex shrink-0 items-center text-text-secondary" title={label}>
+        <Icon size={16} strokeWidth={2.5} aria-hidden="true" />
+        <span className="sr-only">{label}</span>
+      </h3>
+      <span
+        className="h-px min-w-4 flex-1 bg-[color-mix(in_srgb,var(--text-primary)_18%,var(--surface-border))]"
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
+/** Per-column select/clear. Visible labels may match; aria-label must be unique. */
+export function SourceFilterColumnActions({
+  selectLabel,
+  clearLabel,
+  selectAria,
+  clearAria,
+  onSelectAll,
+  onClearAll,
+  selectTestId,
+  clearTestId,
+}: {
+  selectLabel: string;
+  clearLabel: string;
+  selectAria: string;
+  clearAria: string;
+  onSelectAll: () => void;
+  onClearAll: () => void;
+  selectTestId: string;
+  clearTestId: string;
+}) {
+  return (
+    <div className="flex shrink-0 flex-wrap gap-sm px-1">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onSelectAll}
+        aria-label={selectAria}
+        data-testid={selectTestId}
+      >
+        {selectLabel}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onClearAll}
+        aria-label={clearAria}
+        data-testid={clearTestId}
+      >
+        {clearLabel}
+      </Button>
+    </div>
+  );
+}
 
 function taskSearchText(
   child: { id: string; name?: string },
@@ -42,33 +120,6 @@ function taskSearchText(
   const label = resolveSourceFilterTaskLabel(child.name, child.id, unnamedLabel);
   const rawName = (child.name ?? "").trim();
   return rawName && rawName !== label ? `${label} ${rawName}` : label;
-}
-
-function TriStateCheckbox({
-  state,
-  testId,
-  onChange,
-}: {
-  state: TriCheckState;
-  testId: string;
-  onChange: () => void;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = state === "indeterminate";
-    }
-  }, [state]);
-
-  return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={state === "checked"}
-      data-testid={testId}
-      onChange={onChange}
-    />
-  );
 }
 
 /** Search box + expandable workset-primary checkbox tree. */
@@ -83,29 +134,36 @@ export function SourceFilterTree({
   allSourcesSelected,
   onToggleTask,
   onToggleWorkset,
+  hideHint = false,
+  hideSearch = false,
+  embedded = false,
 }: SourceFilterTreeProps) {
   const { t } = useTranslation("common");
   const searching = Boolean(query.trim());
   const unnamedLabel = t("board:common.unnamedTask");
+  const listClass = embedded
+    ? "m-0 flex list-none flex-col gap-1.5 p-0"
+    : "im-auto-scrollbar m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0 [scrollbar-gutter:stable]";
 
   return (
     <div className="flex flex-col gap-md">
-      <p className="m-0 text-caption leading-relaxed text-text-secondary">
-        {t("workset:filterHint")}
-      </p>
-      <TextField
-        type="search"
-        value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
-        placeholder={t("workset:filterSearchPlaceholder")}
-        aria-label={t("workset:filterSearchPlaceholder")}
-        data-testid="source-filter-dialog-search"
-        className="im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] placeholder:text-text-secondary/80"
-      />
-      <ul
-        className="im-auto-scrollbar m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0 [scrollbar-gutter:stable]"
-        aria-label={t("workset:filterBrowseAria")}
-      >
+      {hideHint ? null : (
+        <p className="m-0 text-caption leading-relaxed text-text-secondary">
+          {t("workset:filterHint")}
+        </p>
+      )}
+      {hideSearch ? null : (
+        <TextField
+          type="search"
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder={t("workset:filterSearchPlaceholder")}
+          aria-label={t("workset:filterSearchPlaceholder")}
+          data-testid="source-filter-dialog-search"
+          className="im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] placeholder:text-text-secondary/80"
+        />
+      )}
+      <ul className={listClass} aria-label={t("workset:filterBrowseAria")}>
         {rows.map((row) => {
           const childCount = row.children.length;
           const canExpand = childCount > 0;

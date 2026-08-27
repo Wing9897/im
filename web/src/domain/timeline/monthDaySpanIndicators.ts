@@ -6,6 +6,7 @@ import {
   startOfDay,
   timelineEventDateRange,
 } from "./dateUtils";
+import { isSubscribedTimelineSource } from "../calendarShare/subscribedCalendars";
 
 export type MonthDaySpanCounts = {
   /** Started before this day and continues after it (middle of a multi-day span). */
@@ -20,11 +21,15 @@ function eventBounds(event: TimelineItem): { start: Date; end: Date } {
 }
 
 /** Single-day markers that still feed month-cell「+N 结束」. */
+function isSeriesLastOccurrence(event: TimelineItem): boolean {
+  if (!event.isLastOccurrence) return false;
+  return event.source === "recurring" || isSubscribedTimelineSource(event.source);
+}
+
 function isEndingMarkerOnDay(event: TimelineItem, dayStart: Date): boolean {
   if (!eventStartsOnDay(event, dayStart)) return false;
   // Item projection is remind-only (not a spanning calendar kind).
-  if (event.source === "recurring" && event.isLastOccurrence) return true;
-  return false;
+  return isSeriesLastOccurrence(event);
 }
 
 /**
@@ -84,11 +89,7 @@ export function eventShowsInMonthDayPreview(
   const span = classifyMonthDaySpan(event, day);
   if (span === null) return true;
   // Recurring is non-continuous: final occurrence stays in the normal list.
-  if (
-    span === "ending" &&
-    event.source === "recurring" &&
-    event.isLastOccurrence
-  ) {
+  if (span === "ending" && isSeriesLastOccurrence(event)) {
     return true;
   }
   return false;

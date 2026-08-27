@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../i18n";
 import { SimpleModeProvider } from "../../context/SimpleModeContext";
 import { systemLocation } from "../../hooks/monthWeather/timezone";
+import { MAP_CARTO_API_KEY_STORAGE_KEY } from "../../domain/prefs";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 
 const saveSystemSettings = vi.fn();
@@ -136,6 +137,52 @@ describe("SettingsGeneralPage", () => {
     expect(save).toBeTruthy();
     expect(save?.className).not.toContain("w-full");
     expect(regionCard?.contains(save!)).toBe(true);
+  });
+
+  it("hosts a CARTO basemap API key field on general settings", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+
+    const card = harness.container.querySelector('[data-testid="general-carto-card"]');
+    expect(card).not.toBeNull();
+    expect(card?.textContent).toContain("地圖底圖／CARTO API 金鑰");
+    const input = harness.container.querySelector('[data-testid="carto-api-key"]');
+    expect(input).not.toBeNull();
+    expect(input?.className).toContain("min-w-0");
+    expect(input?.className).toContain("flex-1");
+    expect(input?.className).toContain("w-full");
+    expect(input?.parentElement?.className).toContain("w-full");
+    expect(input?.parentElement?.className).toContain("min-w-0");
+    const docs = harness.container.querySelector<HTMLAnchorElement>('[data-testid="carto-api-key-docs"]');
+    expect(docs?.href).toBe("https://carto.com/basemaps/apikey");
+  });
+
+  it("persists the CARTO API key on this device and reloads it", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+    const input = harness.container.querySelector<HTMLInputElement>('[data-testid="carto-api-key"]')!;
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!;
+    await act(async () => {
+      nativeInputValueSetter.call(input, "  carto-test-key  ");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const save = harness.container.querySelector<HTMLButtonElement>(
+      '[data-testid="save-carto-api-key"]',
+    )!;
+    await act(async () => {
+      save.click();
+    });
+    expect(localStorage.getItem(MAP_CARTO_API_KEY_STORAGE_KEY)).toBe("carto-test-key");
+
+    harness.cleanup();
+    harness = createTestHarness();
+    await harness.render(SettingsGeneralPageWithProviders);
+    const reloaded = harness.container.querySelector<HTMLInputElement>(
+      '[data-testid="carto-api-key"]',
+    )!;
+    expect(reloaded.value).toBe("carto-test-key");
   });
 
   it("persists a custom weather region", async () => {

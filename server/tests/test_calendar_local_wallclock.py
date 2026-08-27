@@ -180,3 +180,59 @@ def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
     assert items[0]["startTime"] == "2026-07-31T16:00:00Z"
     assert items[0]["isAllDay"] is True
     assert all(item["title"] == "1234" for item in items)
+
+
+def test_floating_expand_uses_pinned_calendar_tz_not_live_os(monkeypatch) -> None:
+    from zoneinfo import ZoneInfo
+
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+    pinned = ZoneInfo("America/New_York")
+
+    task = {
+        "id": "pinned-cal",
+        "name": "Ten",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY",
+        "event_is_all_day": 0,
+        "event_start_time": "10:00",
+        "event_end_time": "11:00",
+        "event_timezone": "floating",
+        "event_start_local": "2026-07-01T10:00:00",
+        "event_end_local": "2026-07-01T11:00:00",
+    }
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
+    live = expand_series_occurrences(task, range_start, range_end, budget=5)
+    pinned_items = expand_series_occurrences(
+        task, range_start, range_end, budget=5, calendar_tz=pinned
+    )
+    assert live[0]["startTime"] == "2026-07-01T02:00:00Z"
+    # 10:00 America/New_York in July is UTC-4 → 14:00Z
+    assert pinned_items[0]["startTime"] == "2026-07-01T14:00:00Z"
+
+
+def test_ics_tzid_expand_ignores_pinned_calendar_tz(monkeypatch) -> None:
+    from zoneinfo import ZoneInfo
+
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+
+    task = {
+        "id": "ics-cal",
+        "name": "Imported",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY",
+        "event_is_all_day": 0,
+        "event_start_time": "2026-07-01T10:00:00",
+        "event_end_time": "2026-07-01T11:00:00",
+        "event_start_local": "2026-07-01T10:00:00",
+        "event_end_local": "2026-07-01T11:00:00",
+        "event_timezone": "UTC",
+    }
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
+    items = expand_series_occurrences(
+        task, range_start, range_end, budget=5, calendar_tz=ZoneInfo("America/New_York")
+    )
+    assert items[0]["startTime"] == "2026-07-01T10:00:00Z"

@@ -182,4 +182,17 @@ describe("monthDaySpanIndicators", () => {
     // Ordinary same-day events stay in the preview list.
     expect(eventShowsInMonthDayPreview(single, new Date(2025, 0, 16))).toBe(true);
   });
+
+  it("counts final subscribed series occurrence on its day as ending", () => {
+    const last = makeEvent({
+      id: "Alice/Work:series-weekly:20250116T010000Z",
+      source: "subscribed:Alice/Work",
+      seriesId: "series-weekly",
+      isLastOccurrence: true,
+      startTime: "2025-01-16T01:00:00Z",
+      endTime: "2025-01-16T02:00:00Z",
+    });
+    expect(classifyMonthDaySpan(last, new Date(2025, 0, 16))).toBe("ending");
+    expect(eventShowsInMonthDayPreview(last, new Date(2025, 0, 16))).toBe(true);
+  });
 });

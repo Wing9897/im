@@ -71,6 +71,11 @@ describe("eventListCardMeta", () => {
         makeTimelineItem({ source: "recurring", taskName: "週會" }),
       ),
     ).toBe("task");
+    expect(
+      resolveEventListProvenanceKind(
+        makeTimelineItem({ source: "subscribed:Alice/Work" }),
+      ),
+    ).toBe("subscribed");
   });
 
   it("maps spanning cover to 跨日进行中; ending uses 本日* when focused is today", () => {

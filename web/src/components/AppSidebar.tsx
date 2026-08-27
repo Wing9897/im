@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   BellRing,
   Bot,
+  Bookmark,
   CalendarClock,
   CalendarDays,
   ChevronLeft,
@@ -56,6 +57,7 @@ const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   leaderboard: Trophy,
   intelligence: MapPin,
   timeline: CalendarDays,
+  subscriptions: Bookmark,
   notify: BellRing,
   assistant: MessageSquare,
   ai: Bot,

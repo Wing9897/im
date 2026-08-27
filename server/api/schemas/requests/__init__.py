@@ -22,6 +22,12 @@ from server.api.schemas.requests.calendar import (
     UserEventCreateBody,
     UserEventPatchBody,
 )
+from server.api.schemas.requests.calendar_share import (
+    CalendarShareLoginBody,
+    CalendarSharePublishBody,
+    CalendarShareSubscribeBody,
+    CalendarShareTimezoneBody,
+)
 from server.api.schemas.requests.items import (
     CategoryCreateBody,
     CategoryUpdateBody,
@@ -64,6 +70,10 @@ __all__ = [
     "AgentChatBody",
     "AiEngineTestBody",
     "AnalysisPauseBody",
+    "CalendarShareLoginBody",
+    "CalendarSharePublishBody",
+    "CalendarShareSubscribeBody",
+    "CalendarShareTimezoneBody",
     "CalendarImportCommitBody",
     "CalendarImportInput",
     "CalendarImportSelectionBody",

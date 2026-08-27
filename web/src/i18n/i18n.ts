@@ -19,6 +19,7 @@ import zhHantAccount from "./locales/zh-Hant/account.json";
 import zhHantWorkset from "./locales/zh-Hant/workset.json";
 import zhHantViewer from "./locales/zh-Hant/viewer.json";
 import zhHantLeaderboard from "./locales/zh-Hant/leaderboard.json";
+import zhHantSubscriptions from "./locales/zh-Hant/subscriptions.json";
 import zhHansCommon from "./locales/zh-Hans/common.json";
 import zhHansTasks from "./locales/zh-Hans/tasks.json";
 import zhHansBoard from "./locales/zh-Hans/board.json";
@@ -37,6 +38,7 @@ import zhHansAccount from "./locales/zh-Hans/account.json";
 import zhHansWorkset from "./locales/zh-Hans/workset.json";
 import zhHansViewer from "./locales/zh-Hans/viewer.json";
 import zhHansLeaderboard from "./locales/zh-Hans/leaderboard.json";
+import zhHansSubscriptions from "./locales/zh-Hans/subscriptions.json";
 import enCommon from "./locales/en/common.json";
 import enTasks from "./locales/en/tasks.json";
 import enBoard from "./locales/en/board.json";
@@ -55,6 +57,7 @@ import enAccount from "./locales/en/account.json";
 import enWorkset from "./locales/en/workset.json";
 import enViewer from "./locales/en/viewer.json";
 import enLeaderboard from "./locales/en/leaderboard.json";
+import enSubscriptions from "./locales/en/subscriptions.json";
 
 export const defaultNS = "common";
 
@@ -77,6 +80,7 @@ export const NAMESPACES = [
   "workset",
   "viewer",
   "leaderboard",
+  "subscriptions",
 ] as const;
 
 export const resources = {
@@ -99,6 +103,7 @@ export const resources = {
     workset: zhHantWorkset,
     viewer: zhHantViewer,
     leaderboard: zhHantLeaderboard,
+    subscriptions: zhHantSubscriptions,
   },
   "zh-Hans": {
     common: zhHansCommon,
@@ -119,6 +124,7 @@ export const resources = {
     workset: zhHansWorkset,
     viewer: zhHansViewer,
     leaderboard: zhHansLeaderboard,
+    subscriptions: zhHansSubscriptions,
   },
   en: {
     common: enCommon,
@@ -139,6 +145,7 @@ export const resources = {
     workset: enWorkset,
     viewer: enViewer,
     leaderboard: enLeaderboard,
+    subscriptions: enSubscriptions,
   },
 } as const;
 

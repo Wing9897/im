@@ -7,7 +7,7 @@ import {
   SHARED_DANMAKU_MODE_KEY,
 } from "../../../domain/prefs";
 
-export { CARTO_URL, CARTO_ATTR } from "../../../domain/intelligence/mapTiles";
+export { CARTO_ATTR } from "../../../domain/intelligence/mapTiles";
 export {
   parsePersistedMapTimeWindow,
   readSharedDanmakuMode,

@@ -178,7 +178,7 @@ describe("DashboardViewer", () => {
     container.remove();
   });
 
-  it("shows empty state when no tasks exist", () => {
+  it("shows the pipeline when no tasks exist", () => {
     mockPipeline.current = {
       state: "no_sources",
       showChecklist: true,
@@ -195,6 +195,29 @@ describe("DashboardViewer", () => {
     const emptyState = container.querySelector('[role="status"]');
     expect(emptyState).not.toBeNull();
     expect(container.textContent).toContain("開始情報管線");
+  });
+
+  it("hides the pipeline when any task exists, even if readiness still wants the checklist", () => {
+    mockPipeline.current = {
+      state: "no_events",
+      showChecklist: true,
+      loading: false,
+    };
+    taskCatalogState.tasks = [
+      createMockTask({
+        id: "demo-intel",
+        name: "[demo] 情報事件任務",
+        isActive: false,
+      }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.textContent).not.toContain("開始情報管線");
+    expect(container.textContent).toContain("[demo] 情報事件任務");
   });
 
   it("shows an error toast without adding a retry banner when task loading fails", () => {

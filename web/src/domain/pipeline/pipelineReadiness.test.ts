@@ -10,10 +10,54 @@ const base = {
   sourceCount: 0,
   activeAnalysisTaskCount: 0,
   analysisEventCount: 0,
+  taskCount: 0,
   everCompleted: false,
 };
 
 describe("pipelineReadiness", () => {
+  it("shows the checklist when the catalog is empty", () => {
+    expect(pipelineReadiness(base)).toEqual({
+      state: "no_sources",
+      showChecklist: true,
+      assistantSlotReady: false,
+    });
+    expect(
+      pipelineReadiness({ ...base, sourceCount: 1, activeAnalysisTaskCount: 0 }),
+    ).toEqual({
+      state: "no_active_task",
+      showChecklist: true,
+      assistantSlotReady: false,
+    });
+  });
+
+  it("hides the checklist when any task exists, including inactive or demo", () => {
+    expect(
+      pipelineReadiness({
+        ...base,
+        sourceCount: 1,
+        activeAnalysisTaskCount: 0,
+        taskCount: 1,
+      }),
+    ).toEqual({
+      state: "no_active_task",
+      showChecklist: false,
+      assistantSlotReady: false,
+    });
+    expect(
+      pipelineReadiness({
+        ...base,
+        sourceCount: 1,
+        activeAnalysisTaskCount: 1,
+        taskCount: 2,
+        analysisEventCount: 0,
+      }),
+    ).toEqual({
+      state: "no_events",
+      showChecklist: false,
+      assistantSlotReady: false,
+    });
+  });
+
   it("is no_sources when there are no sources", () => {
     expect(pipelineReadiness(base)).toEqual({
       state: "no_sources",
@@ -23,13 +67,14 @@ describe("pipelineReadiness", () => {
     expect(
       pipelineReadiness({
         ...base,
+        taskCount: 2,
         activeAnalysisTaskCount: 2,
         analysisEventCount: 5,
         everCompleted: true,
       }),
     ).toEqual({
       state: "no_sources",
-      showChecklist: true,
+      showChecklist: false,
       assistantSlotReady: false,
     });
   });
@@ -50,11 +95,12 @@ describe("pipelineReadiness", () => {
         ...base,
         sourceCount: 1,
         activeAnalysisTaskCount: 1,
+        taskCount: 1,
         analysisEventCount: 0,
       }),
     ).toEqual({
       state: "no_events",
-      showChecklist: true,
+      showChecklist: false,
       assistantSlotReady: false,
     });
   });
@@ -65,6 +111,7 @@ describe("pipelineReadiness", () => {
         ...base,
         sourceCount: 1,
         activeAnalysisTaskCount: 1,
+        taskCount: 1,
         analysisEventCount: 3,
       }),
     ).toEqual({
@@ -79,6 +126,7 @@ describe("pipelineReadiness", () => {
       pipelineReadiness({
         sourceCount: 1,
         activeAnalysisTaskCount: 1,
+        taskCount: 1,
         analysisEventCount: 0,
         everCompleted: true,
       }),
@@ -95,6 +143,7 @@ describe("pipelineReadiness", () => {
         ...base,
         sourceCount: 1,
         activeAnalysisTaskCount: 1,
+        taskCount: 1,
         analysisEventCount: 3,
         assistantSlotReady: false,
       }),
@@ -111,12 +160,13 @@ describe("pipelineReadiness", () => {
         ...base,
         sourceCount: 1,
         activeAnalysisTaskCount: 1,
+        taskCount: 1,
         analysisEventCount: 0,
         assistantSlotReady: true,
       }),
     ).toEqual({
       state: "no_events",
-      showChecklist: true,
+      showChecklist: false,
       assistantSlotReady: true,
     });
   });

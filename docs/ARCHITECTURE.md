@@ -440,6 +440,10 @@ Desktop host sidecar sets `INTELLIGENCE_MONITOR_DATA_DIR` to Electron `userData`
 
 Telegram sources do not use Telethon's default SQLite session files (`.session`), which could report `database is locked` when a stale process held the file open. Auth is stored as a `StringSession` token under the data-root `sessions/` directory (see above). The one-time legacy `.session` SQLite migration shim was removed; full／database reset (and `scripts/reset_local_databases.py --apply`) deletes both `*.session.txt` and leftover `*.session`. A source without a token simply re-authenticates.
 
+## Calendar share (IntelligenceCalendar)
+
+Household **local calendar** (timeline `user_events` / analysis / RRULE series) lives in IM SQLite. **Shared calendars** live in the sibling IntelligenceCalendar process (`subscriptions` table: `UNIQUE (subscriber_id, calendar_id)` is the catalog). IM `/api/v1/calendar-share/*` is a proxy: the renderer never talks to IC. `GET`/`POST`/`DELETE /subscriptions` map to IC `/me/subscriptions`; a 502 from IC fails closed (no local `calendar_share_subscriptions` cache). Closed or grant-revoked calendars drop from 我的訂閱 when IC `GET /me/subscriptions` (or the events feed) prunes that subscriber’s own rows. RRULE expansion for subscribed series runs on the **IM server**, not React and not IC.
+
 ## Scheduler
 
 ### Unified schedule + purpose gate

@@ -5,7 +5,8 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AnalysisEvent } from "../../types";
 import { MapMarkers } from "../../components/map/MapMarkers";
-import { CARTO_ATTR, CARTO_URL } from "../../domain/intelligence/mapTiles";
+import { CARTO_ATTR } from "../../domain/intelligence/mapTiles";
+import { useCartoTileUrl } from "../../domain/intelligence/useCartoTileUrl";
 
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
 import type { BoardFocusTarget } from "../boardFocusStore";
@@ -127,6 +128,7 @@ export function MapBoardEmbed({
   focusTarget = null,
 }: MapBoardEmbedProps) {
   const { t } = useTranslation();
+  const cartoUrl = useCartoTileUrl();
   const withCoords = useMemo(
     () => items.filter((item) => isMappableCoordinate(item.latitude, item.longitude)),
     [items],
@@ -158,7 +160,7 @@ export function MapBoardEmbed({
         className="board-widget-map__leaflet"
         style={{ width: "100%", height: "100%" }}
       >
-        <TileLayer url={CARTO_URL} attribution={CARTO_ATTR} noWrap={false} />
+        <TileLayer key={cartoUrl} url={cartoUrl} attribution={CARTO_ATTR} noWrap={false} />
         <MapInvalidateOnResize />
         <MapRefBridge mapRef={bridgeRef} />
         <MapFocusController target={focusTarget} />

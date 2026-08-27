@@ -126,7 +126,8 @@
       "item": "Item",
       "ics": "Calendar import",
       "a2a": "A2A",
-      "agent": "Agent"
+      "agent": "Agent",
+      "subscribed": "Subscribed: {path}"
     }
   },
   "taskDetail": {

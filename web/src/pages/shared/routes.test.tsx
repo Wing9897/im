@@ -137,6 +137,7 @@ describe("Route module imports", () => {
       () => import("../leaderboard/LeaderboardPage"),
       () => import("../intelligence/IntelligencePage"),
       () => import("../timeline/TimelinePage"),
+      () => import("../subscriptions/SubscriptionsShell"),
       () => import("../sources/SourceManagementPage"),
       () => import("../notify/NotifyWorkspacePage"),
       () => import("../logs/LogPage"),

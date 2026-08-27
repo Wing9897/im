@@ -110,6 +110,7 @@ export function usePipelineReadiness(): PipelineReadiness & { loading: boolean }
       sourceCount,
       activeAnalysisTaskCount,
       analysisEventCount: eventCount,
+      taskCount: tasks.length,
       everCompleted,
       assistantSlotReady,
     });
@@ -117,6 +118,7 @@ export function usePipelineReadiness(): PipelineReadiness & { loading: boolean }
     loading,
     sourceCount,
     activeAnalysisTaskCount,
+    tasks.length,
     eventCount,
     everCompleted,
     assistantSlotReady,

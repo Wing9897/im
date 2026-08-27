@@ -87,6 +87,9 @@ export function TimelinePage() {
             <TimelineControlBar
               selectedSources={sources.selectedSources}
               setSelectedSources={sources.setSelectedSources}
+              subscribeCalendars={sources.subscribeCalendars}
+              selectedSubscribeKeys={sources.selectedSubscribeKeys}
+              onChangeSubscribeKeys={sources.setSelectedSubscribeKeys}
               timelineTasks={sources.timelineTasks}
               worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
               expandTasks={tasks.map((row) => ({

@@ -15,6 +15,9 @@ vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
+vi.mock("../../api/calendarShare", async () =>
+  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+
 vi.mock("../../api/tasks", () => ({
   fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
 }));
@@ -37,6 +40,8 @@ import {
   makeAnalysisTask,
   resetTaskCatalogState,
 } from "../../test/context-mocks";
+import { resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 type HookResult = ReturnType<typeof useTimelinePageContainer>;
@@ -59,7 +64,8 @@ describe("useTimelinePageContainer URL view query", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
-    mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
+    resetCalendarShareApiMocks();
+    resetCalendarShareCatalogForTests();
     resetTaskCatalogState([
       makeAnalysisTask({ id: "task-a", name: "任務 A", analysisMode: "intel_event" }),
     ]);
@@ -75,6 +81,7 @@ describe("useTimelinePageContainer URL view query", () => {
     root = null;
     container.remove();
     window.localStorage.clear();
+    resetCalendarShareCatalogForTests();
   });
 
   async function renderAt(path: string) {
