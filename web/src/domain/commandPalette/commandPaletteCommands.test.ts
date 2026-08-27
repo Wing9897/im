@@ -75,6 +75,17 @@ describe("commandPaletteCommands", () => {
     expect(canvas.some((item) => item.id === "board")).toBe(true);
   });
 
+  it("includes subscription mine / published / search shortcuts", () => {
+    const published = filterCommandPaletteItems("發佈");
+    expect(published.some((item) => item.to === "/subscriptions/published")).toBe(true);
+    const privateGroup = filterCommandPaletteItems("私人群組");
+    expect(privateGroup.some((item) => item.to === "/subscriptions/published")).toBe(true);
+    const search = filterCommandPaletteItems("搜尋訂閱");
+    expect(search.some((item) => item.to === "/subscriptions/search")).toBe(true);
+    const mine = filterCommandPaletteItems("訂閱");
+    expect(mine.some((item) => item.to === "/subscriptions/mine")).toBe(true);
+  });
+
   it("includes the worksets catalog in navigation", () => {
     const items = filterCommandPaletteItems("工作集");
     expect(items.some((item) => item.to === "/worksets")).toBe(true);

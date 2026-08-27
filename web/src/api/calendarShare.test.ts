@@ -9,7 +9,15 @@ import {
   loginCalendarShare,
   putCalendarSharePublish,
   putCalendarShareTimezone,
+  fetchCalendarSharePublishList,
+  unpublishCalendarSharePublish,
+  syncCalendarSharePublish,
+  CALENDAR_SHARE_PUBLISH_TIMEOUT_MS,
 } from "./calendarShare";
+import {
+  CalendarShareRateLimitError,
+  resetCalendarShareRateLimitForTests,
+} from "../domain/calendarShare/calendarShareRateLimit";
 
 vi.mock("./client", () => ({
   apiClient: {
@@ -23,6 +31,7 @@ vi.mock("./client", () => ({
 describe("calendarShare API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCalendarShareRateLimitForTests();
   });
 
   it("GETs and PUTs timezone", async () => {
@@ -75,13 +84,41 @@ describe("calendarShare API", () => {
   });
 
   it("PUTs publish mapping", async () => {
-    vi.mocked(apiClient.put).mockResolvedValue({ enabled: true });
-    await putCalendarSharePublish("ws-1", { enabled: true, slug: "Work", syncNow: true });
+    vi.mocked(apiClient.put).mockResolvedValue({ slug: "Work" });
+    await putCalendarSharePublish("ws-1", { slug: "Work", syncNow: true });
     expect(apiClient.put).toHaveBeenCalledWith("/api/v1/calendar-share/publish/ws-1", {
-      enabled: true,
       slug: "Work",
       syncNow: true,
+    }, { timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS });
+  });
+
+  it("GETs publish list and unpublishes without extra payload", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [] });
+    await expect(fetchCalendarSharePublishList()).resolves.toEqual({ items: [] });
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar-share/publish");
+
+    vi.mocked(apiClient.delete).mockResolvedValue({ slug: "Work" });
+    await unpublishCalendarSharePublish({
+      worksetId: "ws-1",
     });
+    expect(apiClient.delete).toHaveBeenCalledWith("/api/v1/calendar-share/publish/ws-1", {
+      timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS,
+    });
+
+    resetCalendarShareRateLimitForTests();
+    vi.mocked(apiClient.put).mockResolvedValue({ slug: "Work" });
+    await syncCalendarSharePublish({
+      worksetId: "ws-1",
+      slug: "Work",
+      publicVisibility: "public_busy",
+      grants: [],
+    });
+    expect(apiClient.put).toHaveBeenCalledWith("/api/v1/calendar-share/publish/ws-1", {
+      slug: "Work",
+      publicVisibility: "public_busy",
+      grants: [],
+      syncNow: true,
+    }, { timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS });
   });
 
   it("POSTs subscription and GETs events", async () => {
@@ -101,11 +138,28 @@ describe("calendarShare API", () => {
 
   it("GETs calendar search", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({
-      items: [{ handle: "DemoPub", slug: "Open", visibility: "details" }],
+      items: [{ handle: "DemoPub", slug: "Open", hitKind: "listing", publicVisibility: "public" }],
     });
     await expect(fetchCalendarShareSearch("Demo")).resolves.toEqual({
-      items: [{ handle: "DemoPub", slug: "Open", visibility: "details" }],
+      items: [{ handle: "DemoPub", slug: "Open", hitKind: "listing", publicVisibility: "public" }],
     });
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar-share/search", { q: "Demo" });
+  });
+
+  it("blocks a second immediate subscribe without sending another request", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ items: [], ownHandle: "Wing" });
+    await addCalendarShareSubscription({ path: "Alice/Work" });
+    await expect(addCalendarShareSubscription({ path: "Bob/Work" })).rejects.toBeInstanceOf(
+      CalendarShareRateLimitError,
+    );
+    expect(apiClient.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows a recommended search plus one query then blocks the next search", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [] });
+    await fetchCalendarShareSearch("");
+    await fetchCalendarShareSearch("Alice");
+    await expect(fetchCalendarShareSearch("Bob")).rejects.toBeInstanceOf(CalendarShareRateLimitError);
+    expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
 });

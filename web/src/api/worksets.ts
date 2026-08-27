@@ -13,12 +13,19 @@ export function listWorksets(): Promise<Workset[]> {
 
 export function createWorkset(
   name: string,
-  opts?: { notifyEnabled?: boolean; externalEnabled?: boolean },
+  opts?: {
+    notifyEnabled?: boolean;
+    externalEnabled?: boolean;
+    emoji?: string;
+    description?: string;
+  },
 ): Promise<Workset> {
   return apiClient.post<Workset>("/api/v1/worksets", {
     name,
     ...(opts?.notifyEnabled === undefined ? {} : { notifyEnabled: opts.notifyEnabled }),
     ...(opts?.externalEnabled === undefined ? {} : { externalEnabled: opts.externalEnabled }),
+    ...(opts?.emoji === undefined ? {} : { emoji: opts.emoji }),
+    ...(opts?.description === undefined ? {} : { description: opts.description }),
   });
 }
 
@@ -28,7 +35,13 @@ export function getWorkset(worksetId: string): Promise<Workset> {
 
 export function updateWorkset(
   worksetId: string,
-  body: { name?: string; notifyEnabled?: boolean; externalEnabled?: boolean },
+  body: {
+    name?: string;
+    notifyEnabled?: boolean;
+    externalEnabled?: boolean;
+    emoji?: string;
+    description?: string;
+  },
 ): Promise<Workset> {
   return apiClient.put<Workset>(`/api/v1/worksets/${encodeURIComponent(worksetId)}`, body);
 }

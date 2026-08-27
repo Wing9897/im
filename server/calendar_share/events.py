@@ -32,7 +32,7 @@ def _identity(item: dict[str, Any]) -> tuple[str, str] | None:
     if not isinstance(handle_raw, str) or not isinstance(slug_raw, str):
         return None
     try:
-        return normalize_handle(handle_raw), normalize_slug(slug_raw)
+        return normalize_handle(handle_raw), normalize_slug(slug_raw, allow_legacy=True)
     except Exception:
         return None
 

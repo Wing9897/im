@@ -29,10 +29,13 @@ export function ChatWorksetField({ worksetId, onWorksetIdChange }: ChatWorksetFi
     [t, worksets],
   );
 
-  const handleCreateWorkset = async (cleaned: string) => {
+  const handleCreateWorkset = async (values: { name: string; emoji: string; description: string }) => {
     setCreateBusy(true);
     try {
-      const created = await createWorkset(cleaned);
+      const created = await createWorkset(values.name, {
+        emoji: values.emoji,
+        description: values.description,
+      });
       await refreshWorksets();
       onWorksetIdChange(created.id);
       showToast(t("workset:createdToast", { name: created.name }), "success");

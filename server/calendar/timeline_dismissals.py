@@ -70,6 +70,11 @@ async def dismiss_timeline_event(
         (clean_source, clean_id),
     )
     assert row is not None
+    from server.calendar_share.dirty import mark_published_workset_dirty, workset_ids_for_timeline_event
+
+    await mark_published_workset_dirty(
+        db, *await workset_ids_for_timeline_event(db, source=clean_source, event_id=clean_id)
+    )
     return serialize_dismissal(row)
 
 
@@ -91,6 +96,11 @@ async def restore_timeline_event(
     await db.execute(
         "DELETE FROM timeline_dismissals WHERE source = ? AND event_id = ?",
         (clean_source, clean_id),
+    )
+    from server.calendar_share.dirty import mark_published_workset_dirty, workset_ids_for_timeline_event
+
+    await mark_published_workset_dirty(
+        db, *await workset_ids_for_timeline_event(db, source=clean_source, event_id=clean_id)
     )
     return True
 

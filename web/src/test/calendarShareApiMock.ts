@@ -20,9 +20,7 @@ const disconnectedSession = {
 const emptyPublish = {
   worksetId: "",
   slug: "",
-  enabled: false,
-  autoSync: false,
-  publicVisibility: "off" as const,
+  publicVisibility: "private_group" as const,
   grants: [] as unknown[],
   lastSyncAt: null,
   lastError: null,
@@ -48,7 +46,10 @@ export const calendarShareApiMocks = {
   logoutCalendarShare: vi.fn(),
   putCalendarShareTimezone: vi.fn(),
   fetchCalendarSharePublish: vi.fn().mockResolvedValue({ ...emptyPublish }),
+  fetchCalendarSharePublishList: vi.fn().mockResolvedValue({ items: [] as unknown[] }),
   putCalendarSharePublish: vi.fn(),
+  unpublishCalendarSharePublish: vi.fn(),
+  syncCalendarSharePublish: vi.fn(),
 };
 
 /** Module-shape mock for `vi.mock("<path>/api/calendarShare", ...)`. */
@@ -74,8 +75,14 @@ export function calendarShareApiModuleMock() {
       calendarShareApiMocks.putCalendarShareTimezone(...args),
     fetchCalendarSharePublish: (...args: unknown[]) =>
       calendarShareApiMocks.fetchCalendarSharePublish(...args),
+    fetchCalendarSharePublishList: (...args: unknown[]) =>
+      calendarShareApiMocks.fetchCalendarSharePublishList(...args),
     putCalendarSharePublish: (...args: unknown[]) =>
       calendarShareApiMocks.putCalendarSharePublish(...args),
+    unpublishCalendarSharePublish: (...args: unknown[]) =>
+      calendarShareApiMocks.unpublishCalendarSharePublish(...args),
+    syncCalendarSharePublish: (...args: unknown[]) =>
+      calendarShareApiMocks.syncCalendarSharePublish(...args),
   };
 }
 
@@ -94,5 +101,8 @@ export function resetCalendarShareApiMocks(): void {
   calendarShareApiMocks.logoutCalendarShare.mockReset();
   calendarShareApiMocks.putCalendarShareTimezone.mockReset();
   calendarShareApiMocks.fetchCalendarSharePublish.mockReset().mockResolvedValue({ ...emptyPublish });
+  calendarShareApiMocks.fetchCalendarSharePublishList.mockReset().mockResolvedValue({ items: [] });
   calendarShareApiMocks.putCalendarSharePublish.mockReset();
+  calendarShareApiMocks.unpublishCalendarSharePublish.mockReset();
+  calendarShareApiMocks.syncCalendarSharePublish.mockReset();
 }

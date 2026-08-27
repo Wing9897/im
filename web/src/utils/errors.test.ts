@@ -59,6 +59,8 @@ describe("toErrorMessage", () => {
 
   it("maps known network failures to Chinese UX copy", () => {
     expect(toErrorMessage(new Error("Backend unreachable"))).toBe("無法連線到後端服務");
+    expect(toErrorMessage(new Error("Calendar share request failed"))).toBe("日曆分享請求失敗，請稍後再試。");
+    expect(toErrorMessage(new Error("Calendar share server unreachable"))).toBe("日曆分享服務連不上，請稍後再試。");
     expect(toErrorMessage(new Error("Request timed out"))).toBe("請求逾時，請稍後再試");
     expect(toErrorMessage(new Error("Request cancelled"))).toBe("請求已取消");
   });
@@ -69,6 +71,25 @@ describe("toErrorMessage", () => {
       message: "Weather provider timed out",
     });
     expect(toErrorMessage(err)).toBe("天氣來源回應過慢，請稍後再試");
+    expect(
+      toErrorMessage(
+        new ApiRequestError(502, {
+          error: "CALENDAR_SHARE_REQUEST_FAILED",
+          message: "Calendar share request failed",
+        }),
+      ),
+    ).toBe("日曆分享請求失敗，請稍後再試。");
+  });
+
+  it("maps INVALID_CALENDAR_SLUG and Invalid slug: IC detail to localized copy", () => {
+    const err = new ApiRequestError(422, {
+      error: "INVALID_CALENDAR_SLUG",
+      message: "Invalid slug: 1–64 letters, digits, dot, underscore, or hyphen",
+    });
+    expect(toErrorMessage(err)).toBe("slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。");
+    expect(
+      toErrorMessage("Invalid slug: 1–64 characters; start with a letter or digit; then letters, digits, dot, underscore, or hyphen"),
+    ).toBe("slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。");
   });
 
   it("maps agent_timeout soft-error code via message lookup", () => {

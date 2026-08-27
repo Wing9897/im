@@ -49,6 +49,8 @@ export const ITEM_FORM_TEST_WORKSETS = [
     isSystem: true,
     notifyEnabled: true,
     externalEnabled: true,
+    emoji: "",
+    description: "",
     createdAt: "",
     updatedAt: "",
   },

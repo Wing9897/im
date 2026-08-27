@@ -18,6 +18,7 @@ export const TASK_LOGO_BADGE_PX = 18;
 export const TASK_LOGO_COMPACT_BADGE_PX = 14;
 
 function emojiAvatarSize(sizePx: number): ItemEmojiAvatarSize {
+  if (sizePx >= 48) return "card";
   if (sizePx >= TASK_LOGO_MARK_PX) return "task";
   if (sizePx >= TASK_EVENT_MARK_PX) return "md";
   if (sizePx >= 22) return "sm";

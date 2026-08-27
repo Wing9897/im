@@ -100,6 +100,34 @@ def test_rate_limit_for_path(path: str, expected: int) -> None:
     assert RateLimitMiddleware._limit_for(path) == expected
 
 
+async def test_rate_limit_middleware_skips_calendar_share_paths() -> None:
+    app_calls = 0
+
+    async def app(_scope, _receive, send):
+        nonlocal app_calls
+        app_calls += 1
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    middleware = RateLimitMiddleware(app)
+    scope = {
+        "type": "http",
+        "path": "/api/v1/calendar-share/search",
+        "client": ("127.0.0.1", 1),
+        "headers": [],
+    }
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(_message):
+        return None
+
+    await middleware(scope, receive, send)
+
+    assert app_calls == 1
+
+
 async def test_rate_limit_middleware_skips_non_api_paths() -> None:
     app_calls = 0
 

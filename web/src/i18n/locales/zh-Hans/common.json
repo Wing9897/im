@@ -84,6 +84,8 @@
     "keyEventsCard": "情报事件 · 卡片",
     "notifyVoice": "通知 · 本机通知",
     "notifyHistory": "通知 · 触发纪录",
+    "subscriptionsPublished": "订阅 · 我的发布",
+    "subscriptionsSearch": "订阅 · 搜索订阅",
     "sourcesRss": "来源 · RSS",
     "sourcesTelegram": "来源 · Telegram",
     "sourcesDiscord": "来源 · Discord",
@@ -169,7 +171,18 @@
     "LLM_PROFILE_INCOMPLETE": "已绑定的 AI 设定档不完整，请到 AI 供应商页面补齐后再试。",
     "Backend unreachable": "无法连线到后端服务",
     "Request timed out": "请求超时，请稍后再试",
-    "Request cancelled": "请求已取消"
+    "Request cancelled": "请求已取消",
+    "RATE_LIMITED": "请求过于频繁，请稍候再试。",
+    "AUTH_REQUIRED": "请先登录日历分享。",
+    "INVALID_CALENDAR_SLUG": "slug 须为 1–64 字符，以字母或数字开头，其后可为字母、数字、点、下划线或连字符。",
+    "CALENDAR_SHARE_REQUEST_FAILED": "日历分享请求失败，请稍后再试。",
+    "CALENDAR_SHARE_UNREACHABLE": "日历分享服务连不上，请稍后再试。",
+    "CALENDAR_SHARE_UNPUBLISH_FAILED": "取消上传失败，请稍后再试。",
+    "Calendar share request failed": "日历分享请求失败，请稍后再试。",
+    "Calendar share server unreachable": "日历分享服务连不上，请稍后再试。",
+    "Calendar share login failed": "日历分享登录失败。",
+    "Calendar share session expired": "日历分享工作阶段已过期，请重新登录。",
+    "Calendar share unpublish failed": "取消上传失败，请稍后再试。"
   },
   "timeFilter": {
     "aria": "时间筛选",
@@ -373,7 +386,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 2／SemVer 1.1.0（SCHEMA_FLOOR 1；stamp 1 会经 SCHEMA_MIGRATIONS 自动升级）。未来 stamp：请升级应用。坏库：请先备份，再执行 {script} 重置后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 4／SemVer 1.3.0（SCHEMA_FLOOR 1；stamp 1 会经 SCHEMA_MIGRATIONS 自动升级）。未来 stamp：请升级应用。坏库：请先备份，再执行 {script} 重置后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

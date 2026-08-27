@@ -9,7 +9,6 @@ from server.calendar_share.constants import (
     KEY_TIMEZONE,
     KEY_TIMEZONE_LAST_PUBLIC,
     KEY_TIMEZONE_PENDING,
-    KEY_WORKSETS,
     VISIBILITY_PUBLIC,
 )
 
@@ -22,6 +21,5 @@ __all__ = [
     "KEY_TIMEZONE",
     "KEY_TIMEZONE_LAST_PUBLIC",
     "KEY_TIMEZONE_PENDING",
-    "KEY_WORKSETS",
     "VISIBILITY_PUBLIC",
 ]

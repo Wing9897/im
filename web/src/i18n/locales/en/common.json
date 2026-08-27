@@ -85,6 +85,8 @@
     "keyEventsCard": "Intel events · Cards",
     "notifyVoice": "Notifications · Local notifications",
     "notifyHistory": "Notifications · Trigger history",
+    "subscriptionsPublished": "Subscriptions · My published",
+    "subscriptionsSearch": "Subscriptions · Find calendars",
     "sourcesRss": "Sources · RSS",
     "sourcesTelegram": "Sources · Telegram",
     "sourcesDiscord": "Sources · Discord",
@@ -170,7 +172,18 @@
     "LLM_PROFILE_INCOMPLETE": "The bound AI profile is incomplete. Finish it under AI provider settings.",
     "Backend unreachable": "Cannot reach the backend service",
     "Request timed out": "Request timed out. Please try again later.",
-    "Request cancelled": "Request cancelled"
+    "Request cancelled": "Request cancelled",
+    "RATE_LIMITED": "Too many requests. Please wait a moment.",
+    "AUTH_REQUIRED": "Sign in to calendar share first.",
+    "INVALID_CALENDAR_SLUG": "Slug must be 1–64 characters; start with a letter or digit; then letters, digits, dot, underscore, or hyphen.",
+    "CALENDAR_SHARE_REQUEST_FAILED": "Calendar share request failed. Please try again later.",
+    "CALENDAR_SHARE_UNREACHABLE": "Calendar share is unreachable. Please try again later.",
+    "CALENDAR_SHARE_UNPUBLISH_FAILED": "Could not unpublish. Please try again later.",
+    "Calendar share request failed": "Calendar share request failed. Please try again later.",
+    "Calendar share server unreachable": "Calendar share is unreachable. Please try again later.",
+    "Calendar share login failed": "Calendar share sign-in failed.",
+    "Calendar share session expired": "Calendar share session expired. Please sign in again.",
+    "Calendar share unpublish failed": "Could not unpublish. Please try again later."
   },
   "timeFilter": {
     "aria": "Time filter",
@@ -375,7 +388,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 2 / SemVer 1.1.0 (SCHEMA_FLOOR 1; stamp 1 auto-upgrades via SCHEMA_MIGRATIONS). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 4 / SemVer 1.3.0 (SCHEMA_FLOOR 1; stamp 1 auto-upgrades via SCHEMA_MIGRATIONS). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

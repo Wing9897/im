@@ -1,86 +1,10 @@
-"""Calendar-share publish: snapshots, grants, incremental patch, fingerprints."""
+"""Calendar-share HTTP publish: snapshot PUT/PATCH, grants, and catalog."""
 
 from __future__ import annotations
 
-from server.calendar_share.publish import snapshot_remote_events, snapshot_remote_series
-from server.calendar_share.snapshot import diff_uid_maps, fingerprint_maps, snapshot_unchanged
+from server.errors import INVALID_CALENDAR_SLUG
 from server.tests.calendar_share_fakes import login_calendar_share
 from server.worksets_const import SYSTEM_WORKSET_ID
-
-
-def test_snapshot_skips_dismissed_and_unknown_sources():
-    events = snapshot_remote_events(
-        [
-            {
-                "id": "gone",
-                "source": "user",
-                "title": "Hidden",
-                "startTime": "2026-08-01T09:00:00Z",
-                "dismissed": True,
-            },
-            {
-                "id": "intel",
-                "source": "analysis",
-                "title": "Intel",
-                "startTime": "2026-08-01T09:00:00Z",
-                "body": "Brief",
-                "location": "Taipei",
-                "dismissed": False,
-            },
-            {
-                "id": "intel-gone",
-                "source": "analysis",
-                "title": "Hidden intel",
-                "startTime": "2026-08-01T10:00:00Z",
-                "dismissed": True,
-            },
-            {
-                "id": "item:badge:remind",
-                "source": "item_remind",
-                "title": "Badge",
-                "startTime": "2026-12-25T00:00:00",
-                "endTime": "2026-12-25T23:59:59",
-                "isAllDay": True,
-                "dismissed": False,
-            },
-            {
-                "id": "item:old:remind",
-                "source": "item_remind",
-                "title": "Old",
-                "startTime": "2026-12-01T00:00:00",
-                "dismissed": True,
-            },
-            {
-                "id": "task-cal:20260803T090000Z",
-                "source": "recurring",
-                "title": "Weekly",
-                "startTime": "2026-08-03T09:00:00Z",
-                "dismissed": False,
-            },
-            {
-                "id": "keep",
-                "source": "user",
-                "title": "Standup",
-                "startTime": "2026-08-01T09:00:00Z",
-                "endTime": "2026-08-01T09:30:00Z",
-                "location": "HQ",
-                "body": "Notes",
-                "isAllDay": False,
-                "dismissed": False,
-            },
-        ]
-    )
-    assert [row["uid"] for row in events] == ["intel", "item:badge:remind", "keep"]
-    assert events[0]["title"] == "Intel"
-    assert events[0]["description"] == "Brief"
-    assert events[0]["location"] == "Taipei"
-    assert events[1]["allDay"] is True
-    assert events[1]["start"] == "2026-12-25T00:00:00"
-    assert events[2]["title"] == "Standup"
-    assert events[2]["location"] == "HQ"
-    assert events[2]["description"] == "Notes"
-    for row in events:
-        assert set(row) == {"uid", "start", "end", "title", "location", "description", "allDay"}
 
 
 async def test_publish_puts_snapshot_and_grants(client, fake_remote):
@@ -88,10 +12,8 @@ async def test_publish_puts_snapshot_and_grants(client, fake_remote):
     resp = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
         json={
-            "enabled": True,
             "slug": "Work",
-            "autoSync": False,
-            "publicVisibility": "busy",
+            "publicVisibility": "public_busy",
             "grants": [{"handle": "Alice", "visibility": "details"}],
             "syncNow": True,
         },
@@ -99,14 +21,16 @@ async def test_publish_puts_snapshot_and_grants(client, fake_remote):
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["slug"] == "Work"
-    assert body["enabled"] is True
-    assert body["publicVisibility"] == "busy"
+    assert "enabled" not in body
+    assert body["publicVisibility"] == "public_busy"
     assert body["grants"] == [{"handle": "Alice", "visibility": "details"}]
     assert body["lastSyncAt"]
     assert body["lastError"] is None
     calendar_put = next(call for call in fake_remote.calls if call["path"] == "/me/calendars/Work")
-    assert calendar_put["json_body"]["publicVisibility"] == "busy"
-    assert calendar_put["json_body"]["visibility"] == "busy"
+    assert calendar_put["json_body"]["publicVisibility"] == "public_busy"
+    assert "visibility" not in calendar_put["json_body"]
+    assert calendar_put["json_body"]["emoji"] == ""
+    assert calendar_put["json_body"]["description"] == ""
     assert "events" in calendar_put["json_body"]
     series = calendar_put["json_body"]["series"]
     assert isinstance(series, list)
@@ -153,7 +77,7 @@ async def test_publish_puts_analysis_and_item_remind(client, app, fake_remote):
     await login_calendar_share(client, fake_remote)
     resp = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert resp.status_code == 200, resp.text
     calendar_put = next(call for call in fake_remote.calls if call["path"] == "/me/calendars/Work")
@@ -190,7 +114,7 @@ async def test_publish_puts_analysis_and_item_remind(client, app, fake_remote):
     fake_remote.calls.clear()
     again = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert again.status_code == 200, again.text
     second = next(call for call in fake_remote.calls if str(call["path"]).endswith("/changes"))
@@ -212,7 +136,7 @@ async def test_publish_refresh_on_401(client, fake_remote):
     fake_remote.fail_first_authorized = True
     resp = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "off"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "private_group"},
     )
     assert resp.status_code == 200, resp.text
     assert any(call["path"] == "/auth/refresh" for call in fake_remote.calls)
@@ -224,10 +148,8 @@ async def test_publish_refresh_on_401(client, fake_remote):
 async def test_publish_second_sync_skips_unchanged_fingerprints(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     body = {
-        "enabled": True,
         "slug": "Work",
-        "autoSync": False,
-        "publicVisibility": "off",
+        "publicVisibility": "private_group",
         "grants": [],
         "syncNow": True,
     }
@@ -244,19 +166,19 @@ async def test_publish_visibility_change_patches_without_event_diff(client, fake
     await login_calendar_share(client, fake_remote)
     first = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert first.status_code == 200, first.text
     fake_remote.calls.clear()
     again = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "busy"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public_busy"},
     )
     assert again.status_code == 200, again.text
     patch = next(call for call in fake_remote.calls if str(call["path"]).endswith("/changes"))
     assert patch["method"] == "PATCH"
     assert patch["json_body"]["baseHash"] == "srv-hash-1"
-    assert patch["json_body"]["publicVisibility"] == "busy"
+    assert patch["json_body"]["publicVisibility"] == "public_busy"
     assert patch["json_body"]["upsertEvents"] == []
     assert patch["json_body"]["deleteEventUids"] == []
     assert not any(call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls)
@@ -266,14 +188,14 @@ async def test_publish_incremental_409_falls_back_to_full_put(client, fake_remot
     await login_calendar_share(client, fake_remote)
     first = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert first.status_code == 200, first.text
     fake_remote.patch_changes_status = 409
     fake_remote.calls.clear()
     again = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "busy"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public_busy"},
     )
     assert again.status_code == 200, again.text
     assert any(str(call["path"]).endswith("/changes") for call in fake_remote.calls)
@@ -284,184 +206,161 @@ async def test_publish_incremental_409_falls_back_to_full_put(client, fake_remot
     assert "series" in fallback["json_body"]
 
 
-async def test_unpublish_deletes_remote_calendar(client, app, fake_remote):
+async def test_publish_without_sync_now_does_not_push(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={
+            "slug": "Work",
+            "syncNow": False,
+            "publicVisibility": "public",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    assert "enabled" not in resp.json()
+    assert "autoSync" not in resp.json()
+    assert not any(call["path"] == "/me/calendars/Work" for call in fake_remote.calls)
+
+
+async def test_publish_copies_workset_emoji_and_description(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    updated = await client.put(
+        f"/api/v1/worksets/{SYSTEM_WORKSET_ID}",
+        json={"emoji": "🌞", "description": "Household ops"},
+    )
+    assert updated.status_code == 200, updated.text
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
+    )
+    assert resp.status_code == 200, resp.text
+    calendar_put = next(call for call in fake_remote.calls if call["path"] == "/me/calendars/Work")
+    assert calendar_put["json_body"]["emoji"] == "🌞"
+    assert calendar_put["json_body"]["description"] == "Household ops"
+    listed = await client.get("/api/v1/calendar-share/publish")
+    row = next(item for item in listed.json()["items"] if item["worksetId"] == SYSTEM_WORKSET_ID)
+    assert row["emoji"] == "🌞"
+    assert row["description"] == "Household ops"
+
+
+async def test_publish_catalog_change_patches_without_event_diff(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     first = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert first.status_code == 200, first.text
-    fake_remote.calls.clear()
-    resp = await client.put(
-        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": False, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+    updated = await client.put(
+        f"/api/v1/worksets/{SYSTEM_WORKSET_ID}",
+        json={"emoji": "🚧", "description": "Busy board"},
     )
-    assert resp.status_code == 200, resp.text
-    assert resp.json()["enabled"] is False
-    calendar_delete = next(
-        call for call in fake_remote.calls if call["path"] == "/me/calendars/Work" and call["method"] == "DELETE"
-    )
-    assert calendar_delete["json_body"] is None
-    assert not any(
-        call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls
-    )
-    assert not any(str(call["path"]).endswith("/grants") for call in fake_remote.calls)
-
-    from server.calendar_share.store import get_workset_entry
-
-    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
-    assert entry["lastFingerprints"] == {"events": {}, "series": {}}
-    assert entry["lastServerEventsHash"] is None
-    assert entry["lastPublicVisibility"] is None
-    assert entry["lastGrantsHash"] is None
-
+    assert updated.status_code == 200, updated.text
     fake_remote.calls.clear()
     again = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
     )
     assert again.status_code == 200, again.text
-    assert any(call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls)
-    assert not any(str(call["path"]).endswith("/changes") for call in fake_remote.calls)
+    patch = next(call for call in fake_remote.calls if str(call["path"]).endswith("/changes"))
+    assert patch["method"] == "PATCH"
+    assert patch["json_body"]["emoji"] == "🚧"
+    assert patch["json_body"]["description"] == "Busy board"
+    assert patch["json_body"]["upsertEvents"] == []
+    assert patch["json_body"]["deleteEventUids"] == []
+    assert not any(call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls)
 
 
-async def test_unpublish_delete_404_is_idempotent(client, fake_remote):
+async def test_publish_coerces_builtin_workset_id_to_general(client, fake_remote):
     await login_calendar_share(client, fake_remote)
-    fake_remote.delete_calendar_status = 404
     resp = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
-        json={"enabled": False, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+        json={"slug": SYSTEM_WORKSET_ID, "syncNow": True, "publicVisibility": "private_group"},
     )
     assert resp.status_code == 200, resp.text
-    assert any(call["path"] == "/me/calendars/Work" and call["method"] == "DELETE" for call in fake_remote.calls)
+    assert resp.json()["slug"] == "general"
+    assert any(call["path"] == "/me/calendars/general" for call in fake_remote.calls)
 
 
-def test_fingerprint_changes_when_title_changes():
-    event = {
-        "uid": "a",
-        "start": "2026-08-01T09:00:00Z",
-        "end": "2026-08-01T10:00:00Z",
-        "title": "A",
-        "location": "",
-        "description": "",
-        "allDay": False,
-    }
-    first = fingerprint_maps([event], [])
-    second = fingerprint_maps([{**event, "title": "B"}], [])
-    assert first != second
-    assert fingerprint_maps([event], []) == first
-    assert snapshot_unchanged(first, fingerprint_maps([event]), "busy", "busy")
-    assert not snapshot_unchanged(first, second, "busy", "busy")
+async def test_publish_rejects_invalid_slugs(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    for slug in ("foo bar", "a/b"):
+        resp = await client.put(
+            f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+            json={"slug": slug, "syncNow": False, "publicVisibility": "private_group"},
+        )
+        assert resp.status_code == 422, resp.text
+        body = resp.json()
+        assert body["error_code"] == INVALID_CALENDAR_SLUG
+    empty = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "", "syncNow": False, "publicVisibility": "private_group"},
+    )
+    assert empty.status_code == 422
+    too_long = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "a" * 65, "syncNow": False, "publicVisibility": "private_group"},
+    )
+    assert too_long.status_code == 422
 
 
-def test_fingerprint_diff_add_update_delete():
-    previous = {"keep": "aaa", "gone": "bbb", "edit": "old"}
-    current = {"keep": "aaa", "edit": "new", "fresh": "ccc"}
-    upsert, delete = diff_uid_maps(previous, current)
-    assert upsert == ["edit", "fresh"]
-    assert delete == ["gone"]
-
-
-def test_fingerprint_maps_include_series_and_visibility_skip():
-    event = {
-        "uid": "a",
-        "start": "2026-08-01T09:00:00Z",
-        "end": "2026-08-01T10:00:00Z",
-        "title": "A",
-        "location": "",
-        "description": "",
-        "allDay": False,
-    }
-    series = {
-        "uid": "s1",
-        "name": "Standup",
-        "rrule": "FREQ=WEEKLY;BYDAY=MO",
-        "dtstart": "2026-08-03T09:00:00Z",
-        "dtend": "2026-08-03T09:30:00Z",
-        "isAllDay": False,
-        "location": "",
-        "description": "",
-        "timezone": "UTC",
-        "timezoneIcal": "",
-        "exdatesJson": "[]",
-        "rdatesJson": "[]",
-        "isActive": True,
-    }
-    first = fingerprint_maps([event], [series])
-    second = fingerprint_maps([event], [{**series, "name": "Other"}])
-    assert first != second
-    assert fingerprint_maps([event], [series]) == first
-    assert snapshot_unchanged(first, first, "busy", "busy")
-    assert not snapshot_unchanged(first, first, "busy", "details")
-    assert not snapshot_unchanged(first, second, "busy", "busy")
-
-
-def test_workset_entry_ignores_legacy_last_events_hash():
-    from server.calendar_share.store import _clean_workset_entry
-
-    cleaned = _clean_workset_entry(
-        "ws",
-        {
-            "slug": "Work",
-            "publicVisibility": "busy",
-            "lastEventsHash": "legacy-local-aggregate",
-            "lastServerEventsHash": "srv-hash",
-            "lastPublicVisibility": "busy",
-            "lastFingerprints": {"events": {"a": "fp"}, "series": {}},
+async def test_publish_succeeds_when_grants_fail_after_snapshot(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    fake_remote.put_grants_status = 500
+    fake_remote.put_grants_payload = None
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={
+            "slug": "general",
+            "syncNow": True,
+            "publicVisibility": "public",
+            "grants": [{"handle": "Alice", "visibility": "details"}],
         },
     )
-    assert cleaned is not None
-    assert "lastEventsHash" not in cleaned
-    assert cleaned["lastServerEventsHash"] == "srv-hash"
-    assert cleaned["lastPublicVisibility"] == "busy"
-    assert cleaned["lastFingerprints"]["events"] == {"a": "fp"}
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert "enabled" not in body
+    assert body["slug"] == "general"
+    assert body["lastError"] is None
+    assert body["lastSyncAt"]
+    assert any(call["path"] == "/me/calendars/general" and call["method"] == "PUT" for call in fake_remote.calls)
+    assert any(str(call["path"]).endswith("/grants") for call in fake_remote.calls)
+    listed = await client.get("/api/v1/calendar-share/publish")
+    row = next(item for item in listed.json()["items"] if item["worksetId"] == SYSTEM_WORKSET_ID)
+    assert "enabled" not in row
+    assert row["slug"] == "general"
 
 
-def test_snapshot_remote_series_stamps_account_tz_on_floating():
-    rows = [
-        {
-            "id": "ser-1",
-            "name": "Weekly",
-            "rrule": "FREQ=WEEKLY;BYDAY=MO",
-            "is_active": 1,
-            "event_start_time": "2026-08-03T09:00:00",
-            "event_end_time": "2026-08-03T09:30:00",
-            "event_start_local": "2026-08-03T09:00:00",
-            "event_end_local": "2026-08-03T09:30:00",
-            "event_is_all_day": 0,
-            "event_location": "HQ",
-            "event_description": "Notes",
-            "event_timezone": "floating",
-            "event_timezone_ical": "BEGIN:VTIMEZONE",
-            "event_exdates_json": "[]",
-            "event_rdates_json": "[]",
-        },
-        {
-            "id": "ser-ics",
-            "name": "Imported",
-            "rrule": "FREQ=WEEKLY;BYDAY=TU",
-            "is_active": 1,
-            "event_start_local": "2026-08-04T09:00:00",
-            "event_start_time": "2026-08-04T09:00:00",
-            "event_end_local": "2026-08-04T09:30:00",
-            "event_timezone": "America/New_York",
-            "event_timezone_ical": "BEGIN:VTIMEZONE\nTZID:America/New_York",
-        },
-        {
-            "id": "ser-inactive",
-            "name": "Paused",
-            "rrule": "FREQ=WEEKLY;BYDAY=TU",
-            "is_active": 0,
-            "event_start_local": "2026-08-04T09:00:00",
-            "event_start_time": "2026-08-04T09:00:00",
-        },
+async def test_publish_timeout_then_write_interval_is_success(client, fake_remote):
+    from server.calendar_share.remote import CalendarShareRemoteError
+
+    await login_calendar_share(client, fake_remote)
+    fake_remote.put_calendar_queue = [
+        CalendarShareRemoteError(502, "Calendar share server unreachable"),
+        (429, {"detail": "Too many calendar writes"}),
     ]
-    out = snapshot_remote_series(rows, calendar_timezone="Asia/Hong_Kong")
-    assert [row["uid"] for row in out] == ["ser-1", "ser-ics"]
-    assert out[0]["dtstart"] == "2026-08-03T09:00:00"
-    assert out[0]["dtend"] == "2026-08-03T09:30:00"
-    assert out[0]["timezone"] == "Asia/Hong_Kong"
-    assert out[0]["timezoneIcal"] == "BEGIN:VTIMEZONE"
-    assert out[0]["exdatesJson"] == "[]"
-    assert out[1]["timezone"] == "America/New_York"
-    assert out[1]["timezoneIcal"] == "BEGIN:VTIMEZONE\nTZID:America/New_York"
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "general", "syncNow": True, "publicVisibility": "public"},
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert "enabled" not in body
+    assert body["lastError"] is None
+    calendar_puts = [
+        call for call in fake_remote.calls if call["path"] == "/me/calendars/general" and call["method"] == "PUT"
+    ]
+    assert len(calendar_puts) == 2
+
+
+async def test_publish_still_fails_when_snapshot_write_fails(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    fake_remote.put_calendar_status = 500
+    fake_remote.put_calendar_queue = [(500, None)]
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "general", "syncNow": True, "publicVisibility": "public"},
+    )
+    assert resp.status_code == 502
+    body = resp.json()
+    assert body["error_code"] == "CALENDAR_SHARE_REQUEST_FAILED"
+    assert body["message"] == "CALENDAR_SHARE_REQUEST_FAILED"

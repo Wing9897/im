@@ -26,16 +26,21 @@ async def insert_workset(
     is_system: bool = False,
     notify_enabled: bool = True,
     external_enabled: bool = True,
+    emoji: str = "",
+    description: str = "",
 ) -> None:
     await tx.execute(
-        "INSERT INTO worksets (id, name, is_system, notify_enabled, external_enabled, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO worksets (id, name, is_system, notify_enabled, external_enabled, "
+        "emoji, description, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             workset_id,
             name,
             1 if is_system else 0,
             1 if notify_enabled else 0,
             1 if external_enabled else 0,
+            emoji,
+            description,
             now,
             now,
         ),
@@ -50,6 +55,8 @@ async def update_workset(
     now: str,
     notify_enabled: bool | None = None,
     external_enabled: bool | None = None,
+    emoji: str | None = None,
+    description: str | None = None,
 ) -> None:
     assignments = ["name = ?"]
     params: list[Any] = [name]
@@ -59,6 +66,12 @@ async def update_workset(
     if external_enabled is not None:
         assignments.append("external_enabled = ?")
         params.append(1 if external_enabled else 0)
+    if emoji is not None:
+        assignments.append("emoji = ?")
+        params.append(emoji)
+    if description is not None:
+        assignments.append("description = ?")
+        params.append(description)
     assignments.append("updated_at = ?")
     params.append(now)
     params.append(workset_id)

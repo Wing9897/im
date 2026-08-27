@@ -138,6 +138,7 @@ describe("Route module imports", () => {
       () => import("../intelligence/IntelligencePage"),
       () => import("../timeline/TimelinePage"),
       () => import("../subscriptions/SubscriptionsShell"),
+      () => import("../subscriptions/SubscriptionsPublishedPage"),
       () => import("../sources/SourceManagementPage"),
       () => import("../notify/NotifyWorkspacePage"),
       () => import("../logs/LogPage"),

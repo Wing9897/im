@@ -1700,6 +1700,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar-share/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Publish States
+         * @description Return this device's published worksets. Does not call IntelligenceCalendar.
+         */
+        get: operations["list_publish_states_api_v1_calendar_share_publish_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar-share/publish/{workset_id}": {
         parameters: {
             query?: never;
@@ -1712,7 +1732,11 @@ export interface paths {
         /** Put Publish State */
         put: operations["put_publish_state_api_v1_calendar_share_publish__workset_id__put"];
         post?: never;
-        delete?: never;
+        /**
+         * Delete Publish State
+         * @description Unpublish: DELETE the IC calendar and drop the local publish row.
+         */
+        delete: operations["delete_publish_state_api_v1_calendar_share_publish__workset_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3168,21 +3192,14 @@ export interface components {
         };
         /** CalendarSharePublishBody */
         CalendarSharePublishBody: {
-            /** Enabled */
-            enabled: boolean;
             /** Slug */
             slug: string;
             /**
-             * Autosync
-             * @default false
-             */
-            autoSync: boolean;
-            /**
              * Publicvisibility
-             * @default off
+             * @default private_group
              * @enum {string}
              */
-            publicVisibility: "off" | "busy" | "details";
+            publicVisibility: "private_group" | "public" | "public_busy";
             /** Grants */
             grants?: components["schemas"]["CalendarShareGrantBody"][];
             /**
@@ -3191,6 +3208,63 @@ export interface components {
              */
             syncNow: boolean;
         };
+        /**
+         * CalendarSharePublishListItemResponse
+         * @description Local publish-map row plus whether the workset still exists.
+         */
+        CalendarSharePublishListItemResponse: {
+            /** Worksetid */
+            worksetId: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Publicvisibility
+             * @default private_group
+             * @enum {string}
+             */
+            publicVisibility: "private_group" | "public" | "public_busy";
+            /** Grants */
+            grants?: components["schemas"]["CalendarShareGrantResponse"][];
+            /** Lastsyncat */
+            lastSyncAt?: string | null;
+            /** Lasterror */
+            lastError?: string | null;
+            /**
+             * Pendingsync
+             * @default false
+             */
+            pendingSync: boolean;
+            /**
+             * Issystemworkset
+             * @default false
+             */
+            isSystemWorkset: boolean;
+            /**
+             * Worksetname
+             * @default
+             */
+            worksetName: string;
+            /**
+             * Worksetmissing
+             * @default false
+             */
+            worksetMissing: boolean;
+            /**
+             * Emoji
+             * @default
+             */
+            emoji: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+        };
+        /** CalendarSharePublishListResponse */
+        CalendarSharePublishListResponse: {
+            /** Items */
+            items?: components["schemas"]["CalendarSharePublishListItemResponse"][];
+        };
         /** CalendarSharePublishStateResponse */
         CalendarSharePublishStateResponse: {
             /** Worksetid */
@@ -3198,27 +3272,22 @@ export interface components {
             /** Slug */
             slug: string;
             /**
-             * Enabled
-             * @default false
-             */
-            enabled: boolean;
-            /**
-             * Autosync
-             * @default false
-             */
-            autoSync: boolean;
-            /**
              * Publicvisibility
-             * @default off
+             * @default private_group
              * @enum {string}
              */
-            publicVisibility: "off" | "busy" | "details";
+            publicVisibility: "private_group" | "public" | "public_busy";
             /** Grants */
             grants?: components["schemas"]["CalendarShareGrantResponse"][];
             /** Lastsyncat */
             lastSyncAt?: string | null;
             /** Lasterror */
             lastError?: string | null;
+            /**
+             * Pendingsync
+             * @default false
+             */
+            pendingSync: boolean;
             /**
              * Issystemworkset
              * @default false
@@ -3232,10 +3301,24 @@ export interface components {
             /** Slug */
             slug: string;
             /**
-             * Visibility
+             * Hitkind
              * @enum {string}
              */
-            visibility: "busy" | "details";
+            hitKind: "listing" | "grant";
+            /** Publicvisibility */
+            publicVisibility?: ("private_group" | "public" | "public_busy") | null;
+            /** Visibility */
+            visibility?: ("busy" | "details") | null;
+            /**
+             * Emoji
+             * @default
+             */
+            emoji: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
         };
         /** CalendarShareSearchResponse */
         CalendarShareSearchResponse: {
@@ -3276,6 +3359,16 @@ export interface components {
             handle: string;
             /** Slug */
             slug: string;
+            /**
+             * Emoji
+             * @default
+             */
+            emoji: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
         };
         /** CalendarShareSubscriptionsResponse */
         CalendarShareSubscriptionsResponse: {
@@ -5773,6 +5866,16 @@ export interface components {
              * @default true
              */
             externalEnabled: boolean;
+            /**
+             * Emoji
+             * @default
+             */
+            emoji: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
         };
         /** WorksetDeleteResponse */
         WorksetDeleteResponse: {
@@ -5803,6 +5906,16 @@ export interface components {
              * @default true
              */
             externalEnabled: boolean;
+            /**
+             * Emoji
+             * @default
+             */
+            emoji: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -5816,6 +5929,10 @@ export interface components {
             notifyEnabled?: boolean | null;
             /** Externalenabled */
             externalEnabled?: boolean | null;
+            /** Emoji */
+            emoji?: string | null;
+            /** Description */
+            description?: string | null;
         };
         /**
          * SseMessagesUpdatedPayload
@@ -9966,6 +10083,26 @@ export interface operations {
             };
         };
     };
+    list_publish_states_api_v1_calendar_share_publish_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSharePublishListResponse"];
+                };
+            };
+        };
+    };
     get_publish_state_api_v1_calendar_share_publish__workset_id__get: {
         parameters: {
             query?: never;
@@ -10011,6 +10148,37 @@ export interface operations {
                 "application/json": components["schemas"]["CalendarSharePublishBody"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSharePublishStateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_publish_state_api_v1_calendar_share_publish__workset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

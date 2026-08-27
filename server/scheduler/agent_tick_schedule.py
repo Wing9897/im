@@ -248,6 +248,10 @@ async def run_schedule_or_threshold(
                 "agent_message = ?, tool_calls_json = ?, updated_at = ?, completed_at = ? WHERE id = ?",
                 (0, 0, len(claimed_messages), message, tools_json, done, done, batch_id),
             )
+        if findings_count > 0:
+            from server.calendar_share.dirty import mark_published_workset_dirty
+
+            await mark_published_workset_dirty(db, str(task.get("workset_id") or ""))
         broadcaster.publish(
             "analysis_completed",
             {

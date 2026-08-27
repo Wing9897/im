@@ -199,6 +199,16 @@ export function formatEventListProvenanceLabel(
 }
 
 /**
+ * Local dismiss is for owned timeline rows. Subscribed calendars are shown
+ * or hidden via the source filter — the card must not offer「從時間軸拿掉」.
+ */
+export function eventListAllowsDismiss(
+  event: Pick<TimelineItem, "source">,
+): boolean {
+  return !isSubscribedTimelineSource(event.source);
+}
+
+/**
  * Card-level day-phase tags:
  * - 「跨日进行中」 for multi-day covering (middle) days — same whether
  *   the focused day is real today or a selected day

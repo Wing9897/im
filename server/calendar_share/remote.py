@@ -17,12 +17,27 @@ from server.calendar_share.store import (
     save_tokens,
 )
 from server.db.database import Database
-from server.errors import AUTH_REQUIRED, VALIDATION_ERROR, http_error
+from server.errors import (
+    AUTH_REQUIRED,
+    CALENDAR_SHARE_REQUEST_FAILED,
+    CALENDAR_SHARE_UNREACHABLE,
+    NOT_FOUND,
+    RATE_LIMITED,
+    VALIDATION_ERROR,
+    http_error,
+)
 
 logger = logging.getLogger(__name__)
 
 _TIMEOUT = aiohttp.ClientTimeout(total=15, connect=5, sock_read=12)
+_WRITE_TIMEOUT = aiohttp.ClientTimeout(total=60, connect=5, sock_read=45)
 _USER_AGENT = "IntelligenceMonitor/calendar-share"
+
+
+def _timeout_for(method: str, path: str) -> aiohttp.ClientTimeout:
+    if method.upper() in {"PUT", "PATCH", "DELETE"} and "/calendars" in path:
+        return _WRITE_TIMEOUT
+    return _TIMEOUT
 # One IM desktop: serialize refresh so concurrent 401s cannot rotate the same refresh token.
 _refresh_lock = asyncio.Lock()
 
@@ -30,11 +45,28 @@ _refresh_lock = asyncio.Lock()
 class CalendarShareRemoteError(Exception):
     """Remote calendar server returned a non-success status."""
 
-    def __init__(self, status: int, message: str, payload: Any = None) -> None:
+    def __init__(self, status: int, message: str, payload: Any = None, *, error_code: str | None = None) -> None:
         super().__init__(message)
         self.status = status
         self.message = message
         self.payload = payload
+        self.error_code = error_code or _error_code_from_payload(payload) or (
+            CALENDAR_SHARE_UNREACHABLE if status == 502 else CALENDAR_SHARE_REQUEST_FAILED
+        )
+
+
+def _error_code_from_payload(payload: Any) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    code = payload.get("error_code")
+    if isinstance(code, str) and code.strip():
+        return code.strip()
+    detail = payload.get("detail")
+    if isinstance(detail, dict):
+        nested = detail.get("error_code")
+        if isinstance(nested, str) and nested.strip():
+            return nested.strip()
+    return None
 
 
 def _message_from_payload(payload: Any, fallback: str) -> str:
@@ -47,10 +79,20 @@ def _message_from_payload(payload: Any, fallback: str) -> str:
                 nested = value.get("message")
                 if isinstance(nested, str) and nested.strip():
                     return nested.strip()
+            if isinstance(value, list) and value:
+                first = value[0]
+                if isinstance(first, str) and first.strip():
+                    return first.strip()
+                if isinstance(first, dict):
+                    nested = first.get("msg") or first.get("message")
+                    if isinstance(nested, str) and nested.strip():
+                        return nested.strip()
         if isinstance(payload.get("error_code"), str) and payload["error_code"].strip():
             return payload["error_code"].strip()
     if isinstance(payload, str) and payload.strip():
         return payload.strip()
+    if isinstance(payload, list) and payload:
+        return _message_from_payload({"detail": payload}, fallback)
     return fallback
 
 
@@ -97,7 +139,7 @@ async def calendar_share_request(
         headers["Authorization"] = f"Bearer {refresh_token}"
     try:
         async with (
-            aiohttp.ClientSession(timeout=_TIMEOUT) as session,
+            aiohttp.ClientSession(timeout=_timeout_for(method, path)) as session,
             session.request(method, url, json=json_body, headers=headers) as resp,
         ):
             payload: Any
@@ -109,21 +151,42 @@ async def calendar_share_request(
             return resp.status, payload
     except (TimeoutError, aiohttp.ClientError, OSError) as exc:
         logger.info("Calendar share request failed: %s %s (%s)", method, path, exc)
-        raise CalendarShareRemoteError(502, "Calendar share server unreachable") from exc
+        raise CalendarShareRemoteError(
+            502,
+            "Calendar share server unreachable",
+            error_code=CALENDAR_SHARE_UNREACHABLE,
+        ) from exc
 
 
-def raise_remote_status(status: int, payload: Any, *, fallback: str) -> None:
-    message = _message_from_payload(payload, fallback)
+def raise_remote_status(
+    status: int,
+    payload: Any,
+    *,
+    fallback_code: str = CALENDAR_SHARE_REQUEST_FAILED,
+    fallback: str | None = None,
+) -> None:
+    """Raise a structured HTTP error. Protocol identity is ``error_code``, not English copy."""
+    code = _error_code_from_payload(payload) or fallback_code
+    if status == 401:
+        code = AUTH_REQUIRED
+    elif status == 404:
+        code = NOT_FOUND
+    elif status == 429:
+        code = RATE_LIMITED
+    elif status == 403:
+        code = _error_code_from_payload(payload) or code
+    message = _message_from_payload(payload, fallback or code)
     if status in (401, 403):
-        code = AUTH_REQUIRED if status == 401 else None
-        raise http_error(status, message, error_code=code)
+        raise http_error(status, message, error_code=AUTH_REQUIRED if status == 401 else code)
     if status == 404:
-        raise http_error(404, message)
+        raise http_error(404, message, error_code=NOT_FOUND)
     if status == 409:
         raise http_error(409, message, error_code=VALIDATION_ERROR)
+    if status == 429:
+        raise http_error(429, message, error_code=RATE_LIMITED)
     if 400 <= status < 500:
         raise http_error(422 if status == 400 else status, message, error_code=VALIDATION_ERROR)
-    raise http_error(502, message)
+    raise http_error(502, message, error_code=code)
 
 
 async def login_remote(base_url: str, handle: str, password: str) -> tuple[str, str]:
@@ -134,7 +197,7 @@ async def login_remote(base_url: str, handle: str, password: str) -> tuple[str, 
         json_body={"handle": handle, "password": password},
     )
     if status >= 400:
-        raise_remote_status(status, payload, fallback="Calendar share login failed")
+        raise_remote_status(status, payload, fallback_code=CALENDAR_SHARE_REQUEST_FAILED)
     access, refresh = parse_token_pair(payload)
     if not access or not refresh:
         raise http_error(502, "Calendar share login did not return access and refresh tokens")
@@ -222,7 +285,7 @@ async def authorized_request_raw(
         status, payload = await _once(used_access)
     except CalendarShareRemoteError as exc:
         if exc.status == 502:
-            raise http_error(502, exc.message) from exc
+            raise http_error(502, exc.message, error_code=CALENDAR_SHARE_UNREACHABLE) from exc
         raise
 
     if status == 401 and refresh:
@@ -231,7 +294,7 @@ async def authorized_request_raw(
             status, payload = await _once(access)
         except CalendarShareRemoteError as exc:
             if exc.status == 502:
-                raise http_error(502, exc.message) from exc
+                raise http_error(502, exc.message, error_code=CALENDAR_SHARE_UNREACHABLE) from exc
             raise
 
     if status == 401:
@@ -260,5 +323,5 @@ async def authorized_request(
         query=query,
     )
     if status >= 400:
-        raise_remote_status(status, payload, fallback="Calendar share request failed")
+        raise_remote_status(status, payload, fallback_code=CALENDAR_SHARE_REQUEST_FAILED)
     return payload

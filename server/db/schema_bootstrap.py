@@ -5,7 +5,7 @@ from the authoritative domain DDL aggregated by ``schema.py``. Exact unstamped
 current fingerprints are stamped (``PRAGMA user_version`` = current stamp).
 ``FLOOR <= version < CURRENT`` backs up once and applies additive
 ``SCHEMA_MIGRATIONS`` steps from :mod:`server.db.schema_steps`. Future stamps
-(``version > CURRENT``, including retired 3–45 while CURRENT=2) refuse with an
+(``version > CURRENT``, including retired 27/45) refuse with an
 update-the-app message. Pre-cut stamp-2 files that do not match the current
 fingerprint hard-reject. Corrupt / lookalike fingerprints hard-reject with the
 explicit reset command. Startup never silently deletes or rebuilds a database.

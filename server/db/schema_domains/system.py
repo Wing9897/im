@@ -10,7 +10,25 @@ CREATE TABLE IF NOT EXISTS schema_meta (
 """
 
 # Keep the literal in sync with ``SCHEMA_SEMVER`` in schema_inspect.py (drift-tested).
-SCHEMA_META_SEED_SQL = "INSERT OR IGNORE INTO schema_meta (id, schema_semver) VALUES (1, '1.1.0');\n"
+SCHEMA_META_SEED_SQL = "INSERT OR IGNORE INTO schema_meta (id, schema_semver) VALUES (1, '1.3.0');\n"
+
+CALENDAR_SHARE_PUBLISH_DDL = """
+CREATE TABLE IF NOT EXISTS calendar_share_publish (
+    workset_id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL,
+    public_visibility TEXT NOT NULL,
+    grants_json TEXT NOT NULL DEFAULT '[]',
+    pending_sync INTEGER NOT NULL DEFAULT 0,
+    last_sync_at TEXT,
+    last_error TEXT,
+    last_grants_hash TEXT,
+    last_server_events_hash TEXT,
+    last_public_visibility TEXT,
+    last_emoji TEXT NOT NULL DEFAULT '',
+    last_description TEXT NOT NULL DEFAULT '',
+    last_fingerprints_json TEXT NOT NULL DEFAULT '{"events":{},"series":{}}'
+);
+"""
 
 DDL = f"""
 {SCHEMA_META_DDL}
@@ -21,6 +39,8 @@ CREATE TABLE IF NOT EXISTS system_config (
     value       TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );
+
+{CALENDAR_SHARE_PUBLISH_DDL}
 
 CREATE TABLE IF NOT EXISTS app_logs (
     id        TEXT PRIMARY KEY,

@@ -21,8 +21,8 @@ export type ServerStatusKey = 'Running' | 'Stopped' | 'Error';
  * Must match ``server/db/schema_inspect.py`` (drift-tested by architecture-invariants).
  * Bump these when SCHEMA stamp / SemVer changes — do not hardcode elsewhere in this file.
  */
-export const SHELL_SCHEMA_BASELINE = 2;
-export const SHELL_SCHEMA_SEMVER = '1.1.0';
+export const SHELL_SCHEMA_BASELINE = 4;
+export const SHELL_SCHEMA_SEMVER = '1.3.0';
 /** Schema floor (must match ``SCHEMA_FLOOR``). Stamp 1 auto-upgrades; future stamps reject. */
 export const SHELL_SCHEMA_FLOOR = 1;
 
@@ -70,7 +70,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   if (locale === 'zh-Hans') {
     return (
       `本地数据库结构不兼容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
-      `stamp 1 会经 SCHEMA_MIGRATIONS 自动升到 2）。\n\n` +
+      `stamp 1 会经 SCHEMA_MIGRATIONS 自动升到 ${baseline}）。\n\n` +
       '未来 stamp：请升级应用。坏库／无法识别：请先备份，再到设置 → 数据 重置，或运行：\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       '然后重新启动应用程序。'
@@ -79,7 +79,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   if (locale === 'en') {
     return (
       `The local database schema is incompatible (schema baseline ${baseline} / schemaSemver ${semver} / SCHEMA_FLOOR ${floor}; ` +
-      `stamp 1 auto-upgrades via SCHEMA_MIGRATIONS to 2).\n\n` +
+      `stamp 1 auto-upgrades via SCHEMA_MIGRATIONS to ${baseline}).\n\n` +
       'Future stamps: update the application. Corrupt or unrecognized databases: back up, then reset with Settings → Data, or run:\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       'Then restart the app.'
@@ -87,7 +87,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   }
   return (
     `本機資料庫結構不相容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
-    `stamp 1 會經 SCHEMA_MIGRATIONS 自動升到 2）。\n\n` +
+    `stamp 1 會經 SCHEMA_MIGRATIONS 自動升到 ${baseline}）。\n\n` +
     '未來 stamp：請升級應用。壞庫／無法識別：請先備份，再到設定 → 資料 重置，或執行：\n' +
     'scripts/reset_local_databases.py --apply\n\n' +
     '然後重新啟動應用程式。'

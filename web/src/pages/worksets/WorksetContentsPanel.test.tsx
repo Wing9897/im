@@ -23,10 +23,6 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
 }));
 
-vi.mock("./WorksetCalendarSharePanel", () => ({
-  WorksetCalendarSharePanel: () => <div data-testid="calendar-share-panel" />,
-}));
-
 vi.mock("react-i18next", () => ({
   useTranslation: (ns?: string) => ({
     t: (key: string, opts?: Record<string, unknown>) => {
@@ -206,6 +202,8 @@ describe("WorksetContentsPanel", () => {
       (taskBtn as HTMLElement).click();
     });
     expect(navigate).toHaveBeenCalledWith("/tasks/t1/edit");
+    expect(container.querySelector('[data-testid="calendar-share-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
   });
 
   it("navigates into item / event from summary", async () => {

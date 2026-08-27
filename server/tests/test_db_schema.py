@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Floor SoT (stamp 2 + retired future-stamp hard-reject): ``test_schema_floor.py``.
+Floor SoT (stamp 4 + retired future-stamp hard-reject): ``test_schema_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 

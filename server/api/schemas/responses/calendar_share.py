@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from server.calendar_share.constants import PublicVisibility
+
 
 class CalendarShareGrantResponse(BaseModel):
     handle: str
@@ -29,18 +31,32 @@ class CalendarShareTimezoneResponse(BaseModel):
 class CalendarSharePublishStateResponse(BaseModel):
     worksetId: str
     slug: str
-    enabled: bool = False
-    autoSync: bool = False
-    publicVisibility: Literal["off", "busy", "details"] = "off"
+    publicVisibility: PublicVisibility = "private_group"
     grants: list[CalendarShareGrantResponse] = Field(default_factory=list)
     lastSyncAt: str | None = None
     lastError: str | None = None
+    pendingSync: bool = False
     isSystemWorkset: bool = False
+
+
+class CalendarSharePublishListItemResponse(CalendarSharePublishStateResponse):
+    """Local publish-map row plus whether the workset still exists."""
+
+    worksetName: str = ""
+    worksetMissing: bool = False
+    emoji: str = ""
+    description: str = ""
+
+
+class CalendarSharePublishListResponse(BaseModel):
+    items: list[CalendarSharePublishListItemResponse] = Field(default_factory=list)
 
 
 class CalendarShareSubscriptionResponse(BaseModel):
     handle: str
     slug: str
+    emoji: str = ""
+    description: str = ""
 
 
 class CalendarShareSubscriptionsResponse(BaseModel):
@@ -84,7 +100,11 @@ class CalendarShareSubscriptionEventsResponse(BaseModel):
 class CalendarShareSearchHitResponse(BaseModel):
     handle: str
     slug: str
-    visibility: Literal["busy", "details"]
+    hitKind: Literal["listing", "grant"]
+    publicVisibility: PublicVisibility | None = None
+    visibility: Literal["busy", "details"] | None = None
+    emoji: str = ""
+    description: str = ""
 
 
 class CalendarShareSearchResponse(BaseModel):

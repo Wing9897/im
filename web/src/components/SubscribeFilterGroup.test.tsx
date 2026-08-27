@@ -4,12 +4,13 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SubscribeFilterGroup } from "./SubscribeFilterGroup";
+import { subscribeCalendarIdentity } from "../domain/calendarShare/subscribedCalendars";
 import { i18n, wrapWithI18n } from "../test/i18nHarness";
 import { setAppLocale } from "../i18n/locale";
 
 const CALENDARS = [
-  { key: "Alice/Work", label: "Alice/Work" },
-  { key: "Carol/Team", label: "Carol/Team" },
+  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" }),
+  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", emoji: "🚧" }),
 ];
 
 describe("SubscribeFilterGroup", () => {
@@ -33,7 +34,7 @@ describe("SubscribeFilterGroup", () => {
 
   function renderGroup(
     extra: {
-      calendars?: typeof CALENDARS;
+      calendars?: readonly ReturnType<typeof subscribeCalendarIdentity>[];
       draft?: string[] | null;
       query?: string;
       availability?: "ok" | "loggedOut" | "offline";
@@ -60,6 +61,22 @@ describe("SubscribeFilterGroup", () => {
     });
     return { onToggleKey, onSelectAll, onClearAll };
   }
+
+  it("renders catalog emoji and does not keep an invisible chevron spacer", () => {
+    renderGroup({
+      calendars: [subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" })],
+    });
+    expect(container.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')?.textContent).toContain(
+      "🌞",
+    );
+    expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
+    expect(container.textContent).toContain("Alice/Work");
+    const chevrons = [...container.querySelectorAll("svg")].filter((node) =>
+      node.classList.contains("invisible"),
+    );
+    expect(chevrons).toHaveLength(0);
+  });
 
   it("renders an icon heading, not a parent tri-state checkbox", () => {
     renderGroup();
@@ -109,10 +126,14 @@ describe("SubscribeFilterGroup", () => {
     expect(onClearAll).toHaveBeenCalledTimes(1);
   });
 
-  it("filters calendar rows by label and keeps the pane when nothing matches", () => {
+  it("filters calendar rows by handle/slug like subscription cards and keeps the pane when nothing matches", () => {
     renderGroup({ query: "Carol" });
     expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeNull();
+
+    renderGroup({ query: "Work" });
+    expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeNull();
 
     renderGroup({ query: "zzz-no-match" });
     expect(container.querySelector('[data-testid="timeline-subscribe-filter"]')).toBeTruthy();

@@ -1,17 +1,26 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { removeCalendarShareSubscription } from "../../api/calendarShare";
-import { SettingsContentCard, SettingsFieldGroup } from "../../components/settings/SettingsFormLayout";
-import { AlertBanner, Button, DataList, EmptyStateLink, ListRow, ListRowMain } from "../../components/ui";
-import { formHelpClass, sectionTitleClass } from "../../components/ui/pageTypography";
-import { calendarShareKey } from "../../domain/calendarShare/subscribedCalendars";
+import { Button } from "../../components/ui";
+import { formHelpClass } from "../../components/ui/pageTypography";
+import {
+  calendarShareKey,
+  matchesCalendarShareFilter,
+  subscribeCalendarIdentity,
+  subscribePageStatus,
+} from "../../domain/calendarShare/subscribedCalendars";
 import {
   invalidateCalendarShareCatalog,
-  refreshCalendarShareCatalog,
   useCalendarShareCatalog,
 } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
+import { SubscriptionCalendarCard } from "./SubscriptionCalendarCard";
+import {
+  SubscriptionsCardSection,
+  SubscriptionsListToolbar,
+  SubscriptionsPageChrome,
+} from "./SubscriptionsPageChrome";
 
 /** Server-backed catalog of subscribed calendars (remove unsubscribes on IntelligenceCalendar). */
 export function SubscriptionsMinePage() {
@@ -19,14 +28,14 @@ export function SubscriptionsMinePage() {
   const catalog = useCalendarShareCatalog();
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [listFilter, setListFilter] = useState("");
 
   const onRemove = useCallback(async (handle: string, slug: string) => {
     const key = calendarShareKey(handle, slug);
     setBusyKey(key);
     try {
       await removeCalendarShareSubscription(handle, slug);
-      invalidateCalendarShareCatalog();
-      await refreshCalendarShareCatalog();
+      await invalidateCalendarShareCatalog();
       setActionError(null);
     } catch (error) {
       setActionError(toErrorMessage(error));
@@ -35,45 +44,60 @@ export function SubscriptionsMinePage() {
     }
   }, []);
 
-  const connected = catalog.session?.connected === true;
+  const status = subscribePageStatus({
+    loading: catalog.loading,
+    connected: catalog.session?.connected,
+    unreachable: catalog.unreachable,
+  });
+  const canMutate = status === "ok";
   const items = catalog.items;
-  const loadError = actionError ?? catalog.error;
+  const visible = useMemo(
+    () =>
+      items.filter((row) =>
+        matchesCalendarShareFilter(listFilter, row.handle, row.slug, calendarShareKey(row.handle, row.slug)),
+      ),
+    [items, listFilter],
+  );
+  const filtering = listFilter.trim().length > 0;
+  const loadError = actionError ?? (status === "ok" ? catalog.error : null);
 
   return (
-    <SettingsContentCard>
-      <SettingsFieldGroup>
-        <h2 className={sectionTitleClass}>{t("mine.title")}</h2>
-        <p className={`mb-0 ${formHelpClass}`}>{t("mine.help")}</p>
-        {connected ? null : (
-          <AlertBanner variant="warning" role="status" className="mb-0 max-w-[56ch]">
-            {t("needLogin")}{" "}
-            <Link to="/account/identity" className="font-medium text-accent no-underline hover:underline">
-              {t("loginLink")}
-            </Link>
-          </AlertBanner>
-        )}
-        {loadError ? (
-          <p className={`mb-0 ${formHelpClass} text-error`} role="alert">
-            {loadError}
+    <SubscriptionsPageChrome
+      status={status}
+      error={loadError}
+      toolbar={
+        <SubscriptionsListToolbar
+          value={listFilter}
+          onChange={setListFilter}
+          testId="subscriptions-mine-filter"
+        />
+      }
+    >
+      <SubscriptionsCardSection
+        status={status}
+        hasItems={visible.length > 0}
+        empty={
+          <p className={`mb-0 ${formHelpClass}`}>
+            {filtering ? t("listFilter.empty") : t("mine.empty")}
           </p>
-        ) : null}
-        {items.length === 0 ? (
-          <div className="flex flex-col gap-sm" data-testid="subscriptions-mine-empty">
-            <p className={`mb-0 ${formHelpClass}`}>{t("mine.empty")}</p>
-            <EmptyStateLink to="/subscriptions/search">{t("mine.searchCta")}</EmptyStateLink>
-          </div>
-        ) : (
-          <DataList maxHeightClass="max-h-[60vh]" data-testid="subscriptions-mine-list">
-            {items.map((row) => {
-              const key = calendarShareKey(row.handle, row.slug);
-              return (
-                <ListRow key={key}>
-                  <ListRowMain>
-                    <span className="font-medium">{key}</span>
-                  </ListRowMain>
+        }
+        emptyTestId={filtering ? "subscriptions-mine-filter-empty" : "subscriptions-mine-empty"}
+        listTestId="subscriptions-mine-list"
+      >
+        {visible.map((row) => {
+          const identity = subscribeCalendarIdentity(row);
+          return (
+            <SubscriptionCalendarCard
+              key={identity.key}
+              title={identity.label}
+              emoji={identity.emoji}
+              description={row.description}
+              data-testid={`subscriptions-mine-card-${identity.key}`}
+              actions={
+                <>
                   <Link
                     to="/timeline"
-                    className="shrink-0 text-caption font-medium text-accent no-underline hover:underline"
+                    className="inline-flex min-h-7 shrink-0 items-center text-caption font-medium text-accent no-underline hover:underline"
                   >
                     {t("mine.openTimeline")}
                   </Link>
@@ -81,18 +105,18 @@ export function SubscriptionsMinePage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={busyKey === key}
+                    disabled={!canMutate || busyKey === identity.key}
                     onClick={() => void onRemove(row.handle, row.slug)}
-                    data-testid={`subscriptions-remove-${key}`}
+                    data-testid={`subscriptions-remove-${identity.key}`}
                   >
                     {t("mine.remove")}
                   </Button>
-                </ListRow>
-              );
-            })}
-          </DataList>
-        )}
-      </SettingsFieldGroup>
-    </SettingsContentCard>
+                </>
+              }
+            />
+          );
+        })}
+      </SubscriptionsCardSection>
+    </SubscriptionsPageChrome>
   );
 }

@@ -9,6 +9,33 @@ export function calendarShareKey(handle: string, slug: string): string {
   return `${handle.trim()}/${slug.trim()}`;
 }
 
+/** Card title + Timeline filter row: same `handle/slug` key, emoji, and path parts. */
+export type SubscribeCalendarIdentity = {
+  key: string;
+  label: string;
+  emoji: string;
+  handle: string;
+  slug: string;
+};
+
+export function subscribeCalendarIdentity(row: {
+  handle: string;
+  slug: string;
+  emoji?: string | null;
+}): SubscribeCalendarIdentity {
+  const handle = row.handle.trim();
+  const slug = row.slug.trim();
+  const key = calendarShareKey(handle, slug);
+  return { key, label: key, emoji: row.emoji ?? "", handle, slug };
+}
+
+/** Map `useCalendarShareCatalog().items` onto Timeline subscribe-column rows. */
+export function subscribeFilterCalendarsFromCatalog(
+  items: readonly { handle: string; slug: string; emoji?: string | null }[],
+): SubscribeCalendarIdentity[] {
+  return items.map(subscribeCalendarIdentity);
+}
+
 export function subscribedTimelineSource(handle: string, slug: string): string {
   return `${SUBSCRIBED_SOURCE_PREFIX}${calendarShareKey(handle, slug)}`;
 }
@@ -35,6 +62,18 @@ export function parseCalendarSharePath(raw: string): { handle: string; slug: str
   const slug = parts[1]?.trim() ?? "";
   if (!handle || !slug) return null;
   return { handle, slug };
+}
+
+/** Unified search: a `/` means path-subscribe, not `GET /search?q=`. */
+export function looksLikeCalendarSharePath(raw: string): boolean {
+  return raw.trim().includes("/");
+}
+
+/** Client-side Mine/Published card filter (handle, slug, workset name). */
+export function matchesCalendarShareFilter(needle: string, ...fields: readonly string[]): boolean {
+  const q = needle.trim().toLowerCase();
+  if (!q) return true;
+  return fields.some((field) => field.trim().toLowerCase().includes(q));
 }
 
 export function isOwnCalendarHandle(handle: string, ownHandle: string): boolean {
@@ -104,6 +143,12 @@ export function sameSubscribeSelection(
 /** Timeline subscribe-column gate: logged out vs IC unreachable. */
 export type SubscribeAvailability = "ok" | "loggedOut" | "offline";
 
+/** First catalog paint before session is known — do not flash a login banner. */
+export type SubscribePageStatus = "loading" | SubscribeAvailability;
+
+/** Same grey+inert gate as the Timeline subscribe column (logged out / 502). */
+export const SUBSCRIBE_UNAVAILABLE_CLASS = "pointer-events-none opacity-50";
+
 export function isCalendarShareUnreachable(error: unknown): boolean {
   if (error == null || error === false) return false;
   if (typeof error === "object" && error !== null) {
@@ -116,6 +161,24 @@ export function isCalendarShareUnreachable(error: unknown): boolean {
   return /\b502\b|\b503\b|\b504\b|unreachable|failed to fetch|network error/i.test(message);
 }
 
+/** GET subscriptions/publish 404 means empty, not a chrome-worthy failure. */
+export function isCalendarShareNotFound(error: unknown): boolean {
+  if (error == null || error === false) return false;
+  if (typeof error === "object" && error !== null) {
+    const status = "status" in error ? Number((error as { status?: unknown }).status) : NaN;
+    if (status === 404) return true;
+    const code =
+      "errorCode" in error
+        ? String((error as { errorCode?: unknown }).errorCode)
+        : "error_code" in error
+          ? String((error as { error_code?: unknown }).error_code)
+          : "";
+    if (/^(not_found|NOT_FOUND|http_404)$/i.test(code)) return true;
+  }
+  const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
+  return /^not found\.?$/i.test(message.trim());
+}
+
 export function resolveSubscribeAvailability(input: {
   connected?: boolean | null;
   catalogUnreachable?: boolean;
@@ -124,6 +187,18 @@ export function resolveSubscribeAvailability(input: {
   if (input.connected === false) return "loggedOut";
   if (input.catalogUnreachable || isCalendarShareUnreachable(input.eventsError)) return "offline";
   return "ok";
+}
+
+export function subscribePageStatus(input: {
+  loading: boolean;
+  connected?: boolean | null;
+  unreachable?: boolean;
+}): SubscribePageStatus {
+  if (input.loading && input.connected == null && !input.unreachable) return "loading";
+  return resolveSubscribeAvailability({
+    connected: input.connected,
+    catalogUnreachable: input.unreachable,
+  });
 }
 
 export function toggleSubscribeKey(

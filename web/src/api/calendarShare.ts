@@ -1,99 +1,36 @@
 /**
  * Local IM proxy for the public calendar-share server.
  * Renderer never talks to that origin; tokens stay on the FastAPI host.
+ * Shapes come from generated OpenAPI (`schema.d.ts`).
  */
 
+import {
+  consumeCalendarShareRateLimit,
+  type CalendarShareActionFamily,
+} from "../domain/calendarShare/calendarShareRateLimit";
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type CalendarShareVisibility = "off" | "busy" | "details";
-export type CalendarShareGrantVisibility = "busy" | "details";
+async function guarded<T>(family: CalendarShareActionFamily, run: () => Promise<T>): Promise<T> {
+  consumeCalendarShareRateLimit(family);
+  return run();
+}
 
-export type CalendarShareGrant = {
-  handle: string;
-  visibility: CalendarShareGrantVisibility;
-};
-
-export type CalendarShareSession = {
-  connected: boolean;
-  baseUrl: string;
-  handle: string;
-  status: "disconnected" | "connected";
-};
-
-export type CalendarShareTimezone = {
-  timezone: string;
-  suggestedTimezone: string;
-  pendingPublicTimezone: boolean;
-  lastPublicTimezone: string;
-};
-
-export type CalendarSharePublishState = {
-  worksetId: string;
-  slug: string;
-  enabled: boolean;
-  autoSync: boolean;
-  publicVisibility: CalendarShareVisibility;
-  grants: CalendarShareGrant[];
-  lastSyncAt: string | null;
-  lastError: string | null;
-  isSystemWorkset: boolean;
-};
-
-export type CalendarShareSubscription = {
-  handle: string;
-  slug: string;
-};
-
-export type CalendarShareSubscriptions = {
-  items: CalendarShareSubscription[];
-  ownHandle: string;
-};
-
-export type CalendarShareSearchHit = {
-  handle: string;
-  slug: string;
-  visibility: "busy" | "details";
-};
-
-export type CalendarShareSearch = {
-  items: CalendarShareSearchHit[];
-};
-
-export type CalendarShareEvent = {
-  id: string;
-  source: string;
-  title: string;
-  startTime?: string | null;
-  endTime?: string | null;
-  location?: string | null;
-  isAllDay?: boolean;
-  timezone?: string | null;
-  emoji?: string | null;
-  body?: string | null;
-  handle?: string | null;
-  slug?: string | null;
-  dismissed?: boolean;
-  important?: boolean;
-  taskName?: string | null;
-  isLastOccurrence?: boolean;
-  /** Remote RRULE uid when this row is an expanded series occurrence; omitted/null for one-offs. */
-  seriesId?: string | null;
-};
-
-export type CalendarShareLoginBody = {
-  baseUrl: string;
-  handle: string;
-  password: string;
-};
-
-export type CalendarSharePublishBody = {
-  enabled: boolean;
-  slug: string;
-  autoSync?: boolean;
-  publicVisibility?: CalendarShareVisibility;
-  grants?: CalendarShareGrant[];
-  syncNow?: boolean;
-};
+export type CalendarShareGrant = components["schemas"]["CalendarShareGrantResponse"];
+export type CalendarShareGrantVisibility = CalendarShareGrant["visibility"];
+export type CalendarShareVisibility = components["schemas"]["CalendarSharePublishStateResponse"]["publicVisibility"];
+export type CalendarShareSession = components["schemas"]["CalendarShareSessionResponse"];
+export type CalendarShareTimezone = components["schemas"]["CalendarShareTimezoneResponse"];
+export type CalendarSharePublishState = components["schemas"]["CalendarSharePublishStateResponse"];
+export type CalendarSharePublishListItem = components["schemas"]["CalendarSharePublishListItemResponse"];
+export type CalendarSharePublishList = components["schemas"]["CalendarSharePublishListResponse"];
+export type CalendarShareSubscription = components["schemas"]["CalendarShareSubscriptionResponse"];
+export type CalendarShareSubscriptions = components["schemas"]["CalendarShareSubscriptionsResponse"];
+export type CalendarShareSearchHit = components["schemas"]["CalendarShareSearchHitResponse"];
+export type CalendarShareSearch = components["schemas"]["CalendarShareSearchResponse"];
+export type CalendarShareEvent = components["schemas"]["CalendarShareEventResponse"];
+export type CalendarShareLoginBody = components["schemas"]["CalendarShareLoginBody"];
+export type CalendarSharePublishBody = components["schemas"]["CalendarSharePublishBody"];
 
 export function fetchCalendarShareSession(): Promise<CalendarShareSession> {
   return apiClient.get<CalendarShareSession>("/api/v1/calendar-share/session");
@@ -116,19 +53,56 @@ export function putCalendarShareTimezone(timezone: string): Promise<CalendarShar
 }
 
 export function fetchCalendarSharePublish(worksetId: string): Promise<CalendarSharePublishState> {
-  return apiClient.get<CalendarSharePublishState>(
-    `/api/v1/calendar-share/publish/${encodeURIComponent(worksetId)}`,
+  return guarded("publishList", () =>
+    apiClient.get<CalendarSharePublishState>(
+      `/api/v1/calendar-share/publish/${encodeURIComponent(worksetId)}`,
+    ),
   );
 }
+
+export function fetchCalendarSharePublishList(): Promise<CalendarSharePublishList> {
+  return guarded("publishList", () =>
+    apiClient.get<CalendarSharePublishList>("/api/v1/calendar-share/publish"),
+  );
+}
+
+export const CALENDAR_SHARE_PUBLISH_TIMEOUT_MS = 90_000;
 
 export function putCalendarSharePublish(
   worksetId: string,
   body: CalendarSharePublishBody,
 ): Promise<CalendarSharePublishState> {
-  return apiClient.put<CalendarSharePublishState>(
-    `/api/v1/calendar-share/publish/${encodeURIComponent(worksetId)}`,
-    body,
+  return guarded("publish", () =>
+    apiClient.put<CalendarSharePublishState>(
+      `/api/v1/calendar-share/publish/${encodeURIComponent(worksetId)}`,
+      body,
+      { timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS },
+    ),
   );
+}
+
+/** DELETE the IC slug calendar and drop the local publish row. Does not delete the local workset. */
+export function unpublishCalendarSharePublish(
+  state: Pick<CalendarSharePublishState, "worksetId">,
+): Promise<CalendarSharePublishState> {
+  return guarded("publish", () =>
+    apiClient.delete<CalendarSharePublishState>(
+      `/api/v1/calendar-share/publish/${encodeURIComponent(state.worksetId)}`,
+      { timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS },
+    ),
+  );
+}
+
+/** Push the current mapping to IC (incremental hash PUT/PATCH). Local workset must still exist. */
+export function syncCalendarSharePublish(
+  state: Pick<CalendarSharePublishState, "worksetId" | "slug" | "publicVisibility" | "grants">,
+): Promise<CalendarSharePublishState> {
+  return putCalendarSharePublish(state.worksetId, {
+    slug: state.slug,
+    publicVisibility: state.publicVisibility,
+    grants: state.grants ?? [],
+    syncNow: true,
+  });
 }
 
 export function fetchCalendarShareSubscriptions(): Promise<CalendarShareSubscriptions> {
@@ -136,7 +110,7 @@ export function fetchCalendarShareSubscriptions(): Promise<CalendarShareSubscrip
 }
 
 export function fetchCalendarShareSearch(q = ""): Promise<CalendarShareSearch> {
-  return apiClient.get<CalendarShareSearch>("/api/v1/calendar-share/search", { q });
+  return guarded("search", () => apiClient.get<CalendarShareSearch>("/api/v1/calendar-share/search", { q }));
 }
 
 export function addCalendarShareSubscription(body: {
@@ -144,13 +118,17 @@ export function addCalendarShareSubscription(body: {
   slug?: string;
   path?: string;
 }): Promise<CalendarShareSubscriptions> {
-  return apiClient.post<CalendarShareSubscriptions>("/api/v1/calendar-share/subscriptions", body);
+  return guarded("subscribe", () =>
+    apiClient.post<CalendarShareSubscriptions>("/api/v1/calendar-share/subscriptions", body),
+  );
 }
 
 export function removeCalendarShareSubscription(handle: string, slug: string): Promise<CalendarShareSubscriptions> {
   const params = new URLSearchParams({ handle, slug });
-  return apiClient.delete<CalendarShareSubscriptions>(
-    `/api/v1/calendar-share/subscriptions?${params.toString()}`,
+  return guarded("unsubscribe", () =>
+    apiClient.delete<CalendarShareSubscriptions>(
+      `/api/v1/calendar-share/subscriptions?${params.toString()}`,
+    ),
   );
 }
 
@@ -162,5 +140,5 @@ export async function fetchCalendarShareSubscriptionEvents(
     "/api/v1/calendar-share/subscriptions/events",
     { from: fromIso, to: toIso },
   );
-  return page.items;
+  return page.items ?? [];
 }

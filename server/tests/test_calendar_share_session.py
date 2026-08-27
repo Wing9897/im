@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from server.calendar_share.constants import KEY_ACCESS_TOKEN, KEY_REFRESH_TOKEN
-from server.calendar_share.remote import authorized_request, parse_token_pair
+from server.calendar_share.remote import _message_from_payload, authorized_request, parse_token_pair
 from server.secrets import unprotect_text
 from server.tests.calendar_share_fakes import DEFAULT_URL, login_calendar_share
 
@@ -15,6 +15,18 @@ def test_parse_token_pair_accepts_camel_and_snake():
     assert parse_token_pair({"access": "a", "refresh": "r"}) == ("a", "r")
     assert parse_token_pair({"access_token": "a", "refresh_token": "r"}) == ("a", "r")
     assert parse_token_pair({"data": {"access": "a", "refresh": "r"}}) == ("a", "r")
+
+
+def test_message_from_payload_reads_fastapi_validation_list():
+    assert _message_from_payload("Duplicate event uid in snapshot", "fallback") == "Duplicate event uid in snapshot"
+    assert (
+        _message_from_payload(
+            {"detail": [{"type": "value_error", "loc": ["body", "events", 0, "start"], "msg": "Field required"}]},
+            "fallback",
+        )
+        == "Field required"
+    )
+    assert _message_from_payload({"detail": "Event end must be after start"}, "fallback") == "Event end must be after start"
 
 
 async def test_session_login_encrypts_tokens(client, app, fake_remote):

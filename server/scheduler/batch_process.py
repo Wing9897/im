@@ -250,6 +250,11 @@ async def process_batch(
             ),
         )
 
+    if findings_count > 0:
+        from server.calendar_share.dirty import mark_published_workset_dirty
+
+        await mark_published_workset_dirty(db, str(task.get("workset_id") or ""))
+
     broadcaster.publish(
         "analysis_completed",
         {

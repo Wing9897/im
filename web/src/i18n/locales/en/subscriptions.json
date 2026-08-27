@@ -3,6 +3,7 @@
   "tabsAria": "Subscription sections",
   "tabs": {
     "mine": "My subscriptions",
+    "published": "My published",
     "search": "Find calendars"
   },
   "needLogin": "Sign in to calendar share under Account → Identity before adding subscriptions.",
@@ -21,32 +22,76 @@
     "loggedOut": "Sign in to calendar share to use the subscription filter. Local sources still work.",
     "offline": "Calendar share is unreachable. Subscriptions stay disabled until it reconnects. Local sources still work."
   },
+  "listFilter": {
+    "placeholder": "Filter by handle, slug, or name",
+    "aria": "Filter listed calendars",
+    "empty": "No matching calendars."
+  },
   "mine": {
-    "title": "Subscribed calendars",
-    "help": "Removing a calendar unsubscribes it on the calendar server. Timeline visibility still uses the source filter.",
     "empty": "No subscriptions yet.",
-    "searchCta": "Find calendars",
     "openTimeline": "Timeline",
     "remove": "Remove"
   },
+  "published": {
+    "needLogin": "Sign in to calendar share under Account → Identity before publishing or unpublishing.",
+    "empty": "No published calendars yet.",
+    "formTitle": "Publish a workset",
+    "worksetLabel": "Local workset",
+    "worksetPlaceholder": "Choose a workset",
+    "edit": "Settings",
+    "syncNow": "Update public copy",
+    "unpublish": "Unpublish",
+    "missingWorkset": "Local workset deleted; the public calendar is still up.",
+    "pendingSync": "Pending automatic update",
+    "publishCta": "Publish a workset",
+    "grantsSummary": "{count} granted handles",
+    "grantsClosed": "Private group — {count} handles can subscribe",
+    "grantsEmpty": "Private group — add handles in Settings so others can subscribe",
+    "form": {
+      "title": "Publish settings",
+      "help": "Confirm uploads this workset now. Later event changes queue one background update about once a minute. To stop uploading, use Unpublish on the card.",
+      "catalogHelp": "Emoji and description are copied from this workset when you upload. Change them on the workset card.",
+      "generalWarning": "The General workset includes unfiled events. Confirm nothing private should be published.",
+      "slugLabel": "Calendar slug",
+      "slugHelp": "Remote path looks like handle/slug. 1–64 characters; start with a letter or digit; then letters, digits, dot, underscore, or hyphen.",
+      "slugRequired": "Enter a slug",
+      "slugInvalid": "Slug must be 1–64 characters; start with a letter or digit; then letters, digits, dot, underscore, or hyphen.",
+      "publicLabel": "Visibility",
+      "publicHelp": "Private group is not listed; you add handles. Public is findable with event details. Public busy is findable but busy/free only.",
+      "grantsTitle": "Who can subscribe to this private group calendar",
+      "grantsHelp": "Add a handle to allow subscribe; remove a grant, then confirm again to revoke access. This is not a shareable password.",
+      "grantsClosedHelp": "This calendar is a private group. Only handles you add here can subscribe via handle/slug.",
+      "grantVisibilityBusy": "Busy",
+      "grantVisibilityDetails": "Details",
+      "grantHandle": "handle",
+      "addGrant": "Add grant",
+      "removeGrant": "Remove",
+      "confirm": "Confirm",
+      "syncing": "Uploading…",
+      "synced": "Uploaded",
+      "failed": "Upload failed",
+      "lastSync": "Last sync: {time}",
+      "neverSynced": "Not synced yet"
+    },
+    "listRefreshPending": "Uploaded. The list will refresh shortly."
+  },
   "search": {
-    "title": "Search public calendars",
-    "help": "Search public busy/details calendars, or paste handle/slug. Calendars granted only to you appear after you sign in.",
-    "queryPlaceholder": "handle or slug",
+    "queryPlaceholder": "handle, slug, or handle/slug",
     "submit": "Search",
     "searching": "Searching…",
     "noResults": "No matching calendars.",
     "already": "Subscribed",
     "add": "Subscribe",
     "adding": "Adding…",
-    "pathTitle": "Subscribe by path",
-    "pathHelp": "Paste handle/slug, e.g. DemoPub/Open. You cannot subscribe to the handle you publish as.",
-    "pathPlaceholder": "handle/slug",
+    "recommendedEmpty": "No public calendars to recommend yet.",
+    "pathHint": "Private group calendars: paste handle/slug. The publisher must add your handle on My published.",
     "invalidPath": "Use handle/slug.",
-    "rejectOwn": "You cannot subscribe to your own calendar."
+    "rejectOwn": "You cannot subscribe to your own calendar.",
+    "noGrant": "No access. Ask the publisher to add your handle on My published."
   },
   "visibility": {
-    "busy": "Busy",
-    "details": "Details"
+    "private_group": "Private group",
+    "public": "Public",
+    "public_busy": "Public busy"
   }
 }

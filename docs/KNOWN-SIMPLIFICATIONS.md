@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler (schema floor 1 / current stamp 2): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (schema floor 1 / current stamp 4): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -66,11 +66,11 @@ Still update sources routes／OpenAPI／pipeline／UI when adding — registry i
 
 ## Schema baseline
 
-Pointer only — stamp / semver / floor + `1→2` registry SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
+Pointer only — stamp / semver / floor + `1→2→3→4` registry SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
 
 ## LLM simplifications (intentional)
 
-Still in force under schema floor **1** / current stamp **2** / `SCHEMA_SEMVER` `1.1.0`. Do **not** restore without a new contract:
+Still in force under schema floor **1** / current stamp **4** / `SCHEMA_SEMVER` `1.3.0`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -100,6 +100,7 @@ One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRU
 
 - **Sub-day frequencies are rejected on write:** `validate_rrule` only allows `FREQ ∈ {DAILY, WEEKLY, MONTHLY, YEARLY}` (`unsupported_freq`). `SECONDLY`／`MINUTELY`／`HOURLY` (and any other FREQ) fail task create／update. Query-time expansion still snaps wall clocks and budgets dense windows for legacy／synthetic rows used in budget tests — writers never emit those freqs.
 - **Desktop ICS／deep-link import:** one-shot multi-VEVENT preview and atomic commit; no webcal／CalDAV／provider OAuth or bidirectional sync. RRULE entries become standalone calendar series, one-time items become user events; unsupported overrides stay visible but unselectable. Public-HTTP(S)-only remote URL policy, supported RFC 5545 subset, size/event limits, and floating-time behavior: [`DESKTOP-ICS.md`](./DESKTOP-ICS.md).
+- **Publish snapshot is unexpanded series:** Timeline dismiss of a single RRULE occurrence does not set `pendingSync` (no exdate on the public replica). Local `timeline_dismissals` still hide that occurrence for the household. Do not re-open as a dirty-flag bug.
 
 ## Batch stats semantics (version-aware)
 

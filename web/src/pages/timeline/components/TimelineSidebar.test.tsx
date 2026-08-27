@@ -242,4 +242,28 @@ describe("TimelineSidebar detail provenance", () => {
     expect(title?.textContent).toContain("生日");
     expect(title?.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toBe("🎂");
   });
+
+  it("hides dismiss on subscribed calendar events", () => {
+    renderSidebar(
+      makeUserEvent({
+        id: "sub-open",
+        title: "Open Office Hours",
+        source: "subscribed:DemoPub/Open",
+        origin: undefined,
+        taskId: null,
+        taskName: null,
+      }),
+    );
+    expect(container.querySelector('[data-testid="timeline-sidebar-dismiss"]')).toBeNull();
+    expect(container.textContent).not.toContain("從時間軸拿掉");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
+    ).toContain("訂閱：DemoPub/Open");
+  });
+
+  it("keeps dismiss on local user events", () => {
+    renderSidebar(makeUserEvent());
+    expect(container.querySelector('[data-testid="timeline-sidebar-dismiss"]')).not.toBeNull();
+    expect(container.textContent).toContain("從時間軸拿掉");
+  });
 });

@@ -4,9 +4,12 @@
  *
  * Selection mutation lives in `sourceFilterDialogDraft` / the dialog state hook —
  * this file is presentational (search box + tree + tri-state checkboxes).
+ * Timeline dual-column chrome (heading + select/clear + scroll) is
+ * `SourceFilterColumnShell`; board/intelligence keep the single-tree dialog.
  */
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, TextField } from "./ui";
@@ -64,6 +67,84 @@ export function SourceFilterSectionHeading({
         aria-hidden="true"
       />
     </div>
+  );
+}
+
+const COLUMN_SCROLL_CLASS =
+  "im-auto-scrollbar min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]";
+
+/** Timeline 本機 / 訂閱 column: heading + select/clear + independently scrolling list. */
+export function SourceFilterColumnShell({
+  icon,
+  label,
+  headingTestId,
+  sectionTestId,
+  scrollTestId,
+  selectLabel,
+  clearLabel,
+  selectAria,
+  clearAria,
+  onSelectAll,
+  onClearAll,
+  selectTestId,
+  clearTestId,
+  disabled = false,
+  actionsClassName,
+  scrollClassName,
+  beforeActions,
+  dataAvailability,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  headingTestId: string;
+  sectionTestId: string;
+  scrollTestId: string;
+  selectLabel: string;
+  clearLabel: string;
+  selectAria: string;
+  clearAria: string;
+  onSelectAll: () => void;
+  onClearAll: () => void;
+  selectTestId: string;
+  clearTestId: string;
+  disabled?: boolean;
+  actionsClassName?: string;
+  scrollClassName?: string;
+  beforeActions?: ReactNode;
+  dataAvailability?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-sm overflow-hidden"
+      data-testid={sectionTestId}
+      data-availability={dataAvailability}
+      aria-label={label}
+      aria-disabled={disabled || undefined}
+    >
+      <SourceFilterSectionHeading icon={icon} label={label} testId={headingTestId} />
+      {beforeActions}
+      <div className={actionsClassName}>
+        <SourceFilterColumnActions
+          selectLabel={selectLabel}
+          clearLabel={clearLabel}
+          selectAria={selectAria}
+          clearAria={clearAria}
+          onSelectAll={onSelectAll}
+          onClearAll={onClearAll}
+          selectTestId={selectTestId}
+          clearTestId={clearTestId}
+          disabled={disabled}
+        />
+      </div>
+      <div
+        className={scrollClassName ? `${COLUMN_SCROLL_CLASS} ${scrollClassName}` : COLUMN_SCROLL_CLASS}
+        data-testid={scrollTestId}
+      >
+        {children}
+      </div>
+    </section>
   );
 }
 

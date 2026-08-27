@@ -40,7 +40,7 @@ import {
   makeAnalysisTask,
   resetTaskCatalogState,
 } from "../../test/context-mocks";
-import { resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
 import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
@@ -126,5 +126,22 @@ describe("useTimelinePageContainer URL view query", () => {
       await Promise.resolve();
     });
     expect(resultRef.current!.sources.viewMode).toBe("calendar");
+  });
+
+  it("maps catalog handle/slug/emoji onto subscribeCalendars for the filter column", async () => {
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
+      connected: true,
+      baseUrl: "http://127.0.0.1:8787",
+      handle: "Wing",
+      status: "connected",
+    });
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
+      items: [{ handle: "DemoPub", slug: "Open", emoji: "🌞", description: "Open to everyone" }],
+      ownHandle: "Wing",
+    });
+    await renderAt("/timeline");
+    expect(resultRef.current!.sources.subscribeCalendars).toEqual([
+      { key: "DemoPub/Open", label: "DemoPub/Open", emoji: "🌞", handle: "DemoPub", slug: "Open" },
+    ]);
   });
 });

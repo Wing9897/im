@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS worksets (
     notify_enabled INTEGER NOT NULL DEFAULT 1,
     -- MCP/A2A visibility (1 = on). Shared by both channels; builtin 「一般」 can be turned off.
     external_enabled INTEGER NOT NULL DEFAULT 1,
+    -- Card glyph (single grapheme or empty). Builtin 「一般」 may set this too.
+    emoji TEXT NOT NULL DEFAULT '',
+    -- Optional truncated card / catalog blurb (API trims, max ~280 chars).
+    description TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );

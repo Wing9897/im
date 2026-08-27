@@ -136,6 +136,9 @@ async def create_user_event(
     )
     item = await get_user_event(db, event_id)
     assert item is not None
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    await mark_published_workset_dirty(db, clean_workset_id)
     return item
 
 
@@ -276,6 +279,10 @@ async def update_user_event(
     )
     item = await get_user_event(db, event_id)
     assert item is not None
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    prev_workset = str(existing.get("workset_id") or "").strip() or SYSTEM_WORKSET_ID
+    await mark_published_workset_dirty(db, prev_workset, next_workset_id)
     return item
 
 
@@ -299,4 +306,8 @@ async def delete_user_event(db: Database, event_id: str) -> bool:
             (event_id,),
         )
         await tx.execute("DELETE FROM user_events WHERE id = ?", (event_id,))
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    prev_workset = str(existing.get("workset_id") or "").strip() or SYSTEM_WORKSET_ID
+    await mark_published_workset_dirty(db, prev_workset)
     return True

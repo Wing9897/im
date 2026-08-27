@@ -113,4 +113,7 @@ async def create_recurring_series(
     row = await fetch_series_row(db, series_id)
     if row is None:
         raise TaskWriteError("failed to create recurring series")
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    await mark_published_workset_dirty(db, resolved_workset)
     return row

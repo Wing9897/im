@@ -371,4 +371,50 @@ describe("EventListPanel", () => {
     );
     expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
   });
+
+  it("puts subscription provenance on its own row and hides dismiss", () => {
+    const event = makeTimelineItem({
+      id: "sub-1",
+      title: "Open Office Hours",
+      source: "subscribed:DemoPub/Open",
+      body: "Walk-in questions",
+      location: "Lobby",
+      startTime: new Date(2026, 6, 14, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 15, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+    });
+
+    const statusWorkset = container.querySelector(
+      '[data-testid="timeline-event-list-status-workset"]',
+    );
+    const provenance = container.querySelector(
+      '[data-testid="timeline-event-list-provenance"]',
+    );
+    expect(statusWorkset?.textContent).toContain("工作集：一般");
+    expect(statusWorkset?.textContent).not.toContain("訂閱");
+    expect(provenance?.textContent).toContain("訂閱：DemoPub/Open");
+    expect(provenance?.parentElement).not.toBe(statusWorkset);
+    expect(container.querySelector('[data-testid="timeline-event-list-dismiss"]')).toBeNull();
+    expect(container.textContent).not.toContain("從時間軸拿掉");
+  });
+
+  it("keeps dismiss on local user events", () => {
+    const event = makeTimelineItem({
+      id: "user-local",
+      title: "本機會議",
+      source: "user",
+      origin: "manual",
+      startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+    });
+    expect(container.querySelector('[data-testid="timeline-event-list-dismiss"]')).not.toBeNull();
+    expect(container.textContent).toContain("從時間軸拿掉");
+  });
 });

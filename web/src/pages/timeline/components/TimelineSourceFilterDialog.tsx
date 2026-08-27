@@ -1,6 +1,7 @@
 /**
  * Timeline source filter: local worksets (left) and subscribed calendars (right).
- * Board / intelligence / gantt keep SourceFilterDialog (tree only).
+ * Board / intelligence / gantt keep SourceFilterDialog (tree only). Subscribe is
+ * an optional slot here — do not merge the two dialog files.
  */
 
 import { Layers, ListFilter } from "lucide-react";
@@ -8,11 +9,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ModalDialog } from "../../../components/ModalDialog";
-import {
-  SourceFilterColumnActions,
-  SourceFilterSectionHeading,
-  SourceFilterTree,
-} from "../../../components/SourceFilterTree";
+import { SourceFilterColumnShell, SourceFilterTree } from "../../../components/SourceFilterTree";
 import {
   SubscribeFilterGroup,
   type SubscribeCalendarOption,
@@ -154,47 +151,37 @@ export function TimelineSourceFilterDialog({
             className="flex min-h-0 flex-1 flex-col gap-md overflow-hidden sm:flex-row sm:gap-lg"
             data-testid="timeline-filter-columns"
           >
-            <section
-              className="flex min-h-0 min-w-0 flex-1 flex-col gap-sm overflow-hidden"
-              data-testid="timeline-filter-local"
-              aria-label={t("subscriptions:filter.local")}
+            <SourceFilterColumnShell
+              icon={Layers}
+              label={t("subscriptions:filter.local")}
+              headingTestId="timeline-filter-section-local"
+              sectionTestId="timeline-filter-local"
+              scrollTestId="timeline-filter-local-scroll"
+              selectLabel={t("subscriptions:filter.selectAll")}
+              clearLabel={t("subscriptions:filter.clearAll")}
+              selectAria={t("subscriptions:filter.selectAllLocalAria")}
+              clearAria={t("subscriptions:filter.clearLocalAria")}
+              onSelectAll={state.selectAll}
+              onClearAll={state.clearAll}
+              selectTestId="timeline-filter-local-select-all"
+              clearTestId="timeline-filter-local-clear"
             >
-              <SourceFilterSectionHeading
-                icon={Layers}
-                label={t("subscriptions:filter.local")}
-                testId="timeline-filter-section-local"
+              <SourceFilterTree
+                rows={state.visibleRows}
+                query={state.query}
+                onQueryChange={state.setQuery}
+                expanded={state.expanded}
+                onToggleExpanded={state.toggleExpanded}
+                checkedTasks={state.checkedTasks}
+                checkedWorksets={state.checkedWorksets}
+                allSourcesSelected={state.allSourcesSelected}
+                onToggleTask={state.toggleTask}
+                onToggleWorkset={state.toggleWorkset}
+                hideHint
+                hideSearch
+                embedded
               />
-              <SourceFilterColumnActions
-                selectLabel={t("subscriptions:filter.selectAll")}
-                clearLabel={t("subscriptions:filter.clearAll")}
-                selectAria={t("subscriptions:filter.selectAllLocalAria")}
-                clearAria={t("subscriptions:filter.clearLocalAria")}
-                onSelectAll={state.selectAll}
-                onClearAll={state.clearAll}
-                selectTestId="timeline-filter-local-select-all"
-                clearTestId="timeline-filter-local-clear"
-              />
-              <div
-                className="im-auto-scrollbar min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]"
-                data-testid="timeline-filter-local-scroll"
-              >
-                <SourceFilterTree
-                  rows={state.visibleRows}
-                  query={state.query}
-                  onQueryChange={state.setQuery}
-                  expanded={state.expanded}
-                  onToggleExpanded={state.toggleExpanded}
-                  checkedTasks={state.checkedTasks}
-                  checkedWorksets={state.checkedWorksets}
-                  allSourcesSelected={state.allSourcesSelected}
-                  onToggleTask={state.toggleTask}
-                  onToggleWorkset={state.toggleWorkset}
-                  hideHint
-                  hideSearch
-                  embedded
-                />
-              </div>
-            </section>
+            </SourceFilterColumnShell>
             <SubscribeFilterGroup
               calendars={subscribeCalendars}
               draft={draftSubscribe}

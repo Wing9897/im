@@ -62,7 +62,12 @@ class RequestBodyLimitMiddleware:
 
 
 class RateLimitMiddleware:
-    """In-memory per-IP and per-token quotas for the single-process service."""
+    """In-memory per-IP and per-token quotas for the single-process service.
+
+    ``/api/v1/calendar-share/*`` is excluded so it does not stack with the
+    calendar-share table in ``server/calendar_share/rate_limit.py`` (synced with
+    IntelligenceCalendar ``app/config.py`` / ``app/rate_limit.py``).
+    """
 
     def __init__(self, app: ASGIApp) -> None:
         self._app = app
@@ -92,7 +97,11 @@ class RateLimitMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path = str(scope.get("path") or "")
-        if scope["type"] != "http" or not path.startswith("/api/v1/"):
+        # Calendar-share has its own table (synced with IC app/rate_limit.py);
+        # skip the global 600/60s so the two windows do not stack.
+        if scope["type"] != "http" or not path.startswith("/api/v1/") or path.startswith(
+            "/api/v1/calendar-share"
+        ):
             await self._app(scope, receive, send)
             return
 

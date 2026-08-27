@@ -10,6 +10,18 @@ import aiosqlite
 from server.db.schema import DDL
 
 _DEFAULT_LOG = ("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test")
+_STAMP3_WORKSET_COLUMNS = ("emoji", "description")
+
+
+async def _drop_workset_stamp3_columns(conn: aiosqlite.Connection) -> None:
+    """Strip stamp-3 workset columns so floor/stamp-2 fixtures can walk ADD COLUMN."""
+    for column in _STAMP3_WORKSET_COLUMNS:
+        await conn.execute(f"ALTER TABLE worksets DROP COLUMN {column}")
+
+
+async def _drop_calendar_share_publish(conn: aiosqlite.Connection) -> None:
+    """Strip stamp-4 publish table so older fixtures can walk CREATE TABLE."""
+    await conn.execute("DROP TABLE IF EXISTS calendar_share_publish")
 
 
 async def logical_snapshot(path: str) -> dict[str, Any]:
@@ -83,13 +95,56 @@ async def make_pre_schema_meta_db(
     *,
     version: int,
     log_rows: list[tuple[str, str, str, str]] | None = None,
+    strip_workset_stamp3: bool = True,
 ) -> None:
-    """Current DDL minus ``schema_meta`` (live stamp-1 shape, or a stamp-2 lookalike)."""
+    """Current DDL minus ``schema_meta``.
+
+    ``strip_workset_stamp3=True`` is the live stamp-1 shape (no emoji/description).
+    ``False`` keeps current workset columns for a current-stamp lookalike.
+    """
     await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
     conn = await aiosqlite.connect(path)
     try:
         await conn.execute("DROP TABLE IF EXISTS schema_meta")
+        await _drop_calendar_share_publish(conn)
+        if strip_workset_stamp3:
+            await _drop_workset_stamp3_columns(conn)
         await conn.execute(f"PRAGMA user_version={version}")
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def make_stamp_2_db(
+    path: str,
+    *,
+    log_rows: list[tuple[str, str, str, str]] | None = None,
+) -> None:
+    """Stamp-2 shape: ``schema_meta`` present, workset emoji/description absent."""
+    await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
+    conn = await aiosqlite.connect(path)
+    try:
+        await _drop_workset_stamp3_columns(conn)
+        await _drop_calendar_share_publish(conn)
+        await conn.execute("UPDATE schema_meta SET schema_semver = '1.1.0' WHERE id = 1")
+        await conn.execute("PRAGMA user_version=2")
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def make_stamp_3_db(
+    path: str,
+    *,
+    log_rows: list[tuple[str, str, str, str]] | None = None,
+) -> None:
+    """Stamp-3 shape: workset emoji/description present, publish table absent."""
+    await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
+    conn = await aiosqlite.connect(path)
+    try:
+        await _drop_calendar_share_publish(conn)
+        await conn.execute("UPDATE schema_meta SET schema_semver = '1.2.0' WHERE id = 1")
+        await conn.execute("PRAGMA user_version=3")
         await conn.commit()
     finally:
         await conn.close()
