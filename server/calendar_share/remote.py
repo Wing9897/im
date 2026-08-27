@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 from urllib.parse import urlencode
@@ -22,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 _TIMEOUT = aiohttp.ClientTimeout(total=15, connect=5, sock_read=12)
 _USER_AGENT = "IntelligenceMonitor/calendar-share"
+# One IM desktop: serialize refresh so concurrent 401s cannot rotate the same refresh token.
+_refresh_lock = asyncio.Lock()
 
 
 class CalendarShareRemoteError(Exception):
@@ -167,6 +170,26 @@ async def logout_remote(base_url: str, refresh_token: str) -> None:
         logger.info("Calendar share remote logout failed; local tokens still cleared")
 
 
+async def _rotate_access_token(db: Database, base_url: str, *, stale_access: str, refresh: str) -> str:
+    """Refresh under a process lock; reuse a token another caller already rotated."""
+    async with _refresh_lock:
+        current_access = await get_access_token(db)
+        current_refresh = await get_refresh_token(db)
+        if current_access and current_access != stale_access:
+            return current_access
+        token = current_refresh or refresh
+        if not token:
+            await clear_tokens(db)
+            raise http_error(401, "Not signed in to calendar share", error_code=AUTH_REQUIRED)
+        try:
+            access, new_refresh = await refresh_remote(base_url, token)
+            await save_tokens(db, access_token=access, refresh_token=new_refresh)
+            return access
+        except CalendarShareRemoteError as exc:
+            await clear_tokens(db)
+            raise http_error(401, exc.message, error_code=AUTH_REQUIRED) from exc
+
+
 async def authorized_request_raw(
     db: Database,
     *,
@@ -192,28 +215,24 @@ async def authorized_request_raw(
         )
 
     if not access and refresh:
-        try:
-            access, new_refresh = await refresh_remote(base_url, refresh)
-            await save_tokens(db, access_token=access, refresh_token=new_refresh)
-        except CalendarShareRemoteError as exc:
-            await clear_tokens(db)
-            raise http_error(401, exc.message, error_code=AUTH_REQUIRED) from exc
+        access = await _rotate_access_token(db, base_url, stale_access="", refresh=refresh)
 
+    used_access = access
     try:
-        status, payload = await _once(access)
+        status, payload = await _once(used_access)
     except CalendarShareRemoteError as exc:
         if exc.status == 502:
             raise http_error(502, exc.message) from exc
         raise
 
     if status == 401 and refresh:
+        access = await _rotate_access_token(db, base_url, stale_access=used_access, refresh=refresh)
         try:
-            access, new_refresh = await refresh_remote(base_url, refresh)
-            await save_tokens(db, access_token=access, refresh_token=new_refresh)
             status, payload = await _once(access)
         except CalendarShareRemoteError as exc:
-            await clear_tokens(db)
-            raise http_error(401, exc.message, error_code=AUTH_REQUIRED) from exc
+            if exc.status == 502:
+                raise http_error(502, exc.message) from exc
+            raise
 
     if status == 401:
         await clear_tokens(db)

@@ -113,4 +113,38 @@ describe("SubscriptionsSearchPage", () => {
       true,
     );
   });
+
+  it("refreshes the catalog after adding a search hit", async () => {
+    calendarShareApiMocks.addCalendarShareSubscription.mockImplementation(async () => {
+      calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
+        items: [
+          { handle: "DemoPub", slug: "Open" },
+          { handle: "Alice", slug: "Work" },
+        ],
+        ownHandle: "Wing",
+      });
+      return {
+        items: [
+          { handle: "DemoPub", slug: "Open" },
+          { handle: "Alice", slug: "Work" },
+        ],
+        ownHandle: "Wing",
+      };
+    });
+    await renderPage();
+    const before = calendarShareApiMocks.fetchCalendarShareSubscriptions.mock.calls.length;
+    await act(async () => {
+      (document.querySelector('[data-testid="subscriptions-add-Alice/Work"]') as HTMLButtonElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(calendarShareApiMocks.addCalendarShareSubscription).toHaveBeenCalledWith({
+      handle: "Alice",
+      slug: "Work",
+    });
+    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions.mock.calls.length).toBeGreaterThan(before);
+    expect(document.querySelector('[data-testid="subscriptions-add-Alice/Work"]')).toBeNull();
+  });
 });

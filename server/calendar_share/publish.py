@@ -166,13 +166,13 @@ async def _patch_or_put_snapshot(
     events: list[dict[str, Any]],
     series: list[dict[str, Any]],
     entry: dict[str, Any],
-    unpublish: bool,
     current_fingerprints: dict[str, dict[str, str]],
 ) -> Any:
     """Incremental PATCH when a server ``events_hash`` receipt exists; otherwise full PUT.
 
-    409 (baseHash mismatch) falls back to a full snapshot. Unpublish always PUT-empty.
+    409 (baseHash mismatch) falls back to a full snapshot.
     ``baseHash`` is the last server ``contentHash`` (events_hash), not a local aggregate.
+    Unpublish uses DELETE, not an empty PUT.
     """
     server_hash = str(entry.get("lastServerEventsHash") or "").strip()
     previous = entry.get("lastFingerprints") if isinstance(entry.get("lastFingerprints"), dict) else {}
@@ -181,7 +181,7 @@ async def _patch_or_put_snapshot(
         and isinstance(previous.get("events"), dict)
         and isinstance(previous.get("series"), dict)
     )
-    if unpublish or not has_checkpoint:
+    if not has_checkpoint:
         return await _put_full_snapshot(db, slug=slug, visibility=visibility, events=events, series=series)
 
     event_upsert_uids, event_delete_uids = diff_uid_maps(
@@ -211,6 +211,31 @@ async def _patch_or_put_snapshot(
     return payload
 
 
+async def _delete_remote_calendar(db: Database, slug: str) -> None:
+    status, payload = await authorized_request_raw(
+        db,
+        method="DELETE",
+        path=f"/me/calendars/{slug}",
+    )
+    if status in (200, 204, 404):
+        return
+    raise_remote_status(status, payload, fallback="Calendar share unpublish failed")
+
+
+def _cleared_unpublish_entry(entry: dict[str, Any], *, now: str) -> dict[str, Any]:
+    next_entry = {
+        **entry,
+        "lastSyncAt": now,
+        "lastError": None,
+        "lastGrantsHash": None,
+        "lastServerEventsHash": None,
+        "lastPublicVisibility": None,
+        "lastFingerprints": {"events": {}, "series": {}},
+    }
+    next_entry.pop("lastEventsHash", None)
+    return next_entry
+
+
 async def push_workset_calendar(
     db: Database,
     *,
@@ -224,22 +249,32 @@ async def push_workset_calendar(
     visibility = str(entry.get("publicVisibility") or "off")
     grants = list(entry.get("grants") or [])
     if unpublish or not entry.get("enabled"):
-        events: list[dict[str, Any]] = []
-        series: list[dict[str, Any]] = []
-        unpublish = True
-    else:
-        events, series = await collect_workset_snapshot(db, workset_id)
-        unpublish = False
+        try:
+            await _delete_remote_calendar(db, slug)
+        except Exception as exc:
+            await upsert_workset_entry(
+                db,
+                workset_id,
+                {**entry, "lastError": str(exc), "lastSyncAt": entry.get("lastSyncAt")},
+            )
+            raise
+        return await upsert_workset_entry(
+            db,
+            workset_id,
+            _cleared_unpublish_entry(entry, now=utc_now_iso()),
+        )
+
+    events, series = await collect_workset_snapshot(db, workset_id)
     grants_hash = grants_content_hash(grants)
     current_fingerprints = fingerprint_maps(events, series)
     previous_fps = entry.get("lastFingerprints") if isinstance(entry.get("lastFingerprints"), dict) else {}
-    skip_events = (not unpublish) and snapshot_unchanged(
+    skip_events = snapshot_unchanged(
         previous_fps,
         current_fingerprints,
         str(entry.get("lastPublicVisibility") or ""),
         visibility,
     )
-    skip_grants = (not unpublish) and str(entry.get("lastGrantsHash") or "") == grants_hash
+    skip_grants = str(entry.get("lastGrantsHash") or "") == grants_hash
     remote_payload: Any = None
     try:
         if not skip_events:
@@ -250,7 +285,6 @@ async def push_workset_calendar(
                 events=events,
                 series=series,
                 entry=entry,
-                unpublish=unpublish,
                 current_fingerprints=current_fingerprints,
             )
         if not skip_grants:

@@ -119,7 +119,7 @@
   "graphGateExternalAria": "{name}: external ({state})",
   "calendarShare": {
     "title": "Calendar share",
-    "help": "Upload this workset’s user and recurring events to the remote calendar. ACL lives on the server; this page only stores the workset↔slug mapping and publish switch.",
+    "help": "Upload this workset’s user and recurring events to the remote calendar. Turning off upload deletes that slug calendar on the public server (subscribers will no longer see it). ACL lives on the server; this page only stores the workset↔slug mapping and publish switch.",
     "generalWarning": "The General workset includes unfiled events. Confirm nothing private should be published.",
     "needLogin": "Sign in to calendar share under Account → Identity first.",
     "enabled": "Enable upload",

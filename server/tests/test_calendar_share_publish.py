@@ -284,7 +284,7 @@ async def test_publish_incremental_409_falls_back_to_full_put(client, fake_remot
     assert "series" in fallback["json_body"]
 
 
-async def test_unpublish_sends_empty_events_and_series(client, fake_remote):
+async def test_unpublish_deletes_remote_calendar(client, app, fake_remote):
     await login_calendar_share(client, fake_remote)
     first = await client.put(
         f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
@@ -297,10 +297,43 @@ async def test_unpublish_sends_empty_events_and_series(client, fake_remote):
         json={"enabled": False, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
     )
     assert resp.status_code == 200, resp.text
-    calendar_put = next(call for call in fake_remote.calls if call["path"] == "/me/calendars/Work")
-    assert calendar_put["json_body"]["events"] == []
-    assert calendar_put["json_body"]["series"] == []
-    assert calendar_put["json_body"]["visibility"] == "details"
+    assert resp.json()["enabled"] is False
+    calendar_delete = next(
+        call for call in fake_remote.calls if call["path"] == "/me/calendars/Work" and call["method"] == "DELETE"
+    )
+    assert calendar_delete["json_body"] is None
+    assert not any(
+        call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls
+    )
+    assert not any(str(call["path"]).endswith("/grants") for call in fake_remote.calls)
+
+    from server.calendar_share.store import get_workset_entry
+
+    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert entry["lastFingerprints"] == {"events": {}, "series": {}}
+    assert entry["lastServerEventsHash"] is None
+    assert entry["lastPublicVisibility"] is None
+    assert entry["lastGrantsHash"] is None
+
+    fake_remote.calls.clear()
+    again = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"enabled": True, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+    )
+    assert again.status_code == 200, again.text
+    assert any(call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls)
+    assert not any(str(call["path"]).endswith("/changes") for call in fake_remote.calls)
+
+
+async def test_unpublish_delete_404_is_idempotent(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    fake_remote.delete_calendar_status = 404
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"enabled": False, "slug": "Work", "syncNow": True, "publicVisibility": "details"},
+    )
+    assert resp.status_code == 200, resp.text
+    assert any(call["path"] == "/me/calendars/Work" and call["method"] == "DELETE" for call in fake_remote.calls)
 
 
 def test_fingerprint_changes_when_title_changes():

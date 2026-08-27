@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from server.calendar_share.constants import KEY_ACCESS_TOKEN, KEY_REFRESH_TOKEN
-from server.calendar_share.remote import parse_token_pair
+from server.calendar_share.remote import authorized_request, parse_token_pair
 from server.secrets import unprotect_text
 from server.tests.calendar_share_fakes import DEFAULT_URL, login_calendar_share
 
@@ -74,3 +76,53 @@ async def test_session_get_wipes_legacy_subscription_cache(client, app):
         ("calendar_share_subscriptions",),
     )
     assert leftover is None
+
+
+async def test_concurrent_authorized_requests_refresh_once(app, client, fake_remote, monkeypatch):
+    await login_calendar_share(client, fake_remote)
+    fake_remote.expired_access_tokens.add("acc-1")
+    fake_remote.single_use_refresh = True
+
+    release = asyncio.Event()
+    refresh_started = asyncio.Event()
+    refresh_calls = 0
+    real = fake_remote.__call__
+
+    async def gated(
+        *,
+        base_url: str,
+        method: str,
+        path: str,
+        json_body=None,
+        query=None,
+        access_token=None,
+        refresh_token=None,
+    ):
+        nonlocal refresh_calls
+        if path == "/auth/refresh":
+            refresh_calls += 1
+            refresh_started.set()
+            await release.wait()
+        return await real(
+            base_url=base_url,
+            method=method,
+            path=path,
+            json_body=json_body,
+            query=query,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", gated)
+
+    async def one():
+        return await authorized_request(app.state.db, method="GET", path="/me/subscriptions")
+
+    first = asyncio.create_task(one())
+    second = asyncio.create_task(one())
+    await refresh_started.wait()
+    await asyncio.sleep(0.05)
+    release.set()
+    results = await asyncio.gather(first, second)
+    assert refresh_calls == 1
+    assert results[0] == results[1] == {"items": []}

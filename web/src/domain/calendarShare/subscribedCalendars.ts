@@ -69,6 +69,8 @@ export function pruneSubscribedCalendarSelection(
   catalogKeys: readonly string[],
 ): SubscribedCalendarSelection {
   if (selection === null) return null;
+  // Empty catalog (logged out / still loading): keep the persisted subset so it can
+  // restore when keys return. Visibility already treats empty catalog as no events.
   if (catalogKeys.length === 0) return selection;
   const allowed = new Set(catalogKeys);
   const next = selection.filter((key) => allowed.has(key));
@@ -97,6 +99,31 @@ export function sameSubscribeSelection(
   if (a === null && b === null) return true;
   if (a === null || b === null) return false;
   return a.length === b.length && a.every((key) => b.includes(key));
+}
+
+/** Timeline subscribe-column gate: logged out vs IC unreachable. */
+export type SubscribeAvailability = "ok" | "loggedOut" | "offline";
+
+export function isCalendarShareUnreachable(error: unknown): boolean {
+  if (error == null || error === false) return false;
+  if (typeof error === "object" && error !== null) {
+    const status = "status" in error ? Number((error as { status?: unknown }).status) : NaN;
+    if (status === 502 || status === 503 || status === 504) return true;
+    const name = "name" in error ? String((error as { name?: unknown }).name) : "";
+    if (name === "NetworkError") return true;
+  }
+  const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
+  return /\b502\b|\b503\b|\b504\b|unreachable|failed to fetch|network error/i.test(message);
+}
+
+export function resolveSubscribeAvailability(input: {
+  connected?: boolean | null;
+  catalogUnreachable?: boolean;
+  eventsError?: unknown;
+}): SubscribeAvailability {
+  if (input.connected === false) return "loggedOut";
+  if (input.catalogUnreachable || isCalendarShareUnreachable(input.eventsError)) return "offline";
+  return "ok";
 }
 
 export function toggleSubscribeKey(

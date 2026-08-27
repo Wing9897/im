@@ -17,7 +17,9 @@
     "clearLocalAria": "清空本機",
     "selectAllSubscribeAria": "全選訂閱",
     "clearSubscribeAria": "清空訂閱",
-    "browseAria": "已訂閱日曆"
+    "browseAria": "已訂閱日曆",
+    "loggedOut": "尚未登入日曆分享，訂閱欄無法操作。本機來源仍可篩選。",
+    "offline": "日曆分享離線或連不上伺服器，訂閱欄暫停操作。本機來源仍可篩選。"
   },
   "mine": {
     "title": "已訂閱日曆",

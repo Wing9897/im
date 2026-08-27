@@ -104,4 +104,14 @@ describe("useCalendarShareCatalog", () => {
     });
     await first;
   });
+
+  it("marks catalog unreachable on 502 without treating it as logged out", async () => {
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(
+      Object.assign(new Error("Calendar share server unreachable"), { status: 502, name: "ApiRequestError" }),
+    );
+    await renderHook();
+    expect(resultRef.current?.unreachable).toBe(true);
+    expect(resultRef.current?.session?.connected).toBe(true);
+    expect(resultRef.current?.error).toMatch(/unreachable/i);
+  });
 });

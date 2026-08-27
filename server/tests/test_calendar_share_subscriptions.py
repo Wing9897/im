@@ -141,15 +141,14 @@ async def test_list_subscriptions_502_fails_closed(client, app, fake_remote):
     assert leftover is None
 
 
-async def test_subscribe_get_502_returns_mutated_handle_without_cache(client, app, fake_remote):
+async def test_subscribe_get_502_fails_closed(client, app, fake_remote):
     await login_calendar_share(client, fake_remote)
     fake_remote.get_sub_status = 502
     resp = await client.post(
         "/api/v1/calendar-share/subscriptions",
         json={"handle": "Alice", "slug": "Work"},
     )
-    assert resp.status_code == 200, resp.text
-    assert resp.json()["items"] == [{"handle": "Alice", "slug": "Work"}]
+    assert resp.status_code == 502
     leftover = await app.state.db.fetch_one(
         "SELECT value FROM system_config WHERE key = ?",
         ("calendar_share_subscriptions",),
@@ -157,7 +156,7 @@ async def test_subscribe_get_502_returns_mutated_handle_without_cache(client, ap
     assert leftover is None
 
 
-async def test_delete_get_502_returns_without_writing_config(client, app, fake_remote):
+async def test_delete_get_502_fails_closed(client, app, fake_remote):
     await login_calendar_share(client, fake_remote)
     await subscribe_calendar_share(client)
     fake_remote.get_sub_status = 502
@@ -165,8 +164,7 @@ async def test_delete_get_502_returns_without_writing_config(client, app, fake_r
         "/api/v1/calendar-share/subscriptions",
         params={"handle": "Alice", "slug": "Work"},
     )
-    assert deleted.status_code == 200, deleted.text
-    assert deleted.json()["items"] == []
+    assert deleted.status_code == 502
     leftover = await app.state.db.fetch_one(
         "SELECT value FROM system_config WHERE key = ?",
         ("calendar_share_subscriptions",),

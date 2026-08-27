@@ -6,7 +6,7 @@ import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
-import type { SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
+import type { SubscribeAvailability, SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
 
 type TimelineTaskOption = {
   id: string;
@@ -46,6 +46,7 @@ type TimelineControlBarProps = {
   subscribeCalendars?: SubscribeCalendarOption[];
   selectedSubscribeKeys?: SubscribedCalendarSelection;
   onChangeSubscribeKeys?: (next: SubscribedCalendarSelection) => void;
+  subscribeAvailability?: SubscribeAvailability;
   children?: ReactNode;
 };
 
@@ -70,6 +71,7 @@ export function TimelineControlBar({
   subscribeCalendars,
   selectedSubscribeKeys = null,
   onChangeSubscribeKeys,
+  subscribeAvailability = "ok",
   children,
 }: TimelineControlBarProps) {
   const { t } = useTranslation("timeline");
@@ -108,6 +110,7 @@ export function TimelineControlBar({
           subscribeCalendars={subscribeCalendars}
           selectedSubscribeKeys={selectedSubscribeKeys}
           onChangeSubscribeKeys={onChangeSubscribeKeys}
+          subscribeAvailability={subscribeAvailability}
         />
       </div>
 

@@ -17,7 +17,9 @@
     "clearLocalAria": "Clear local sources",
     "selectAllSubscribeAria": "Select all subscriptions",
     "clearSubscribeAria": "Clear subscriptions",
-    "browseAria": "Subscribed calendars"
+    "browseAria": "Subscribed calendars",
+    "loggedOut": "Sign in to calendar share to use the subscription filter. Local sources still work.",
+    "offline": "Calendar share is unreachable. Subscriptions stay disabled until it reconnects. Local sources still work."
   },
   "mine": {
     "title": "Subscribed calendars",

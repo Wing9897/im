@@ -1,5 +1,6 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SubscribeFilterGroup } from "./SubscribeFilterGroup";
@@ -35,22 +36,25 @@ describe("SubscribeFilterGroup", () => {
       calendars?: typeof CALENDARS;
       draft?: string[] | null;
       query?: string;
+      availability?: "ok" | "loggedOut" | "offline";
     } = {},
   ) {
     const onToggleKey = vi.fn();
     const onSelectAll = vi.fn();
     const onClearAll = vi.fn();
+    const group = createElement(SubscribeFilterGroup, {
+      calendars: extra.calendars ?? CALENDARS,
+      draft: extra.draft === undefined ? null : extra.draft,
+      query: extra.query ?? "",
+      onToggleKey,
+      onSelectAll,
+      onClearAll,
+      availability: extra.availability,
+    });
     act(() => {
       root.render(
         wrapWithI18n(
-          createElement(SubscribeFilterGroup, {
-            calendars: extra.calendars ?? CALENDARS,
-            draft: extra.draft === undefined ? null : extra.draft,
-            query: extra.query ?? "",
-            onToggleKey,
-            onSelectAll,
-            onClearAll,
-          }),
+          extra.availability === "loggedOut" ? createElement(MemoryRouter, null, group) : group,
         ),
       );
     });
@@ -119,5 +123,34 @@ describe("SubscribeFilterGroup", () => {
     expect(container.querySelector('[data-testid="timeline-filter-subscribe-scroll"]')?.className).toContain(
       "overflow-y-auto",
     );
+  });
+
+  it("greys the subscribe column when offline and ignores toggles", () => {
+    const { onToggleKey, onSelectAll } = renderGroup({ availability: "offline" });
+    const status = container.querySelector('[data-testid="timeline-subscribe-disabled"]');
+    expect(status?.textContent).toMatch(/unreachable/i);
+    expect(container.querySelector('[data-testid="timeline-subscribe-filter"]')?.className).not.toContain(
+      "needLogin",
+    );
+    const checkbox = container.querySelector(
+      '[data-testid="timeline-subscribe-toggle-Alice/Work"]',
+    ) as HTMLInputElement;
+    expect(checkbox.disabled).toBe(true);
+    act(() => {
+      checkbox.click();
+      (
+        container.querySelector('[data-testid="timeline-filter-subscribe-select-all"]') as HTMLButtonElement
+      ).click();
+    });
+    expect(onToggleKey).not.toHaveBeenCalled();
+    expect(onSelectAll).not.toHaveBeenCalled();
+  });
+
+  it("uses different copy when calendar-share is not signed in", () => {
+    renderGroup({ availability: "loggedOut" });
+    const status = container.querySelector('[data-testid="timeline-subscribe-disabled"]');
+    expect(status?.textContent).toMatch(/sign in/i);
+    expect(status?.textContent).not.toMatch(/unreachable/i);
+    expect(status?.querySelector('a[href="/account/identity"]')?.textContent).toMatch(/sign-in/i);
   });
 });

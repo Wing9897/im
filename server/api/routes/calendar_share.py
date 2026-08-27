@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Query, Request
 
 from server.api.deps import API_DEPS, get_db, require_row
 from server.api.schemas.requests.calendar_share import (
@@ -286,10 +286,7 @@ async def add_remote_subscription(
         path="/me/subscriptions",
         json_body={"handle": handle, "slug": slug},
     )
-    try:
-        items = await _fetch_subscription_items(db)
-    except HTTPException:
-        items = [{"handle": handle, "slug": slug}]
+    items = await _fetch_subscription_items(db)
     return CalendarShareSubscriptionsResponse.model_validate({"items": items, "ownHandle": own})
 
 
@@ -314,10 +311,7 @@ async def delete_subscription(
         path="/me/subscriptions",
         query={"handle": parsed_handle, "slug": parsed_slug},
     )
-    try:
-        items = await _fetch_subscription_items(db)
-    except HTTPException:
-        items = []
+    items = await _fetch_subscription_items(db)
     return CalendarShareSubscriptionsResponse.model_validate({"items": items, "ownHandle": await get_handle(db)})
 
 

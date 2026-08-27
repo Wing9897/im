@@ -1,5 +1,6 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
@@ -50,28 +51,33 @@ describe("TimelineSourceFilterDialog", () => {
       subscribeCalendars?: { key: string; label: string }[];
       selectedSubscribeKeys?: string[] | null;
       onChangeSubscribeKeys?: (next: string[] | null) => void;
+      subscribeAvailability?: "ok" | "loggedOut" | "offline";
     } = {},
   ) {
     const onChange = vi.fn();
     const onChangeSubscribeKeys = extra.onChangeSubscribeKeys ?? vi.fn();
+    const dialog = createElement(TimelineSourceFilterDialog, {
+      tasks: TASKS,
+      worksets: WORKSETS,
+      expandTasks: EXPAND_TASKS,
+      selection,
+      onChange,
+      ariaLabelPrefix: "Timeline",
+      variant: "toolbar",
+      subscribeCalendars: extra.subscribeCalendars ?? [
+        { key: "Alice/Work", label: "Alice/Work" },
+        { key: "Carol/Team", label: "Carol/Team" },
+      ],
+      selectedSubscribeKeys: extra.selectedSubscribeKeys ?? null,
+      onChangeSubscribeKeys,
+      subscribeAvailability: extra.subscribeAvailability,
+    });
     act(() => {
       root.render(
         wrapWithI18n(
-          createElement(TimelineSourceFilterDialog, {
-            tasks: TASKS,
-            worksets: WORKSETS,
-            expandTasks: EXPAND_TASKS,
-            selection,
-            onChange,
-            ariaLabelPrefix: "Timeline",
-            variant: "toolbar",
-            subscribeCalendars: extra.subscribeCalendars ?? [
-              { key: "Alice/Work", label: "Alice/Work" },
-              { key: "Carol/Team", label: "Carol/Team" },
-            ],
-            selectedSubscribeKeys: extra.selectedSubscribeKeys ?? null,
-            onChangeSubscribeKeys,
-          }),
+          extra.subscribeAvailability === "loggedOut"
+            ? createElement(MemoryRouter, null, dialog)
+            : dialog,
         ),
       );
     });
@@ -130,6 +136,19 @@ describe("TimelineSourceFilterDialog", () => {
     openDialog();
     expect(document.querySelector('[data-testid="timeline-subscribe-filter"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-subscribe-empty"]')).toBeTruthy();
+  });
+
+  it("does not badge a persisted subscribe subset when the catalog is empty", () => {
+    renderDialog(null, { subscribeCalendars: [], selectedSubscribeKeys: ["Alice/Work"] });
+    expect(document.querySelector('[data-testid="board-source-filter-count"]')).toBeNull();
+    expect(
+      document.querySelector('[data-testid="board-source-filter"]')?.getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
+  it("badges a subscribe subset when the catalog has those calendars", () => {
+    renderDialog(null, { selectedSubscribeKeys: ["Alice/Work"] });
+    expect(document.querySelector('[data-testid="board-source-filter-count"]')?.textContent).toBe("1");
   });
 
   it("keeps select-all and clear on each column, not in the shared footer", () => {
@@ -261,5 +280,48 @@ describe("TimelineSourceFilterDialog", () => {
     expect(localScroll?.className).toContain("min-h-0");
     expect(subscribeScroll?.className).toContain("overflow-y-auto");
     expect(subscribeScroll?.className).toContain("min-h-0");
+  });
+
+  it("disables the subscribe column when calendar-share is offline, not when describing login", () => {
+    renderDialog(null, { subscribeAvailability: "offline" });
+    openDialog();
+    const group = document.querySelector('[data-testid="timeline-subscribe-filter"]');
+    expect(group?.getAttribute("data-availability")).toBe("offline");
+    expect(group?.getAttribute("aria-disabled")).toBe("true");
+    const status = document.querySelector('[data-testid="timeline-subscribe-disabled"]');
+    expect(status?.textContent).toMatch(/unreachable/i);
+    expect(status?.textContent).not.toMatch(/sign in/i);
+    const selectAll = document.querySelector(
+      '[data-testid="timeline-filter-subscribe-select-all"]',
+    ) as HTMLButtonElement;
+    const checkbox = document.querySelector(
+      '[data-testid="timeline-subscribe-toggle-Alice/Work"]',
+    ) as HTMLInputElement;
+    expect(selectAll.disabled).toBe(true);
+    expect(checkbox.disabled).toBe(true);
+    expect(document.querySelector('[data-testid="timeline-filter-local-select-all"]')).toBeTruthy();
+    expect(
+      (document.querySelector('[data-testid="timeline-filter-local-select-all"]') as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+  });
+
+  it("uses distinct logged-out copy and keeps local sources usable", () => {
+    const { onChange, onChangeSubscribeKeys } = renderDialog(null, {
+      subscribeAvailability: "loggedOut",
+    });
+    openDialog();
+    const status = document.querySelector('[data-testid="timeline-subscribe-disabled"]');
+    expect(status?.textContent).toMatch(/sign in/i);
+    expect(status?.textContent).not.toMatch(/unreachable/i);
+    expect(status?.querySelector('a[href="/account/identity"]')).toBeTruthy();
+    act(() => {
+      (document.querySelector('[data-testid="timeline-filter-local-clear"]') as HTMLButtonElement).click();
+    });
+    act(() => {
+      (document.querySelector('[data-testid="source-filter-apply"]') as HTMLButtonElement).click();
+    });
+    expect(onChange).toHaveBeenCalledWith({ taskIds: [], worksetIds: [] });
+    expect(onChangeSubscribeKeys).not.toHaveBeenCalled();
   });
 });

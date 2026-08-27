@@ -25,6 +25,7 @@ import type { SourceFilterExpandTask, WorksetFilterOption } from "../../../compo
 import {
   sameSubscribeSelection,
   toggleSubscribeKey,
+  type SubscribeAvailability,
   type SubscribedCalendarSelection,
 } from "../../../domain/calendarShare/subscribedCalendars";
 
@@ -41,6 +42,7 @@ type TimelineSourceFilterDialogProps = {
   subscribeCalendars?: SubscribeCalendarOption[];
   selectedSubscribeKeys?: SubscribedCalendarSelection;
   onChangeSubscribeKeys?: (next: SubscribedCalendarSelection) => void;
+  subscribeAvailability?: SubscribeAvailability;
 };
 
 export function TimelineSourceFilterDialog({
@@ -54,6 +56,7 @@ export function TimelineSourceFilterDialog({
   subscribeCalendars = [],
   selectedSubscribeKeys = null,
   onChangeSubscribeKeys,
+  subscribeAvailability = "ok",
 }: TimelineSourceFilterDialogProps) {
   const { t } = useTranslation("common");
   const prefix = ariaLabelPrefix ?? t("board:shell.sourceFilterPrefix");
@@ -72,11 +75,12 @@ export function TimelineSourceFilterDialog({
     setDraftSubscribe(selectedSubscribeKeys);
   }, [selectedSubscribeKeys, state.open]);
 
-  const subscribeFiltering = selectedSubscribeKeys !== null;
+  const subscribeCatalogReady = catalogKeys.length > 0;
+  const subscribeFiltering = selectedSubscribeKeys !== null && subscribeCatalogReady;
   const isFiltering = state.isFiltering || subscribeFiltering;
   const filterBadgeCount =
     (state.isFiltering ? state.filterBadgeCount : 0) +
-    (selectedSubscribeKeys === null ? 0 : selectedSubscribeKeys.length);
+    (selectedSubscribeKeys === null || !subscribeCatalogReady ? 0 : selectedSubscribeKeys.length);
   const subscribeDirty = !sameSubscribeSelection(draftSubscribe, selectedSubscribeKeys);
   const applyDisabled = state.applyDisabled && !subscribeDirty;
 
@@ -200,6 +204,7 @@ export function TimelineSourceFilterDialog({
               }
               onSelectAll={() => setDraftSubscribe(null)}
               onClearAll={() => setDraftSubscribe([])}
+              availability={subscribeAvailability}
             />
           </div>
         </div>

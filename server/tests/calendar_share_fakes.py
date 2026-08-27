@@ -33,6 +33,7 @@ class FakeRemote:
         self.refresh_payload: Any = {"accessToken": "acc-2", "refreshToken": "ref-2"}
         self.logout_status = 204
         self.put_calendar_status = 200
+        self.delete_calendar_status = 200
         self.patch_changes_status = 200
         self.put_grants_status = 200
         self.put_timezone_status = 200
@@ -63,6 +64,9 @@ class FakeRemote:
         }
         self.fail_first_authorized = False
         self._authorized_hits = 0
+        self.expired_access_tokens: set[str] = set()
+        self.single_use_refresh = False
+        self._consumed_refresh: str | None = None
 
     async def __call__(
         self,
@@ -89,9 +93,20 @@ class FakeRemote:
         if path == "/auth/login":
             return self.login_status, self.login_payload
         if path == "/auth/refresh":
+            token = ""
+            if isinstance(json_body, dict):
+                token = str(json_body.get("refreshToken") or json_body.get("refresh") or "").strip()
+            if not token:
+                token = str(refresh_token or "").strip()
+            if self.single_use_refresh and self._consumed_refresh is not None and token == self._consumed_refresh:
+                return 401, {"message": "refresh already used"}
+            if self.single_use_refresh and self.refresh_status < 400:
+                self._consumed_refresh = token
             return self.refresh_status, self.refresh_payload
         if path == "/auth/logout":
             return self.logout_status, None
+        if access_token and access_token in self.expired_access_tokens:
+            return 401, {"message": "expired"}
         if path == "/search":
             return self.search_status, self.search_payload
         if path == "/me/timezone":
@@ -129,6 +144,8 @@ class FakeRemote:
                 return 401, {"message": "expired"}
             return self.patch_changes_status, {"contentHash": "srv-hash-2", "ok": True}
         if path.startswith("/me/calendars/"):
+            if method == "DELETE":
+                return self.delete_calendar_status, {"deleted": self.delete_calendar_status < 400}
             if self.fail_first_authorized and self._authorized_hits == 0 and access_token == "acc-1":
                 self._authorized_hits += 1
                 return 401, {"message": "expired"}
