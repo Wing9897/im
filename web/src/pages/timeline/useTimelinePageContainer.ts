@@ -10,7 +10,7 @@ import {
   usePersistedSourceFilter,
   usePruneSourceFilterToCatalog,
 } from "../../hooks/usePersistedSourceFilter";
-import { calendarShareKey, pruneSubscribedCalendarSelection } from "../../domain/calendarShare/subscribedCalendars";
+import { calendarShareKey, pruneSubscribedCalendarSelection, resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
 import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { usePersistedSubscribeFilter } from "../../domain/calendarShare/usePersistedSubscribeFilter";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
@@ -97,6 +97,11 @@ export function useTimelinePageContainer() {
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
   });
+  const subscribeAvailability = resolveSubscribeAvailability({
+    connected: catalog.session?.connected,
+    catalogUnreachable: catalog.unreachable,
+    eventsError: data.pageError,
+  });
   usePruneSourceFilterToCatalog(timelineSelectedSourcesFilter, {
     selectedSources,
     setSelectedSources,
@@ -161,6 +166,7 @@ export function useTimelinePageContainer() {
         key,
         label: key,
       })),
+      subscribeAvailability,
       timelineTasks: data.timelineTasks,
       viewMode: prefs.viewMode,
       setViewMode: actions.handleSetViewMode,

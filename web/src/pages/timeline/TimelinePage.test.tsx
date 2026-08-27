@@ -39,10 +39,15 @@ const mockNavigate = vi.fn();
 const mockSetSearchParams = vi.fn();
 let mockSearchParams = new URLSearchParams();
 
-vi.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate,
-  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
-}));
+vi.mock("react-router-dom", async () => {
+  const { createElement } = await import("react");
+  return {
+    useNavigate: () => mockNavigate,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+    Link: ({ to, children, ...rest }: { to: string; children?: ReactNode }) =>
+      createElement("a", { href: typeof to === "string" ? to : "", ...rest }, children),
+  };
+});
 
 vi.mock("../../api/userEvents", () => ({
   createUserEvent: (...args: unknown[]) => mockCreateUserEvent(...args),

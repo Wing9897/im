@@ -17,7 +17,9 @@
     "clearLocalAria": "清空本地",
     "selectAllSubscribeAria": "全选订阅",
     "clearSubscribeAria": "清空订阅",
-    "browseAria": "已订阅日历"
+    "browseAria": "已订阅日历",
+    "loggedOut": "尚未登录日历分享，订阅栏无法操作。本地来源仍可筛选。",
+    "offline": "日历分享离线或连不上服务器，订阅栏暂停操作。本地来源仍可筛选。"
   },
   "mine": {
     "title": "已订阅日历",

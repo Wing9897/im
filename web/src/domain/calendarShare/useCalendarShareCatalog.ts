@@ -13,7 +13,7 @@ import {
   type CalendarShareSubscription,
 } from "../../api/calendarShare";
 import { toErrorMessage } from "../../utils/errors";
-import { calendarShareKey } from "./subscribedCalendars";
+import { calendarShareKey, isCalendarShareUnreachable } from "./subscribedCalendars";
 import { pruneSubscribedDismissals } from "./subscribedDismissals";
 
 export type CalendarShareCatalog = {
@@ -22,6 +22,7 @@ export type CalendarShareCatalog = {
   ownHandle: string;
   loading: boolean;
   error: string | null;
+  unreachable: boolean;
 };
 
 const EMPTY: CalendarShareCatalog = {
@@ -30,6 +31,7 @@ const EMPTY: CalendarShareCatalog = {
   ownHandle: "",
   loading: true,
   error: null,
+  unreachable: false,
 };
 
 let snapshot: CalendarShareCatalog = { ...EMPTY };
@@ -62,22 +64,47 @@ export function refreshCalendarShareCatalog(): Promise<void> {
   }
   const pending = (async () => {
     try {
-      const [session, payload] = await Promise.all([
-        fetchCalendarShareSession(),
-        fetchCalendarShareSubscriptions(),
-      ]);
+      const session = await fetchCalendarShareSession();
       if (myEpoch !== epoch) return;
-      const previousKeys = snapshot.items.map((row) => calendarShareKey(row.handle, row.slug));
-      snapshot = {
-        session,
-        items: payload.items,
-        ownHandle: payload.ownHandle ?? "",
-        loading: false,
-        error: null,
-      };
-      completed = true;
-      if (previousKeys.length > 0) {
-        pruneSubscribedDismissals(payload.items.map((row) => calendarShareKey(row.handle, row.slug)));
+      if (!session.connected) {
+        snapshot = {
+          session,
+          items: [],
+          ownHandle: session.handle ?? "",
+          loading: false,
+          error: null,
+          unreachable: false,
+        };
+        completed = true;
+        return;
+      }
+      try {
+        const payload = await fetchCalendarShareSubscriptions();
+        if (myEpoch !== epoch) return;
+        const previousKeys = snapshot.items.map((row) => calendarShareKey(row.handle, row.slug));
+        snapshot = {
+          session,
+          items: payload.items,
+          ownHandle: payload.ownHandle ?? session.handle ?? "",
+          loading: false,
+          error: null,
+          unreachable: false,
+        };
+        completed = true;
+        if (previousKeys.length > 0) {
+          pruneSubscribedDismissals(payload.items.map((row) => calendarShareKey(row.handle, row.slug)));
+        }
+      } catch (error) {
+        if (myEpoch !== epoch) return;
+        snapshot = {
+          session,
+          items: snapshot.items,
+          ownHandle: snapshot.ownHandle || session.handle || "",
+          loading: false,
+          error: toErrorMessage(error),
+          unreachable: isCalendarShareUnreachable(error),
+        };
+        completed = true;
       }
     } catch (error) {
       if (myEpoch !== epoch) return;
@@ -85,6 +112,7 @@ export function refreshCalendarShareCatalog(): Promise<void> {
         ...snapshot,
         loading: false,
         error: toErrorMessage(error),
+        unreachable: isCalendarShareUnreachable(error),
       };
       completed = true;
     } finally {

@@ -70,7 +70,11 @@ describe("SubscriptionsMinePage", () => {
       (document.querySelector('[data-testid="subscriptions-remove-DemoPub/Open"]') as HTMLButtonElement).click();
       await Promise.resolve();
       await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
     });
     expect(calendarShareApiMocks.removeCalendarShareSubscription).toHaveBeenCalledWith("DemoPub", "Open");
+    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions.mock.calls.length).toBeGreaterThan(1);
+    expect(document.querySelector('[data-testid="subscriptions-mine-empty"]')).toBeTruthy();
   });
 });

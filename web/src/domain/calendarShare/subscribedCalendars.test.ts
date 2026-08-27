@@ -8,6 +8,8 @@ import {
   parseSubscribedCalendarSelection,
   pruneSubscribedCalendarSelection,
   resolvedSubscribeKeys,
+  resolveSubscribeAvailability,
+  isCalendarShareUnreachable,
   subscribedEventVisible,
   subscribedTimelineSource,
   toggleSubscribeKey,
@@ -41,6 +43,7 @@ describe("subscribedCalendars", () => {
     expect(pruneSubscribedCalendarSelection(["Alice/Work", "gone"], ["Alice/Work"])).toEqual([
       "Alice/Work",
     ]);
+    expect(pruneSubscribedCalendarSelection(["Alice/Work"], [])).toEqual(["Alice/Work"]);
     expect(resolvedSubscribeKeys(null, [])).toEqual([]);
     expect(resolvedSubscribeKeys(null, ["Alice/Work", "Carol/Team"])).toEqual(["Alice/Work", "Carol/Team"]);
     expect(resolvedSubscribeKeys(["DemoPub/Open"], [])).toEqual([]);
@@ -58,5 +61,16 @@ describe("subscribedCalendars", () => {
       "Carol/Team",
     ]);
     expect(toggleSubscribeKey(["Carol/Team"], "Alice/Work", ["Alice/Work", "Carol/Team"])).toBeNull();
+  });
+
+  it("distinguishes logged-out from calendar-share unreachable", () => {
+    expect(resolveSubscribeAvailability({ connected: false, catalogUnreachable: true })).toBe("loggedOut");
+    expect(resolveSubscribeAvailability({ connected: true, catalogUnreachable: true })).toBe("offline");
+    expect(resolveSubscribeAvailability({ connected: true, eventsError: "calendar share 502" })).toBe(
+      "offline",
+    );
+    expect(resolveSubscribeAvailability({ connected: true })).toBe("ok");
+    expect(isCalendarShareUnreachable("calendar share 502")).toBe(true);
+    expect(isCalendarShareUnreachable("Not signed in to calendar share")).toBe(false);
   });
 });

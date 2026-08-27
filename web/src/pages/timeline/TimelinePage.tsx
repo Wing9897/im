@@ -16,10 +16,12 @@
  */
 
 import { RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AppPageShell, PillButton } from "../../components/ui";
+import { AlertBanner, AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useErrorToast } from "../../hooks/useErrorToast";
+import { isCalendarShareUnreachable } from "../../domain/calendarShare/subscribedCalendars";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
@@ -46,10 +48,13 @@ const timelineWindowedShellClass = "im-fs-atmosphere flex h-full min-h-0 flex-co
 const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export function TimelinePage() {
-  const { t } = useTranslation("timeline");
+  const { t } = useTranslation(["timeline", "subscriptions"]);
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks } = useTaskCatalog();
-  useErrorToast(data.pageError);
+  const subscribeAvailability = sources.subscribeAvailability ?? "ok";
+  const subscribeOfflineError =
+    subscribeAvailability === "offline" && isCalendarShareUnreachable(data.pageError);
+  useErrorToast(subscribeOfflineError ? null : data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
   const dialogs = useTimelinePageDialogs({
     refreshEvents: data.refreshEvents,
@@ -90,6 +95,7 @@ export function TimelinePage() {
               subscribeCalendars={sources.subscribeCalendars}
               selectedSubscribeKeys={sources.selectedSubscribeKeys}
               onChangeSubscribeKeys={sources.setSelectedSubscribeKeys}
+              subscribeAvailability={subscribeAvailability}
               timelineTasks={sources.timelineTasks}
               worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
               expandTasks={tasks.map((row) => ({
@@ -154,6 +160,24 @@ export function TimelinePage() {
               />
             </TimelineControlBar>
           </div>
+          {subscribeAvailability === "loggedOut" || subscribeAvailability === "offline" ? (
+            <AlertBanner
+              variant="warning"
+              role="status"
+              className="mb-sm max-w-[56ch] shrink-0"
+              data-testid="timeline-subscribe-status"
+              data-availability={subscribeAvailability}
+            >
+              {subscribeAvailability === "offline"
+                ? t("subscriptions:filter.offline")
+                : t("subscriptions:filter.loggedOut")}{" "}
+              {subscribeAvailability === "loggedOut" ? (
+                <Link to="/account/identity" className="font-medium text-accent no-underline hover:underline">
+                  {t("subscriptions:loginLink")}
+                </Link>
+              ) : null}
+            </AlertBanner>
+          ) : null}
 
           <div className={scrollAreaClass}>
             <TimelineViewSwitch

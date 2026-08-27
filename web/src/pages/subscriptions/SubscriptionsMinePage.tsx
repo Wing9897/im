@@ -8,6 +8,7 @@ import { formHelpClass, sectionTitleClass } from "../../components/ui/pageTypogr
 import { calendarShareKey } from "../../domain/calendarShare/subscribedCalendars";
 import {
   invalidateCalendarShareCatalog,
+  refreshCalendarShareCatalog,
   useCalendarShareCatalog,
 } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
@@ -25,6 +26,7 @@ export function SubscriptionsMinePage() {
     try {
       await removeCalendarShareSubscription(handle, slug);
       invalidateCalendarShareCatalog();
+      await refreshCalendarShareCatalog();
       setActionError(null);
     } catch (error) {
       setActionError(toErrorMessage(error));

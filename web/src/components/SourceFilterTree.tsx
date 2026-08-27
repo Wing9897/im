@@ -77,6 +77,7 @@ export function SourceFilterColumnActions({
   onClearAll,
   selectTestId,
   clearTestId,
+  disabled = false,
 }: {
   selectLabel: string;
   clearLabel: string;
@@ -86,6 +87,7 @@ export function SourceFilterColumnActions({
   onClearAll: () => void;
   selectTestId: string;
   clearTestId: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex shrink-0 flex-wrap gap-sm px-1">
@@ -96,6 +98,7 @@ export function SourceFilterColumnActions({
         onClick={onSelectAll}
         aria-label={selectAria}
         data-testid={selectTestId}
+        disabled={disabled}
       >
         {selectLabel}
       </Button>
@@ -106,6 +109,7 @@ export function SourceFilterColumnActions({
         onClick={onClearAll}
         aria-label={clearAria}
         data-testid={clearTestId}
+        disabled={disabled}
       >
         {clearLabel}
       </Button>

@@ -13,6 +13,7 @@ import { formHelpClass, sectionTitleClass } from "../../components/ui/pageTypogr
 import { calendarShareKey } from "../../domain/calendarShare/subscribedCalendars";
 import {
   invalidateCalendarShareCatalog,
+  refreshCalendarShareCatalog,
   useCalendarShareCatalog,
 } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
@@ -63,6 +64,7 @@ export function SubscriptionsSearchPage() {
     try {
       await addCalendarShareSubscription({ handle, slug });
       invalidateCalendarShareCatalog();
+      await refreshCalendarShareCatalog();
     } catch (err) {
       setActionError(toErrorMessage(err));
     } finally {
