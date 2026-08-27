@@ -15,6 +15,11 @@ export interface PipelineReadinessInput {
   activeAnalysisTaskCount: number;
   analysisEventCount: number;
   /**
+   * Catalog size (every task, including inactive and demo). Any task hides
+   * the setup wizard; `activeAnalysisTaskCount` only drives step state.
+   */
+  taskCount: number;
+  /**
    * True after the pipeline has once reached `complete`. Cleared when sources
    * or active analysis tasks are wiped so the checklist can return.
    */
@@ -62,33 +67,35 @@ export function countActiveAnalysisTasks(
 /**
  * Derive pipeline checklist visibility from live counts.
  *
- * Complete hides the checklist even if analysis events are later dismissed,
- * until sources or active analysis tasks are emptied.
+ * Any catalog task hides the wizard (inactive / demo included). Zero tasks
+ * is the empty state and shows it, independent of sources, first analysis,
+ * or the optional AI slot.
  */
 export function pipelineReadiness(input: PipelineReadinessInput): PipelineReadiness {
   const sourceCount = Math.max(0, input.sourceCount);
   const activeAnalysisTaskCount = Math.max(0, input.activeAnalysisTaskCount);
   const analysisEventCount = Math.max(0, input.analysisEventCount);
+  const taskCount = Math.max(0, input.taskCount);
   const assistantSlotReady = input.assistantSlotReady === true;
+  const showChecklist = taskCount <= 0;
 
   if (sourceCount <= 0) {
-    return { state: "no_sources", showChecklist: true, assistantSlotReady };
+    return { state: "no_sources", showChecklist, assistantSlotReady };
   }
   if (activeAnalysisTaskCount <= 0) {
-    return { state: "no_active_task", showChecklist: true, assistantSlotReady };
+    return { state: "no_active_task", showChecklist, assistantSlotReady };
   }
-  if (analysisEventCount > 0) {
-    return { state: "complete", showChecklist: false, assistantSlotReady };
+  if (analysisEventCount > 0 || input.everCompleted) {
+    return { state: "complete", showChecklist, assistantSlotReady };
   }
-  if (input.everCompleted) {
-    return { state: "complete", showChecklist: false, assistantSlotReady };
-  }
-  return { state: "no_events", showChecklist: true, assistantSlotReady };
+  return { state: "no_events", showChecklist, assistantSlotReady };
 }
 
 /** Persist “ever completed” only while the pipeline still has sources + tasks. */
 export function nextPipelineEverCompleted(
-  input: Omit<PipelineReadinessInput, "everCompleted"> & { everCompleted: boolean },
+  input: Omit<PipelineReadinessInput, "everCompleted" | "taskCount"> & {
+    everCompleted: boolean;
+  },
 ): boolean {
   if (input.sourceCount <= 0 || input.activeAnalysisTaskCount <= 0) {
     return false;

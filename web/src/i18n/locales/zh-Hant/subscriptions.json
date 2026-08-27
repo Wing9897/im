@@ -1,0 +1,50 @@
+{
+  "root": "訂閱",
+  "tabsAria": "訂閱分頁",
+  "tabs": {
+    "mine": "我的訂閱",
+    "search": "搜尋訂閱"
+  },
+  "needLogin": "請先到帳戶 → 身分登入日曆分享服務，才能加入訂閱。",
+  "loginLink": "前往登入",
+  "filter": {
+    "title": "訂閱",
+    "local": "本機",
+    "empty": "尚未訂閱日曆。",
+    "selectAll": "全選",
+    "clearAll": "清空",
+    "selectAllLocalAria": "全選本機",
+    "clearLocalAria": "清空本機",
+    "selectAllSubscribeAria": "全選訂閱",
+    "clearSubscribeAria": "清空訂閱",
+    "browseAria": "已訂閱日曆"
+  },
+  "mine": {
+    "title": "已訂閱日曆",
+    "help": "移除會在伺服器上取消訂閱。時間規劃上的顯示開關在來源篩選裡。",
+    "empty": "尚未訂閱日曆。",
+    "searchCta": "搜尋訂閱",
+    "openTimeline": "時間規劃",
+    "remove": "移除"
+  },
+  "search": {
+    "title": "搜尋公開日曆",
+    "help": "搜尋公開 busy／詳情日曆，或直接貼上 handle/slug。授權給你但未公開的日曆，登入後才會出現。",
+    "queryPlaceholder": "handle 或 slug",
+    "submit": "搜尋",
+    "searching": "搜尋中…",
+    "noResults": "沒有符合的日曆。",
+    "already": "已訂閱",
+    "add": "訂閱",
+    "adding": "加入中…",
+    "pathTitle": "用路徑訂閱",
+    "pathHelp": "貼上 handle/slug，例如 DemoPub/Open。不能訂閱自己正在上載的帳號。",
+    "pathPlaceholder": "handle/slug",
+    "invalidPath": "請使用 handle/slug 格式。",
+    "rejectOwn": "不能訂閱自己的日曆。"
+  },
+  "visibility": {
+    "busy": "忙碌",
+    "details": "詳情"
+  }
+}

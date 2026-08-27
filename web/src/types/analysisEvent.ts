@@ -22,9 +22,14 @@ export type AnalysisEvent = Omit<
    * - recurring → calendar RRULE series (``seriesId``; not an analysis task)
    * - user (no itemId) → general calendar; user + itemId → item-linked calendar
    * - item_remind → remind DATE projection only (≠ item-linked user_events)
+   * - subscribed:{handle}/{slug} → read-only public calendar; recurring rows also carry ``seriesId``
    */
-  source?: "analysis" | "recurring" | "user" | "item_remind";
-  /** Present when ``source === "recurring"``: owning recurring series id. */
+  source?: "analysis" | "recurring" | "user" | "item_remind" | `subscribed:${string}`;
+  /**
+   * Owning RRULE series id when ``source === "recurring"`` (local series) or
+   * ``source`` is ``subscribed:{handle}/{slug}`` (remote uid on expanded occurrences).
+   * One-offs omit it or set null — Gantt must not fake-group those rows.
+   */
   seriesId?: string | null;
   /** Frontend-only: indicates an all-day event */
   isAllDay?: boolean;
@@ -41,8 +46,9 @@ export type AnalysisEvent = Omit<
   /** Present when source === "item_remind": remind projection. */
   itemDateKind?: "remind";
   /**
-   * Present when source === "recurring": true if this is the final occurrence
-   * of a finite RRULE series (UNTIL / COUNT). Used for month-cell「+N 结束」.
+   * Present when this is the final occurrence of a finite RRULE series
+   * (UNTIL / COUNT): local ``source === "recurring"`` or subscribed series.
+   * Used for month-cell「+N 结束」.
    */
   isLastOccurrence?: boolean;
   /**

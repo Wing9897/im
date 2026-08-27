@@ -158,11 +158,10 @@ export function DashboardViewer() {
 
       {loading ? <SkeletonScreen variant="card-grid" count={6} columns={3} /> : null}
 
-      {!loading && !error && pipeline.showChecklist && isTaskView ? (
+      {!loading && !error && pipeline.showChecklist && isTaskView && tasks.length === 0 ? (
         <PipelineGuideChecklist
           state={pipeline.state}
           assistantSlotReady={pipeline.assistantSlotReady}
-          compact={tasks.length > 0}
         />
       ) : null}
 

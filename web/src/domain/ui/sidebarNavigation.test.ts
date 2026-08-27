@@ -15,7 +15,7 @@ describe("visibleSidebarGroups", () => {
 
   it("hides Tasks and collect/analyze entries in simple mode", () => {
     const simple = hrefs(true);
-    expect(simple).toEqual(["/worksets", "/schedule", "/items", "/timeline", "/notify", "/assistant"]);
+    expect(simple).toEqual(["/worksets", "/schedule", "/items", "/timeline", "/subscriptions", "/notify", "/assistant"]);
     expect(simple).not.toContain("/tasks");
     expect(simple).not.toContain("/monitor");
     expect(simple).not.toContain("/sources");

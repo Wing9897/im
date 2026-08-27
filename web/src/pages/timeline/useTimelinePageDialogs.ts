@@ -31,6 +31,11 @@ import type { TimelineItem } from "../../types";
 import type { AnalysisTask } from "../../types/tasks";
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
 import { handleCommandError } from "../../utils/errors";
+import { isSubscribedTimelineSource } from "../../domain/calendarShare/subscribedCalendars";
+import {
+  markSubscribedEventDismissed,
+  restoreSubscribedEventDismissed,
+} from "../../domain/calendarShare/subscribedDismissals";
 
 export type PendingTimelineConfirm =
   | { kind: "dismiss"; event: TimelineItem }
@@ -219,10 +224,16 @@ export function useTimelinePageDialogs({
     setUserEventActionBusy(true);
     try {
       if (kind === "dismiss") {
-        await dismissTimelineEvent(timelineItemDismissalSource(event.source), event.id);
+        if (isSubscribedTimelineSource(event.source)) {
+          markSubscribedEventDismissed(event);
+        } else {
+          await dismissTimelineEvent(timelineItemDismissalSource(event.source), event.id);
+        }
         if (selectedEvent?.id === event.id) {
           setSelectedEvent(null);
         }
+      } else if (isSubscribedTimelineSource(event.source)) {
+        restoreSubscribedEventDismissed(event);
       } else {
         await restoreTimelineEvent(timelineItemDismissalSource(event.source), event.id);
       }
@@ -243,6 +254,7 @@ export function useTimelinePageDialogs({
 
   const handleToggleImportantEvent = useCallback(
     async (event: TimelineItem) => {
+      if (isSubscribedTimelineSource(event.source)) return;
       setUserEventActionBusy(true);
       try {
         const source = timelineItemImportanceSource(event.source);

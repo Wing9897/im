@@ -70,5 +70,29 @@
     "copied": "已複製",
     "copyFailed": "無法複製",
     "scopesReadOnly": "唯讀"
+  },
+  "calendarShare": {
+    "title": "日曆分享",
+    "help": "登入內測日曆分享服務後，才能從工作集上載行程。訂閱別人的日曆在「訂閱」頁；此頁只負責連線，不編輯各本日曆的授權。",
+    "urlLabel": "服務網址",
+    "urlHelp": "預設本機公開服務。權杖由本機伺服器加密保存，畫面不會直連該站。",
+    "handleLabel": "帳號 handle",
+    "passwordLabel": "密碼",
+    "login": "登入",
+    "loggingIn": "登入中…",
+    "logout": "登出",
+    "loggingOut": "登出中…",
+    "loggedIn": "已連線日曆分享",
+    "loggedOut": "已登出日曆分享",
+    "status": "狀態：{status}（{handle}）",
+    "statusConnected": "已連線",
+    "statusDisconnected": "未連線",
+    "timezoneLabel": "日曆時區",
+    "timezoneHelp": "家用日曆時鐘，選定後固定。預填目前系統城市，旅行時不會跟隨 Windows。",
+    "timezoneSave": "儲存時區",
+    "timezoneSaving": "儲存中…",
+    "timezoneSaved": "已儲存日曆時區",
+    "timezonePending": "上次更新公開伺服器時區未完成。連線後可再試。",
+    "timezoneRetry": "重試公開更新"
   }
 }

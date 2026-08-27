@@ -13,10 +13,10 @@ export function PasswordField({ className, ...rest }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative flex w-full min-w-0">
       <TextField
         type={visible ? "text" : "password"}
-        className={["pr-10", className ?? ""].filter(Boolean).join(" ")}
+        className={["min-w-0 flex-1 pr-10", className ?? ""].filter(Boolean).join(" ")}
         {...rest}
       />
       <button

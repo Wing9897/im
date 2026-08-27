@@ -21,6 +21,15 @@ _INTERNAL_CONFIG_KEYS = frozenset(
         "llm_global_slot_assistant",
         "llm_global_slot_liaison",
         "llm_global_slot_task_editor",
+        # Calendar-share proxy — dedicated /api/v1/calendar-share routes, not Settings.
+        "calendar_share_base_url",
+        "calendar_share_handle",
+        "calendar_share_access_token",
+        "calendar_share_refresh_token",
+        "calendar_share_worksets",
+        "calendar_share_timezone",
+        "calendar_share_timezone_pending",
+        "calendar_share_timezone_last_public",
     }
 )
 
@@ -75,6 +84,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "brave_search_api_key",
         "mcp_workset_scope",
         "mcp_workset_ids",
+        "calendar_share_subscriptions",
     }
 )
 

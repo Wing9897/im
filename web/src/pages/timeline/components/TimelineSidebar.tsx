@@ -32,6 +32,7 @@ import { dismissedTitleClass } from "../timelineDismissUtils";
 import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
 import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
 import { isUserScheduleTimelineEvent } from "../../../domain/schedule/scheduleCardFields";
+import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 
 const asideClass =
   "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";
@@ -86,6 +87,7 @@ export function TimelineSidebar({
 
   const isUserEvent = selectedEvent?.source === "user";
   const isItemEvent = selectedEvent?.source === "item_remind";
+  const isSubscribed = isSubscribedTimelineSource(selectedEvent?.source);
   const isDismissed = Boolean(selectedEvent?.dismissed);
   const isImportant = Boolean(selectedEvent?.important);
   const showRemindBadge = selectedEvent
@@ -222,6 +224,7 @@ export function TimelineSidebar({
                   {ti("editItem")}
                 </PillButton>
               ) : null}
+              {isSubscribed ? null : (
               <PillButton
                 type="button"
                 disabled={userEventActionBusy}
@@ -231,6 +234,7 @@ export function TimelineSidebar({
               >
                 {isImportant ? t("sidebar.unmarkImportant") : t("sidebar.markImportant")}
               </PillButton>
+              )}
               {isDismissed ? (
                 <PillButton
                   type="button"
@@ -251,7 +255,7 @@ export function TimelineSidebar({
             </div>
           </section>
 
-          {!isUserEvent && !isItemEvent ? (
+          {!isUserEvent && !isItemEvent && !isSubscribed ? (
             <section className="grid gap-sm border-t border-surface-border pt-md">
               <h3 className="m-0 text-xs font-semibold text-text-primary">
                 {t("sidebar.manualTime")}

@@ -1663,6 +1663,114 @@ export interface paths {
         patch: operations["patch_recurring_series_endpoint_api_v1_calendar_recurring__series_id__patch"];
         trace?: never;
     };
+    "/api/v1/calendar-share/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session_api_v1_calendar_share_session_get"];
+        put?: never;
+        /** Login Session */
+        post: operations["login_session_api_v1_calendar_share_session_post"];
+        /** Logout Session */
+        delete: operations["logout_session_api_v1_calendar_share_session_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-share/timezone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Timezone */
+        get: operations["get_timezone_api_v1_calendar_share_timezone_get"];
+        /** Put Timezone */
+        put: operations["put_timezone_api_v1_calendar_share_timezone_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-share/publish/{workset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Publish State */
+        get: operations["get_publish_state_api_v1_calendar_share_publish__workset_id__get"];
+        /** Put Publish State */
+        put: operations["put_publish_state_api_v1_calendar_share_publish__workset_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-share/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Calendars */
+        get: operations["search_calendars_api_v1_calendar_share_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-share/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Subscriptions */
+        get: operations["list_subscriptions_api_v1_calendar_share_subscriptions_get"];
+        put?: never;
+        /** Add Remote Subscription */
+        post: operations["add_remote_subscription_api_v1_calendar_share_subscriptions_post"];
+        /** Delete Subscription */
+        delete: operations["delete_subscription_api_v1_calendar_share_subscriptions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-share/subscriptions/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Subscription Events */
+        get: operations["list_subscription_events_api_v1_calendar_share_subscriptions_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ui-prefs/board": {
         parameters: {
             query?: never;
@@ -2962,6 +3070,250 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /**
+         * CalendarShareEventResponse
+         * @description Read-only subscribed occurrence. ``source`` is ``subscribed:{handle}/{slug}``.
+         */
+        CalendarShareEventResponse: {
+            /** Id */
+            id: string;
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+            /** Starttime */
+            startTime?: string | null;
+            /** Endtime */
+            endTime?: string | null;
+            /** Location */
+            location?: string | null;
+            /**
+             * Isallday
+             * @default false
+             */
+            isAllDay: boolean;
+            /** Timezone */
+            timezone?: string | null;
+            /** Emoji */
+            emoji?: string | null;
+            /** Taskid */
+            taskId?: string | null;
+            /** Seriesid */
+            seriesId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
+            /** Origin */
+            origin?: string | null;
+            /** Itemdatekind */
+            itemDateKind?: string | null;
+            /** Notifypref */
+            notifyPref?: string | null;
+            /**
+             * Dismissed
+             * @default false
+             */
+            dismissed: boolean;
+            /**
+             * Important
+             * @default false
+             */
+            important: boolean;
+            /** Taskname */
+            taskName?: string | null;
+            /**
+             * Islastoccurrence
+             * @default false
+             */
+            isLastOccurrence: boolean;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
+            /** Body */
+            body?: string | null;
+            /** Handle */
+            handle?: string | null;
+            /** Slug */
+            slug?: string | null;
+        };
+        /** CalendarShareGrantBody */
+        CalendarShareGrantBody: {
+            /** Handle */
+            handle: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "busy" | "details";
+        };
+        /** CalendarShareGrantResponse */
+        CalendarShareGrantResponse: {
+            /** Handle */
+            handle: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "busy" | "details";
+        };
+        /** CalendarShareLoginBody */
+        CalendarShareLoginBody: {
+            /** Baseurl */
+            baseUrl: string;
+            /** Handle */
+            handle: string;
+            /** Password */
+            password: string;
+        };
+        /** CalendarSharePublishBody */
+        CalendarSharePublishBody: {
+            /** Enabled */
+            enabled: boolean;
+            /** Slug */
+            slug: string;
+            /**
+             * Autosync
+             * @default false
+             */
+            autoSync: boolean;
+            /**
+             * Publicvisibility
+             * @default off
+             * @enum {string}
+             */
+            publicVisibility: "off" | "busy" | "details";
+            /** Grants */
+            grants?: components["schemas"]["CalendarShareGrantBody"][];
+            /**
+             * Syncnow
+             * @default false
+             */
+            syncNow: boolean;
+        };
+        /** CalendarSharePublishStateResponse */
+        CalendarSharePublishStateResponse: {
+            /** Worksetid */
+            worksetId: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Autosync
+             * @default false
+             */
+            autoSync: boolean;
+            /**
+             * Publicvisibility
+             * @default off
+             * @enum {string}
+             */
+            publicVisibility: "off" | "busy" | "details";
+            /** Grants */
+            grants?: components["schemas"]["CalendarShareGrantResponse"][];
+            /** Lastsyncat */
+            lastSyncAt?: string | null;
+            /** Lasterror */
+            lastError?: string | null;
+            /**
+             * Issystemworkset
+             * @default false
+             */
+            isSystemWorkset: boolean;
+        };
+        /** CalendarShareSearchHitResponse */
+        CalendarShareSearchHitResponse: {
+            /** Handle */
+            handle: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "busy" | "details";
+        };
+        /** CalendarShareSearchResponse */
+        CalendarShareSearchResponse: {
+            /** Items */
+            items?: components["schemas"]["CalendarShareSearchHitResponse"][];
+        };
+        /** CalendarShareSessionResponse */
+        CalendarShareSessionResponse: {
+            /** Connected */
+            connected: boolean;
+            /** Baseurl */
+            baseUrl: string;
+            /** Handle */
+            handle: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "disconnected" | "connected";
+        };
+        /** CalendarShareSubscribeBody */
+        CalendarShareSubscribeBody: {
+            /** Handle */
+            handle?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Path */
+            path?: string | null;
+        };
+        /** CalendarShareSubscriptionEventsResponse */
+        CalendarShareSubscriptionEventsResponse: {
+            /** Items */
+            items?: components["schemas"]["CalendarShareEventResponse"][];
+        };
+        /** CalendarShareSubscriptionResponse */
+        CalendarShareSubscriptionResponse: {
+            /** Handle */
+            handle: string;
+            /** Slug */
+            slug: string;
+        };
+        /** CalendarShareSubscriptionsResponse */
+        CalendarShareSubscriptionsResponse: {
+            /** Items */
+            items?: components["schemas"]["CalendarShareSubscriptionResponse"][];
+            /**
+             * Ownhandle
+             * @default
+             */
+            ownHandle: string;
+        };
+        /** CalendarShareTimezoneBody */
+        CalendarShareTimezoneBody: {
+            /** Timezone */
+            timezone: string;
+        };
+        /** CalendarShareTimezoneResponse */
+        CalendarShareTimezoneResponse: {
+            /**
+             * Timezone
+             * @default
+             */
+            timezone: string;
+            /**
+             * Suggestedtimezone
+             * @default
+             */
+            suggestedTimezone: string;
+            /**
+             * Pendingpublictimezone
+             * @default false
+             */
+            pendingPublicTimezone: boolean;
+            /**
+             * Lastpublictimezone
+             * @default
+             */
+            lastPublicTimezone: string;
         };
         /**
          * CalendarWindowItemResponse
@@ -9475,6 +9827,347 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecurringSeriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_api_v1_calendar_share_session_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSessionResponse"];
+                };
+            };
+        };
+    };
+    login_session_api_v1_calendar_share_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarShareLoginBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSessionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_session_api_v1_calendar_share_session_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSessionResponse"];
+                };
+            };
+        };
+    };
+    get_timezone_api_v1_calendar_share_timezone_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareTimezoneResponse"];
+                };
+            };
+        };
+    };
+    put_timezone_api_v1_calendar_share_timezone_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarShareTimezoneBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareTimezoneResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_publish_state_api_v1_calendar_share_publish__workset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSharePublishStateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_publish_state_api_v1_calendar_share_publish__workset_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarSharePublishBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSharePublishStateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_calendars_api_v1_calendar_share_search_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_subscriptions_api_v1_calendar_share_subscriptions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSubscriptionsResponse"];
+                };
+            };
+        };
+    };
+    add_remote_subscription_api_v1_calendar_share_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarShareSubscribeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSubscriptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_subscription_api_v1_calendar_share_subscriptions_delete: {
+        parameters: {
+            query?: {
+                handle?: string | null;
+                slug?: string | null;
+                path?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSubscriptionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_subscription_events_api_v1_calendar_share_subscriptions_events_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareSubscriptionEventsResponse"];
                 };
             };
             /** @description Validation Error */

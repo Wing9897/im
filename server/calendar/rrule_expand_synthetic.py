@@ -59,14 +59,18 @@ def expand_series_occurrences(
     range_start: datetime,
     range_end: datetime,
     budget: int,
+    *,
+    calendar_tz: tzinfo | None = None,
 ) -> list[dict[str, Any]]:
     """Expand a single recurring series RRULE inside [range_start, range_end].
 
     Returns camelCase dicts for the calendar window (``CalendarWindowItemResponse``).
     Any parse failure returns [] so one bad series never breaks the whole request.
 
-    Recurrence calendar days and ``HH:MM`` clocks are interpreted in the host
-    system timezone; wire ``startTime`` / ``endTime`` are UTC.
+    Recurrence calendar days and ``HH:MM`` clocks are interpreted in the pinned
+    household calendar timezone when ``calendar_tz`` is set; otherwise the host
+    system timezone. Wire ``startTime`` / ``endTime`` are UTC. ICS series with a
+    real TZID still expand in that TZID.
     """
     from server.calendar import rrule as rrule_mod
 
@@ -80,9 +84,11 @@ def expand_series_occurrences(
         # Writers reject the prefix; refuse to expand non-canonical stored forms.
         return []
     if str(task_value(series, "event_start_local") or "").strip():
-        return _expand_imported_occurrences(series, range_start, range_end, budget)
+        return _expand_imported_occurrences(
+            series, range_start, range_end, budget, calendar_tz=calendar_tz
+        )
 
-    local_tz = rrule_mod._system_tzinfo()
+    local_tz = calendar_tz or rrule_mod._system_tzinfo()
     is_all_day = bool(task_value(series, "event_is_all_day"))
     start_tod = (
         time(0, 0)
@@ -189,6 +195,8 @@ def expand_calendar_occurrences(
     series_rows: Sequence[Mapping[str, Any]],
     range_start: datetime,
     range_end: datetime,
+    *,
+    calendar_tz: tzinfo | None = None,
 ) -> list[dict[str, Any]]:
     """Expand all active recurring series under the shared MAX_OCCURRENCES budget."""
     results: list[dict[str, Any]] = []
@@ -198,6 +206,10 @@ def expand_calendar_occurrences(
         remaining = MAX_OCCURRENCES - len(results)
         if remaining <= 0:
             break
-        results.extend(expand_series_occurrences(series, range_start, range_end, remaining))
+        results.extend(
+            expand_series_occurrences(
+                series, range_start, range_end, remaining, calendar_tz=calendar_tz
+            )
+        )
     results.sort(key=lambda o: (o["startTime"], o["seriesId"]))
     return results

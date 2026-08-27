@@ -5682,6 +5682,484 @@
         }
       }
     },
+    "/api/v1/calendar-share/session": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Get Session",
+        "operationId": "get_session_api_v1_calendar_share_session_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Login Session",
+        "operationId": "login_session_api_v1_calendar_share_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarShareLoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Logout Session",
+        "operationId": "logout_session_api_v1_calendar_share_session_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-share/timezone": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Get Timezone",
+        "operationId": "get_timezone_api_v1_calendar_share_timezone_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareTimezoneResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Put Timezone",
+        "operationId": "put_timezone_api_v1_calendar_share_timezone_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarShareTimezoneBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareTimezoneResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-share/publish/{workset_id}": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Get Publish State",
+        "operationId": "get_publish_state_api_v1_calendar_share_publish__workset_id__get",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSharePublishStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Put Publish State",
+        "operationId": "put_publish_state_api_v1_calendar_share_publish__workset_id__put",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarSharePublishBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSharePublishStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-share/search": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Search Calendars",
+        "operationId": "search_calendars_api_v1_calendar_share_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-share/subscriptions": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "List Subscriptions",
+        "operationId": "list_subscriptions_api_v1_calendar_share_subscriptions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSubscriptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Add Remote Subscription",
+        "operationId": "add_remote_subscription_api_v1_calendar_share_subscriptions_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarShareSubscribeBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSubscriptionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Delete Subscription",
+        "operationId": "delete_subscription_api_v1_calendar_share_subscriptions_delete",
+        "parameters": [
+          {
+            "name": "handle",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Handle"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSubscriptionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-share/subscriptions/events": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "List Subscription Events",
+        "operationId": "list_subscription_events_api_v1_calendar_share_subscriptions_events_get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareSubscriptionEventsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ui-prefs/board": {
       "get": {
         "tags": [
@@ -9484,6 +9962,640 @@
           "message"
         ],
         "title": "CalendarImportWarningResponse"
+      },
+      "CalendarShareEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "startTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starttime"
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endtime"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "isAllDay": {
+            "type": "boolean",
+            "title": "Isallday",
+            "default": false
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskid"
+          },
+          "seriesId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seriesid"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          },
+          "itemDateKind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemdatekind"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
+          },
+          "dismissed": {
+            "type": "boolean",
+            "title": "Dismissed",
+            "default": false
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important",
+            "default": false
+          },
+          "taskName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskname"
+          },
+          "isLastOccurrence": {
+            "type": "boolean",
+            "title": "Islastoccurrence",
+            "default": false
+          },
+          "remindBeforeDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remindbeforedays"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "handle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handle"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "title"
+        ],
+        "title": "CalendarShareEventResponse",
+        "description": "Read-only subscribed occurrence. ``source`` is ``subscribed:{handle}/{slug}``."
+      },
+      "CalendarShareGrantBody": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Handle"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "busy",
+              "details"
+            ],
+            "title": "Visibility"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "handle",
+          "visibility"
+        ],
+        "title": "CalendarShareGrantBody"
+      },
+      "CalendarShareGrantResponse": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "busy",
+              "details"
+            ],
+            "title": "Visibility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "handle",
+          "visibility"
+        ],
+        "title": "CalendarShareGrantResponse"
+      },
+      "CalendarShareLoginBody": {
+        "properties": {
+          "baseUrl": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Baseurl"
+          },
+          "handle": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Handle"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseUrl",
+          "handle",
+          "password"
+        ],
+        "title": "CalendarShareLoginBody"
+      },
+      "CalendarSharePublishBody": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Slug"
+          },
+          "autoSync": {
+            "type": "boolean",
+            "title": "Autosync",
+            "default": false
+          },
+          "publicVisibility": {
+            "type": "string",
+            "enum": [
+              "off",
+              "busy",
+              "details"
+            ],
+            "title": "Publicvisibility",
+            "default": "off"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareGrantBody"
+            },
+            "type": "array",
+            "title": "Grants"
+          },
+          "syncNow": {
+            "type": "boolean",
+            "title": "Syncnow",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled",
+          "slug"
+        ],
+        "title": "CalendarSharePublishBody"
+      },
+      "CalendarSharePublishStateResponse": {
+        "properties": {
+          "worksetId": {
+            "type": "string",
+            "title": "Worksetid"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "autoSync": {
+            "type": "boolean",
+            "title": "Autosync",
+            "default": false
+          },
+          "publicVisibility": {
+            "type": "string",
+            "enum": [
+              "off",
+              "busy",
+              "details"
+            ],
+            "title": "Publicvisibility",
+            "default": "off"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareGrantResponse"
+            },
+            "type": "array",
+            "title": "Grants"
+          },
+          "lastSyncAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsyncat"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "isSystemWorkset": {
+            "type": "boolean",
+            "title": "Issystemworkset",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "worksetId",
+          "slug"
+        ],
+        "title": "CalendarSharePublishStateResponse"
+      },
+      "CalendarShareSearchHitResponse": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "busy",
+              "details"
+            ],
+            "title": "Visibility"
+          }
+        },
+        "type": "object",
+        "required": [
+          "handle",
+          "slug",
+          "visibility"
+        ],
+        "title": "CalendarShareSearchHitResponse"
+      },
+      "CalendarShareSearchResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareSearchHitResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "title": "CalendarShareSearchResponse"
+      },
+      "CalendarShareSessionResponse": {
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "baseUrl": {
+            "type": "string",
+            "title": "Baseurl"
+          },
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "disconnected",
+              "connected"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connected",
+          "baseUrl",
+          "handle",
+          "status"
+        ],
+        "title": "CalendarShareSessionResponse"
+      },
+      "CalendarShareSubscribeBody": {
+        "properties": {
+          "handle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handle"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 140
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CalendarShareSubscribeBody"
+      },
+      "CalendarShareSubscriptionEventsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareEventResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "title": "CalendarShareSubscriptionEventsResponse"
+      },
+      "CalendarShareSubscriptionResponse": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "title": "Handle"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "handle",
+          "slug"
+        ],
+        "title": "CalendarShareSubscriptionResponse"
+      },
+      "CalendarShareSubscriptionsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareSubscriptionResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "ownHandle": {
+            "type": "string",
+            "title": "Ownhandle",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "CalendarShareSubscriptionsResponse"
+      },
+      "CalendarShareTimezoneBody": {
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Timezone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "timezone"
+        ],
+        "title": "CalendarShareTimezoneBody"
+      },
+      "CalendarShareTimezoneResponse": {
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": ""
+          },
+          "suggestedTimezone": {
+            "type": "string",
+            "title": "Suggestedtimezone",
+            "default": ""
+          },
+          "pendingPublicTimezone": {
+            "type": "boolean",
+            "title": "Pendingpublictimezone",
+            "default": false
+          },
+          "lastPublicTimezone": {
+            "type": "string",
+            "title": "Lastpublictimezone",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "CalendarShareTimezoneResponse"
       },
       "CalendarWindowItemResponse": {
         "properties": {

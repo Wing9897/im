@@ -14,6 +14,8 @@ from server.secrets import _fernet
 from server.tests.property_strategies import MIN_PROPERTY_EXAMPLES
 from server.tests.seed import seed_database
 
+pytest_plugins = ["server.tests.calendar_share_fakes"]
+
 settings.register_profile("property-invariants", max_examples=MIN_PROPERTY_EXAMPLES)
 settings.load_profile("property-invariants")
 

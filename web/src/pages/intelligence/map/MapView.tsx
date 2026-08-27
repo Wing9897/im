@@ -16,9 +16,9 @@ import {
   mapStageFullscreenClass,
 } from "./mapViewClasses";
 import {
-  CARTO_URL,
   CARTO_ATTR,
 } from "./mapViewHelpers";
+import { useCartoTileUrl } from "../../../domain/intelligence/useCartoTileUrl";
 import {
   INTELLIGENCE_MAP_DEFAULT_CENTER,
   INTELLIGENCE_MAP_DEFAULT_ZOOM,
@@ -57,6 +57,7 @@ function MapViewComponent({
   onFetchWindowChange,
 }: MapViewProps) {
   const { t } = useTranslation("intelligence");
+  const cartoUrl = useCartoTileUrl();
   const {
     containerRef,
     isFullscreen,
@@ -113,7 +114,7 @@ function MapViewComponent({
           style={{ width: "100%", height: "100%" }}
           maxBoundsViscosity={0}
         >
-          <TileLayer url={CARTO_URL} attribution={CARTO_ATTR} noWrap={false} />
+          <TileLayer key={cartoUrl} url={cartoUrl} attribution={CARTO_ATTR} noWrap={false} />
           <ResetViewController trigger={resetViewTrigger} />
           <MapMarkers
             coordGroups={coordGroups}

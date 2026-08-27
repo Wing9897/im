@@ -10,6 +10,7 @@ export type SidebarIconKey =
   | "leaderboard"
   | "intelligence"
   | "timeline"
+  | "subscriptions"
   | "notify"
   | "assistant"
   | "ai"
@@ -49,7 +50,15 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
   },
   {
     labelKey: "groupTime",
-    items: [{ to: "/timeline", labelKey: "timeline", icon: "timeline" }],
+    items: [
+      { to: "/timeline", labelKey: "timeline", icon: "timeline" },
+      {
+        to: "/subscriptions",
+        labelKey: "subscriptions",
+        icon: "subscriptions",
+        activePrefix: "/subscriptions",
+      },
+    ],
   },
   {
     labelKey: "groupInteract",

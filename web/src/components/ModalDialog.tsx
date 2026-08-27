@@ -38,9 +38,10 @@ interface ModalDialogProps {
   /**
    * Shell width preset.
    * - default / wide / xl: compact pickers
+   * - tall: fixed-size two-column filters (timeline sources); do not use for board/intelligence
    * - form: wider create/edit forms (e.g. notifications)
    */
-  size?: "default" | "wide" | "xl" | "form" | "compact";
+  size?: "default" | "wide" | "xl" | "tall" | "form" | "compact";
   /** Replaces the size preset shell width/height classes when set. */
   shellClassName?: string;
   /** Extra class on the scrollable body (e.g. picker flex layout). */
@@ -60,6 +61,7 @@ const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
   compact: "box-border w-[380px] max-w-[min(90vw,380px)] max-h-[min(78vh,640px)]",
   wide: "box-border w-[480px] max-w-[min(92vw,480px)] max-h-[min(78vh,640px)]",
   xl: "box-border w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
+  tall: "box-border h-[min(86vh,780px)] w-[720px] max-w-[min(94vw,720px)] overflow-hidden",
   form: "box-border w-[720px] max-w-[min(94vw,720px)] h-[min(86vh,780px)]",
 };
 

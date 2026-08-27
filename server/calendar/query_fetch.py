@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from server.calendar.item_projection import fetch_item_occurrences_in_range
+from server.calendar.item_projection import (
+    fetch_item_occurrences_in_range,
+    fetch_item_reminds_for_workset,
+)
 from server.calendar.normalize import (
     build_analysis_item,
     build_item_calendar_item,
@@ -141,7 +144,51 @@ async def expand_active_calendar_occurrences(
 
     series = await fetch_active_recurring_series(db, series_id=series_id, series_ids=series_ids)
     series = [row for row in series if may_calendar_expand_series(row)]
-    return expand_calendar_occurrences(series, range_start, range_end)
+    from server.calendar_share.store import get_calendar_timezone
+    from server.calendar_share.timezone import tzinfo_from_iana
+
+    calendar_tz = tzinfo_from_iana(await get_calendar_timezone(db))
+    return expand_calendar_occurrences(series, range_start, range_end, calendar_tz=calendar_tz)
+
+
+async def fetch_workset_analysis_items(db: Database, *, workset_id: str) -> list[dict[str, Any]]:
+    """All current-version timeline intel events for tasks in ``workset_id`` (no date cap)."""
+    items: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        rows, _ = await query_analysis_events(
+            db,
+            task_id=None,
+            search=None,
+            start_date=None,
+            end_date=None,
+            sort="event_time",
+            limit=_FETCH_CAP,
+            offset=offset,
+            has_time=None,
+            has_coords=None,
+            search_location=False,
+            ascending=True,
+            include_total=False,
+            require_include_in_timeline=True,
+            workset_ids=[workset_id],
+        )
+        if not rows:
+            break
+        items.extend(build_analysis_item(row) for row in rows)
+        if len(rows) < _FETCH_CAP:
+            break
+        offset += len(rows)
+    await _annotate_analysis_dismissed(db, items)
+    return items
+
+
+async def fetch_workset_item_remind_items(db: Database, *, workset_id: str) -> list[dict[str, Any]]:
+    """Derived ``source=item_remind`` rows for a workset (no display-window clip)."""
+    raw = await fetch_item_reminds_for_workset(db, workset_id=workset_id)
+    items = [build_item_calendar_item(item) for item in raw]
+    await attach_dismissed_flag(db, source="item_remind", items=items)
+    return items
 
 
 async def _fetch_analysis_in_range(

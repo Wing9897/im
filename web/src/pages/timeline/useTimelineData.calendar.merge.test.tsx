@@ -24,6 +24,9 @@ vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
+vi.mock("../../api/calendarShare", async () =>
+  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+
 vi.mock("../../api/tasks", () => ({
   fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
 }));

@@ -91,12 +91,7 @@ export function SourceFilterDialog({
                 {t("workset:clearAll")}
               </Button>
             </div>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={state.apply}
-              disabled={state.applyDisabled}
-            >
+            <Button type="button" variant="primary" onClick={state.apply} disabled={state.applyDisabled}>
               {t("workset:apply")}
             </Button>
           </>

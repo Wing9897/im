@@ -10,16 +10,29 @@ import {
   paddedTimelineFetchWindow,
 } from "../../domain/timeline/timelineMergedFetch";
 import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
+import { fetchCalendarShareSubscriptionEvents } from "../../api/calendarShare";
+import { applySubscribedDismissals } from "../../domain/calendarShare/subscribedDismissals";
+import { projectSubscribedTimelineItems } from "../../domain/calendarShare/subscribedEventProject";
+import {
+  resolvedSubscribeKeys,
+  subscribedEventVisible,
+  type SubscribedCalendarSelection,
+} from "../../domain/calendarShare/subscribedCalendars";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useTimelineCalendarRefresh } from "../../hooks/useTimelineCalendarRefresh";
 import type { AnalysisTask, TimelineItem, TaskActivitySpan } from "../../types";
 import { useGanttData } from "./useGanttData";
 
 const EMPTY_EVENTS: TimelineItem[] = [];
+const EMPTY_SUBSCRIBE_CATALOG: readonly string[] = [];
 
 interface UseTimelineDataOptions {
   /** `null` = all, `[]` = none, otherwise multi-select (may include `__general__`). */
   selectedSources: SourceFilterSelection;
+  /** Timeline-only subscribed calendar keys; never mixed into SourceFilterSelection. */
+  selectedSubscribeKeys?: SubscribedCalendarSelection;
+  /** `handle/slug` keys from 我的訂閱 (IC list); empty means no subscribed events. */
+  subscribeCatalogKeys?: readonly string[];
   /** Current view mode — span fetching only triggers in "gantt" mode. */
   viewMode: "calendar" | "gantt";
   /** Start of the visible date range (calendar window is fetched around it). */
@@ -62,6 +75,8 @@ type TimelineFetchKey = {
   startIso: string;
   endIso: string;
   selectedSources: SourceFilterSelection;
+  selectedSubscribeKeys: SubscribedCalendarSelection;
+  subscribeCatalogKeys: readonly string[];
   /** Stable fingerprint of the filter plan for cache/effect identity. */
   planKey: string;
   filterPlan: ReturnType<typeof resolveTimelineFilterPlan>;
@@ -93,6 +108,8 @@ function filterPlanKey(plan: ReturnType<typeof resolveTimelineFilterPlan>): stri
  */
 export function useTimelineData({
   selectedSources,
+  selectedSubscribeKeys = null,
+  subscribeCatalogKeys = EMPTY_SUBSCRIBE_CATALOG,
   viewMode,
   rangeStart,
   rangeEnd,
@@ -128,20 +145,49 @@ export function useTimelineData({
   calendarWindowRef.current = calendarWindow;
   const selectedSourcesRef = useRef(selectedSources);
   selectedSourcesRef.current = selectedSources;
+  const selectedSubscribeKeysRef = useRef(selectedSubscribeKeys);
+  selectedSubscribeKeysRef.current = selectedSubscribeKeys;
+  const subscribeCatalogKeysRef = useRef(subscribeCatalogKeys);
+  subscribeCatalogKeysRef.current = subscribeCatalogKeys;
+  const subscribeCatalogFingerprint = subscribeCatalogKeys.join("\n");
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
 
   const fetcher = useCallback(
-    (key: TimelineFetchKey) =>
-      fetchMergedTimelineEvents({
-        selectedSources: key.selectedSources,
-        filterPlan: key.filterPlan,
-        startIso: key.startIso,
-        endIso: key.endIso,
-        taskNameById,
-        generalWorksetLabel,
-        worksetNameById,
-      }),
+    async (key: TimelineFetchKey) => {
+      const localEmpty =
+        key.selectedSources !== null &&
+        key.selectedSources.taskIds.length === 0 &&
+        key.selectedSources.worksetIds.length === 0;
+      const skipLocal =
+        localEmpty ||
+        (!key.filterPlan.fetchAnalysis &&
+          !key.filterPlan.fetchCalendar &&
+          !key.filterPlan.fetchUserEvents &&
+          !key.filterPlan.fetchItems);
+      const local = skipLocal
+        ? []
+        : await fetchMergedTimelineEvents({
+            selectedSources: key.selectedSources,
+            filterPlan: key.filterPlan,
+            startIso: key.startIso,
+            endIso: key.endIso,
+            taskNameById,
+            generalWorksetLabel,
+            worksetNameById,
+          });
+      let subscribed: TimelineItem[] = [];
+      const visibleKeys = resolvedSubscribeKeys(key.selectedSubscribeKeys, key.subscribeCatalogKeys);
+      if (visibleKeys.length > 0) {
+        const remote = await fetchCalendarShareSubscriptionEvents(key.startIso, key.endIso);
+        subscribed = applySubscribedDismissals(
+          projectSubscribedTimelineItems(remote).filter((event) =>
+            subscribedEventVisible(event.source, key.selectedSubscribeKeys, key.subscribeCatalogKeys),
+          ),
+        );
+      }
+      return [...local, ...subscribed];
+    },
     [taskNameById, generalWorksetLabel, worksetNameById],
   );
 
@@ -157,20 +203,16 @@ export function useTimelineData({
     async (catalogOverride?: readonly AnalysisTask[]) => {
       const catalog = catalogOverride ?? tasksRef.current;
       const selection = selectedSourcesRef.current;
+      const subscribeKeys = selectedSubscribeKeysRef.current;
+      const catalogKeys = subscribeCatalogKeysRef.current;
       const plan = resolveTimelineFilterPlan(selection, catalog);
-      if (
-        !plan.fetchAnalysis &&
-        !plan.fetchCalendar &&
-        !plan.fetchUserEvents &&
-        !plan.fetchItems
-      ) {
-        return;
-      }
       const window = calendarWindowRef.current;
       await fetchEvents({
         startIso: window.startIso,
         endIso: window.endIso,
         selectedSources: selection,
+        selectedSubscribeKeys: subscribeKeys,
+        subscribeCatalogKeys: catalogKeys,
         planKey: filterPlanKey(plan),
         filterPlan: plan,
       });
@@ -180,18 +222,12 @@ export function useTimelineData({
 
   useEffect(() => {
     if (!pageActive) return;
-    if (
-      !filterPlan.fetchAnalysis &&
-      !filterPlan.fetchCalendar &&
-      !filterPlan.fetchUserEvents &&
-      !filterPlan.fetchItems
-    ) {
-      return;
-    }
     void fetchEvents({
       startIso: calendarWindow.startIso,
       endIso: calendarWindow.endIso,
       selectedSources,
+      selectedSubscribeKeys,
+      subscribeCatalogKeys,
       planKey,
       filterPlan,
     });
@@ -200,6 +236,8 @@ export function useTimelineData({
     fetchEvents,
     calendarWindow,
     selectedSources,
+    selectedSubscribeKeys,
+    subscribeCatalogFingerprint,
     planKey,
     filterPlan,
   ]);
@@ -210,25 +248,7 @@ export function useTimelineData({
     refreshTasks,
   });
 
-  // Empty / no-op plans must not keep showing a prior merge (effect skips fetch).
-  const events = useMemo(() => {
-    if (
-      selectedSources !== null &&
-      selectedSources.taskIds.length === 0 &&
-      selectedSources.worksetIds.length === 0
-    ) {
-      return EMPTY_EVENTS;
-    }
-    if (
-      !filterPlan.fetchAnalysis &&
-      !filterPlan.fetchCalendar &&
-      !filterPlan.fetchUserEvents &&
-      !filterPlan.fetchItems
-    ) {
-      return EMPTY_EVENTS;
-    }
-    return data ?? EMPTY_EVENTS;
-  }, [data, selectedSources, filterPlan]);
+  const events = useMemo(() => data ?? EMPTY_EVENTS, [data]);
   const pageError = error ?? taskLoadError;
 
   const ganttData = useGanttData({ viewMode });

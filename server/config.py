@@ -66,6 +66,15 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "mcp_enabled": "true",
     "a2a_enabled": "true",
     **MCP_CAPABILITY_CONFIG_DEFAULTS,
+    # Calendar-share proxy (tokens Fernet-encrypted via SECRET_CONFIG_KEYS).
+    "calendar_share_base_url": "http://127.0.0.1:8787",
+    "calendar_share_handle": "",
+    "calendar_share_access_token": "",
+    "calendar_share_refresh_token": "",
+    "calendar_share_worksets": "{}",
+    "calendar_share_timezone": "",
+    "calendar_share_timezone_pending": "false",
+    "calendar_share_timezone_last_public": "",
     # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }
 

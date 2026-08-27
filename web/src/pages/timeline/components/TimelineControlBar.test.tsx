@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { TimelineControlBar } from "./TimelineControlBar";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
@@ -55,7 +56,7 @@ function renderControlBar(opts: RenderOpts = {}) {
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      wrapWithI18n(createElement(TimelineControlBar, props)),
+      wrapWithI18n(createElement(MemoryRouter, null, createElement(TimelineControlBar, props))),
     );
   });
   return container;

@@ -19,13 +19,13 @@ from server.util import parse_json_list, task_value
 logger = logging.getLogger(__name__)
 
 
-def _task_timezone(task: Mapping[str, Any]) -> tzinfo:
+def _task_timezone(task: Mapping[str, Any], *, calendar_tz: tzinfo | None = None) -> tzinfo:
     # Lazy facade lookup so tests can monkeypatch ``server.calendar.rrule._system_tzinfo``.
     from server.calendar import rrule as rrule_mod
 
     raw = str(task_value(task, "event_timezone") or "").strip()
     if not raw or raw == "floating":
-        return rrule_mod._system_tzinfo()
+        return calendar_tz or rrule_mod._system_tzinfo()
     if raw.upper() in {"UTC", "ETC/UTC", "GMT"}:
         return UTC
     try:
@@ -86,12 +86,14 @@ def _expand_imported_occurrences(
     range_start: datetime,
     range_end: datetime,
     budget: int,
+    *,
+    calendar_tz: tzinfo | None = None,
 ) -> list[dict[str, Any]]:
     from server.calendar import rrule as rrule_mod
 
     rule = str(task_value(task, "rrule") or "").strip()
     is_all_day = bool(task_value(task, "event_is_all_day"))
-    zone = _task_timezone(task)
+    zone = _task_timezone(task, calendar_tz=calendar_tz)
     anchor = _stored_recurrence_datetime(
         task_value(task, "event_start_local"),
         zone=zone,

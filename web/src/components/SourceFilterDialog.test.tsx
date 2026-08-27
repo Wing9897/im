@@ -313,4 +313,15 @@ describe("SourceFilterDialog", () => {
       worksetIds: [],
     });
   });
+
+  it("does not render the timeline subscription group", () => {
+    renderDialog();
+    openDialog();
+    expect(document.querySelector('[data-testid="timeline-subscribe-filter"]')).toBeNull();
+    expect(document.querySelector('[data-testid="timeline-filter-section-local"]')).toBeNull();
+    expect(document.querySelector('[data-testid="timeline-filter-section-subscribe"]')).toBeNull();
+    const shell = document.querySelector('[data-testid="source-filter-dialog"] [role="dialog"]');
+    expect(shell?.className).toContain("w-[480px]");
+    expect(shell?.className).not.toContain("w-[720px]");
+  });
 });

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -10,6 +10,9 @@ import {
   usePersistedSourceFilter,
   usePruneSourceFilterToCatalog,
 } from "../../hooks/usePersistedSourceFilter";
+import { calendarShareKey, pruneSubscribedCalendarSelection } from "../../domain/calendarShare/subscribedCalendars";
+import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { usePersistedSubscribeFilter } from "../../domain/calendarShare/usePersistedSubscribeFilter";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
@@ -74,8 +77,22 @@ export function useTimelinePageContainer() {
   const { selectedSources, setSelectedSources } = usePersistedSourceFilter(
     timelineSelectedSourcesFilter,
   );
+  const [selectedSubscribeKeys, setSelectedSubscribeKeys] = usePersistedSubscribeFilter();
+  const catalog = useCalendarShareCatalog();
+  const subscribeCatalog = catalog.items;
+  const subscribeCatalogKeys = useMemo(
+    () => subscribeCatalog.map((row) => calendarShareKey(row.handle, row.slug)),
+    [subscribeCatalog],
+  );
+
+  useEffect(() => {
+    setSelectedSubscribeKeys((prev) => pruneSubscribedCalendarSelection(prev, subscribeCatalogKeys));
+  }, [subscribeCatalogKeys, setSelectedSubscribeKeys]);
+
   const data = useTimelineData({
     selectedSources,
+    selectedSubscribeKeys,
+    subscribeCatalogKeys,
     viewMode: prefs.viewMode,
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
@@ -138,6 +155,12 @@ export function useTimelinePageContainer() {
     sources: {
       selectedSources,
       setSelectedSources,
+      selectedSubscribeKeys,
+      setSelectedSubscribeKeys,
+      subscribeCalendars: subscribeCatalogKeys.map((key) => ({
+        key,
+        label: key,
+      })),
       timelineTasks: data.timelineTasks,
       viewMode: prefs.viewMode,
       setViewMode: actions.handleSetViewMode,

@@ -23,6 +23,10 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
 }));
 
+vi.mock("./WorksetCalendarSharePanel", () => ({
+  WorksetCalendarSharePanel: () => <div data-testid="calendar-share-panel" />,
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: (ns?: string) => ({
     t: (key: string, opts?: Record<string, unknown>) => {

@@ -116,5 +116,31 @@
   "graphGateCalendarWriteAria": "{name}: write calendar ({state})",
   "graphGateNotifyAria": "{name}: notify ({state})",
   "graphGateIntelAria": "{name}: intelligence ({state})",
-  "graphGateExternalAria": "{name}: external ({state})"
+  "graphGateExternalAria": "{name}: external ({state})",
+  "calendarShare": {
+    "title": "Calendar share",
+    "help": "Upload this workset’s user and recurring events to the remote calendar. ACL lives on the server; this page only stores the workset↔slug mapping and publish switch.",
+    "generalWarning": "The General workset includes unfiled events. Confirm nothing private should be published.",
+    "needLogin": "Sign in to calendar share under Account → Identity first.",
+    "enabled": "Enable upload",
+    "slugLabel": "Calendar slug",
+    "slugHelp": "Remote path looks like handle/slug.",
+    "slugRequired": "Enter a slug",
+    "publicLabel": "Public visibility",
+    "publicHelp": "Anonymous visitors: off, busy only, or full details.",
+    "visibilityOff": "Off",
+    "visibilityBusy": "Busy",
+    "visibilityDetails": "Details",
+    "grantsLabel": "Granted handles",
+    "grantHandle": "handle",
+    "addGrant": "Add grant",
+    "removeGrant": "Remove",
+    "autoSync": "Upload automatically after changes",
+    "save": "Save settings",
+    "syncNow": "Upload now",
+    "syncing": "Uploading…",
+    "synced": "Uploaded",
+    "lastSync": "Last sync: {time}",
+    "neverSynced": "Not synced yet"
+  }
 }

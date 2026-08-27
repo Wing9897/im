@@ -21,6 +21,7 @@ import {
 } from "../../components/settings/SettingsFormLayout";
 import { AccountAvatarControl } from "./components/AccountAvatarControl";
 import { AccountChangePasswordSection } from "./components/AccountChangePasswordSection";
+import { CalendarShareLoginSection } from "./components/CalendarShareLoginSection";
 
 /** Account → Identity: display name, avatar, background, change password. */
 export function AccountIdentityPage() {
@@ -164,6 +165,12 @@ export function AccountIdentityPage() {
           <SettingsFieldGroup>
             <AccountChangePasswordSection />
           </SettingsFieldGroup>
+        </SettingsContentCard>
+      </div>
+
+      <div className="mt-lg">
+        <SettingsContentCard>
+          <CalendarShareLoginSection />
         </SettingsContentCard>
       </div>
     </div>

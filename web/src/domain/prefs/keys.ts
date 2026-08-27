@@ -71,6 +71,10 @@ export const INTELLIGENCE_SEARCH_FILTER_OPEN_STORAGE_KEY =
 // ── Map ─────────────────────────────────────────────────────────────────────
 
 export const SHARED_DANMAKU_MODE_KEY = "im:map:shared-danmaku-mode";
+/** Device-local CARTO basemap API key (appears in tile URLs; not Fernet secrets). */
+export const MAP_CARTO_API_KEY_STORAGE_KEY = "im:map:carto-api-key";
+/** Dispatched on ``window`` after the CARTO key is saved in system settings. */
+export const MAP_CARTO_API_KEY_EVENT = "im:map:carto-api-key-change";
 export const MAP_LIVE_MODE_STORAGE_KEY = "im:map:live-mode";
 export const MAP_TIME_WINDOW_STORAGE_KEY = "im:map:time-window";
 export const MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY = "im:map:overlay-display-mode";
@@ -89,6 +93,10 @@ export const MONITOR_FILTER_BAR_OPEN_STORAGE_KEY = "im:monitor:filter-bar-open";
 // ── Timeline ────────────────────────────────────────────────────────────────
 
 export const TIMELINE_SELECTED_SOURCES_STORAGE_KEY = "im:timeline:selected-sources";
+/** Timeline display filter for subscribed calendars (`handle/slug`); not the catalog. */
+export const TIMELINE_SUBSCRIBE_FILTER_KEY = "im:timeline:subscribe-filter";
+/** Device-local dismiss overlay for `subscribed:{handle}/{slug}` events. */
+export const TIMELINE_SUBSCRIBED_DISMISSALS_STORAGE_KEY = "im:timeline:subscribed-dismissals";
 export const TIMELINE_VIEW_MODE_STORAGE_KEY = "im:timeline:view-mode";
 export const TIMELINE_SHOW_DISMISSED_STORAGE_KEY = "im:timeline:show-dismissed";
 export const TIMELINE_SHOW_ONGOING_STORAGE_KEY = "im:timeline:show-ongoing";

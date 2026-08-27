@@ -5,10 +5,11 @@ RRULE is expanded only when the frontend calendar view queries a time range.
 Expansion uses a fixed synthetic DTSTART anchor (never persisted) so results are
 stable while scrolling.
 
-``event_start_time`` / ``event_end_time`` as bare ``HH:MM`` are **system-local**
-wall clocks (same host TZ as the assistant clock). Expanded ``startTime`` /
+``event_start_time`` / ``event_end_time`` as bare ``HH:MM`` are **calendar-local**
+wall clocks: the pinned household IANA timezone when set, otherwise the host
+system TZ (same as the assistant clock). Expanded ``startTime`` /
 ``endTime`` on the wire are absolute UTC (``…Z``), matching user_events and
-analysis events.
+analysis events. ICS series with a real TZID still expand in that TZID.
 
 Implementation is split across ``rrule_validate``, ``rrule_expand_imported``,
 and ``rrule_expand_synthetic``; this module remains the stable public facade.

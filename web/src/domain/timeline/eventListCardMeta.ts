@@ -132,7 +132,8 @@ export type EventListProvenanceKind =
   | "item"
   | "ics"
   | "a2a"
-  | "agent";
+  | "agent"
+  | "subscribed";
 
 /**
  * Generation source for the card footer (任務 / 用戶 / 助手 / 物品 / …).
@@ -141,6 +142,9 @@ export type EventListProvenanceKind =
 export function resolveEventListProvenanceKind(
   event: TimelineItem,
 ): EventListProvenanceKind {
+  if (typeof event.source === "string" && event.source.startsWith("subscribed:")) {
+    return "subscribed";
+  }
   if (event.source === "item_remind") return "item";
   if (event.source === "user") {
     switch (event.origin) {
@@ -177,6 +181,13 @@ export function formatEventListProvenanceLabel(
   t: (key: string, opts?: Record<string, string>) => string,
 ): string {
   const kind = resolveEventListProvenanceKind(event);
+  if (kind === "subscribed") {
+    const path =
+      typeof event.source === "string" && event.source.startsWith("subscribed:")
+        ? event.source.slice("subscribed:".length)
+        : event.taskName ?? "";
+    return t("eventList.provenance.subscribed", { path });
+  }
   if (kind === "task") {
     const taskName = resolveEventListTaskName(event);
     return taskName

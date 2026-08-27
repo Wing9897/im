@@ -8,6 +8,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/leaderboard": () => import("../pages/leaderboard/LeaderboardPage"),
   "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
   "/timeline": () => import("../pages/timeline/TimelinePage"),
+  "/subscriptions": () => import("../pages/subscriptions/SubscriptionsShell"),
   "/items": () => import("../pages/items/ItemsPage"),
   "/notify": () => import("../pages/notify/NotifyWorkspacePage"),
   "/sources": () => import("../pages/sources/SourceManagementPage"),
@@ -83,7 +84,9 @@ export function prefetchRoute(to: string): void {
       ? ROUTE_PREFETCHERS["/ai"]
       : path.startsWith("/settings")
         ? ROUTE_PREFETCHERS["/settings"]
-        : undefined);
+        : path.startsWith("/subscriptions")
+          ? ROUTE_PREFETCHERS["/subscriptions"]
+          : undefined);
   if (!loader || prefetched.has(path)) return;
   prefetched.add(path);
   void loader().catch(() => {
