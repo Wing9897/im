@@ -162,6 +162,13 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         if leaving_agent_parent or (existing_mode == AGENT_MODE and effective_mode != AGENT_MODE):
             await clear_children_parent_links(tx, task_id, now=now)
 
+    prev_workset = str(existing.get("workset_id") or "")
+    prev_timeline = bool(existing.get("include_in_timeline"))
+    if prev_workset != str(workset_id or "") or prev_timeline != bool(include_in_timeline):
+        from server.calendar_share.dirty import mark_published_workset_dirty
+
+        await mark_published_workset_dirty(db, prev_workset, str(workset_id or ""))
+
     if body.isActive is not None:
         desired = 1 if body.isActive else 0
         current = int(existing.get("is_active") or 0)

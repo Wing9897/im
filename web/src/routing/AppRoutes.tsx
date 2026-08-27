@@ -65,6 +65,10 @@ const SubscriptionsSearchPage = lazyNamed(
   () => import("../pages/subscriptions/SubscriptionsSearchPage"),
   "SubscriptionsSearchPage",
 );
+const SubscriptionsPublishedPage = lazyNamed(
+  () => import("../pages/subscriptions/SubscriptionsPublishedPage"),
+  "SubscriptionsPublishedPage",
+);
 const ItemsPage = lazyNamed(() => import("../pages/items/ItemsPage"), "ItemsPage");
 const ItemFormPage = lazyNamed(() => import("../pages/items/form/ItemFormPage"), "ItemFormPage");
 const ItemsFinancePage = lazyNamed(
@@ -142,6 +146,7 @@ export function AppRoutes() {
         <Route path="/subscriptions" element={<LazyPage Page={SubscriptionsShell} />}>
           <Route index element={<Navigate to="/subscriptions/mine" replace />} />
           <Route path="mine" element={<LazyPage Page={SubscriptionsMinePage} />} />
+          <Route path="published" element={<LazyPage Page={SubscriptionsPublishedPage} />} />
           <Route path="search" element={<LazyPage Page={SubscriptionsSearchPage} />} />
         </Route>
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />

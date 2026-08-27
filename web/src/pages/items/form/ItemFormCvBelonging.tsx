@@ -74,6 +74,8 @@ export function ItemFormCvBelonging({
         isSystem: false,
         notifyEnabled: true,
         externalEnabled: true,
+        emoji: "",
+        description: "",
         createdAt: "",
         updatedAt: "",
       })),

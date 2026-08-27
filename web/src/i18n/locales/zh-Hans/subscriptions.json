@@ -3,6 +3,7 @@
   "tabsAria": "订阅分页",
   "tabs": {
     "mine": "我的订阅",
+    "published": "我的发布",
     "search": "搜索订阅"
   },
   "needLogin": "请先到账户 → 身份登录日历分享服务，才能加入订阅。",
@@ -21,32 +22,76 @@
     "loggedOut": "尚未登录日历分享，订阅栏无法操作。本地来源仍可筛选。",
     "offline": "日历分享离线或连不上服务器，订阅栏暂停操作。本地来源仍可筛选。"
   },
+  "listFilter": {
+    "placeholder": "按 handle、slug 或名称筛选",
+    "aria": "筛选已列出的日历",
+    "empty": "没有符合的日历。"
+  },
   "mine": {
-    "title": "已订阅日历",
-    "help": "移除会在服务器上取消订阅。时间规划上的显示开关在来源筛选里。",
     "empty": "尚未订阅日历。",
-    "searchCta": "搜索订阅",
     "openTimeline": "时间规划",
     "remove": "移除"
   },
+  "published": {
+    "needLogin": "请先到账户 → 身份登录日历分享服务，才能发布或取消上传。",
+    "empty": "尚未发布日历。",
+    "formTitle": "发布工作集",
+    "worksetLabel": "本地工作集",
+    "worksetPlaceholder": "选择工作集",
+    "edit": "设置",
+    "syncNow": "更新公开副本",
+    "unpublish": "取消上传",
+    "missingWorkset": "本地工作集已删，公开日历仍在。",
+    "pendingSync": "待自动更新",
+    "publishCta": "发布工作集",
+    "grantsSummary": "{count} 个已授权 handle",
+    "grantsClosed": "私人群组 — {count} 个 handle 可订阅",
+    "grantsEmpty": "私人群组 — 在设置中加入 handle，对方才能订阅",
+    "form": {
+      "title": "发布设置",
+      "help": "确定会把当前工作集上传到远端。之后行程变更会每分钟合并成一次公开副本更新。关掉上传请在卡片取消上传。",
+      "catalogHelp": "上传时会复制这个工作集的 emoji 和描述。请在工作集卡片上修改。",
+      "generalWarning": "「一般」工作集包含未归类行程。公开上传前请确认没有不该分享的内容。",
+      "slugLabel": "日历 slug",
+      "slugHelp": "远端路径格式为 handle/slug。1–64 字符，须以字母或数字开头，其后可为字母、数字、点、下划线或连字符。",
+      "slugRequired": "请输入 slug",
+      "slugInvalid": "slug 须为 1–64 字符，以字母或数字开头，其后可为字母、数字、点、下划线或连字符。",
+      "publicLabel": "可见性",
+      "publicHelp": "私人群组不公开列出，由你加入 handle。「公开」任何人可搜到并看行程详情；「公开闲忙」可搜到但只显示闲忙。",
+      "grantsTitle": "谁能订这本私人群组日历",
+      "grantsHelp": "加入 handle 即可让对方订阅；移除授权后请再按确定，对方才会失去订阅。这不是可转传的密码。",
+      "grantsClosedHelp": "这本日历为私人群组。只有你在此加入的 handle 能用路径订阅。",
+      "grantVisibilityBusy": "忙碌",
+      "grantVisibilityDetails": "详情",
+      "grantHandle": "handle",
+      "addGrant": "新增授权",
+      "removeGrant": "移除",
+      "confirm": "确定",
+      "syncing": "上传中…",
+      "synced": "已上传",
+      "failed": "上传失败",
+      "lastSync": "上次同步：{time}",
+      "neverSynced": "尚未同步"
+    },
+    "listRefreshPending": "已上传，列表稍后更新"
+  },
   "search": {
-    "title": "搜索公开日历",
-    "help": "搜索公开 busy／详情日历，或直接粘贴 handle/slug。授权给你但未公开的日历，登录后才会出现。",
-    "queryPlaceholder": "handle 或 slug",
+    "queryPlaceholder": "handle、slug 或 handle/slug",
     "submit": "搜索",
     "searching": "搜索中…",
     "noResults": "没有符合的日历。",
     "already": "已订阅",
     "add": "订阅",
     "adding": "加入中…",
-    "pathTitle": "用路径订阅",
-    "pathHelp": "粘贴 handle/slug，例如 DemoPub/Open。不能订阅自己正在上传的账号。",
-    "pathPlaceholder": "handle/slug",
+    "recommendedEmpty": "暂无公开日历可推荐。",
+    "pathHint": "私人群组日历请粘贴 handle/slug。须发布者在「我的发布」加入你的 handle。",
     "invalidPath": "请使用 handle/slug 格式。",
-    "rejectOwn": "不能订阅自己的日历。"
+    "rejectOwn": "不能订阅自己的日历。",
+    "noGrant": "没有权限。请发布者在「我的发布」加入你的 handle。"
   },
   "visibility": {
-    "busy": "忙碌",
-    "details": "详情"
+    "private_group": "私人群组",
+    "public": "公开",
+    "public_busy": "公开闲忙"
   }
 }

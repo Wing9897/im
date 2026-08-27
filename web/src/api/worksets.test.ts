@@ -56,6 +56,19 @@ describe("worksets API", () => {
       expect(result).toEqual(response);
     });
 
+    it("posts emoji and description when provided", async () => {
+      const response = { id: "w-2", name: "New", emoji: "📚", description: "Notes" };
+      vi.mocked(apiClient.post).mockResolvedValue(response);
+
+      await createWorkset("New", { emoji: "📚", description: "Notes" });
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/worksets", {
+        name: "New",
+        emoji: "📚",
+        description: "Notes",
+      });
+    });
+
     it("propagates errors", async () => {
       vi.mocked(apiClient.post).mockRejectedValue(new Error("Validation error"));
 

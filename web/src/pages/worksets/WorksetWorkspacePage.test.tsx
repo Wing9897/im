@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeAnalysisTask, resetTaskCatalogState, taskCatalogState } from "../../test/context-mocks";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
+import "../../components/items/emoji/emojiPickerReactMock";
 
 vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
@@ -99,11 +100,12 @@ describe("WorksetWorkspacePage", () => {
     expect(harness.container.querySelector('[data-testid="workset-flow-panel"]')).toBeNull();
   });
 
-  it("hides rename and delete for the built-in General workset", async () => {
+  it("hides delete for the built-in General workset and offers edit", async () => {
     await harness.render(WorkspaceAt, { entry: "/worksets/__general__" });
 
     expect(harness.container.querySelector('[data-testid="workset-workspace-rename"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-workspace-delete"]')).toBeNull();
+    expect(harness.container.querySelector('[data-testid="workset-workspace-edit"]')).toBeTruthy();
     expect(harness.container.textContent).toContain("一般");
     expect(harness.container.textContent).toContain("內建");
   });

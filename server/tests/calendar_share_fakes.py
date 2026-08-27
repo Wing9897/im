@@ -36,6 +36,8 @@ class FakeRemote:
         self.delete_calendar_status = 200
         self.patch_changes_status = 200
         self.put_grants_status = 200
+        self.put_grants_payload: Any = {"ok": True}
+        self.put_calendar_queue: list[Any] = []
         self.put_timezone_status = 200
         self.post_sub_status = 200
         self.post_sub_payload: Any = {"handle": "Alice", "slug": "Work"}
@@ -44,7 +46,16 @@ class FakeRemote:
         self.remote_subs: list[dict[str, str]] = []
         self.search_status = 200
         self.search_payload: Any = {
-            "items": [{"handle": "DemoPub", "slug": "Open", "visibility": "details"}],
+            "items": [
+                {
+                    "handle": "DemoPub",
+                    "slug": "Open",
+                    "hitKind": "listing",
+                    "publicVisibility": "public",
+                    "emoji": "",
+                    "description": "",
+                }
+            ],
         }
         self.events_status = 200
         self.events_payload: Any = {
@@ -137,7 +148,7 @@ class FakeRemote:
                 return self.events_status, {"calendars": [], "events": [], "series": []}
             return self.events_status, self.events_payload
         if path.endswith("/grants"):
-            return self.put_grants_status, {"ok": True}
+            return self.put_grants_status, self.put_grants_payload
         if path.endswith("/changes"):
             if self.fail_first_authorized and self._authorized_hits == 0 and access_token == "acc-1":
                 self._authorized_hits += 1
@@ -146,6 +157,12 @@ class FakeRemote:
         if path.startswith("/me/calendars/"):
             if method == "DELETE":
                 return self.delete_calendar_status, {"deleted": self.delete_calendar_status < 400}
+            if self.put_calendar_queue:
+                outcome = self.put_calendar_queue.pop(0)
+                if isinstance(outcome, BaseException):
+                    raise outcome
+                if isinstance(outcome, tuple) and len(outcome) == 2:
+                    return outcome
             if self.fail_first_authorized and self._authorized_hits == 0 and access_token == "acc-1":
                 self._authorized_hits += 1
                 return 401, {"message": "expired"}

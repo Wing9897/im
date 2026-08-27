@@ -143,7 +143,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 含 `mcp`。當前基線為 stamp **2**／`SCHEMA_SEMVER` `1.1.0`（地板 stamp 1 會自動升級）。未來 stamp 硬拒絕 → 升級應用；壞庫 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`。
+**Schema：** `user_events.origin` 含 `mcp`。當前基線為 stamp **4**／`SCHEMA_SEMVER` `1.3.0`（地板 stamp 1 會自動升級）。未來 stamp 硬拒絕 → 升級應用；壞庫 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`。
 
 ## 非目標
 

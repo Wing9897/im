@@ -15,6 +15,7 @@ import {
   EVENT_LIST_DAY_PHASE_TAG_CLASS,
   EVENT_LIST_DAY_PHASE_TAG_META,
   calendarLocationDisplay,
+  eventListAllowsDismiss,
   eventListTimeLabel,
   formatEventListProvenanceLabel,
   previewEventBody,
@@ -52,6 +53,30 @@ function EventProvenanceRow({
   );
 }
 
+function EventListStatusWorksetRow({
+  statusColor,
+  statusLabel,
+  worksetLabel,
+}: {
+  statusColor: string;
+  statusLabel: string;
+  worksetLabel: string;
+}) {
+  return (
+    <div
+      className="flex min-w-0 flex-wrap items-center gap-x-sm gap-y-0.5"
+      data-testid="timeline-event-list-status-workset"
+    >
+      <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
+        {statusLabel}
+      </span>
+      <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
+        {worksetLabel}
+      </span>
+    </div>
+  );
+}
+
 export function EventListItem({
   event,
   focusedDay,
@@ -83,6 +108,9 @@ export function EventListItem({
     value: resolveEventListWorksetName(event, metaLookups),
   });
   const provenanceLabel = formatEventListProvenanceLabel(event, t);
+  const statusLabel = getEventStatusLabel(status);
+  const allowDismiss = eventListAllowsDismiss(event);
+  const showDismissFooter = dismissed || allowDismiss;
 
   return (
     <SurfaceCard
@@ -174,7 +202,7 @@ export function EventListItem({
               data-testid="timeline-event-list-meta"
             >
               <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
-                {getEventStatusLabel(status)}
+                {statusLabel}
               </span>
               <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
                 {worksetLabel}
@@ -204,47 +232,48 @@ export function EventListItem({
               text={timeLabel}
               className={`${captionClass} mt-1`}
             />
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-sm gap-y-0.5 text-[11px] text-text-muted">
-              <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
-                {getEventStatusLabel(status)}
-              </span>
-              <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
-                {worksetLabel}
-              </span>
+            <div className="mt-1 flex min-w-0 flex-col gap-0.5 text-[11px] text-text-muted">
+              <EventListStatusWorksetRow
+                statusColor={statusColor}
+                statusLabel={statusLabel}
+                worksetLabel={worksetLabel}
+              />
               <EventProvenanceRow event={event} label={provenanceLabel} />
             </div>
           </>
         )}
       </button>
-      <div className="mt-sm">
-        {dismissed ? (
-          <button
-            type="button"
-            className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
-            disabled={userEventActionBusy}
-            data-testid="timeline-event-list-restore"
-            onClick={(clickEvent) => {
-              clickEvent.stopPropagation();
-              onRestoreTimelineEvent?.(event);
-            }}
-          >
-            {t("sidebar.restore")}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
-            disabled={userEventActionBusy}
-            data-testid="timeline-event-list-dismiss"
-            onClick={(clickEvent) => {
-              clickEvent.stopPropagation();
-              onDismissTimelineEvent?.(event);
-            }}
-          >
-            {t("sidebar.dismiss")}
-          </button>
-        )}
-      </div>
+      {showDismissFooter ? (
+        <div className="mt-sm">
+          {dismissed ? (
+            <button
+              type="button"
+              className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
+              disabled={userEventActionBusy}
+              data-testid="timeline-event-list-restore"
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation();
+                onRestoreTimelineEvent?.(event);
+              }}
+            >
+              {t("sidebar.restore")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="border-none bg-transparent p-0 text-caption text-text-secondary hover:text-text-primary"
+              disabled={userEventActionBusy}
+              data-testid="timeline-event-list-dismiss"
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation();
+                onDismissTimelineEvent?.(event);
+              }}
+            >
+              {t("sidebar.dismiss")}
+            </button>
+          )}
+        </div>
+      ) : null}
     </SurfaceCard>
   );
 }

@@ -4,6 +4,10 @@ import i18n from "../i18n";
 import { messageForErrorCode } from "../i18n/errorCodes";
 
 function localizeMessage(raw: string): string {
+  if (raw.startsWith("Invalid slug:")) {
+    const mappedSlug = messageForErrorCode("INVALID_CALENDAR_SLUG");
+    if (mappedSlug) return mappedSlug;
+  }
   const byCode = messageForErrorCode(raw);
   if (byCode) return byCode;
   return formatAnalysisErrorMessage(raw, i18n.t.bind(i18n)) ?? raw;

@@ -15,6 +15,7 @@ import {
   resolveEventListDayPhaseTag,
   resolveEventListProvenanceKind,
   resolveEventListWorksetName,
+  eventListAllowsDismiss,
 } from "./eventListCardMeta";
 import { IMPORTANT_EVENT_EMOJI } from "../../api/timelineImportance";
 
@@ -83,6 +84,15 @@ describe("eventListCardMeta", () => {
         (key, opts) => (key === "eventList.provenance.subscribed" ? `Subscribed: ${opts?.path}` : key),
       ),
     ).toBe("Subscribed: Alice/Work");
+  });
+
+  it("allows local dismiss only for non-subscribed events", () => {
+    expect(eventListAllowsDismiss(makeTimelineItem({ source: "user" }))).toBe(true);
+    expect(eventListAllowsDismiss(makeTimelineItem({ source: "analysis" }))).toBe(true);
+    expect(eventListAllowsDismiss(makeTimelineItem({ source: "recurring" }))).toBe(true);
+    expect(
+      eventListAllowsDismiss(makeTimelineItem({ source: "subscribed:DemoPub/Open" })),
+    ).toBe(false);
   });
 
   it("maps spanning cover to 跨日进行中; ending uses 本日* when focused is today", () => {

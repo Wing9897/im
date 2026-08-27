@@ -5821,6 +5821,28 @@
         }
       }
     },
+    "/api/v1/calendar-share/publish": {
+      "get": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "List Publish States",
+        "description": "Return this device's published worksets. Does not call IntelligenceCalendar.",
+        "operationId": "list_publish_states_api_v1_calendar_share_publish_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSharePublishListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/calendar-share/publish/{workset_id}": {
       "get": {
         "tags": [
@@ -5889,6 +5911,47 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSharePublishStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar-share"
+        ],
+        "summary": "Delete Publish State",
+        "description": "Unpublish: DELETE the IC calendar and drop the local publish row.",
+        "operationId": "delete_publish_state_api_v1_calendar_share_publish__workset_id__delete",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -10273,30 +10336,21 @@
       },
       "CalendarSharePublishBody": {
         "properties": {
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled"
-          },
           "slug": {
             "type": "string",
             "maxLength": 64,
             "minLength": 1,
             "title": "Slug"
           },
-          "autoSync": {
-            "type": "boolean",
-            "title": "Autosync",
-            "default": false
-          },
           "publicVisibility": {
             "type": "string",
             "enum": [
-              "off",
-              "busy",
-              "details"
+              "private_group",
+              "public",
+              "public_busy"
             ],
             "title": "Publicvisibility",
-            "default": "off"
+            "default": "private_group"
           },
           "grants": {
             "items": {
@@ -10314,12 +10368,11 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "enabled",
           "slug"
         ],
         "title": "CalendarSharePublishBody"
       },
-      "CalendarSharePublishStateResponse": {
+      "CalendarSharePublishListItemResponse": {
         "properties": {
           "worksetId": {
             "type": "string",
@@ -10329,25 +10382,15 @@
             "type": "string",
             "title": "Slug"
           },
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled",
-            "default": false
-          },
-          "autoSync": {
-            "type": "boolean",
-            "title": "Autosync",
-            "default": false
-          },
           "publicVisibility": {
             "type": "string",
             "enum": [
-              "off",
-              "busy",
-              "details"
+              "private_group",
+              "public",
+              "public_busy"
             ],
             "title": "Publicvisibility",
-            "default": "off"
+            "default": "private_group"
           },
           "grants": {
             "items": {
@@ -10378,6 +10421,112 @@
             ],
             "title": "Lasterror"
           },
+          "pendingSync": {
+            "type": "boolean",
+            "title": "Pendingsync",
+            "default": false
+          },
+          "isSystemWorkset": {
+            "type": "boolean",
+            "title": "Issystemworkset",
+            "default": false
+          },
+          "worksetName": {
+            "type": "string",
+            "title": "Worksetname",
+            "default": ""
+          },
+          "worksetMissing": {
+            "type": "boolean",
+            "title": "Worksetmissing",
+            "default": false
+          },
+          "emoji": {
+            "type": "string",
+            "title": "Emoji",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "worksetId",
+          "slug"
+        ],
+        "title": "CalendarSharePublishListItemResponse",
+        "description": "Local publish-map row plus whether the workset still exists."
+      },
+      "CalendarSharePublishListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarSharePublishListItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "title": "CalendarSharePublishListResponse"
+      },
+      "CalendarSharePublishStateResponse": {
+        "properties": {
+          "worksetId": {
+            "type": "string",
+            "title": "Worksetid"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "publicVisibility": {
+            "type": "string",
+            "enum": [
+              "private_group",
+              "public",
+              "public_busy"
+            ],
+            "title": "Publicvisibility",
+            "default": "private_group"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarShareGrantResponse"
+            },
+            "type": "array",
+            "title": "Grants"
+          },
+          "lastSyncAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsyncat"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "pendingSync": {
+            "type": "boolean",
+            "title": "Pendingsync",
+            "default": false
+          },
           "isSystemWorkset": {
             "type": "boolean",
             "title": "Issystemworkset",
@@ -10401,20 +10550,61 @@
             "type": "string",
             "title": "Slug"
           },
-          "visibility": {
+          "hitKind": {
             "type": "string",
             "enum": [
-              "busy",
-              "details"
+              "listing",
+              "grant"
+            ],
+            "title": "Hitkind"
+          },
+          "publicVisibility": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "private_group",
+                  "public",
+                  "public_busy"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publicvisibility"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "busy",
+                  "details"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
             "title": "Visibility"
+          },
+          "emoji": {
+            "type": "string",
+            "title": "Emoji",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
           }
         },
         "type": "object",
         "required": [
           "handle",
           "slug",
-          "visibility"
+          "hitKind"
         ],
         "title": "CalendarShareSearchHitResponse"
       },
@@ -10528,6 +10718,16 @@
           "slug": {
             "type": "string",
             "title": "Slug"
+          },
+          "emoji": {
+            "type": "string",
+            "title": "Emoji",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
           }
         },
         "type": "object",
@@ -18507,6 +18707,18 @@
             "type": "boolean",
             "title": "Externalenabled",
             "default": true
+          },
+          "emoji": {
+            "type": "string",
+            "maxLength": 16,
+            "title": "Emoji",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 280,
+            "title": "Description",
+            "default": ""
           }
         },
         "additionalProperties": false,
@@ -18551,6 +18763,16 @@
             "type": "boolean",
             "title": "Externalenabled",
             "default": true
+          },
+          "emoji": {
+            "type": "string",
+            "title": "Emoji",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
           },
           "createdAt": {
             "anyOf": [
@@ -18618,6 +18840,30 @@
               }
             ],
             "title": "Externalenabled"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           }
         },
         "additionalProperties": false,

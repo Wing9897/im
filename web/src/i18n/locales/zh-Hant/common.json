@@ -84,6 +84,8 @@
     "keyEventsCard": "情報事件 · 卡片",
     "notifyVoice": "通知 · 本機通知",
     "notifyHistory": "通知 · 觸發紀錄",
+    "subscriptionsPublished": "訂閱 · 我的發佈",
+    "subscriptionsSearch": "訂閱 · 搜尋訂閱",
     "sourcesRss": "來源 · RSS",
     "sourcesTelegram": "來源 · Telegram",
     "sourcesDiscord": "來源 · Discord",
@@ -169,7 +171,18 @@
     "LLM_PROFILE_INCOMPLETE": "已綁定的 AI 設定檔不完整，請到 AI 供應商頁面補齊後再試。",
     "Backend unreachable": "無法連線到後端服務",
     "Request timed out": "請求逾時，請稍後再試",
-    "Request cancelled": "請求已取消"
+    "Request cancelled": "請求已取消",
+    "RATE_LIMITED": "請求過於頻繁，請稍候再試。",
+    "AUTH_REQUIRED": "請先登入日曆分享。",
+    "INVALID_CALENDAR_SLUG": "slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。",
+    "CALENDAR_SHARE_REQUEST_FAILED": "日曆分享請求失敗，請稍後再試。",
+    "CALENDAR_SHARE_UNREACHABLE": "日曆分享服務連不上，請稍後再試。",
+    "CALENDAR_SHARE_UNPUBLISH_FAILED": "取消上載失敗，請稍後再試。",
+    "Calendar share request failed": "日曆分享請求失敗，請稍後再試。",
+    "Calendar share server unreachable": "日曆分享服務連不上，請稍後再試。",
+    "Calendar share login failed": "日曆分享登入失敗。",
+    "Calendar share session expired": "日曆分享工作階段已過期，請重新登入。",
+    "Calendar share unpublish failed": "取消上載失敗，請稍後再試。"
   },
   "timeFilter": {
     "aria": "時間篩選",
@@ -373,7 +386,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 2／SemVer 1.1.0（SCHEMA_FLOOR 1；stamp 1 會經 SCHEMA_MIGRATIONS 自動升級）。未來 stamp：請升級應用。壞庫：請先備份，再執行 {script} 重置後重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 4／SemVer 1.3.0（SCHEMA_FLOOR 1；stamp 1 會經 SCHEMA_MIGRATIONS 自動升級）。未來 stamp：請升級應用。壞庫：請先備份，再執行 {script} 重置後重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

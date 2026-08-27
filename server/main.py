@@ -83,6 +83,12 @@ async def _start_runtime_services(
     if start_scheduler:
         await scheduler.recover_orphan_batches()
         await scheduler.start()
+        from server.calendar_share.autosync import calendar_share_autosync_loop
+
+        app.state.calendar_share_autosync_task = asyncio.create_task(
+            calendar_share_autosync_loop(db),
+            name="calendar-share-autosync",
+        )
 
     collector: Any | None = None
     if start_collector:
@@ -128,6 +134,7 @@ async def _lifespan_impl(
     app.state.analysis_engine = None
     app.state.scheduler = None
     app.state.collector = None
+    app.state.calendar_share_autosync_task = None
     # Default ready until a probe runs; only a failed decrypt flips this False.
     app.state.secrets_ready = True
     app.state.secrets_error = None
@@ -218,6 +225,17 @@ async def _lifespan_impl(
                 pass
             except Exception as exc:  # noqa: BLE001 — best-effort shutdown observation
                 logger.warning("Event geocode backfill skipped: %s", exc)
+
+        autosync_task = getattr(app.state, "calendar_share_autosync_task", None)
+        if autosync_task is not None:
+            if not autosync_task.done():
+                autosync_task.cancel()
+            try:
+                await autosync_task
+            except CancelledError:
+                pass
+            except Exception as exc:  # noqa: BLE001 — best-effort shutdown
+                logger.warning("Calendar share autosync shutdown error: %s", exc)
 
         scheduler = getattr(app.state, "scheduler", None)
         if start_scheduler and scheduler is not None:

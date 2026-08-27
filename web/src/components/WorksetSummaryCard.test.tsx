@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetTaskCatalogState, taskCatalogState } from "../test/context-mocks";
 import { WorksetSummaryCard } from "./WorksetSummaryCard";
+import "./items/emoji/emojiPickerReactMock";
 
 const updateWorkset = vi.fn(() => Promise.resolve({}));
 const onOpen = vi.fn();
@@ -41,6 +42,8 @@ vi.mock("react-i18next", () => ({
         if (key === "workset:delete") return "delete";
         if (key === "workset:deleteAria") return `Delete ${opts?.name ?? ""}`;
         if (key === "workset:nameAria") return "Workset name";
+        if (key === "workset:changeEmojiAria") return `Change emoji ${opts?.name ?? ""}`;
+        if (key === "changeEmojiAria") return `Change emoji ${opts?.name ?? ""}`;
       }
       return key;
     },
@@ -62,6 +65,8 @@ describe("WorksetSummaryCard", () => {
         externalEnabled: true,
         createdAt: "",
         updatedAt: "",
+        emoji: "🎯",
+        description: "Ops notes that should appear truncated on the card",
       },
     ];
     updateWorkset.mockClear();
@@ -98,12 +103,18 @@ describe("WorksetSummaryCard", () => {
     });
   }
 
-  it("puts a large Layers mark beside the workset name", async () => {
+  it("puts a 48px emoji avatar beside the workset name", async () => {
     await renderCard({ onRename: undefined, onDelete: undefined });
-    const titleIcon = container.querySelector('[data-testid="card-title-icon"]');
-    expect(titleIcon).toBeTruthy();
-    expect(titleIcon?.getAttribute("width")).toBe("20");
-    expect(titleIcon?.classList.contains("lucide-layers")).toBe(true);
+    const avatar = container.querySelector('[data-testid="item-emoji-avatar"]') as HTMLElement | null;
+    expect(avatar).toBeTruthy();
+    expect(avatar?.style.width).toBe("48px");
+    expect(avatar?.textContent).toContain("🎯");
+    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+  });
+
+  it("shows a truncated custom description", async () => {
+    await renderCard({ onRename: undefined, onDelete: undefined });
+    expect(container.textContent ?? "").toContain("Ops notes that should appear truncated on the card");
   });
 
   it("toggles notify and external without opening the workset detail", async () => {

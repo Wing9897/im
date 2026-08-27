@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
 import { listItems } from "../../../api/items";
-import { createWorkset, deleteWorkset, renameWorkset } from "../../../api/worksets";
+import { createWorkset, deleteWorkset, renameWorkset, updateWorkset } from "../../../api/worksets";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import { useToast } from "../../../context/ToastContext";
 import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
@@ -129,16 +129,24 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
   );
 
   const handleWorksetNameSubmit = useCallback(
-    async (cleaned: string) => {
+    async (values: { name: string; emoji: string; description: string }) => {
       if (!worksetNameDialog) return;
       setWorksetNameBusy(true);
+      const cleaned = values.name.trim();
       try {
         if (worksetNameDialog.mode === "create") {
-          await createWorkset(cleaned);
+          await createWorkset(cleaned, {
+            emoji: values.emoji,
+            description: values.description,
+          });
           await refreshWorksets();
           showToast(t("workset:createdToast", { name: cleaned }), "success");
         } else {
-          await renameWorkset(worksetNameDialog.id, cleaned);
+          await updateWorkset(worksetNameDialog.id, {
+            name: cleaned,
+            emoji: values.emoji,
+            description: values.description,
+          });
           await refreshWorksets();
           showToast(t("workset:renamedToast", { name: cleaned }), "success");
         }

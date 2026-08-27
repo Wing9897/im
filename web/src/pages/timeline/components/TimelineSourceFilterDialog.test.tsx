@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
+import { subscribeCalendarIdentity } from "../../../domain/calendarShare/subscribedCalendars";
 import { TimelineSourceFilterDialog } from "./TimelineSourceFilterDialog";
 import { i18n, wrapWithI18n } from "../../../test/i18nHarness";
 import { setAppLocale } from "../../../i18n/locale";
@@ -23,6 +24,11 @@ const EXPAND_TASKS = [
   { id: "task-1", name: "First task", worksetId: "ws-1" },
   { id: "task-2", name: "Second task", worksetId: "ws-1" },
   { id: "task-3", name: "Third task", worksetId: "__general__" },
+];
+
+const SUBSCRIBE_CALENDARS = [
+  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" }),
+  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", emoji: "🚧" }),
 ];
 
 describe("TimelineSourceFilterDialog", () => {
@@ -48,7 +54,7 @@ describe("TimelineSourceFilterDialog", () => {
   function renderDialog(
     selection: SourceFilterSelection = null,
     extra: {
-      subscribeCalendars?: { key: string; label: string }[];
+      subscribeCalendars?: ReturnType<typeof subscribeCalendarIdentity>[];
       selectedSubscribeKeys?: string[] | null;
       onChangeSubscribeKeys?: (next: string[] | null) => void;
       subscribeAvailability?: "ok" | "loggedOut" | "offline";
@@ -64,10 +70,7 @@ describe("TimelineSourceFilterDialog", () => {
       onChange,
       ariaLabelPrefix: "Timeline",
       variant: "toolbar",
-      subscribeCalendars: extra.subscribeCalendars ?? [
-        { key: "Alice/Work", label: "Alice/Work" },
-        { key: "Carol/Team", label: "Carol/Team" },
-      ],
+      subscribeCalendars: extra.subscribeCalendars ?? SUBSCRIBE_CALENDARS,
       selectedSubscribeKeys: extra.selectedSubscribeKeys ?? null,
       onChangeSubscribeKeys,
       subscribeAvailability: extra.subscribeAvailability,
@@ -117,6 +120,12 @@ describe("TimelineSourceFilterDialog", () => {
     );
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="timeline-subscribe-emoji-Carol/Team"]')).toBeTruthy();
+    expect(group?.textContent).toContain("Alice/Work");
+    expect(group?.textContent).toContain("Carol/Team");
+    expect(group?.textContent).toContain("🌞");
+    expect(group?.textContent).toContain("🚧");
     expect(document.querySelector('[data-testid="timeline-filter-local-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-filter-subscribe-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-__general__"]')).toBeTruthy();

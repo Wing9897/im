@@ -12,8 +12,22 @@ import {
   type CalendarShareSession,
   type CalendarShareSubscription,
 } from "../../api/calendarShare";
+import {
+  consumeCalendarShareRateLimit,
+  resetCalendarShareRateLimitForTests,
+} from "./calendarShareRateLimit";
 import { toErrorMessage } from "../../utils/errors";
-import { calendarShareKey, isCalendarShareUnreachable } from "./subscribedCalendars";
+import {
+  calendarShareKey,
+  isCalendarShareNotFound,
+  isCalendarShareUnreachable,
+} from "./subscribedCalendars";
+
+export {
+  subscribeCalendarIdentity,
+  subscribeFilterCalendarsFromCatalog,
+  type SubscribeCalendarIdentity,
+} from "./subscribedCalendars";
 import { pruneSubscribedDismissals } from "./subscribedDismissals";
 
 export type CalendarShareCatalog = {
@@ -51,12 +65,19 @@ function subscribeCatalog(listener: () => void): () => void {
   };
 }
 
-export function getCalendarShareCatalogSnapshot(): CalendarShareCatalog {
+function getCalendarShareCatalogSnapshot(): CalendarShareCatalog {
   return snapshot;
 }
 
 export function refreshCalendarShareCatalog(): Promise<void> {
   if (inFlight) return inFlight;
+  try {
+    consumeCalendarShareRateLimit("catalog");
+  } catch (error) {
+    snapshot = { ...snapshot, loading: false, error: toErrorMessage(error) };
+    emit();
+    return Promise.reject(error);
+  }
   const myEpoch = ++epoch;
   if (!completed) {
     snapshot = { ...snapshot, loading: true };
@@ -84,7 +105,7 @@ export function refreshCalendarShareCatalog(): Promise<void> {
         const previousKeys = snapshot.items.map((row) => calendarShareKey(row.handle, row.slug));
         snapshot = {
           session,
-          items: payload.items,
+          items: payload.items ?? [],
           ownHandle: payload.ownHandle ?? session.handle ?? "",
           loading: false,
           error: null,
@@ -92,10 +113,22 @@ export function refreshCalendarShareCatalog(): Promise<void> {
         };
         completed = true;
         if (previousKeys.length > 0) {
-          pruneSubscribedDismissals(payload.items.map((row) => calendarShareKey(row.handle, row.slug)));
+          pruneSubscribedDismissals((payload.items ?? []).map((row) => calendarShareKey(row.handle, row.slug)));
         }
       } catch (error) {
         if (myEpoch !== epoch) return;
+        if (isCalendarShareNotFound(error)) {
+          snapshot = {
+            session,
+            items: [],
+            ownHandle: snapshot.ownHandle || session.handle || "",
+            loading: false,
+            error: null,
+            unreachable: false,
+          };
+          completed = true;
+          return;
+        }
         snapshot = {
           session,
           items: snapshot.items,
@@ -127,9 +160,9 @@ export function refreshCalendarShareCatalog(): Promise<void> {
 }
 
 /** Drop in-flight work and refetch so mounted Timeline filters pick up catalog edits. */
-export function invalidateCalendarShareCatalog(): void {
+export function invalidateCalendarShareCatalog(): Promise<void> {
   inFlight = null;
-  void refreshCalendarShareCatalog();
+  return refreshCalendarShareCatalog();
 }
 
 /** Test-only: clear cache, in-flight, and listeners. */
@@ -139,11 +172,12 @@ export function resetCalendarShareCatalogForTests(): void {
   epoch = 0;
   completed = false;
   listeners.clear();
+  resetCalendarShareRateLimitForTests();
 }
 
 export type CalendarShareCatalogHook = CalendarShareCatalog & {
   refresh: () => Promise<void>;
-  invalidate: () => void;
+  invalidate: () => Promise<void>;
 };
 
 export function useCalendarShareCatalog(): CalendarShareCatalogHook {

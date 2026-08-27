@@ -4,7 +4,7 @@
 |-----|----------------|
 | [../README.md](../README.md) | Install, run, ports, desktop host/client, product overview |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, API contract, frontend layering |
-| [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema contract: stamp 2 / semver 1.1.0, floor + `1→2` walk, support matrix, explicit reset |
+| [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema contract: stamp 4 / semver 1.3.0, floor + `1→2→3→4` walk, support matrix, explicit reset |
 | [AUTH.md](AUTH.md) | Authentication: device sessions, API keys, setup routes, manual checklist |
 | [DESKTOP-ICS.md](DESKTOP-ICS.md) | Desktop one-shot ICS import: supported subset, limits, remote-URL policy |
 | [RETIRED-API.md](RETIRED-API.md) | Index of retired HTTP paths; lock is `test_dead_endpoints` |

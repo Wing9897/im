@@ -31,6 +31,15 @@ def isolated_secret_key(tmp_path, monkeypatch):
     _fernet.cache_clear()
 
 
+@pytest.fixture(autouse=True)
+def reset_calendar_share_rate_limits():
+    from server.calendar_share.rate_limit import reset_calendar_share_rate_limit_for_tests
+
+    reset_calendar_share_rate_limit_for_tests()
+    yield
+    reset_calendar_share_rate_limit_for_tests()
+
+
 @pytest.fixture
 async def app(tmp_path) -> AsyncIterator[FastAPI]:
     application = create_app(

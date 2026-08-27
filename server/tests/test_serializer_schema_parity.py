@@ -220,6 +220,8 @@ Serializer = Callable[[], dict[str, Any]]
                     "id": "workset-1",
                     "name": "Research",
                     "is_system": 0,
+                    "emoji": "📚",
+                    "description": "Desk research",
                     "created_at": "2026-07-28T09:00:00Z",
                     "updated_at": "2026-07-28T09:01:00Z",
                 }

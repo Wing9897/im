@@ -249,6 +249,11 @@ async def commit_calendar_import(
                     "action": result_action,
                 }
             )
+    if any(result["action"] in ("created", "updated") for result in results):
+        from server.calendar_share.dirty import mark_published_workset_dirty
+        from server.worksets_const import SYSTEM_WORKSET_ID
+
+        await mark_published_workset_dirty(db, SYSTEM_WORKSET_ID)
     return {
         "sourceId": source,
         "committedCount": len(results),

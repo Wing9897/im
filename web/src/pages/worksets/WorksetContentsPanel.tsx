@@ -11,7 +11,6 @@ import {
   WorksetItemsSection,
   WorksetTasksSection,
 } from "../dashboard/components/WorksetDetailSections";
-import { WorksetCalendarSharePanel } from "./WorksetCalendarSharePanel";
 
 export type WorksetWorkspaceTarget = {
   id: string;
@@ -70,12 +69,6 @@ export function WorksetContentsPanel({ workset }: Props) {
   return (
     <div className="flex flex-col gap-md" data-testid="workset-contents-panel">
       <p className={`m-0 ${captionClass}`}>{t("workset:detailSubtitle")}</p>
-
-      <WorksetCalendarSharePanel
-        worksetId={workset.id}
-        worksetTitle={workset.title}
-        isSystem={workset.isSystem}
-      />
 
       {itemsError ? (
         <AlertBanner variant="error" role="alert" className="mb-0">

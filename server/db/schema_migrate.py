@@ -2,7 +2,7 @@
 
 Production steps live in :mod:`server.db.schema_steps`. Only additive SQL is
 allowed: ``ADD COLUMN`` / ``CREATE TABLE`` / ``CREATE INDEX``. There is no
-``down()``. Do not revive retired stamps 3–45 as a migration chain.
+``down()``. Do not revive retired stamps 27/45 as a migration chain.
 """
 
 from __future__ import annotations

@@ -3,6 +3,7 @@
   "tabsAria": "訂閱分頁",
   "tabs": {
     "mine": "我的訂閱",
+    "published": "我的發佈",
     "search": "搜尋訂閱"
   },
   "needLogin": "請先到帳戶 → 身分登入日曆分享服務，才能加入訂閱。",
@@ -21,32 +22,76 @@
     "loggedOut": "尚未登入日曆分享，訂閱欄無法操作。本機來源仍可篩選。",
     "offline": "日曆分享離線或連不上伺服器，訂閱欄暫停操作。本機來源仍可篩選。"
   },
+  "listFilter": {
+    "placeholder": "按 handle、slug 或名稱篩選",
+    "aria": "篩選已列出的日曆",
+    "empty": "沒有符合的日曆。"
+  },
   "mine": {
-    "title": "已訂閱日曆",
-    "help": "移除會在伺服器上取消訂閱。時間規劃上的顯示開關在來源篩選裡。",
     "empty": "尚未訂閱日曆。",
-    "searchCta": "搜尋訂閱",
     "openTimeline": "時間規劃",
     "remove": "移除"
   },
+  "published": {
+    "needLogin": "請先到帳戶 → 身分登入日曆分享服務，才能發佈或取消上載。",
+    "empty": "尚未發佈日曆。",
+    "formTitle": "發佈工作集",
+    "worksetLabel": "本機工作集",
+    "worksetPlaceholder": "選擇工作集",
+    "edit": "設定",
+    "syncNow": "更新公開副本",
+    "unpublish": "取消上載",
+    "missingWorkset": "本機工作集已刪，公開日曆仍在。",
+    "pendingSync": "待自動更新",
+    "publishCta": "發佈工作集",
+    "grantsSummary": "{count} 個已授權 handle",
+    "grantsClosed": "私人群組 — {count} 個 handle 可訂閱",
+    "grantsEmpty": "私人群組 — 在設定中加入 handle，對方才能訂閱",
+    "form": {
+      "title": "發佈設定",
+      "help": "確定會把目前工作集上載到遠端。之後行程變更會每分鐘合併成一次公開副本更新。關掉上載請在卡片取消上載。",
+      "catalogHelp": "上載時會複製這個工作集的 emoji 和描述。請在工作集卡片上修改。",
+      "generalWarning": "「一般」工作集包含未歸類行程。公開上載前請確認沒有不該分享的內容。",
+      "slugLabel": "日曆 slug",
+      "slugHelp": "遠端路徑格式為 handle/slug。1–64 字元，須以字母或數字開頭，其後可為字母、數字、點、底線或連字號。",
+      "slugRequired": "請輸入 slug",
+      "slugInvalid": "slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。",
+      "publicLabel": "可見性",
+      "publicHelp": "私人群組不公開列出，由你加入 handle。「公開」任何人可搜到並看行程詳情；「公開閒忙」可搜到但只顯示閒忙。",
+      "grantsTitle": "誰能訂這本私人群組日曆",
+      "grantsHelp": "加入 handle 即可讓對方訂閱；移除授權後請再按確定，對方才會失去訂閱。這不是可轉傳的密碼。",
+      "grantsClosedHelp": "這本日曆為私人群組。只有你在此加入的 handle 能用路徑訂閱。",
+      "grantVisibilityBusy": "忙碌",
+      "grantVisibilityDetails": "詳情",
+      "grantHandle": "handle",
+      "addGrant": "新增授權",
+      "removeGrant": "移除",
+      "confirm": "確定",
+      "syncing": "上載中…",
+      "synced": "已上載",
+      "failed": "上載失敗",
+      "lastSync": "上次同步：{time}",
+      "neverSynced": "尚未同步"
+    },
+    "listRefreshPending": "已上載，列表稍後更新"
+  },
   "search": {
-    "title": "搜尋公開日曆",
-    "help": "搜尋公開 busy／詳情日曆，或直接貼上 handle/slug。授權給你但未公開的日曆，登入後才會出現。",
-    "queryPlaceholder": "handle 或 slug",
+    "queryPlaceholder": "handle、slug 或 handle/slug",
     "submit": "搜尋",
     "searching": "搜尋中…",
     "noResults": "沒有符合的日曆。",
     "already": "已訂閱",
     "add": "訂閱",
     "adding": "加入中…",
-    "pathTitle": "用路徑訂閱",
-    "pathHelp": "貼上 handle/slug，例如 DemoPub/Open。不能訂閱自己正在上載的帳號。",
-    "pathPlaceholder": "handle/slug",
+    "recommendedEmpty": "暫無公開日曆可推薦。",
+    "pathHint": "私人群組日曆請貼上 handle/slug。須發佈者在「我的發佈」加入你的 handle。",
     "invalidPath": "請使用 handle/slug 格式。",
-    "rejectOwn": "不能訂閱自己的日曆。"
+    "rejectOwn": "不能訂閱自己的日曆。",
+    "noGrant": "沒有權限。請發佈者在「我的發佈」加入你的 handle。"
   },
   "visibility": {
-    "busy": "忙碌",
-    "details": "詳情"
+    "private_group": "私人群組",
+    "public": "公開",
+    "public_busy": "公開閒忙"
   }
 }

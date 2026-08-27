@@ -7,7 +7,10 @@ import {
   type SubscribedCalendarSelection,
 } from "./subscribedCalendars";
 
-/** Timeline display filter for subscribed calendars (mine catalog). */
+/**
+ * Timeline display filter for subscribed calendars (mine catalog).
+ * Device localStorage only — not board ui-prefs and not SourceFilterSelection.
+ */
 export function usePersistedSubscribeFilter(): readonly [
   SubscribedCalendarSelection,
   Dispatch<SetStateAction<SubscribedCalendarSelection>>,

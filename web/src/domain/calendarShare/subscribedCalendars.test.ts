@@ -3,13 +3,19 @@ import {
   calendarShareKey,
   isOwnCalendarHandle,
   isSubscribedTimelineSource,
+  looksLikeCalendarSharePath,
+  matchesCalendarShareFilter,
   parseCalendarSharePath,
   parseSubscribedTimelineSource,
   parseSubscribedCalendarSelection,
   pruneSubscribedCalendarSelection,
   resolvedSubscribeKeys,
   resolveSubscribeAvailability,
+  subscribeCalendarIdentity,
+  subscribeFilterCalendarsFromCatalog,
+  subscribePageStatus,
   isCalendarShareUnreachable,
+  isCalendarShareNotFound,
   subscribedEventVisible,
   subscribedTimelineSource,
   toggleSubscribeKey,
@@ -19,9 +25,31 @@ describe("subscribedCalendars", () => {
   it("parses handle/slug and rejects own handle", () => {
     expect(parseCalendarSharePath(" Alice/Work ")).toEqual({ handle: "Alice", slug: "Work" });
     expect(parseCalendarSharePath("Alice")).toBeNull();
+    expect(looksLikeCalendarSharePath("Alice/Work")).toBe(true);
+    expect(looksLikeCalendarSharePath("Alice")).toBe(false);
+    expect(matchesCalendarShareFilter("ops", "Wing", "Ops", "Operations")).toBe(true);
+    expect(matchesCalendarShareFilter("zzz", "Wing", "Ops")).toBe(false);
+    expect(matchesCalendarShareFilter("  ", "Wing")).toBe(true);
     expect(isOwnCalendarHandle("Wing", "wing")).toBe(true);
     expect(isOwnCalendarHandle("Alice", "Wing")).toBe(false);
     expect(calendarShareKey("Alice", "Work")).toBe("Alice/Work");
+    expect(subscribeCalendarIdentity({ handle: " Alice ", slug: " Work ", emoji: "🌞" })).toEqual({
+      key: "Alice/Work",
+      label: "Alice/Work",
+      emoji: "🌞",
+      handle: "Alice",
+      slug: "Work",
+    });
+    expect(subscribeCalendarIdentity({ handle: "Alice", slug: "Work" }).emoji).toBe("");
+    expect(
+      subscribeFilterCalendarsFromCatalog([
+        { handle: "Alice", slug: "Work", emoji: "🌞" },
+        { handle: "Carol", slug: "Team" },
+      ]),
+    ).toEqual([
+      { key: "Alice/Work", label: "Alice/Work", emoji: "🌞", handle: "Alice", slug: "Work" },
+      { key: "Carol/Team", label: "Carol/Team", emoji: "", handle: "Carol", slug: "Team" },
+    ]);
     expect(subscribedTimelineSource("Alice", "Work")).toBe("subscribed:Alice/Work");
     expect(isSubscribedTimelineSource("subscribed:Alice/Work")).toBe(true);
     expect(isSubscribedTimelineSource("user")).toBe(false);
@@ -72,5 +100,17 @@ describe("subscribedCalendars", () => {
     expect(resolveSubscribeAvailability({ connected: true })).toBe("ok");
     expect(isCalendarShareUnreachable("calendar share 502")).toBe(true);
     expect(isCalendarShareUnreachable("Not signed in to calendar share")).toBe(false);
+    expect(isCalendarShareNotFound(new Error("Not found"))).toBe(true);
+    expect(isCalendarShareNotFound({ status: 404, message: "Calendar missing" })).toBe(true);
+    expect(isCalendarShareNotFound({ errorCode: "NOT_FOUND", message: "gone" })).toBe(true);
+    expect(isCalendarShareNotFound("Calendar share is unreachable")).toBe(false);
+  });
+
+  it("keeps the first catalog paint in loading until session is known", () => {
+    expect(subscribePageStatus({ loading: true, connected: null })).toBe("loading");
+    expect(subscribePageStatus({ loading: true, connected: false })).toBe("loggedOut");
+    expect(subscribePageStatus({ loading: false, connected: false })).toBe("loggedOut");
+    expect(subscribePageStatus({ loading: true, connected: true, unreachable: true })).toBe("offline");
+    expect(subscribePageStatus({ loading: false, connected: true })).toBe("ok");
   });
 });

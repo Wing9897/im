@@ -71,7 +71,6 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "calendar_share_handle": "",
     "calendar_share_access_token": "",
     "calendar_share_refresh_token": "",
-    "calendar_share_worksets": "{}",
     "calendar_share_timezone": "",
     "calendar_share_timezone_pending": "false",
     "calendar_share_timezone_last_public": "",

@@ -28,6 +28,8 @@ interface SourceFilterDialogProps {
 
 /**
  * Toolbar filter trigger + modal: hierarchical workset/task tree multi-select.
+ * Timeline keeps a separate two-column dialog (`TimelineSourceFilterDialog`);
+ * do not fold the subscribe column into this file.
  */
 export function SourceFilterDialog({
   tasks,

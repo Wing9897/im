@@ -5,10 +5,11 @@ import { pageShellRootClass } from "../../components/ui/pageLayout";
 
 const TAB_ITEMS = [
   { to: "/subscriptions/mine", labelKey: "tabs.mine" },
+  { to: "/subscriptions/published", labelKey: "tabs.published" },
   { to: "/subscriptions/search", labelKey: "tabs.search" },
 ] as const;
 
-/** Subscriptions workspace: IC-backed mine list / search remote calendars. */
+/** Subscriptions workspace: mine list / this device's published map / search. */
 export function SubscriptionsShell() {
   const { t } = useTranslation("subscriptions");
   const { pathname } = useLocation();
@@ -25,13 +26,14 @@ export function SubscriptionsShell() {
   return (
     <div className={`${pageShellRootClass} max-w-[1200px]`} data-testid="subscriptions-shell">
       <PageBreadcrumb
+        className="!mb-0"
         items={[
           { label: t("root"), to: "/subscriptions/mine" },
           { label: current ? t(current.labelKey) : t("root") },
         ]}
       />
-      <SegmentedTabs items={tabs} ariaLabel={t("tabsAria")} />
-      <div className="mt-lg">
+      <SegmentedTabs className="!mb-0" items={tabs} ariaLabel={t("tabsAria")} />
+      <div className="min-w-0">
         <Outlet />
       </div>
     </div>

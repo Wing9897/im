@@ -9,6 +9,7 @@ import {
 } from "../../../context/TaskCatalogContext";
 import { itemDateKindLabel } from "../../../domain/items/itemCalendarProjection";
 import {
+  eventListAllowsDismiss,
   eventListCardTitle,
   eventShowsRemindBadge,
   formatEventListProvenanceLabel,
@@ -239,19 +240,21 @@ export function TimelineSidebar({
                 <PillButton
                   type="button"
                   disabled={userEventActionBusy}
+                  data-testid="timeline-sidebar-restore"
                   onClick={() => onRestoreTimelineEvent?.(selectedEvent)}
                 >
                   {t("sidebar.restore")}
                 </PillButton>
-              ) : (
+              ) : eventListAllowsDismiss(selectedEvent) ? (
                 <PillButton
                   type="button"
                   disabled={userEventActionBusy}
+                  data-testid="timeline-sidebar-dismiss"
                   onClick={() => onDismissTimelineEvent?.(selectedEvent)}
                 >
                   {t("sidebar.dismiss")}
                 </PillButton>
-              )}
+              ) : null}
             </div>
           </section>
 

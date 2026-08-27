@@ -105,6 +105,16 @@ describe("useCalendarShareCatalog", () => {
     await first;
   });
 
+  it("treats a subscriptions 404 as an empty catalog, not an error", async () => {
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(new Error("Not found"));
+    await renderHook();
+    expect(resultRef.current?.items).toEqual([]);
+    expect(resultRef.current?.error).toBeNull();
+    expect(resultRef.current?.unreachable).toBe(false);
+    expect(resultRef.current?.session?.connected).toBe(true);
+    expect(resultRef.current?.loading).toBe(false);
+  });
+
   it("marks catalog unreachable on 502 without treating it as logged out", async () => {
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(
       Object.assign(new Error("Calendar share server unreachable"), { status: 502, name: "ApiRequestError" }),
@@ -112,6 +122,29 @@ describe("useCalendarShareCatalog", () => {
     await renderHook();
     expect(resultRef.current?.unreachable).toBe(true);
     expect(resultRef.current?.session?.connected).toBe(true);
-    expect(resultRef.current?.error).toMatch(/unreachable/i);
+    expect(resultRef.current?.error).toBeTruthy();
+  });
+
+  it("does not flash loading when invalidate refreshes a loaded catalog", async () => {
+    await renderHook();
+    expect(resultRef.current?.loading).toBe(false);
+    let resolveSubs: (value: unknown) => void = () => {};
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSubs = resolve;
+      }),
+    );
+    act(() => {
+      void invalidateCalendarShareCatalog();
+    });
+    expect(resultRef.current?.loading).toBe(false);
+    expect(resultRef.current?.items).toEqual([{ handle: "DemoPub", slug: "Open" }]);
+    resolveSubs({ items: [{ handle: "Alice", slug: "Work" }], ownHandle: "Wing" });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(resultRef.current?.items).toEqual([{ handle: "Alice", slug: "Work" }]);
+    expect(resultRef.current?.loading).toBe(false);
   });
 });

@@ -140,6 +140,10 @@ async def patch_recurring_series(
     updated = await fetch_series_row(db, sid)
     if updated is None:
         raise TaskWriteError("failed to update recurring series")
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    prev_workset = str(row.get("workset_id") or SYSTEM_WORKSET_ID)
+    await mark_published_workset_dirty(db, prev_workset, resolved_workset)
     return updated
 
 
@@ -170,4 +174,7 @@ async def hard_delete_recurring_series(
             (occurrence_pattern,),
         )
         await delete_series(tx, sid)
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    await mark_published_workset_dirty(db, str(row.get("workset_id") or SYSTEM_WORKSET_ID))
     return row

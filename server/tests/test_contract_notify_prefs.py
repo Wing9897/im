@@ -4,7 +4,17 @@ from __future__ import annotations
 
 from server.tests.contract_helpers import assert_keys
 
-WORKSET_KEYS = ["id", "name", "isSystem", "notifyEnabled", "externalEnabled", "createdAt", "updatedAt"]
+WORKSET_KEYS = [
+    "id",
+    "name",
+    "isSystem",
+    "notifyEnabled",
+    "externalEnabled",
+    "emoji",
+    "description",
+    "createdAt",
+    "updatedAt",
+]
 USER_EVENT_NOTIFY_KEYS = ["id", "title", "notifyPref", "worksetId"]
 RECURRING_NOTIFY_KEYS = ["id", "name", "rrule", "notifyPref", "worksetId"]
 TASK_NOTIFY_KEYS = ["id", "name", "notifyPref"]

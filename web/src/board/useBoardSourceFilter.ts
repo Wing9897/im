@@ -26,7 +26,10 @@ function saveSourceFilterIds(
   saveSourceFilterToApi(widgetId, selection);
 }
 
-/** Per-widget hierarchical source multi-select. `null` means all; empty means none. */
+/**
+ * Per-widget hierarchical source multi-select. `null` means all; empty means none.
+ * Server ui-prefs (`boardPrefsStore`), not timeline/intelligence localStorage.
+ */
 export function useBoardSourceFilter(widgetId: string | undefined) {
   const [selection, setSelectionState] = useState<SourceFilterSelection>(() =>
     loadBoardSourceFilter(widgetId),

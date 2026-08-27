@@ -258,10 +258,13 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     const targets = [...source.matchAll(/MigrationStep\(\s*target\s*=\s*(\d+)/g)].map((match) =>
       Number(match[1]),
     );
-    expect(targets, `production SCHEMA_MIGRATIONS targets missing in ${relFromRoot(stepsPath)}`).toEqual(
-      [2],
-    );
     return targets;
+  }
+
+  function expectedProductionTargets(): number[] {
+    const current = readCurrentSchemaVersion();
+    const floor = readSchemaFloor();
+    return Array.from({ length: current - floor }, (_, i) => floor + 1 + i);
   }
 
   it("ARCHITECTURE.md states the current baseline (not an older one)", () => {
@@ -286,7 +289,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
   it("README.md states the floor, stamp-2 registry, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const floor = readSchemaFloor();
-    expect(readProductionRegistryTargets()).toEqual([2]);
+    expect(readProductionRegistryTargets()).toEqual(expectedProductionTargets());
     const readmePath = path.resolve(ROOT_DIR, "README.md");
     const content = fs.readFileSync(readmePath, "utf-8");
 
@@ -304,7 +307,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
     const floor = readSchemaFloor();
-    expect(readProductionRegistryTargets()).toEqual([2]);
+    expect(readProductionRegistryTargets()).toEqual(expectedProductionTargets());
     const hintPath = path.resolve(ROOT_DIR, "desktop", "shell-i18n.ts");
     const content = fs.readFileSync(hintPath, "utf-8");
 
@@ -328,7 +331,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
     const floor = readSchemaFloor();
-    expect(readProductionRegistryTargets()).toEqual([2]);
+    expect(readProductionRegistryTargets()).toEqual(expectedProductionTargets());
     for (const locale of ["en", "zh-Hant", "zh-Hans"] as const) {
       const localePath = path.resolve(
         ROOT_DIR,

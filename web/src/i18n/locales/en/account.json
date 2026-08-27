@@ -73,7 +73,7 @@
   },
   "calendarShare": {
     "title": "Calendar share",
-    "help": "Sign in to the private calendar-share service to publish workset events. Subscribe to other calendars on the Subscriptions page. This page only connects the account; calendar ACL is edited on the workset.",
+    "help": "Sign in to the private calendar-share service and set the household timezone. Publish, ACL, and unpublish live under Subscriptions → My published. Subscribe on My subscriptions or Find calendars. This page only connects the account and timezone; Timeline only displays and filters.",
     "urlLabel": "Server URL",
     "urlHelp": "Default is the local public service. Tokens are encrypted on this machine; the UI never talks to that origin directly.",
     "handleLabel": "Handle",

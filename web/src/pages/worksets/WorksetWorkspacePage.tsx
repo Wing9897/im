@@ -11,7 +11,7 @@ import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { WorksetNameDialog } from "../../components/dialogs/WorksetNameDialog";
 import { WorksetPermissionToggles } from "../../components/WorksetPermissionToggles";
 import { AppPageShell, Badge, Button, OpsControlBar, pageTitleClass } from "../../components/ui";
-import { deleteWorkset, renameWorkset } from "../../api/worksets";
+import { deleteWorkset, updateWorkset } from "../../api/worksets";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
 import { WORKSETS_PATH } from "../../domain/worksets/worksetRoutes";
@@ -55,14 +55,23 @@ export function WorksetWorkspacePage() {
     navigate(WORKSETS_PATH);
   }, [navigate]);
 
-  const handleRename = useCallback(
-    async (cleaned: string) => {
+  const handleSave = useCallback(
+    async (values: { name: string; emoji: string; description: string }) => {
       if (!workset) return;
       setRenameBusy(true);
       try {
-        await renameWorkset(workset.id, cleaned);
+        await updateWorkset(workset.id, {
+          ...(isSystem ? {} : { name: values.name }),
+          emoji: values.emoji,
+          description: values.description,
+        });
         await refreshWorksets();
-        showToast(t("workset:renamedToast", { name: cleaned }), "success");
+        showToast(
+          isSystem
+            ? t("workset:updatedToast", { name: title })
+            : t("workset:renamedToast", { name: values.name }),
+          "success",
+        );
         setRenameOpen(false);
       } catch (error) {
         showToast(toError(error).message, "error");
@@ -70,7 +79,7 @@ export function WorksetWorkspacePage() {
         setRenameBusy(false);
       }
     },
-    [refreshWorksets, showToast, t, workset],
+    [isSystem, refreshWorksets, showToast, t, title, workset],
   );
 
   const handleDelete = useCallback(async () => {
@@ -144,25 +153,23 @@ export function WorksetWorkspacePage() {
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-sm">
           <WorksetPermissionToggles worksetId={workset.id} worksetName={title} />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setRenameOpen(true)}
+            data-testid={isSystem ? "workset-workspace-edit" : "workset-workspace-rename"}
+          >
+            {isSystem ? t("workset:edit") : t("workset:rename")}
+          </Button>
           {!isSystem ? (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setRenameOpen(true)}
-                data-testid="workset-workspace-rename"
-              >
-                {t("workset:rename")}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setDeleteOpen(true)}
-                data-testid="workset-workspace-delete"
-              >
-                {t("workset:delete")}
-              </Button>
-            </>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+              data-testid="workset-workspace-delete"
+            >
+              {t("workset:delete")}
+            </Button>
           ) : null}
         </div>
       </OpsControlBar>
@@ -180,11 +187,14 @@ export function WorksetWorkspacePage() {
         open={renameOpen}
         mode="rename"
         initialName={workset.name}
+        initialEmoji={workset.emoji ?? ""}
+        initialDescription={workset.description ?? ""}
+        nameDisabled={isSystem}
         busy={renameBusy}
         onClose={() => {
           if (!renameBusy) setRenameOpen(false);
         }}
-        onSubmit={handleRename}
+        onSubmit={handleSave}
       />
 
       {deleteOpen ? (

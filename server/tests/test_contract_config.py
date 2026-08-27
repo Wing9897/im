@@ -26,7 +26,6 @@ _INTERNAL_CONFIG_KEYS = frozenset(
         "calendar_share_handle",
         "calendar_share_access_token",
         "calendar_share_refresh_token",
-        "calendar_share_worksets",
         "calendar_share_timezone",
         "calendar_share_timezone_pending",
         "calendar_share_timezone_last_public",
@@ -85,6 +84,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "mcp_workset_scope",
         "mcp_workset_ids",
         "calendar_share_subscriptions",
+        "calendar_share_worksets",
     }
 )
 

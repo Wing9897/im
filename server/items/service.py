@@ -268,6 +268,9 @@ async def patch_item(
             )
     row = await fetch_item_row(db, item_id)
     assert row is not None
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    await mark_published_workset_dirty(db, prev_workset, next_workset)
     return serialize_item(row)
 
 
@@ -277,3 +280,6 @@ async def remove_item(db: Database, item_id: str) -> None:
         raise ItemValidationError("item not found")
     async with db.transaction() as conn:
         await delete_item(TransactionDb(conn), item_id)
+    from server.calendar_share.dirty import mark_published_workset_dirty
+
+    await mark_published_workset_dirty(db, str(existing.get("workset_id") or ""))

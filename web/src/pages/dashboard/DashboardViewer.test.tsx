@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import "../../components/items/emoji/emojiPickerReactMock";
 
 // --- Mocks ---
 
@@ -473,7 +474,7 @@ describe("DashboardViewer", () => {
     });
 
     expect(promptSpy).not.toHaveBeenCalled();
-    expect(mockCreateWorkset).toHaveBeenCalledWith("Alpha");
+    expect(mockCreateWorkset).toHaveBeenCalledWith("Alpha", { emoji: "", description: "" });
     promptSpy.mockRestore();
   });
 

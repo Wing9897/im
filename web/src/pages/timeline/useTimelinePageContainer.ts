@@ -10,8 +10,11 @@ import {
   usePersistedSourceFilter,
   usePruneSourceFilterToCatalog,
 } from "../../hooks/usePersistedSourceFilter";
-import { calendarShareKey, pruneSubscribedCalendarSelection, resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
-import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { pruneSubscribedCalendarSelection, resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
+import {
+  subscribeFilterCalendarsFromCatalog,
+  useCalendarShareCatalog,
+} from "../../domain/calendarShare/useCalendarShareCatalog";
 import { usePersistedSubscribeFilter } from "../../domain/calendarShare/usePersistedSubscribeFilter";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
@@ -79,10 +82,13 @@ export function useTimelinePageContainer() {
   );
   const [selectedSubscribeKeys, setSelectedSubscribeKeys] = usePersistedSubscribeFilter();
   const catalog = useCalendarShareCatalog();
-  const subscribeCatalog = catalog.items;
+  const subscribeCalendars = useMemo(
+    () => subscribeFilterCalendarsFromCatalog(catalog.items),
+    [catalog.items],
+  );
   const subscribeCatalogKeys = useMemo(
-    () => subscribeCatalog.map((row) => calendarShareKey(row.handle, row.slug)),
-    [subscribeCatalog],
+    () => subscribeCalendars.map((row) => row.key),
+    [subscribeCalendars],
   );
 
   useEffect(() => {
@@ -162,10 +168,7 @@ export function useTimelinePageContainer() {
       setSelectedSources,
       selectedSubscribeKeys,
       setSelectedSubscribeKeys,
-      subscribeCalendars: subscribeCatalogKeys.map((key) => ({
-        key,
-        label: key,
-      })),
+      subscribeCalendars,
       subscribeAvailability,
       timelineTasks: data.timelineTasks,
       viewMode: prefs.viewMode,

@@ -1,6 +1,10 @@
 /**
  * Persisted hierarchical source filter: `{ taskIds, worksetIds } | null`.
  * Legacy flat `string[]` is ignored (treated as all sources).
+ *
+ * This helper is localStorage only (timeline + intelligence named keys).
+ * Board widgets persist the same selection shape on server ui-prefs — see
+ * `namedSourceFilters.ts`. Do not fold board prefs into these keys.
  */
 
 import {

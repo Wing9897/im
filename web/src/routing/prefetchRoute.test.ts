@@ -29,5 +29,8 @@ describe("prefetchRoute", () => {
   it("prefetches the notifications workspace at /notify", () => {
     expect(() => prefetchRoute("/notify")).not.toThrow();
     expect(() => prefetchRoute("/notify?tab=notify")).not.toThrow();
+    expect(() => prefetchRoute("/subscriptions")).not.toThrow();
+    expect(() => prefetchRoute("/subscriptions/published")).not.toThrow();
+    expect(() => prefetchRoute("/subscriptions/search")).not.toThrow();
   });
 });
