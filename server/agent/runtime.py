@@ -4,7 +4,8 @@ Uses a single project-wide JSON protocol (not native provider tools) so Ollama /
 OpenAI-style / Gemini all share one path via ``ConfigurableLlmClient.complete``.
 
 Prompt assembly: ``runtime_prompt``. Completion + json_mode fallback:
-``runtime_complete``. Parse / tool-round helpers remain in sibling modules.
+``runtime_complete``. Tool-context dict: ``runtime_tool_context``. Chat event
+loop: ``runtime_loop``. Parse / tool-round helpers remain in sibling modules.
 """
 
 from __future__ import annotations
@@ -12,41 +13,18 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from server.agent.channels import AgentChannel, AgentChannelId, apply_household_tool_caps, get_agent_channel
-from server.agent.context_compact import (
-    DEFAULT_MAX_CHARS as DEFAULT_HISTORY_MAX_CHARS,
-)
-from server.agent.context_compact import (
-    DEFAULT_MAX_MESSAGES as DEFAULT_HISTORY_MAX_MESSAGES,
-)
-from server.agent.context_compact import (
-    compact_agent_history,
-)
+from server.agent.channels import AgentChannel, AgentChannelId, get_agent_channel
 from server.agent.runtime_complete import (
     LlmCompleter,
     complete_for_agent,
     resolve_web_search_route_for_runtime,
 )
-from server.agent.runtime_parse import (
-    final_event as _final_event,
-)
-from server.agent.runtime_parse import (
-    messages_for_channel as _messages_for_channel,
-)
+from server.agent.runtime_loop import iter_agent_chat_events
 from server.agent.runtime_prompt import build_system_prompt
-from server.agent.runtime_tool_round import run_tool_round
-from server.agent.session_clock import resolve_conversation_clock
+from server.agent.runtime_tool_context import build_agent_tool_context
 from server.agent.web_search_routing import WebSearchRoute
-from server.config import get_config, get_config_int
 from server.db.database import Database
-from server.domain.web_search_providers import KEYED_WEB_SEARCH_PROVIDERS
-from server.prompts.assistant import (
-    AGENT_EMPTY_USER_MESSAGE,
-    AGENT_HISTORY_OMIT_NOTICE,
-    AGENT_TOOL_ROUNDS_EXHAUSTED,
-    AGENT_UNPARSEABLE_REPLY,
-)
-from server.prompts.locale import normalize_ui_locale
+from server.prompts.assistant import AGENT_UNPARSEABLE_REPLY
 from server.util import new_id
 
 MAX_TOOL_ROUNDS = 8
@@ -107,37 +85,24 @@ class AgentRuntime:
         web_route: WebSearchRoute | None = None,
         force_web_search: bool = False,
     ) -> dict[str, Any]:
-        route = web_route or await self._resolve_web_search_route(force_enabled=force_web_search)
-        from server.analyzer.llm_config import load_agent_llm_config
-
-        override = getattr(self.llm, "profile_id", None)
-        profile_id = override.strip() if isinstance(override, str) and override.strip() else None
-        llm_cfg = await load_agent_llm_config(self.db, profile_id=profile_id)
-        stored_keys = llm_cfg.get("web_search_api_keys") or {}
-        return {
-            "web_search_enabled": route.enabled and route.inject_web_search_tool,
-            "web_search_provider": route.tool_provider,
-            "web_search_mode": route.mode,
-            "native_web_search": route.native_web_search,
-            "web_search_api_keys": {
-                provider: str(stored_keys.get(provider) or "") for provider in KEYED_WEB_SEARCH_PROVIDERS
-            },
-            "web_fetch_count": 0,
-            "user_event_origin": user_event_origin,
-            "default_workset_id": workset_id,
-            "agent_scope_task_id": agent_scope_task_id,
-            "broadcaster": self.broadcaster,
-            "task_advisor_enabled": task_advisor_enabled,
-            "calendar_writes_enabled": calendar_writes_enabled,
-            "calendar_read_enabled": calendar_read_enabled,
-            "analysis_events_read_enabled": analysis_events_read_enabled,
-            "items_read_enabled": items_read_enabled,
-            "items_writes_enabled": items_writes_enabled,
-            "messages_search_enabled": messages_search_enabled,
-            "allowed_workset_ids": allowed_workset_ids,
-            "current_task": current_task,
-            "locale": locale,
-        }
+        return await build_agent_tool_context(
+            self,
+            user_event_origin=user_event_origin,
+            workset_id=workset_id,
+            agent_scope_task_id=agent_scope_task_id,
+            task_advisor_enabled=task_advisor_enabled,
+            calendar_writes_enabled=calendar_writes_enabled,
+            calendar_read_enabled=calendar_read_enabled,
+            analysis_events_read_enabled=analysis_events_read_enabled,
+            items_read_enabled=items_read_enabled,
+            items_writes_enabled=items_writes_enabled,
+            messages_search_enabled=messages_search_enabled,
+            allowed_workset_ids=allowed_workset_ids,
+            current_task=current_task,
+            locale=locale,
+            web_route=web_route,
+            force_web_search=force_web_search,
+        )
 
     async def _complete_for_agent(
         self,
@@ -167,143 +132,20 @@ class AgentRuntime:
         policy: AgentChannel | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Yield NDJSON/SSE-friendly progress events during the agent tool loop."""
-        channel_policy = policy if policy is not None else get_agent_channel(channel)
-        if channel_policy.id == "a2a":
-            from server.agent.mcp_tools import load_mcp_capabilities
-            from server.queries.worksets_queries import fetch_external_enabled_workset_ids
-
-            caps = await load_mcp_capabilities(self.db)
-            channel_policy = apply_household_tool_caps(channel_policy, caps)
-            allowed_workset_ids = await fetch_external_enabled_workset_ids(self.db)
-        else:
-            allowed_workset_ids = None
-        if channel_policy.stateless:
-            sid = new_id()
-            is_new_conversation = True
-        else:
-            sid_provided = (session_id or "").strip()
-            sid = sid_provided or new_id()
-            is_new_conversation = not bool(sid_provided)
-        clock = resolve_conversation_clock(
-            sid,
-            is_new_conversation=is_new_conversation,
-        )
-        resolved_locale = (
-            normalize_ui_locale(locale)
-            if locale is not None and str(locale).strip()
-            else normalize_ui_locale(await get_config(self.db, "ui_locale"))
-        )
-        # Task advisor is UI-gated (task editor + assistant channel only).
-        task_advisor_enabled = channel_policy.id == "assistant" and surface == "task_editor"
-        if channel_policy.id == "agent":
-            search_on = channel_policy.force_web_search or channel_policy.web_search_enabled
-            web_route = await self._resolve_web_search_route(
-                force_enabled=search_on,
-                force_disabled=not search_on,
-            )
-        else:
-            web_route = await self._resolve_web_search_route(
-                force_enabled=channel_policy.force_web_search,
-            )
-        user_background = await get_config(self.db, "user_background")
-        tool_context = await self._tool_context(
-            user_event_origin=channel_policy.user_event_origin,
+        async for event in iter_agent_chat_events(
+            self,
+            messages,
+            session_id=session_id,
+            locale=locale,
+            channel=channel,
             workset_id=workset_id,
             agent_scope_task_id=agent_scope_task_id,
-            task_advisor_enabled=task_advisor_enabled,
-            calendar_writes_enabled=channel_policy.calendar_writes_enabled,
-            calendar_read_enabled=channel_policy.calendar_read_enabled,
-            analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
-            items_read_enabled=channel_policy.items_read_enabled,
-            items_writes_enabled=channel_policy.items_writes_enabled,
-            messages_search_enabled=channel_policy.messages_search_enabled,
-            allowed_workset_ids=allowed_workset_ids,
-            current_task=current_task if task_advisor_enabled else None,
-            locale=resolved_locale if task_advisor_enabled else None,
-            web_route=web_route,
-            force_web_search=channel_policy.force_web_search,
-        )
-        native_web_search = web_route.native_web_search
-        history: list[dict[str, Any]] = [
-            {
-                "role": "system",
-                "content": build_system_prompt(
-                    now=clock,
-                    locale=resolved_locale,
-                    web_search_enabled=web_route.enabled,
-                    web_search_provider=web_route.tool_provider,
-                    web_search_mode=web_route.mode,
-                    inject_web_search_tool=web_route.inject_web_search_tool,
-                    task_advisor_enabled=task_advisor_enabled,
-                    calendar_writes_enabled=channel_policy.calendar_writes_enabled,
-                    calendar_read_enabled=channel_policy.calendar_read_enabled,
-                    analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
-                    items_read_enabled=channel_policy.items_read_enabled,
-                    items_writes_enabled=channel_policy.items_writes_enabled,
-                    messages_search_enabled=channel_policy.messages_search_enabled,
-                    user_background=user_background,
-                    base_prompt=base_prompt if base_prompt is not None else channel_policy.system_prompt,
-                ),
-            }
-        ]
-        history.extend(_messages_for_channel(messages))
-
-        if not any(m["role"] == "user" for m in history):
-            yield _final_event(
-                message=AGENT_EMPTY_USER_MESSAGE,
-                session_id=None if channel_policy.stateless else sid,
-                tool_calls=[],
-            )
-            return
-
-        max_history_messages = await get_config_int(self.db, "agent_history_max_messages")
-        max_history_chars = await get_config_int(self.db, "agent_history_max_chars")
-        if max_history_messages <= 0:
-            max_history_messages = DEFAULT_HISTORY_MAX_MESSAGES
-        if max_history_chars <= 0:
-            max_history_chars = DEFAULT_HISTORY_MAX_CHARS
-
-        def _compact(current: list[dict[str, Any]]) -> list[dict[str, Any]]:
-            # Stateless A2A: no server transcript store; still compact oversized
-            # caller-supplied messages for this request only.
-            return compact_agent_history(
-                current,
-                max_messages=max_history_messages,
-                max_chars=max_history_chars,
-                omit_notice=AGENT_HISTORY_OMIT_NOTICE,
-            )
-
-        history = _compact(history)
-
-        tool_trace: list[dict[str, Any]] = []
-        last_task_config: dict[str, Any] | None = None
-        event_session_id = None if channel_policy.stateless else sid
-        for round_index in range(self.max_tool_rounds + 1):
-            round_result = await run_tool_round(
-                db=self.db,
-                history=history,
-                round_index=round_index,
-                max_tool_rounds=self.max_tool_rounds,
-                tool_context=tool_context,
-                tool_trace=tool_trace,
-                last_task_config=last_task_config,
-                complete_for_agent=self._complete_for_agent,
-                native_web_search=native_web_search,
-                compact=_compact,
-                session_id=event_session_id,
-            )
-            last_task_config = round_result.last_task_config
-            for event in round_result.events:
-                yield event
-            if round_result.kind == "final":
-                return
-
-        yield _final_event(
-            message=AGENT_TOOL_ROUNDS_EXHAUSTED,
-            session_id=event_session_id,
-            tool_calls=tool_trace,
-            task_config=last_task_config,
-        )
+            surface=surface,
+            current_task=current_task,
+            base_prompt=base_prompt,
+            policy=policy,
+        ):
+            yield event
 
     async def chat(
         self,

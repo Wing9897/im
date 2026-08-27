@@ -77,6 +77,7 @@ extend-immutable-calls = ["fastapi.Query", "fastapi.Depends", "server.api.query_
 [tool.ruff.lint.per-file-ignores]
 "server/main.py" = ["E402"]
 "server/__main__.py" = ["E402"]
+"server/api/schemas/responses/__init__.py" = ["F401"]
 "scripts/_seed_common.py" = ["E402"]
 "scripts/_verify_common.py" = ["E402"]
 "scripts/seed_calendar_ui_fixtures.py" = ["E402"]
