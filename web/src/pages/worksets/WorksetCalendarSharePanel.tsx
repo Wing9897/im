@@ -13,13 +13,13 @@ import { SettingsContentCard, SettingsFieldGroup } from "../../components/settin
 import { useToast } from "../../context/ToastContext";
 import {
   fetchCalendarSharePublish,
-  fetchCalendarShareSession,
   putCalendarSharePublish,
   type CalendarShareGrant,
   type CalendarShareGrantVisibility,
   type CalendarSharePublishState,
   type CalendarShareVisibility,
 } from "../../api/calendarShare";
+import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
 
 const DEBOUNCE_MS = 1500;
@@ -43,7 +43,8 @@ type Props = {
 export function WorksetCalendarSharePanel({ worksetId, worksetTitle, isSystem }: Props) {
   const { t } = useTranslation("workset");
   const { showToast } = useToast();
-  const [connected, setConnected] = useState(false);
+  const catalog = useCalendarShareCatalog();
+  const connected = catalog.session?.connected === true;
   const [state, setState] = useState<CalendarSharePublishState | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [slug, setSlug] = useState("");
@@ -56,11 +57,7 @@ export function WorksetCalendarSharePanel({ worksetId, worksetTitle, isSystem }:
 
   const load = useCallback(async () => {
     try {
-      const [session, publish] = await Promise.all([
-        fetchCalendarShareSession(),
-        fetchCalendarSharePublish(worksetId),
-      ]);
-      setConnected(session.connected);
+      const publish = await fetchCalendarSharePublish(worksetId);
       setState(publish);
       setEnabled(publish.enabled);
       setSlug(publish.slug || defaultSlug(worksetTitle, worksetId));
@@ -114,6 +111,10 @@ export function WorksetCalendarSharePanel({ worksetId, worksetTitle, isSystem }:
     },
     [payload, showToast, t, worksetId],
   );
+
+  useEffect(() => {
+    skipDebounceRef.current = true;
+  }, [connected]);
 
   useEffect(() => {
     if (skipDebounceRef.current) {

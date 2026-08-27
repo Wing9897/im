@@ -5,16 +5,14 @@ import { formHelpClass, sectionTitleClass } from "../../../components/ui/pageTyp
 import { SettingsFieldGroup } from "../../../components/settings/SettingsFormLayout";
 import { useToast } from "../../../context/ToastContext";
 import {
-  fetchCalendarShareSession,
   fetchCalendarShareTimezone,
   loginCalendarShare,
   logoutCalendarShare,
   putCalendarShareTimezone,
-  type CalendarShareSession,
   type CalendarShareTimezone,
 } from "../../../api/calendarShare";
 import { calendarTimezoneOptions, systemIanaTimezone } from "../../../domain/calendar/ianaTimezones";
-import { invalidateCalendarShareCatalog } from "../../../domain/calendarShare/useCalendarShareCatalog";
+import { useCalendarShareCatalog } from "../../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../../utils/errors";
 
 const DEFAULT_URL = "http://127.0.0.1:8787";
@@ -27,7 +25,8 @@ function prefillTimezone(state: CalendarShareTimezone | null): string {
 export function CalendarShareLoginSection() {
   const { t } = useTranslation("account");
   const { showToast } = useToast();
-  const [session, setSession] = useState<CalendarShareSession | null>(null);
+  const catalog = useCalendarShareCatalog();
+  const session = catalog.session;
   const [timezoneState, setTimezoneState] = useState<CalendarShareTimezone | null>(null);
   const [baseUrl, setBaseUrl] = useState(DEFAULT_URL);
   const [handle, setHandle] = useState("");
@@ -35,39 +34,37 @@ export function CalendarShareLoginSection() {
   const [timezoneDraft, setTimezoneDraft] = useState(systemIanaTimezone);
   const [busy, setBusy] = useState(false);
   const [timezoneBusy, setTimezoneBusy] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [timezoneError, setTimezoneError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const loadTimezone = useCallback(async () => {
     try {
-      const [nextSession, nextTimezone] = await Promise.all([
-        fetchCalendarShareSession(),
-        fetchCalendarShareTimezone(),
-      ]);
-      setSession(nextSession);
-      setBaseUrl(nextSession.baseUrl || DEFAULT_URL);
-      setHandle(nextSession.handle);
+      const nextTimezone = await fetchCalendarShareTimezone();
       setTimezoneState(nextTimezone);
       setTimezoneDraft(prefillTimezone(nextTimezone));
-      setLoadError(null);
+      setTimezoneError(null);
     } catch (error) {
-      setLoadError(toErrorMessage(error));
+      setTimezoneError(toErrorMessage(error));
     }
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadTimezone();
+  }, [loadTimezone]);
+
+  useEffect(() => {
+    if (!session) return;
+    setBaseUrl(session.baseUrl || DEFAULT_URL);
+    setHandle(session.handle);
+  }, [session]);
 
   const onLogin = async () => {
     setBusy(true);
     try {
-      const next = await loginCalendarShare({ baseUrl, handle, password });
-      setSession(next);
+      await loginCalendarShare({ baseUrl, handle, password });
       setPassword("");
-      invalidateCalendarShareCatalog();
-      const nextTimezone = await fetchCalendarShareTimezone();
-      setTimezoneState(nextTimezone);
-      setTimezoneDraft(prefillTimezone(nextTimezone));
+      catalog.invalidate();
+      await catalog.refresh();
+      await loadTimezone();
       showToast(t("calendarShare.loggedIn"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
@@ -79,10 +76,10 @@ export function CalendarShareLoginSection() {
   const onLogout = async () => {
     setBusy(true);
     try {
-      const next = await logoutCalendarShare();
-      setSession(next);
+      await logoutCalendarShare();
       setPassword("");
-      invalidateCalendarShareCatalog();
+      catalog.invalidate();
+      await catalog.refresh();
       showToast(t("calendarShare.loggedOut"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
@@ -163,7 +160,9 @@ export function CalendarShareLoginSection() {
         data-testid="calendar-share-status"
         role="status"
       >
-        {loadError ?? t("calendarShare.status", { status: statusLabel, handle: session?.handle || "—" })}
+        {timezoneError ??
+          catalog.error ??
+          t("calendarShare.status", { status: statusLabel, handle: session?.handle || "—" })}
       </p>
 
       <div className="flex flex-wrap gap-sm">

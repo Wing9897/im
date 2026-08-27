@@ -9,6 +9,7 @@ import {
   eventListCardTitle,
   eventListTimeLabel,
   eventShowsRemindBadge,
+  formatEventListProvenanceLabel,
   previewEventBody,
   resolveEventCardDisplay,
   resolveEventListDayPhaseTag,
@@ -76,6 +77,12 @@ describe("eventListCardMeta", () => {
         makeTimelineItem({ source: "subscribed:Alice/Work" }),
       ),
     ).toBe("subscribed");
+    expect(
+      formatEventListProvenanceLabel(
+        makeTimelineItem({ source: "subscribed:Alice/Work" }),
+        (key, opts) => (key === "eventList.provenance.subscribed" ? `Subscribed: ${opts?.path}` : key),
+      ),
+    ).toBe("Subscribed: Alice/Work");
   });
 
   it("maps spanning cover to 跨日进行中; ending uses 本日* when focused is today", () => {

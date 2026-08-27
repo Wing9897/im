@@ -6,6 +6,10 @@
  */
 
 import { stripItemKindTitlePrefix } from "../items/itemCalendarProjection";
+import {
+  isSubscribedTimelineSource,
+  parseSubscribedTimelineSource,
+} from "../calendarShare/subscribedCalendars";
 import type { TimelineItem } from "../../types";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { formatOsDateTime } from "../../utils/time";
@@ -142,7 +146,7 @@ export type EventListProvenanceKind =
 export function resolveEventListProvenanceKind(
   event: TimelineItem,
 ): EventListProvenanceKind {
-  if (typeof event.source === "string" && event.source.startsWith("subscribed:")) {
+  if (isSubscribedTimelineSource(event.source)) {
     return "subscribed";
   }
   if (event.source === "item_remind") return "item";
@@ -182,10 +186,7 @@ export function formatEventListProvenanceLabel(
 ): string {
   const kind = resolveEventListProvenanceKind(event);
   if (kind === "subscribed") {
-    const path =
-      typeof event.source === "string" && event.source.startsWith("subscribed:")
-        ? event.source.slice("subscribed:".length)
-        : event.taskName ?? "";
+    const path = parseSubscribedTimelineSource(event.source) ?? event.taskName ?? "";
     return t("eventList.provenance.subscribed", { path });
   }
   if (kind === "task") {
