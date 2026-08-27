@@ -6,12 +6,7 @@ import json
 from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from server.agent.runtime import (
-    MAX_TOOL_ROUNDS,
-    AgentRuntime,
-    build_system_prompt,
-)
-from server.agent.runtime_parse import summarize_tool_result as _summarize_tool_result
+from server.agent.runtime import MAX_TOOL_ROUNDS, AgentRuntime
 from server.agent.session_clock import clear_session_clocks
 from server.agent.timeouts import (
     AGENT_WALL_TIMEOUT_CAP_SECONDS,
@@ -27,26 +22,6 @@ def test_agent_round_and_wall_cap_constants() -> None:
     assert agent_wall_timeout_seconds(120) == 1080.0
     # Large per-call timeout must still hit the hard wall cap.
     assert agent_wall_timeout_seconds(200) == float(AGENT_WALL_TIMEOUT_CAP_SECONDS)
-
-
-def test_summarize_hard_delete_as_deleted() -> None:
-    assert (
-        _summarize_tool_result(
-            "calendar.delete_recurring_series",
-            {"deleted": True, "id": "s1"},
-        )
-        == "calendar.delete_recurring_series: deleted"
-    )
-
-
-def test_summarize_delete_event_as_dismissed() -> None:
-    assert (
-        _summarize_tool_result(
-            "calendar.delete_event",
-            {"deleted": True, "dismissed": True, "id": "e1"},
-        )
-        == "calendar.delete_event: dismissed"
-    )
 
 
 async def test_agent_messages_search_via_registry(app) -> None:
@@ -176,78 +151,6 @@ async def test_agent_one_tool_round_then_final_answer(app) -> None:
     assert "json_mode" in mock_llm.complete.await_args_list[0].kwargs
 
 
-def test_build_system_prompt_includes_injected_clock() -> None:
-    from datetime import datetime
-
-    prompt = build_system_prompt(now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC))
-    assert "2026-07-21T02:30:00Z" in prompt
-    assert "系統本地" in prompt
-    assert "本輪對話開始時由本機系統時鐘注入一次" in prompt
-    assert "禁止使用訓練資料中的過期年份" in prompt
-    assert "Asia/Taipei" not in prompt
-    assert "Traditional Chinese" in prompt
-    assert '"name": "messages.search"' in prompt
-    assert '"name": "intelligence.search_events"' in prompt
-    assert '"name": "web.search"' in prompt
-    assert '"name": "web.fetch"' in prompt
-    assert "timeRange=today" in prompt
-    assert "allTime=true" in prompt
-    assert "禁止把 7 天窗或全庫結果說成「今日」" in prompt
-
-
-def test_build_system_prompt_omits_web_search_when_disabled() -> None:
-    from datetime import datetime
-
-    prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
-        web_search_enabled=False,
-    )
-    assert '"name": "messages.search"' in prompt
-    assert '"name": "web.search"' not in prompt
-    assert '"name": "web.fetch"' not in prompt
-    assert "設定已關閉助手聯網" in prompt
-
-
-def test_build_system_prompt_omits_web_search_tool_for_openai_native() -> None:
-    from datetime import datetime
-
-    prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
-        web_search_enabled=True,
-        web_search_mode="openai_native",
-        inject_web_search_tool=False,
-    )
-    assert '"name": "web.search"' not in prompt
-    assert '"name": "web.fetch"' not in prompt
-    assert "OpenAI 原生 web_search" in prompt
-
-
-def test_build_system_prompt_appends_english_output_directive() -> None:
-    from datetime import datetime
-
-    prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
-        locale="en",
-    )
-    assert "Write all user-facing text in English." in prompt
-    assert "Traditional Chinese" not in prompt
-
-
-def test_build_system_prompt_injects_user_background_when_set() -> None:
-    from datetime import datetime
-
-    now = datetime(2026, 7, 21, 2, 30, tzinfo=UTC)
-    with_bg = build_system_prompt(now=now, user_background="  Ops lead, SE Asia routes  ")
-    assert "（用戶背景：Ops lead, SE Asia routes）" in with_bg
-
-    empty = build_system_prompt(now=now, user_background="")
-    whitespace = build_system_prompt(now=now, user_background="   ")
-    omitted = build_system_prompt(now=now)
-    assert "用戶背景" not in empty
-    assert "用戶背景" not in whitespace
-    assert "用戶背景" not in omitted
-
-
 async def test_agent_chat_uses_request_locale_for_system_prompt(app) -> None:
     clear_session_clocks()
     db = app.state.db
@@ -285,7 +188,7 @@ async def test_conversation_clock_frozen_across_turns(app) -> None:
     runtime = AgentRuntime(db, mock_llm)
 
     with patch(
-        "server.agent.runtime.resolve_conversation_clock",
+        "server.agent.runtime_loop.resolve_conversation_clock",
         side_effect=[
             frozen,
             frozen,

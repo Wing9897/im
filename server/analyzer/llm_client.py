@@ -5,7 +5,8 @@ Provider connection details live in ``llm_profiles`` rows.
 The configured ``base_url`` is always honoured — the previous generation
 hard-coded the OpenAI/Gemini endpoints, breaking every "-compatible" deployment.
 
-Wire implementations live in ``server/analyzer/llm_providers.py``; JSON reply
+Wire implementations live in ``server/analyzer/llm_providers.py`` (façade over
+``llm_providers_common`` / ``_ollama`` / ``_openai`` / ``_gemini``); JSON reply
 parsing in ``server/analyzer/llm_json.py``; factory helpers in
 ``llm_client_factory.py``; bound handlers in ``llm_client_handlers.py``.
 """
