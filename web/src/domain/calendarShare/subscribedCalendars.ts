@@ -17,6 +17,13 @@ export function isSubscribedTimelineSource(source: string | undefined): boolean 
   return typeof source === "string" && source.startsWith(SUBSCRIBED_SOURCE_PREFIX);
 }
 
+/** `handle/slug` after `subscribed:`, or null when the source is not a subscription. */
+export function parseSubscribedTimelineSource(source: string | undefined): string | null {
+  if (!isSubscribedTimelineSource(source)) return null;
+  const path = source.slice(SUBSCRIBED_SOURCE_PREFIX.length).trim();
+  return path.length > 0 ? path : null;
+}
+
 export function parseCalendarSharePath(raw: string): { handle: string; slug: string } | null {
   const parts = raw
     .trim()
@@ -76,10 +83,10 @@ export function subscribedEventVisible(
   selection: SubscribedCalendarSelection,
   catalogKeys: readonly string[] = [],
 ): boolean {
-  if (!isSubscribedTimelineSource(source)) return false;
+  const key = parseSubscribedTimelineSource(source);
+  if (!key) return false;
   const allowed = resolvedSubscribeKeys(selection, catalogKeys);
   if (allowed.length === 0) return false;
-  const key = source!.slice(SUBSCRIBED_SOURCE_PREFIX.length);
   return allowed.includes(key);
 }
 

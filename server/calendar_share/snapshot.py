@@ -49,6 +49,22 @@ def item_fingerprint(canonical: dict[str, Any]) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def events_content_hash(
+    events: list[dict[str, Any]],
+    series: list[dict[str, Any]] | None = None,
+) -> str:
+    """IC ``contentHash`` / PATCH ``baseHash`` over canonical event+series rows."""
+    event_rows = sorted((_canonical_event(event) for event in events), key=lambda row: row["uid"])
+    series_rows = sorted((_canonical_series(item) for item in (series or [])), key=lambda row: row["uid"])
+    encoded = json.dumps(
+        {"events": event_rows, "series": series_rows},
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def fingerprint_maps(
     events: list[dict[str, Any]],
     series: list[dict[str, Any]] | None = None,

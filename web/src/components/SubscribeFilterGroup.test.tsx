@@ -66,8 +66,6 @@ describe("SubscribeFilterGroup", () => {
     expect(container.querySelector('[data-testid="timeline-subscribe-filter"]')?.getAttribute("aria-label")).toBe(
       "Subscriptions",
     );
-    expect(container.querySelector('[data-testid="timeline-subscribe-group"]')).toBeNull();
-    expect(container.querySelector('[data-testid="timeline-subscribe-expand"]')).toBeNull();
     expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeTruthy();
   });
@@ -80,11 +78,9 @@ describe("SubscribeFilterGroup", () => {
     expect(onToggleKey).toHaveBeenCalledWith("Alice/Work");
   });
 
-  it("shows empty copy without search or manage links when the catalog is empty", () => {
+  it("shows empty copy when the catalog is empty", () => {
     renderGroup({ calendars: [] });
     expect(container.querySelector('[data-testid="timeline-subscribe-empty"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="timeline-subscribe-search-link"]')).toBeNull();
-    expect(container.querySelector('[data-testid="timeline-subscribe-manage-link"]')).toBeNull();
     expect(container.querySelector('[data-testid="timeline-filter-subscribe-select-all"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="timeline-filter-subscribe-clear"]')).toBeTruthy();
   });

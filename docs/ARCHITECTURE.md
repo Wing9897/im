@@ -442,7 +442,7 @@ Telegram sources do not use Telethon's default SQLite session files (`.session`)
 
 ## Calendar share (IntelligenceCalendar)
 
-Household **local calendar** (timeline `user_events` / analysis / RRULE series) lives in IM SQLite. **Shared calendars** live in the sibling IntelligenceCalendar process (`subscriptions` table: `UNIQUE (subscriber_id, calendar_id)` is the catalog). IM `/api/v1/calendar-share/*` is a proxy: the renderer never talks to IC. `GET`/`POST`/`DELETE /subscriptions` map to IC `/me/subscriptions`; a 502 from IC fails closed (no local `calendar_share_subscriptions` cache). Closed or grant-revoked calendars drop from 我的訂閱 when IC `GET /me/subscriptions` (or the events feed) prunes that subscriber’s own rows. RRULE expansion for subscribed series runs on the **IM server**, not React and not IC.
+Household **local calendar** (timeline `user_events` / analysis / RRULE series) lives in IM SQLite. **Shared calendars** live in the sibling IntelligenceCalendar process (`subscriptions` table: `UNIQUE (subscriber_id, calendar_id)` is the catalog). Household IANA timezone is stored and edited on IM; the public replica timezone lives on IntelligenceCalendar. IM `/api/v1/calendar-share/*` is a proxy: the renderer never talks to IC. `GET`/`POST`/`DELETE /subscriptions` map to IC `/me/subscriptions`; a 502 from IC fails closed (no local `calendar_share_subscriptions` cache). Closed or grant-revoked calendars drop from 我的訂閱 when IC `GET /me/subscriptions` (or the events feed) prunes that subscriber’s own rows. RRULE expansion for subscribed series runs on the **IM server**, not React and not IC.
 
 ## Scheduler
 

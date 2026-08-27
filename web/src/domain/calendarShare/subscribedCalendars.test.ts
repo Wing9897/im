@@ -4,6 +4,7 @@ import {
   isOwnCalendarHandle,
   isSubscribedTimelineSource,
   parseCalendarSharePath,
+  parseSubscribedTimelineSource,
   parseSubscribedCalendarSelection,
   pruneSubscribedCalendarSelection,
   resolvedSubscribeKeys,
@@ -22,6 +23,8 @@ describe("subscribedCalendars", () => {
     expect(subscribedTimelineSource("Alice", "Work")).toBe("subscribed:Alice/Work");
     expect(isSubscribedTimelineSource("subscribed:Alice/Work")).toBe(true);
     expect(isSubscribedTimelineSource("user")).toBe(false);
+    expect(parseSubscribedTimelineSource("subscribed:Alice/Work")).toBe("Alice/Work");
+    expect(parseSubscribedTimelineSource("user")).toBeNull();
   });
 
   it("normalizes persisted display-filter values", () => {

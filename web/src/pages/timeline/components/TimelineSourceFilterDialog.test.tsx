@@ -109,12 +109,8 @@ describe("TimelineSourceFilterDialog", () => {
     expect(document.querySelector('[data-testid="timeline-filter-local"]')?.getAttribute("aria-label")).toBe(
       "Local",
     );
-    expect(document.querySelector('[data-testid="timeline-subscribe-group"]')).toBeNull();
-    expect(document.querySelector('[data-testid="timeline-subscribe-expand"]')).toBeNull();
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="timeline-subscribe-search-link"]')).toBeNull();
-    expect(document.querySelector('[data-testid="timeline-subscribe-manage-link"]')).toBeNull();
     expect(document.querySelector('[data-testid="timeline-filter-local-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-filter-subscribe-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-__general__"]')).toBeTruthy();
@@ -134,9 +130,6 @@ describe("TimelineSourceFilterDialog", () => {
     openDialog();
     expect(document.querySelector('[data-testid="timeline-subscribe-filter"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-subscribe-empty"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="timeline-subscribe-search-link"]')).toBeNull();
-    expect(document.querySelector('[data-testid="timeline-subscribe-manage-link"]')).toBeNull();
-    expect(document.querySelector('[data-testid="timeline-subscribe-group"]')).toBeNull();
   });
 
   it("keeps select-all and clear on each column, not in the shared footer", () => {

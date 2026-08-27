@@ -1,31 +1,32 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CalendarShareLoginSection } from "./CalendarShareLoginSection";
-import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
-const fetchCalendarShareSession = vi.fn();
-const fetchCalendarShareTimezone = vi.fn();
-const loginCalendarShare = vi.fn();
-const logoutCalendarShare = vi.fn();
-const putCalendarShareTimezone = vi.fn();
-const invalidateCalendarShareCatalog = vi.fn();
-
-vi.mock("../../../api/calendarShare", () => ({
-  fetchCalendarShareSession: (...args: unknown[]) => fetchCalendarShareSession(...args),
-  fetchCalendarShareTimezone: (...args: unknown[]) => fetchCalendarShareTimezone(...args),
-  loginCalendarShare: (...args: unknown[]) => loginCalendarShare(...args),
-  logoutCalendarShare: (...args: unknown[]) => logoutCalendarShare(...args),
-  putCalendarShareTimezone: (...args: unknown[]) => putCalendarShareTimezone(...args),
-}));
-
-vi.mock("../../../domain/calendarShare/useCalendarShareCatalog", () => ({
-  invalidateCalendarShareCatalog: (...args: unknown[]) => invalidateCalendarShareCatalog(...args),
-}));
+vi.mock("../../../api/calendarShare", async () =>
+  (await import("../../../test/calendarShareApiMock")).calendarShareApiModuleMock());
 
 vi.mock("../../../context/ToastContext", async () =>
   (await import("../../../test/context-mocks")).toastContextModuleMock(),
 );
+
+import { CalendarShareLoginSection } from "./CalendarShareLoginSection";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
+import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../../test/calendarShareApiMock";
+import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog";
+
+const DISCONNECTED = {
+  connected: false,
+  baseUrl: "http://127.0.0.1:8787",
+  handle: "",
+  status: "disconnected" as const,
+};
+
+const CONNECTED = {
+  connected: true,
+  baseUrl: "http://127.0.0.1:8787",
+  handle: "Wing",
+  status: "connected" as const,
+};
 
 describe("CalendarShareLoginSection timezone", () => {
   let container: HTMLDivElement;
@@ -33,17 +34,12 @@ describe("CalendarShareLoginSection timezone", () => {
 
   beforeEach(async () => {
     await ensureZhHantLocale();
-    fetchCalendarShareSession.mockReset();
-    fetchCalendarShareTimezone.mockReset();
-    loginCalendarShare.mockReset();
-    logoutCalendarShare.mockReset();
-    putCalendarShareTimezone.mockReset();
-    invalidateCalendarShareCatalog.mockReset();
-    fetchCalendarShareSession.mockResolvedValue({
-      connected: false,
-      baseUrl: "http://127.0.0.1:8787",
-      handle: "",
-      status: "disconnected",
+    resetCalendarShareCatalogForTests();
+    resetCalendarShareApiMocks();
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(DISCONNECTED);
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
+      items: [],
+      ownHandle: "",
     });
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -53,6 +49,7 @@ describe("CalendarShareLoginSection timezone", () => {
   afterEach(() => {
     act(() => root.unmount());
     document.body.removeChild(container);
+    resetCalendarShareCatalogForTests();
   });
 
   async function renderSection() {
@@ -65,21 +62,33 @@ describe("CalendarShareLoginSection timezone", () => {
     });
   }
 
+  it("loads session only through the shared catalog", async () => {
+    calendarShareApiMocks.fetchCalendarShareTimezone.mockResolvedValue({
+      timezone: "Asia/Taipei",
+      suggestedTimezone: "Asia/Taipei",
+      pendingPublicTimezone: false,
+      lastPublicTimezone: "Asia/Taipei",
+    });
+    await renderSection();
+    expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
+    expect(calendarShareApiMocks.fetchCalendarShareTimezone).toHaveBeenCalled();
+  });
+
   it("shows a reminder when the last public timezone update did not finish", async () => {
-    fetchCalendarShareTimezone.mockResolvedValue({
+    calendarShareApiMocks.fetchCalendarShareTimezone.mockResolvedValue({
       timezone: "Asia/Hong_Kong",
       suggestedTimezone: "Asia/Hong_Kong",
       pendingPublicTimezone: true,
       lastPublicTimezone: "",
     });
     await renderSection();
-    expect(fetchCalendarShareTimezone).toHaveBeenCalled();
+    expect(calendarShareApiMocks.fetchCalendarShareTimezone).toHaveBeenCalled();
     expect(container.querySelector('[data-testid="calendar-share-timezone-pending"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="calendar-share-timezone"]')).toBeTruthy();
   });
 
   it("hides the reminder when the public replica is current", async () => {
-    fetchCalendarShareTimezone.mockResolvedValue({
+    calendarShareApiMocks.fetchCalendarShareTimezone.mockResolvedValue({
       timezone: "Asia/Taipei",
       suggestedTimezone: "Asia/Hong_Kong",
       pendingPublicTimezone: false,
@@ -90,23 +99,19 @@ describe("CalendarShareLoginSection timezone", () => {
   });
 
   it("invalidates the shared catalog after login and logout", async () => {
-    fetchCalendarShareTimezone.mockResolvedValue({
+    calendarShareApiMocks.fetchCalendarShareTimezone.mockResolvedValue({
       timezone: "Asia/Taipei",
       suggestedTimezone: "Asia/Taipei",
       pendingPublicTimezone: false,
       lastPublicTimezone: "Asia/Taipei",
     });
-    loginCalendarShare.mockResolvedValue({
-      connected: true,
-      baseUrl: "http://127.0.0.1:8787",
-      handle: "Wing",
-      status: "connected",
+    calendarShareApiMocks.loginCalendarShare.mockImplementation(async () => {
+      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(CONNECTED);
+      return CONNECTED;
     });
-    logoutCalendarShare.mockResolvedValue({
-      connected: false,
-      baseUrl: "http://127.0.0.1:8787",
-      handle: "",
-      status: "disconnected",
+    calendarShareApiMocks.logoutCalendarShare.mockImplementation(async () => {
+      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(DISCONNECTED);
+      return DISCONNECTED;
     });
     await renderSection();
 
@@ -123,14 +128,21 @@ describe("CalendarShareLoginSection timezone", () => {
       (container.querySelector('[data-testid="calendar-share-login"]') as HTMLButtonElement).click();
       await Promise.resolve();
       await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
     });
-    expect(invalidateCalendarShareCatalog).toHaveBeenCalledTimes(1);
+    expect(calendarShareApiMocks.loginCalendarShare).toHaveBeenCalled();
+    expect(calendarShareApiMocks.fetchCalendarShareSession.mock.calls.length).toBeGreaterThan(1);
+    expect(container.querySelector('[data-testid="calendar-share-logout"]')).toBeTruthy();
 
     await act(async () => {
       (container.querySelector('[data-testid="calendar-share-logout"]') as HTMLButtonElement).click();
       await Promise.resolve();
       await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
     });
-    expect(invalidateCalendarShareCatalog).toHaveBeenCalledTimes(2);
+    expect(calendarShareApiMocks.logoutCalendarShare).toHaveBeenCalled();
+    expect(container.querySelector('[data-testid="calendar-share-login"]')).toBeTruthy();
   });
 });
