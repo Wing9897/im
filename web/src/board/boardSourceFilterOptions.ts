@@ -17,6 +17,7 @@ export type BoardFilterWorksetOption = {
   id: string;
   name: string;
   isSystem: boolean;
+  cover?: string;
 };
 
 /** Label builtin `__general__` with the localized「一般」name. */
@@ -28,6 +29,7 @@ export function boardSourceFilterWorksets(
     id: ws.id,
     name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
     isSystem: ws.isSystem,
+    cover: ws.cover ?? "",
   }));
 }
 

@@ -133,6 +133,31 @@ describe("TimelineCalendarView markers", () => {
     });
   });
 
+  it("month preview shows subscribed events with dot and title only", () => {
+    const subscribed = makeEvent({
+      id: "sub-month",
+      title: "Open Office Hours",
+      source: "subscribed:DemoPub/Open",
+      startTime: "2025-01-05T14:00:00",
+      endTime: "2025-01-05T15:00:00",
+    });
+    const monthCursor = new Date(2025, 0, 1);
+    const container = render(
+      makeProps({
+        timeScale: "month",
+        monthCursor,
+        monthDays: buildCalendarDays(monthCursor),
+        monthEvents: [subscribed],
+        timeCursor: new Date(2025, 0, 5),
+      }),
+    );
+
+    expect(container.textContent).toMatch(/Open Offi/);
+    expect(container.querySelector('[data-testid="subscribed-event-avatar"]')).toBeNull();
+    const previewRow = container.querySelector(".im-month-day-events button");
+    expect(previewRow?.querySelector("span.rounded-full")).toBeTruthy();
+  });
+
   describe("important marker — single leading glyph", () => {
     /** Remind stays in month titled preview; important ❗ replaces kind glyph. */
     const importantPreviewItem = makeEvent({

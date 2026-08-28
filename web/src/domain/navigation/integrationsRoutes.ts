@@ -1,8 +1,8 @@
-/** Settings → 外部接口 SoT: `/settings/integrations?tab=webhook|a2a|deeplink|mcp`. */
+/** Settings → 外部接口 SoT: `/settings/integrations?tab=webhook|a2a|deeplink|mcp|system`. */
 
 export const SETTINGS_INTEGRATIONS_PATH = "/settings/integrations";
 
-export const INTEGRATION_TABS = ["webhook", "a2a", "deeplink", "mcp"] as const;
+export const INTEGRATION_TABS = ["webhook", "a2a", "deeplink", "mcp", "system"] as const;
 
 export type IntegrationTabKey = (typeof INTEGRATION_TABS)[number];
 

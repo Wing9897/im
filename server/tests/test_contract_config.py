@@ -157,6 +157,8 @@ async def test_settings_snapshot_and_roundtrip(client):
     assert isinstance(snapshot["maxConcurrentBatches"], str)
     for retired in _RETIRED_WIRE_KEYS:
         assert retired not in snapshot
+    assert "calendarShareWorksets" not in snapshot
+    assert "calendarShareSubscriptions" not in snapshot
 
     snapshot["maxConcurrentBatches"] = "3"
     snapshot["agentHistoryMaxMessages"] = "48"

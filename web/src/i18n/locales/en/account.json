@@ -71,28 +71,6 @@
     "copyFailed": "Copy failed",
     "scopesReadOnly": "Read-only"
   },
-  "calendarShare": {
-    "title": "Calendar share",
-    "help": "Sign in to the private calendar-share service and set the household timezone. Publish, ACL, and unpublish live under Subscriptions → My published. Subscribe on My subscriptions or Find calendars. This page only connects the account and timezone; Timeline only displays and filters.",
-    "urlLabel": "Server URL",
-    "urlHelp": "Default is the local public service. Tokens are encrypted on this machine; the UI never talks to that origin directly.",
-    "handleLabel": "Handle",
-    "passwordLabel": "Password",
-    "login": "Sign in",
-    "loggingIn": "Signing in…",
-    "logout": "Sign out",
-    "loggingOut": "Signing out…",
-    "loggedIn": "Connected to calendar share",
-    "loggedOut": "Signed out of calendar share",
-    "status": "Status: {status} ({handle})",
-    "statusConnected": "Connected",
-    "statusDisconnected": "Disconnected",
-    "timezoneLabel": "Calendar timezone",
-    "timezoneHelp": "Pinned household clock for floating recurring series. Prefills your current city; it does not follow Windows when you travel.",
-    "timezoneSave": "Save timezone",
-    "timezoneSaving": "Saving…",
-    "timezoneSaved": "Calendar timezone saved",
-    "timezonePending": "The last public-server timezone update did not finish. You can retry when connected.",
-    "timezoneRetry": "Retry public update"
-  }
+  "calendarShareMoved": "Calendar share sign-in and timezone now live under Subscriptions.",
+  "calendarShareMovedLink": "Subscriptions → Calendar share"
 }

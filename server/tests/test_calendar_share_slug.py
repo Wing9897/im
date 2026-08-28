@@ -1,6 +1,6 @@
 """Calendar-share slug write rule vs builtin workset id."""
 
-from __future__ import annotations
+from typing import Any, cast
 
 import pytest
 from fastapi import HTTPException
@@ -29,8 +29,7 @@ def test_normalize_slug_rejects_invalid():
         with pytest.raises(HTTPException) as caught:
             normalize_slug(raw)
         assert caught.value.status_code == 422
-        detail = caught.value.detail
-        assert isinstance(detail, dict)
+        detail = cast(dict[str, Any], caught.value.detail)
         assert detail["error_code"] == INVALID_CALENDAR_SLUG
         assert detail["message"] == INVALID_SLUG_MESSAGE
 

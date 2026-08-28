@@ -3,23 +3,30 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { listUserEventsPage } from "../../api/userEvents";
 import { listRecurringSeries } from "../../api/recurringSeries";
-import { CardFieldRow, CardTitleIcon } from "../../components/ui";
+import { Badge, CardFieldRow, CardTitleIcon } from "../../components/ui";
+import { lookupScheduleEmoji } from "../../domain/schedule/scheduleEmoji";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 import { getDateTimeLocale } from "../../i18n/locale";
 
+type ScheduleUpcomingRow = {
+  id: string;
+  title: string;
+  when: string;
+  emoji: string | null;
+};
+
+type ScheduleSeriesRow = {
+  id: string;
+  name: string;
+  active: boolean;
+  emoji: string | null;
+};
+
 type ScheduleSummary = {
-  upcoming: Array<{
-    id: string;
-    title: string;
-    when: string;
-  }>;
-  series: Array<{
-    id: string;
-    name: string;
-    active: boolean;
-  }>;
+  upcoming: ScheduleUpcomingRow[];
+  series: ScheduleSeriesRow[];
 };
 
 function formatWhen(value: string | null | undefined): string {
@@ -32,6 +39,28 @@ function formatWhen(value: string | null | undefined): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function ScheduleTitleMark({
+  source,
+  emoji,
+}: {
+  source: "user" | "recurring";
+  emoji: string | null;
+}) {
+  const glyph = lookupScheduleEmoji({ source, emoji });
+  if (glyph) {
+    return (
+      <span
+        className="board-schedule-emoji shrink-0 leading-none"
+        data-testid="schedule-event-emoji"
+        aria-hidden="true"
+      >
+        {glyph}
+      </span>
+    );
+  }
+  return <CardTitleIcon icon={source === "recurring" ? Repeat : CalendarDays} />;
 }
 
 async function fetchScheduleSummary(): Promise<ScheduleSummary> {
@@ -52,11 +81,13 @@ async function fetchScheduleSummary(): Promise<ScheduleSummary> {
       id: event.id,
       title: event.title || "—",
       when: formatWhen(event.startTime),
+      emoji: event.emoji ?? null,
     }));
   const series = seriesPage.items.slice(0, 12).map((row) => ({
     id: row.id,
     name: row.name || "—",
     active: Boolean(row.isActive),
+    emoji: row.emoji ?? null,
   }));
   return { upcoming, series };
 }
@@ -94,7 +125,7 @@ export function ScheduleBoardWidget({ active = true }: BoardWidgetProps) {
                       data-testid={`board-schedule-event-${row.id}`}
                     >
                       <span className="board-widget-list__title">
-                        <CardTitleIcon icon={CalendarDays} />
+                        <ScheduleTitleMark source="user" emoji={row.emoji} />
                         <span className="board-widget-list__primary">{row.title}</span>
                       </span>
                       <CardFieldRow icon={Clock} text={row.when} className="board-widget-list__meta" />
@@ -112,13 +143,13 @@ export function ScheduleBoardWidget({ active = true }: BoardWidgetProps) {
                       data-testid={`board-schedule-series-${row.id}`}
                     >
                       <span className="board-widget-list__title">
-                        <CardTitleIcon icon={Repeat} />
+                        <ScheduleTitleMark source="recurring" emoji={row.emoji} />
                         <span className="board-widget-list__primary">{row.name}</span>
-                      </span>
-                      <span className="board-widget-list__meta">
-                        {row.active
-                          ? t("board:common.enabled")
-                          : t("board:common.disabled")}
+                        <Badge tone={row.active ? "success" : "neutral"}>
+                          {row.active
+                            ? t("board:common.enabled")
+                            : t("board:common.disabled")}
+                        </Badge>
                       </span>
                     </div>
                   </li>

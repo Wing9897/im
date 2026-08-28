@@ -15,6 +15,8 @@ const fetchMcpStatus = vi.fn();
 vi.mock("../../api/mcp", () => ({
   fetchMcpStatus: (...args: unknown[]) => fetchMcpStatus(...args),
 }));
+vi.mock("../../context/ToastContext", async () =>
+  (await import("../../test/context-mocks")).toastContextModuleMock());
 
 const { settingsState, updateSettings, handleSave } = vi.hoisted(() => {
     const settingsState = {
@@ -123,6 +125,7 @@ describe("SettingsIntegrationsPage", () => {
     expect(tabButton("日曆連結")).toBeTruthy();
     expect(tabButton("Desktop 日曆 deep link")).toBeFalsy();
     expect(tabButton("MCP")).toBeTruthy();
+    expect(tabButton("系統 API 及網址")).toBeTruthy();
     expect(container.querySelector('[data-testid="navlink-/settings/api"]')).toBeNull();
     expect(container.querySelector('[data-testid="navlink-/settings/mcp"]')).toBeNull();
     expect(container.querySelector('a[href="/settings/api"]')).toBeNull();
@@ -266,6 +269,17 @@ describe("SettingsIntegrationsPage", () => {
     );
     expect(container.textContent).not.toContain("Desktop 日曆 deep link");
     expect(container.querySelector('[data-testid="api-docs-example"]')).toBeNull();
+  });
+
+  it("opens system tab from ?tab=system with outbound URLs", () => {
+    renderPage("/settings/integrations?tab=system");
+    expect(container.querySelector('[data-testid="integrations-system-carto-card"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="integrations-system-outbound-list"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="carto-api-key"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="integrations-system-outbound-url-open-meteo-forecast"]')
+        ?.textContent,
+    ).toBe("https://api.open-meteo.com/v1/forecast");
   });
 
   it("toggles A2A master enable on the A2A tab without touching MCP enable", async () => {

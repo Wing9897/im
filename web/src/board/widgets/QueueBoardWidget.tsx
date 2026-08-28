@@ -6,16 +6,25 @@ import {
   batchStatusLabel,
   batchStatusTone,
 } from "../../domain/analysis/batchStatus";
+import { formatAnalysisErrorMessage } from "../../domain/analysis/formatAnalysisError";
+import { truncateDisplayText } from "../../domain/text/truncateDisplayText";
 import type { ProcessingBatchInfo } from "../../types";
 import { BoardWidgetEmpty, BoardWidgetShell } from "../BoardWidgetStatus";
 import type { BoardWidgetProps } from "../types";
 import i18n from "../../i18n";
+
+const BATCH_ERROR_PREVIEW_MAX = 96;
 
 function BatchRow({
   batch,
 }: {
   batch: ProcessingBatchInfo;
 }) {
+  const { t } = useTranslation(["board", "common"]);
+  const errorText = formatAnalysisErrorMessage(batch.errorMessage, t);
+  const errorPreview = errorText
+    ? truncateDisplayText(errorText, BATCH_ERROR_PREVIEW_MAX)
+    : null;
   const tokens =
     (batch.promptTokens ?? 0) > 0 || (batch.completionTokens ?? 0) > 0
       ? ` · ${batch.promptTokens ?? 0}/${batch.completionTokens ?? 0} tok`
@@ -39,13 +48,16 @@ function BatchRow({
             : ""}
           {tokens}
         </span>
-        {batch.errorMessage ? (
+        {errorPreview ? (
           <span
             className="board-widget-list__error"
             data-testid={`board-queue-error-${batch.batchId}`}
-            title={batch.errorMessage}
+            title={errorText ?? undefined}
           >
-            {batch.errorMessage}
+            <Badge tone="danger" className="board-queue-batch-badge">
+              {t("board:queue.attention")}
+            </Badge>
+            {errorPreview}
           </span>
         ) : null}
       </div>

@@ -49,7 +49,7 @@ export function useSubscriptionsPublishedList() {
       if (publishResult.status === "fulfilled") setLoadError(null);
       return;
     }
-    const failure =
+    const failure: unknown =
       (publishResult.status === "rejected" && !isCalendarShareNotFound(publishResult.reason)
         ? publishResult.reason
         : null) ??

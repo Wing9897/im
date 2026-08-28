@@ -8,8 +8,6 @@ import {
 } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGanttRows";
-import { lookupScheduleEmoji } from "../../../domain/schedule/scheduleEmoji";
-import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
 import {
   ganttEventNameClass,
   ganttEventNamesColumnClass,
@@ -115,8 +113,6 @@ export function GanttEventLabelsColumn({
                 >
                   {leading.emoji}
                 </span>
-              ) : first && lookupScheduleEmoji(first) ? (
-                <ScheduleEventCompactEmoji event={first} />
               ) : null}
               <span className={ganttLabelTitleClass}>{title}</span>
             </div>

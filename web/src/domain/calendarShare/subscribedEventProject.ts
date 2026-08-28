@@ -8,11 +8,13 @@ function subscribedSeriesId(event: CalendarShareEvent): string | null {
   return seriesId.length > 0 ? seriesId : null;
 }
 
-function projectedSource(event: CalendarShareEvent): string | undefined {
+function projectedSource(event: CalendarShareEvent): TimelineItem["source"] {
   const handle = typeof event.handle === "string" ? event.handle.trim() : "";
   const slug = typeof event.slug === "string" ? event.slug.trim() : "";
   if (handle && slug) return subscribedTimelineSource(handle, slug);
-  return event.source;
+  const raw = typeof event.source === "string" ? event.source.trim() : "";
+  if (raw.startsWith("subscribed:")) return raw as TimelineItem["source"];
+  return undefined;
 }
 
 /** Project a calendar-share proxy event into a read-only timeline item. */

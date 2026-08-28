@@ -4,8 +4,9 @@ import { PIPELINE_BLOCK, PIPELINE_LAYER_PORT, PIPELINE_OUTPUT_DEFS } from "./pip
 import { pipelineEdge, type PipelineEdge } from "./pipelineGraphTypes";
 
 /**
- * Legend wires from the L3 工作集 block. notifyEnabled / externalEnabled stay as
- * card icons and do not gate these edges.
+ * Legend wires from the L3 工作集 block to L4 pages (timeline / intel /
+ * local notify at `/notify?tab=notify` / actions at `/notify?tab=types`).
+ * notifyEnabled / externalEnabled stay as card icons and do not gate these edges.
  */
 export function buildPipelineLegendEdges(pointIds: ReadonlySet<string>): PipelineEdge[] {
   const edges: PipelineEdge[] = [];

@@ -9,6 +9,7 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../../test/context-mocks";
+import { applyCalendarShareCatalogItems, resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { TimelinePageProvider } from "../TimelinePageContext";
 import { makeContext, makeEvent, renderPanel } from "./eventListPanelTestUtils";
@@ -20,6 +21,7 @@ vi.mock("../../../context/TaskCatalogContext", async () =>
 describe("EventListPanel", () => {
   beforeEach(async () => {
     await ensureZhHantLocale();
+    resetCalendarShareCatalogForTests();
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
@@ -34,6 +36,7 @@ describe("EventListPanel", () => {
   });
 
   afterEach(() => {
+    resetCalendarShareCatalogForTests();
     vi.useRealTimers();
   });
 
@@ -222,8 +225,8 @@ describe("EventListPanel", () => {
     ).toBe("❗");
     expect(container.textContent).toContain("❗");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-status"]'),
-    ).not.toBeNull();
+      container.querySelector('[data-testid="timeline-event-list-status"]')?.textContent,
+    ).toContain("狀態：");
 
     const emptyLoc = makeTimelineItem({
       id: "loc-2",
@@ -372,7 +375,7 @@ describe("EventListPanel", () => {
     expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
   });
 
-  it("puts subscription provenance on its own row and hides dismiss", () => {
+  it("shows calendar affiliation on separate rows and hides dismiss", () => {
     const event = makeTimelineItem({
       id: "sub-1",
       title: "Open Office Hours",
@@ -393,12 +396,49 @@ describe("EventListPanel", () => {
     const provenance = container.querySelector(
       '[data-testid="timeline-event-list-provenance"]',
     );
-    expect(statusWorkset?.textContent).toContain("工作集：一般");
+    expect(statusWorkset?.className).toContain("flex-col");
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-status"]')?.textContent,
+    ).toContain("狀態：");
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-workset"]')?.textContent,
+    ).toContain("日曆：DemoPub/Open");
+    expect(statusWorkset?.textContent).not.toContain("工作集");
     expect(statusWorkset?.textContent).not.toContain("訂閱");
-    expect(provenance?.textContent).toContain("訂閱：DemoPub/Open");
-    expect(provenance?.parentElement).not.toBe(statusWorkset);
+    expect(provenance).toBeNull();
     expect(container.querySelector('[data-testid="timeline-event-list-dismiss"]')).toBeNull();
     expect(container.textContent).not.toContain("從時間軸拿掉");
+    expect(container.querySelector('[data-testid="subscribed-event-avatar"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="subscribed-event-icon"]')).toBeTruthy();
+  });
+
+  it("shows subscribed publisher avatar from catalog ownerAvatar", () => {
+    applyCalendarShareCatalogItems([
+      {
+        handle: "DemoPub",
+        slug: "Open",
+        ownerAvatar: "data:image/png;base64,pub",
+        visibility: "details",
+      },
+    ]);
+    const event = makeTimelineItem({
+      id: "sub-avatar",
+      title: "Office Hours",
+      source: "subscribed:DemoPub/Open",
+      startTime: new Date(2026, 6, 14, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 15, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+    });
+    const avatar = container.querySelector('[data-testid="subscribed-event-avatar"]');
+    expect(avatar).toBeTruthy();
+    expect(avatar?.getAttribute("data-custom-src")).toBe("true");
+    expect(avatar?.style.width).toBe("28px");
+    expect(container.querySelector('[data-testid="subscribed-event-fallback-icon"]')).toBeNull();
+    expect(container.querySelector('[data-testid="subscribed-event-emoji"]')).toBeNull();
+    expect(container.querySelector('[data-testid="subscribed-event-icon"]')).toBeTruthy();
   });
 
   it("keeps dismiss on local user events", () => {
@@ -414,7 +454,14 @@ describe("EventListPanel", () => {
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
     });
-    expect(container.querySelector('[data-testid="timeline-event-list-dismiss"]')).not.toBeNull();
-    expect(container.textContent).toContain("從時間軸拿掉");
+    const dismiss = container.querySelector('[data-testid="timeline-event-list-dismiss"]');
+    expect(dismiss).not.toBeNull();
+    expect(dismiss?.getAttribute("aria-label")).toBe("從時間軸拿掉");
+    expect(dismiss?.getAttribute("title")).toBe("從時間軸拿掉");
+    expect(dismiss?.className).toContain("text-error");
+    expect(container.textContent).not.toContain("從時間軸拿掉");
+    const selectButton = container.querySelector(".im-timeline-event-list-item button");
+    expect(selectButton?.parentElement).toBe(dismiss?.parentElement);
+    expect(dismiss?.parentElement?.className).toContain("items-start");
   });
 });

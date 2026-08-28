@@ -3,9 +3,9 @@ import {
   normalizeEvidenceStyle,
   type EvidenceStyle,
 } from "../../domain/settings/analysisEvidenceStyle";
-import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
+import { useSystemSettingsPage } from "../../hooks/useSystemSettingsPage";
 
-export function useSettingsAnalysisStrategyPage() {
+export function useAnalysisSchedulingForm() {
   const {
     settingsObject,
     settingsInitialLoading,
@@ -15,7 +15,12 @@ export function useSettingsAnalysisStrategyPage() {
     handleSettingChange,
     handleSave: saveSettings,
     reloadSettings,
-  } = useSettingsPageState();
+    settings,
+    savedSnapshot,
+    showConcurrentBatchesWarning,
+    confirmConcurrentBatchesSave,
+    cancelConcurrentBatchesSave,
+  } = useSystemSettingsPage();
 
   const evidenceStyle: EvidenceStyle = normalizeEvidenceStyle(
     settingsObject?.analysisStrategyMode,
@@ -35,5 +40,10 @@ export function useSettingsAnalysisStrategyPage() {
     handleSave,
     reloadSettings,
     evidenceStyle,
+    settings,
+    savedSnapshot,
+    showConcurrentBatchesWarning,
+    confirmConcurrentBatchesSave,
+    cancelConcurrentBatchesSave,
   };
 }

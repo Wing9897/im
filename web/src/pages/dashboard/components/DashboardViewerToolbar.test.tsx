@@ -36,9 +36,10 @@ function renderToolbar(
           onModeFilterChange: vi.fn(),
           onSearchQueryChange: vi.fn(),
           onToggleSystemTasks: vi.fn(),
-          onCreateTask: vi.fn(),
-          onCreateWorkset: vi.fn(),
-          ...overrides,
+            onCreateTask: vi.fn(),
+            onCreateWorkset: vi.fn(),
+            onOpenScheduling: vi.fn(),
+            ...overrides,
         }),
       ),
     );
@@ -115,6 +116,7 @@ describe("DashboardViewerToolbar", () => {
     const actions = search.parentElement;
     expect(actions).not.toBeNull();
     expect(actions!.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
+    expect(actions!.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
     expect(actions!.textContent).toContain("新增任務");
   });
 
@@ -125,6 +127,7 @@ describe("DashboardViewerToolbar", () => {
     const search = toolbar.querySelector('[data-testid="tasks-search"]');
     expect(search).toBeInstanceOf(HTMLInputElement);
     expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
+    expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
   });
 
   it("keeps workset search in the worksets catalog toolbar", () => {
@@ -136,6 +139,7 @@ describe("DashboardViewerToolbar", () => {
     expect(search).toBeInstanceOf(HTMLInputElement);
     expect(search.placeholder).toBe("搜尋工作集…");
     expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeNull();
+    expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
     expect(toolbar.querySelector('[data-testid="dashboard-create-workset"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
@@ -178,5 +182,17 @@ describe("DashboardViewerToolbar", () => {
     expect(filter?.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
     expect(trigger?.getAttribute("aria-haspopup")).toBe("dialog");
     expect(trigger?.textContent).toContain("2/2");
+  });
+
+  it("shows the global scheduling icon only on the tasks toolbar", () => {
+    const tasks = track({ isWorksetView: false, taskCount: 2 }, "/tasks");
+    const scheduling = tasks.querySelector(
+      '[data-testid="open-global-scheduling"]',
+    ) as HTMLButtonElement;
+    expect(scheduling).not.toBeNull();
+    expect(scheduling.getAttribute("aria-label")).toBe("全局調度設定");
+
+    const worksets = track({ isWorksetView: true, taskCount: 0 }, "/worksets");
+    expect(worksets.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
   });
 });

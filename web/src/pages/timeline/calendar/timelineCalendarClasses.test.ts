@@ -13,7 +13,7 @@ import {
   monthDayWeekdayFillerClass,
   monthGridContainerClass,
   monthGridRootClass,
-} from "./timelineCalendarClasses";
+} from "../timelineCalendarClasses";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const timelineCss = readFileSync(resolve(here, "../../../css/timeline-page.css"), "utf8");

@@ -5,14 +5,12 @@ import { AlertBanner, CollapsePanel, FormStack, SettingsRow, TextField } from ".
 interface AdvancedSettingsPanelProps {
   analysisMaxTotalChars: string;
   analysisMaxEstimatedInputTokens: string;
-  llmGenerationTimeout: string;
   maxConcurrentBatches: string;
   maxBatchRetries: string;
   /** Optional hint for concurrent-batch copy (profiles own the provider now). */
   preferLocalConcurrencyHint?: boolean;
   onAnalysisMaxTotalCharsChange: (v: string) => void;
   onAnalysisMaxEstimatedInputTokensChange: (v: string) => void;
-  onLlmGenerationTimeoutChange: (v: string) => void;
   onMaxConcurrentBatchesChange: (v: string) => void;
   onMaxBatchRetriesChange: (v: string) => void;
 }
@@ -20,13 +18,11 @@ interface AdvancedSettingsPanelProps {
 export function AdvancedSettingsPanel({
   analysisMaxTotalChars,
   analysisMaxEstimatedInputTokens,
-  llmGenerationTimeout,
   maxConcurrentBatches,
   maxBatchRetries,
   preferLocalConcurrencyHint = false,
   onAnalysisMaxTotalCharsChange,
   onAnalysisMaxEstimatedInputTokensChange,
-  onLlmGenerationTimeoutChange,
   onMaxConcurrentBatchesChange,
   onMaxBatchRetriesChange,
 }: AdvancedSettingsPanelProps) {
@@ -44,22 +40,6 @@ export function AdvancedSettingsPanel({
         open={batchOpen}
         onToggle={() => setBatchOpen((v) => !v)}
       >
-        <SettingsRow
-          label={t("analysis.advanced.timeoutLabel")}
-          htmlFor="llm-generation-timeout"
-          help={t("analysis.advanced.timeoutHelp")}
-        >
-          <TextField
-            id="llm-generation-timeout"
-            type="number"
-            min={30}
-            max={1800}
-            className="max-w-[200px]"
-            value={llmGenerationTimeout}
-            onChange={(e) => onLlmGenerationTimeoutChange(e.target.value)}
-          />
-        </SettingsRow>
-
         <SettingsRow
           label={t("analysis.advanced.maxRetriesLabel")}
           htmlFor="max-batch-retries"

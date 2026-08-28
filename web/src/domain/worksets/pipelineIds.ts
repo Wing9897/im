@@ -37,7 +37,7 @@ export type PipelineOutputDef = {
   labelKey: PipelineOutputKind;
 };
 
-/** L4 app destinations — no MCP/A2A page nodes. */
+/** L4: timeline / intel / local notify / actions — no MCP/A2A page nodes. */
 export const PIPELINE_OUTPUT_DEFS: readonly PipelineOutputDef[] = [
   {
     kind: "timeline",
@@ -68,7 +68,7 @@ export const PIPELINE_OUTPUT_DEFS: readonly PipelineOutputDef[] = [
     blockId: PIPELINE_BLOCK.external,
     pageId: PIPELINE_PAGE.external,
     titleKey: "graphOutputExternal",
-    href: "/settings/integrations",
+    href: "/notify?tab=types",
     labelKey: "external",
   },
 ];

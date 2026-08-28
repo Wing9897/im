@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
 import { currentMonthWindowIso } from "../../domain/timeline/boardFetchWindows";
+import { useEventListMetaLookups } from "../../domain/timeline/useEventListMetaLookups";
 import { fetchMergedTimedBoardEvents } from "../../domain/timeline/timedEventMerge";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { useBoardTimedEventsWidget } from "../useBoardTimedEventsWidget";
@@ -48,6 +49,7 @@ export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetP
     ariaLabelPrefix: ariaPrefix,
     headerExtra,
   });
+  const metaLookups = useEventListMetaLookups();
 
   const selectEvent = useCallback(
     (event: { id: string; latitude?: number | null; longitude?: number | null }) => {
@@ -81,6 +83,7 @@ export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetP
             labelHeader={t("board:ganttWidget.labelEvent")}
             emptyLabel={t("board:ganttWidget.emptyEvents")}
             onSelectActivity={selectEvent}
+            metaLookups={metaLookups}
           />
         </Suspense>
       </BoardWidgetShell>

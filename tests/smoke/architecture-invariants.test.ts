@@ -286,7 +286,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     );
   });
 
-  it("README.md states the floor, stamp-2 registry, and future-stamp reject", () => {
+  it("README.md states the floor, schema registry, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const floor = readSchemaFloor();
     expect(readProductionRegistryTargets()).toEqual(expectedProductionTargets());
@@ -303,7 +303,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     expect(content).toMatch(/reset/i);
   });
 
-  it("desktop schema hint states the floor, stamp-2 baseline, and future-stamp reject", () => {
+  it("desktop schema hint states the floor, schema baseline, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
     const floor = readSchemaFloor();
@@ -327,7 +327,7 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     expect(content).toMatch(/reset|重置/i);
   });
 
-  it("web boot unavailableHint states the floor, stamp-2 baseline, and future-stamp reject", () => {
+  it("web boot unavailableHint states the floor, schema baseline, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const semver = readSchemaSemver();
     const floor = readSchemaFloor();

@@ -10,7 +10,7 @@ WORKSET_KEYS = [
     "isSystem",
     "notifyEnabled",
     "externalEnabled",
-    "emoji",
+    "cover",
     "description",
     "createdAt",
     "updatedAt",

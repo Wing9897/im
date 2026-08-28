@@ -179,6 +179,7 @@ describe("AiWorkspacePage layout", () => {
     expect(container.textContent).not.toContain("助手");
     // Provider tab was renamed to "AI 設定檔" with the profile-based editor.
     expect(container.textContent).toContain("AI 設定檔");
+    expect(container.textContent).not.toContain("分析調度");
     expect(container.querySelector('[data-testid="segmented-indicator"]')).toBeTruthy();
     expect(container.querySelector(".relative.flex.w-full.overflow-hidden.rounded-md")).toBeTruthy();
   });

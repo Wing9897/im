@@ -100,6 +100,11 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
     });
   }, [filteredSpans, worksets, userEventsLabel]);
 
+  const worksetCoverById = useMemo(
+    () => new Map(worksets.map((ws) => [ws.id, ws.cover ?? ""] as const)),
+    [worksets],
+  );
+
   const headerActions = useMemo(
     () => (
       <>
@@ -147,6 +152,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
             viewMode={viewMode}
             labelHeader={t("board:ganttWidget.labelTask")}
             emptyLabel={t("board:gantt.defaultEmptyLabel")}
+            worksetCoverById={worksetCoverById}
           />
         </Suspense>
       </BoardWidgetShell>

@@ -23,7 +23,7 @@ import i18n from "../../../i18n";
 import {
   EMPTY_TASK_CARD_STATS,
   toTaskCardStats,
-} from "../taskCardStats";
+} from "../../../domain/dashboard/taskCardStats";
 import { selectTopLevelTasks } from "../../../domain/tasks/agentTaskSelectors";
 
 export function useDashboardViewer() {

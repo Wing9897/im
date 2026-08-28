@@ -17,7 +17,7 @@ import {
   monthDayMetaClass,
   monthTodayLabelClass,
   monthDayWeekdayFillerClass,
-} from "./timelineCalendarClasses";
+} from "../timelineCalendarClasses";
 import { holidayNamesForDay, type DailyHoliday } from "../../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";

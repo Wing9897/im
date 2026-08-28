@@ -1,7 +1,11 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchCalendarWindow } from "../../api/calendarWindow";
-import { formatItemOccurrenceTitle } from "../../domain/items/itemCalendarProjection";
+import {
+  formatItemOccurrenceTitle,
+  itemDateKindEmoji,
+  itemDateKindMarkerClass,
+} from "../../domain/items/itemCalendarProjection";
 import { addDays, startOfDay } from "../../domain/timeline/dateUtils";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -12,6 +16,7 @@ type ItemRemindRow = {
   id: string;
   title: string;
   when: string;
+  itemDateKind: string | null;
 };
 
 function formatWhen(value: string): string {
@@ -41,6 +46,7 @@ async function fetchItemRemindSummary(): Promise<ItemRemindRow[]> {
         id: row.id,
         title: formatItemOccurrenceTitle(row.itemDateKind, row.title || ""),
         when: formatWhen(row.startTime),
+        itemDateKind: row.itemDateKind ?? null,
       },
     ];
   }).slice(0, 12);
@@ -73,7 +79,16 @@ export function ItemsBoardWidget({ active = true }: BoardWidgetProps) {
                   className="board-widget-list__row"
                   data-testid={`board-items-row-${row.id}`}
                 >
-                  <span className="board-widget-list__primary">{row.title}</span>
+                  <span className="board-widget-list__title">
+                    <span
+                      className={itemDateKindMarkerClass(row.itemDateKind)}
+                      aria-hidden="true"
+                      data-testid={`board-items-kind-${row.id}`}
+                    >
+                      {itemDateKindEmoji(row.itemDateKind)}
+                    </span>
+                    <span className="board-widget-list__primary">{row.title}</span>
+                  </span>
                   <span className="board-widget-list__meta">{row.when}</span>
                 </div>
               </li>

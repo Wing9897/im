@@ -58,16 +58,16 @@ async def put_full_snapshot(
     *,
     slug: str,
     public_visibility: str,
-    emoji: str,
     description: str,
+    cover: str,
     events: list[dict[str, Any]],
     series: list[dict[str, Any]],
 ) -> Any:
     """PUT the full snapshot. Retry once on timeout; IC write-interval 429 means the first write landed."""
     body = {
         "publicVisibility": public_visibility,
-        "emoji": emoji,
         "description": description,
+        "cover": cover,
         "events": events,
         "series": series,
     }
@@ -100,8 +100,8 @@ async def patch_or_put_snapshot(
     *,
     slug: str,
     public_visibility: str,
-    emoji: str,
     description: str,
+    cover: str,
     events: list[dict[str, Any]],
     series: list[dict[str, Any]],
     entry: dict[str, Any],
@@ -111,32 +111,31 @@ async def patch_or_put_snapshot(
 
     409 (baseHash mismatch) falls back to a full snapshot.
     Unpublish uses DELETE, not an empty PUT.
-    Catalog (emoji/description) and listing visibility ride on the same PATCH
+    Catalog (description/cover) and listing visibility ride on the same PATCH
     without re-uploading unchanged events.
     """
     server_hash = str(entry.get("lastServerEventsHash") or "").strip()
-    previous = entry.get("lastFingerprints") if isinstance(entry.get("lastFingerprints"), dict) else {}
-    has_checkpoint = (
-        bool(server_hash)
-        and isinstance(previous.get("events"), dict)
-        and isinstance(previous.get("series"), dict)
-    )
+    raw_previous = entry.get("lastFingerprints")
+    previous: dict[str, Any] = raw_previous if isinstance(raw_previous, dict) else {}
+    previous_events = previous.get("events")
+    previous_series = previous.get("series")
+    has_checkpoint = bool(server_hash) and isinstance(previous_events, dict) and isinstance(previous_series, dict)
     if not has_checkpoint:
         return await put_full_snapshot(
             db,
             slug=slug,
             public_visibility=public_visibility,
-            emoji=emoji,
             description=description,
+            cover=cover,
             events=events,
             series=series,
         )
 
     event_upsert_uids, event_delete_uids = diff_uid_maps(
-        previous.get("events") or {}, current_fingerprints.get("events") or {}
+        previous_events or {}, current_fingerprints.get("events") or {}
     )
     series_upsert_uids, series_delete_uids = diff_uid_maps(
-        previous.get("series") or {}, current_fingerprints.get("series") or {}
+        previous_series or {}, current_fingerprints.get("series") or {}
     )
     status, payload = await authorized_request_raw(
         db,
@@ -145,8 +144,8 @@ async def patch_or_put_snapshot(
         json_body={
             "baseHash": server_hash,
             "publicVisibility": public_visibility,
-            "emoji": emoji,
             "description": description,
+            "cover": cover,
             "upsertEvents": _rows_by_uid(events, event_upsert_uids),
             "deleteEventUids": event_delete_uids,
             "upsertSeries": _rows_by_uid(series, series_upsert_uids),
@@ -158,8 +157,8 @@ async def patch_or_put_snapshot(
             db,
             slug=slug,
             public_visibility=public_visibility,
-            emoji=emoji,
             description=description,
+            cover=cover,
             events=events,
             series=series,
         )

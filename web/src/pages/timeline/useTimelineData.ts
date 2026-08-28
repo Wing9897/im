@@ -237,6 +237,7 @@ export function useTimelineData({
     calendarWindow,
     selectedSources,
     selectedSubscribeKeys,
+    subscribeCatalogKeys,
     subscribeCatalogFingerprint,
     planKey,
     filterPlan,

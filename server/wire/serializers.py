@@ -11,6 +11,10 @@ from server.wire.serializer_domains.calendar import (
     serialize_trending_topic,
     serialize_user_event,
 )
+from server.wire.serializer_domains.calendar_share import (
+    serialize_calendar_share_event,
+    serialize_catalog_wire_fields,
+)
 from server.wire.serializer_domains.items import (
     serialize_item,
     serialize_item_category,
@@ -50,6 +54,8 @@ __all__ = [
     "serialize_analysis_event",
     "serialize_app_log",
     "serialize_batch_tool_calls",
+    "serialize_calendar_share_event",
+    "serialize_catalog_wire_fields",
     "serialize_channel",
     "serialize_channel_ref",
     "serialize_dismissal",

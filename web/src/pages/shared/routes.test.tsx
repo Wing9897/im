@@ -139,6 +139,7 @@ describe("Route module imports", () => {
       () => import("../timeline/TimelinePage"),
       () => import("../subscriptions/SubscriptionsShell"),
       () => import("../subscriptions/SubscriptionsPublishedPage"),
+      () => import("../subscriptions/SubscriptionsAccountPage"),
       () => import("../sources/SourceManagementPage"),
       () => import("../notify/NotifyWorkspacePage"),
       () => import("../logs/LogPage"),
@@ -148,7 +149,6 @@ describe("Route module imports", () => {
       () => import("../settings/SettingsThemePage"),
       () => import("../ai/SettingsAiProviderPage"),
       () => import("../ai/SettingsVoicePage"),
-      () => import("../ai/SettingsAnalysisStrategyPage"),
       () => import("../settings/SettingsDataPage"),
     ];
 

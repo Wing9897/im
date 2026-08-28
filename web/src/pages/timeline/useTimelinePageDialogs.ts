@@ -37,10 +37,6 @@ import {
   restoreSubscribedEventDismissed,
 } from "../../domain/calendarShare/subscribedDismissals";
 
-export type PendingTimelineConfirm =
-  | { kind: "dismiss"; event: TimelineItem }
-  | { kind: "restore"; event: TimelineItem };
-
 export type OpenCreateDialogOptions = {
   worksetId?: string | null;
   /** Prefill start on this wall day (month cell right-click). */
@@ -63,7 +59,7 @@ function isOpenCreateOptions(value: unknown): value is OpenCreateDialogOptions {
   );
 }
 
-/** User-event create/edit + dismiss/restore confirm state for TimelinePage. */
+/** User-event create/edit + dismiss/restore actions for TimelinePage. */
 export function useTimelinePageDialogs({
   refreshEvents,
   selectedEvent,
@@ -82,7 +78,6 @@ export function useTimelinePageDialogs({
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [userEventActionBusy, setUserEventActionBusy] = useState(false);
-  const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
 
   const openCreateDialog = useCallback(
     (worksetIdOrOpts?: string | null | OpenCreateDialogOptions) => {
@@ -210,20 +205,10 @@ export function useTimelinePageDialogs({
     [dialogMode, editingEvent, refreshEvents, showToast, t],
   );
 
-  const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {
-    setPendingConfirm({ kind: "dismiss", event });
-  }, []);
-
-  const handleRestoreTimelineEvent = useCallback((event: TimelineItem) => {
-    setPendingConfirm({ kind: "restore", event });
-  }, []);
-
-  const confirmPendingAction = useCallback(async () => {
-    if (!pendingConfirm) return;
-    const { kind, event } = pendingConfirm;
-    setUserEventActionBusy(true);
-    try {
-      if (kind === "dismiss") {
+  const handleDismissTimelineEvent = useCallback(
+    async (event: TimelineItem) => {
+      setUserEventActionBusy(true);
+      try {
         if (isSubscribedTimelineSource(event.source)) {
           markSubscribedEventDismissed(event);
         } else {
@@ -232,25 +217,34 @@ export function useTimelinePageDialogs({
         if (selectedEvent?.id === event.id) {
           setSelectedEvent(null);
         }
-      } else if (isSubscribedTimelineSource(event.source)) {
-        restoreSubscribedEventDismissed(event);
-      } else {
-        await restoreTimelineEvent(timelineItemDismissalSource(event.source), event.id);
+        await refreshEvents();
+      } catch (error) {
+        showToast(handleCommandError(error) || t("messages.dismissFailed"), "error");
+      } finally {
+        setUserEventActionBusy(false);
       }
-      setPendingConfirm(null);
-      await refreshEvents();
-    } catch (error) {
-      const fallback =
-        kind === "dismiss" ? t("messages.dismissFailed") : t("messages.restoreFailed");
-      showToast(handleCommandError(error) || fallback, "error");
-    } finally {
-      setUserEventActionBusy(false);
-    }
-  }, [pendingConfirm, refreshEvents, selectedEvent, setSelectedEvent, showToast, t]);
+    },
+    [refreshEvents, selectedEvent, setSelectedEvent, showToast, t],
+  );
 
-  const cancelPendingConfirm = useCallback(() => {
-    if (!userEventActionBusy) setPendingConfirm(null);
-  }, [userEventActionBusy]);
+  const handleRestoreTimelineEvent = useCallback(
+    async (event: TimelineItem) => {
+      setUserEventActionBusy(true);
+      try {
+        if (isSubscribedTimelineSource(event.source)) {
+          restoreSubscribedEventDismissed(event);
+        } else {
+          await restoreTimelineEvent(timelineItemDismissalSource(event.source), event.id);
+        }
+        await refreshEvents();
+      } catch (error) {
+        showToast(handleCommandError(error) || t("messages.restoreFailed"), "error");
+      } finally {
+        setUserEventActionBusy(false);
+      }
+    },
+    [refreshEvents, showToast, t],
+  );
 
   const handleToggleImportantEvent = useCallback(
     async (event: TimelineItem) => {
@@ -287,7 +281,6 @@ export function useTimelinePageDialogs({
     dialogBusy,
     dialogError,
     userEventActionBusy,
-    pendingConfirm,
     openCreateDialog,
     openEditDialog,
     openEditItem,
@@ -296,7 +289,5 @@ export function useTimelinePageDialogs({
     handleDismissTimelineEvent,
     handleRestoreTimelineEvent,
     handleToggleImportantEvent,
-    confirmPendingAction,
-    cancelPendingConfirm,
   };
 }

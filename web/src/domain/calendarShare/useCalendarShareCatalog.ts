@@ -16,7 +16,7 @@ import {
   consumeCalendarShareRateLimit,
   resetCalendarShareRateLimitForTests,
 } from "./calendarShareRateLimit";
-import { toErrorMessage } from "../../utils/errors";
+import { toError, toErrorMessage } from "../../utils/errors";
 import {
   calendarShareKey,
   isCalendarShareNotFound,
@@ -76,7 +76,7 @@ export function refreshCalendarShareCatalog(): Promise<void> {
   } catch (error) {
     snapshot = { ...snapshot, loading: false, error: toErrorMessage(error) };
     emit();
-    return Promise.reject(error);
+    return Promise.reject(toError(error));
   }
   const myEpoch = ++epoch;
   if (!completed) {
@@ -163,6 +163,27 @@ export function refreshCalendarShareCatalog(): Promise<void> {
 export function invalidateCalendarShareCatalog(): Promise<void> {
   inFlight = null;
   return refreshCalendarShareCatalog();
+}
+
+/** Apply POST/DELETE subscription mutation body without a follow-up catalog GET. */
+export function applyCalendarShareCatalogItems(
+  items: CalendarShareSubscription[],
+  ownHandle?: string,
+): void {
+  const previousKeys = snapshot.items.map((row) => calendarShareKey(row.handle, row.slug));
+  snapshot = {
+    ...snapshot,
+    items,
+    ownHandle: ownHandle ?? snapshot.ownHandle,
+    loading: false,
+    error: null,
+    unreachable: false,
+  };
+  completed = true;
+  if (previousKeys.length > 0) {
+    pruneSubscribedDismissals(items.map((row) => calendarShareKey(row.handle, row.slug)));
+  }
+  emit();
 }
 
 /** Test-only: clear cache, in-flight, and listeners. */

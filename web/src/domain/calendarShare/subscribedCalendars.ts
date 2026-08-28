@@ -3,17 +3,30 @@
  * Display-filter keys stay outside SourceFilterSelection.taskIds / worksetIds.
  */
 
+import { toErrorMessage } from "../../utils/errors";
+
 export const SUBSCRIBED_SOURCE_PREFIX = "subscribed:";
 
 export function calendarShareKey(handle: string, slug: string): string {
   return `${handle.trim()}/${slug.trim()}`;
 }
 
-/** Card title + Timeline filter row: same `handle/slug` key, emoji, and path parts. */
+/** Whether `handle/slug` is in the subscription catalog (case-insensitive key match). */
+export function isCatalogSubscribed(
+  items: readonly { handle: string; slug: string }[],
+  handle: string,
+  slug: string,
+): boolean {
+  const target = calendarShareKey(handle, slug).toLowerCase();
+  return items.some((row) => calendarShareKey(row.handle, row.slug).toLowerCase() === target);
+}
+
+/** Card title + Timeline filter row: same `handle/slug` key, media, and path parts. */
 export type SubscribeCalendarIdentity = {
   key: string;
   label: string;
-  emoji: string;
+  ownerAvatar: string;
+  cover: string;
   handle: string;
   slug: string;
 };
@@ -21,32 +34,45 @@ export type SubscribeCalendarIdentity = {
 export function subscribeCalendarIdentity(row: {
   handle: string;
   slug: string;
-  emoji?: string | null;
+  ownerAvatar?: string | null;
+  cover?: string | null;
 }): SubscribeCalendarIdentity {
   const handle = row.handle.trim();
   const slug = row.slug.trim();
   const key = calendarShareKey(handle, slug);
-  return { key, label: key, emoji: row.emoji ?? "", handle, slug };
+  return {
+    key,
+    label: key,
+    ownerAvatar: (row.ownerAvatar ?? "").trim(),
+    cover: (row.cover ?? "").trim(),
+    handle,
+    slug,
+  };
 }
 
 /** Map `useCalendarShareCatalog().items` onto Timeline subscribe-column rows. */
 export function subscribeFilterCalendarsFromCatalog(
-  items: readonly { handle: string; slug: string; emoji?: string | null }[],
+  items: readonly {
+    handle: string;
+    slug: string;
+    ownerAvatar?: string | null;
+    cover?: string | null;
+  }[],
 ): SubscribeCalendarIdentity[] {
   return items.map(subscribeCalendarIdentity);
 }
 
-export function subscribedTimelineSource(handle: string, slug: string): string {
+export function subscribedTimelineSource(handle: string, slug: string): `subscribed:${string}` {
   return `${SUBSCRIBED_SOURCE_PREFIX}${calendarShareKey(handle, slug)}`;
 }
 
-export function isSubscribedTimelineSource(source: string | undefined): boolean {
+export function isSubscribedTimelineSource(source: string | null | undefined): boolean {
   return typeof source === "string" && source.startsWith(SUBSCRIBED_SOURCE_PREFIX);
 }
 
 /** `handle/slug` after `subscribed:`, or null when the source is not a subscription. */
-export function parseSubscribedTimelineSource(source: string | undefined): string | null {
-  if (!isSubscribedTimelineSource(source)) return null;
+export function parseSubscribedTimelineSource(source: string | null | undefined): string | null {
+  if (typeof source !== "string" || !isSubscribedTimelineSource(source)) return null;
   const path = source.slice(SUBSCRIBED_SOURCE_PREFIX.length).trim();
   return path.length > 0 ? path : null;
 }
@@ -157,7 +183,7 @@ export function isCalendarShareUnreachable(error: unknown): boolean {
     const name = "name" in error ? String((error as { name?: unknown }).name) : "";
     if (name === "NetworkError") return true;
   }
-  const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
+  const message = toErrorMessage(error);
   return /\b502\b|\b503\b|\b504\b|unreachable|failed to fetch|network error/i.test(message);
 }
 
@@ -175,7 +201,7 @@ export function isCalendarShareNotFound(error: unknown): boolean {
           : "";
     if (/^(not_found|NOT_FOUND|http_404)$/i.test(code)) return true;
   }
-  const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
+  const message = toErrorMessage(error);
   return /^not found\.?$/i.test(message.trim());
 }
 

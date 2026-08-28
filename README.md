@@ -12,7 +12,7 @@
 - **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；本機通知掃描情報事件與日程
-- **本地優先** — SQLite（**schema v3**；`SCHEMA_FLOOR` 1＋`SCHEMA_MIGRATIONS` 含 `1→2`／`2→3`；stamp 1 會自動升級；未來 stamp 須升級應用）、憑證加密、本機綁定；Electron 開箱即用
+- **本地優先** — SQLite（**schema v5**；`SCHEMA_FLOOR` 5＝現況 stamp；舊 stamp 1–4 須備份後 reset；未來 stamp 須升級應用）、憑證加密、本機綁定；Electron 開箱即用
 
 架構與契約細節見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
@@ -282,15 +282,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v4**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `1.3.0`；stamp 2 新增 `schema_meta`；stamp 3 新增 `worksets.emoji`／`description`；stamp 4 新增 `calendar_share_publish`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode、`notify_pref`）由 `server/domain/` Python SoT 生成並配 drift 測試；`notify_pref` 為 `inherit`／`off`（`"follow"`／`"on"` 為 422）；內建工作集 id `__general__`；`worksets.notify_enabled`／`external_enabled` 默認開（工作集頁樞紐；內建「一般」兩檔都可關）；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；任務／日程／物品圖標為實體 `emoji` 欄；時間窗 SoT 為 `GET /api/v1/calendar/window`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-4 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v5**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `1.4.0`；stamp 5 含 `schema_meta`、`worksets.description`／`cover_data_url`（無 workset emoji）、`calendar_share_publish.last_cover`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode、`notify_pref`）由 `server/domain/` Python SoT 生成並配 drift 測試；`notify_pref` 為 `inherit`／`off`（`"follow"`／`"on"` 為 422）；內建工作集 id `__general__`；`worksets.notify_enabled`／`external_enabled` 默認開（工作集頁樞紐；內建「一般」兩檔都可關）；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；任務／日程／物品圖標為實體 `emoji` 欄；時間窗 SoT 為 `GET /api/v1/calendar/window`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-5 庫。
 
-**地板 + 加法遷移：** stamp **1** 是 `SCHEMA_FLOOR`。`FLOOR ≤ v < CURRENT` 走加法遷移（生產 `SCHEMA_MIGRATIONS` 含 `target=2`、`target=3` 與 `target=4`）。**未來 stamp**（含已退役的 27／45）啟動 hard-reject，請升級應用；壞庫／fingerprint 不符才備份後 reset。**絕不**靜默刪庫重建。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**地板：** stamp **5** 是 `SCHEMA_FLOOR` 與 current。生產 `SCHEMA_MIGRATIONS` 為空。**stamp 1–4** 啟動 hard-reject，請先備份再 `python scripts/reset_local_databases.py --apply`。**未來 stamp**（含已退役的 27／45）請升級應用；壞庫／fingerprint 不符才備份後 reset。**絕不**靜默刪庫重建。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與地板規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v4-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與地板規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v5-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`、`uv run python scripts/seed_items_finance_demo.py`、`uv run python scripts/seed_trace_correct_demo.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

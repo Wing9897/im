@@ -27,6 +27,7 @@ export type WorksetFilterOption = {
   id: string;
   name: string;
   isSystem?: boolean;
+  cover?: string;
 };
 
 export type SourceFilterExpandTask = {

@@ -1,7 +1,8 @@
-"""Schema floor SoT: stamp 4 + retired future stamps 27/45 hard-reject.
+"""Schema floor SoT: stamp 5 is floor and current; retired 27/45 hard-reject.
 
-Additive 1→4 walks live in ``test_schema_migrate.py``. Fingerprint validation,
-unstamped current, and newer-than-supported: ``test_db_schema.py``.
+Stamp 1–4 files reject (backup then reset). Injected migration-runner walks live in
+``test_schema_migrate.py``. Fingerprint validation, unstamped current, and
+newer-than-supported: ``test_db_schema.py``.
 """
 
 from __future__ import annotations
@@ -18,22 +19,31 @@ from server.db.schema_bootstrap import (
     ensure_supported_schema,
     inspect_schema,
 )
-from server.tests.schema_fixtures import file_snapshot, logical_snapshot, make_pre_schema_meta_db, make_stamped_db
+from server.db.schema_inspect import SCHEMA_FLOOR
+from server.tests.schema_fixtures import (
+    file_snapshot,
+    logical_snapshot,
+    make_pre_schema_meta_db,
+    make_stamp_2_db,
+    make_stamp_3_db,
+    make_stamped_db,
+)
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-# Retired pre-cut stamps greater than CURRENT=4 still hard-reject (future-stamp path).
+# Retired pre-cut stamps greater than CURRENT=5 still hard-reject (future-stamp path).
 _HARD_REJECT_FUTURE_VERSIONS = (27, 45)
 
 
 def test_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 4
-    assert SCHEMA_SEMVER == "1.3.0"
+    assert CURRENT_SCHEMA_VERSION == 5
+    assert SCHEMA_FLOOR == 5
+    assert SCHEMA_SEMVER == "1.4.0"
     assert CURRENT_SCHEMA_VERSION not in _HARD_REJECT_FUTURE_VERSIONS
     assert all(version > CURRENT_SCHEMA_VERSION for version in _HARD_REJECT_FUTURE_VERSIONS)
 
 
 def test_schema_meta_ddl_seeds_current_semver() -> None:
-    """Fresh DDL and 1→2 must write the same ``schema_meta`` singleton."""
+    """Fresh DDL must write the ``schema_meta`` singleton."""
     from server.db.schema_domains.system import DDL as SYSTEM_DDL
 
     assert f"VALUES (1, '{SCHEMA_SEMVER}')" in SYSTEM_DDL
@@ -41,7 +51,7 @@ def test_schema_meta_ddl_seeds_current_semver() -> None:
 
 @pytest.mark.asyncio
 async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
-    """Empty DB + ensure_supported_schema → stamp 4 + schema_meta + seeded __general__."""
+    """Empty DB + ensure_supported_schema → stamp 5 + schema_meta + seeded __general__."""
     path = str(tmp_path / "fresh-floor.db")
     db = Database(path)
     await db.connect()
@@ -88,12 +98,13 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert int(workset_cols["notify_enabled"][3]) == 1
         assert "external_enabled" in workset_cols
         assert int(workset_cols["external_enabled"][3]) == 1
-        assert "emoji" in workset_cols
-        assert int(workset_cols["emoji"][3]) == 1
-        assert str(workset_cols["emoji"][4]).replace('"', "").replace("'", "") == ""
+        assert "emoji" not in workset_cols
         assert "description" in workset_cols
         assert int(workset_cols["description"][3]) == 1
         assert str(workset_cols["description"][4]).replace('"', "").replace("'", "") == ""
+        assert "cover_data_url" in workset_cols
+        assert int(workset_cols["cover_data_url"][3]) == 1
+        assert str(workset_cols["cover_data_url"][4]).replace('"', "").replace("'", "") == ""
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
             ue_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_pref" in ue_cols
@@ -127,6 +138,62 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert "schema_semver" in meta_cols
     finally:
         await db.close()
+
+
+@pytest.mark.parametrize("version", (1, 2, 3, 4), ids=["stamped-v1", "stamped-v2", "stamped-v3", "stamped-v4"])
+@pytest.mark.asyncio
+async def test_below_floor_stamps_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
+    """Stamp 1–4 files reject; backup then reset. No additive walk."""
+    path = str(tmp_path / f"stamped-v{version}.db")
+    if version == 1:
+        await make_pre_schema_meta_db(
+            path,
+            version=1,
+            log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+        )
+    elif version == 2:
+        await make_stamp_2_db(
+            path,
+            log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+        )
+    elif version == 3:
+        await make_stamp_3_db(
+            path,
+            log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+        )
+    else:
+        from server.tests.schema_fixtures import make_stamp_4_db
+
+        await make_stamp_4_db(
+            path,
+            log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+        )
+
+    before_logical = await logical_snapshot(path)
+    before_file = file_snapshot(path)
+    assert before_logical["version"] == version
+
+    db = Database(path)
+    await db.connect()
+    try:
+        with pytest.raises(
+            SchemaBaselineError,
+            match=(
+                rf"Unsupported database schema version {version}.*"
+                r"reset_local_databases.py --apply"
+            ),
+        ):
+            await db.ensure_schema()
+        assert await db.fetch_value("PRAGMA user_version") == version
+        assert (
+            await db.fetch_value(f"SELECT message FROM app_logs WHERE id = 'log-v{version}'")
+            == f"message for log-v{version}"
+        )
+    finally:
+        await db.close()
+
+    assert await logical_snapshot(path) == before_logical
+    assert file_snapshot(path) == before_file
 
 
 @pytest.mark.parametrize(

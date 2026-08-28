@@ -71,28 +71,6 @@
     "copyFailed": "无法复制",
     "scopesReadOnly": "只读"
   },
-  "calendarShare": {
-    "title": "日历分享",
-    "help": "登录内测日历分享服务，并设置家用日历时区。发布、授权与取消上传在「订阅 → 我的发布」；订阅别人的日历在「我的订阅」或「搜索订阅」。此页只负责连接与时区；时间规划仅显示与筛选。",
-    "urlLabel": "服务网址",
-    "urlHelp": "默认本机公开服务。令牌由本机服务器加密保存，画面不会直连该站。",
-    "handleLabel": "账号 handle",
-    "passwordLabel": "密码",
-    "login": "登录",
-    "loggingIn": "登录中…",
-    "logout": "登出",
-    "loggingOut": "登出中…",
-    "loggedIn": "已连接日历分享",
-    "loggedOut": "已登出日历分享",
-    "status": "状态：{status}（{handle}）",
-    "statusConnected": "已连接",
-    "statusDisconnected": "未连接",
-    "timezoneLabel": "日历时区",
-    "timezoneHelp": "家用日历时钟，选定后固定。预填当前系统城市，旅行时不会跟随 Windows。",
-    "timezoneSave": "保存时区",
-    "timezoneSaving": "保存中…",
-    "timezoneSaved": "已保存日历时区",
-    "timezonePending": "上次更新公开服务器时区未完成。连接后可再试。",
-    "timezoneRetry": "重试公开更新"
-  }
+  "calendarShareMoved": "日历分享登录与时区已移至订阅页。",
+  "calendarShareMovedLink": "订阅 → 日历分享"
 }

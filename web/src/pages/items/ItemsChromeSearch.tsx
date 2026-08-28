@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button, TextField } from "../../components/ui";
-import { itemsPageChromeCategorySearchWrapClass, itemsPageChromeSearchClass } from "./itemsPageChromeClasses";
+import { itemsPageChromeCategorySearchWrapClass, itemsPageChromeSearchClass } from "../../styles/itemsPageChromeClasses";
 
 export const ITEMS_SEARCH_DEBOUNCE_MS = 250;
 

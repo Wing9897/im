@@ -18,7 +18,7 @@ import {
   itemsPageChromeEntryActionsClass,
   itemsPageChromeEntryActionLabelClass,
   itemsPageChromeSelectClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 import { ITEMS_SORT_OPTION_KEYS, type ItemsFilterKey, type ItemsSortKey } from "../../domain/items/itemsListModel";
 
 type Props = {

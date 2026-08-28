@@ -25,7 +25,7 @@ interface DashboardViewerDialogsProps {
   onConfirmTaskDelete: () => Promise<void>;
   onCancelTaskDelete: () => void;
   onCloseWorksetNameDialog: () => void;
-  onSubmitWorksetName: (values: { name: string; emoji: string; description: string }) => Promise<void>;
+  onSubmitWorksetName: (values: { name: string; description: string; cover: string }) => Promise<void>;
   onConfirmWorksetDelete: () => Promise<void>;
   onCancelWorksetDelete: () => void;
   onCloseTaskDetail: () => void;

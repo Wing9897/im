@@ -28,6 +28,7 @@ export type CalendarShareSubscription = components["schemas"]["CalendarShareSubs
 export type CalendarShareSubscriptions = components["schemas"]["CalendarShareSubscriptionsResponse"];
 export type CalendarShareSearchHit = components["schemas"]["CalendarShareSearchHitResponse"];
 export type CalendarShareSearch = components["schemas"]["CalendarShareSearchResponse"];
+export type CalendarShareProfile = components["schemas"]["CalendarShareProfileResponse"];
 export type CalendarShareEvent = components["schemas"]["CalendarShareEventResponse"];
 export type CalendarShareLoginBody = components["schemas"]["CalendarShareLoginBody"];
 export type CalendarSharePublishBody = components["schemas"]["CalendarSharePublishBody"];
@@ -50,6 +51,10 @@ export function fetchCalendarShareTimezone(): Promise<CalendarShareTimezone> {
 
 export function putCalendarShareTimezone(timezone: string): Promise<CalendarShareTimezone> {
   return apiClient.put<CalendarShareTimezone>("/api/v1/calendar-share/timezone", { timezone });
+}
+
+export function putCalendarShareProfile(avatar: string): Promise<CalendarShareProfile> {
+  return apiClient.put<CalendarShareProfile>("/api/v1/calendar-share/profile", { avatar });
 }
 
 export function fetchCalendarSharePublish(worksetId: string): Promise<CalendarSharePublishState> {

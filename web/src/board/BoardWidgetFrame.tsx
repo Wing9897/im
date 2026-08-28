@@ -12,6 +12,7 @@ import { Maximize2, Minimize2, X } from "lucide-react";
 import { BOARD_SIZE_PRESETS } from "./boardSizePresets";
 import { getWidgetMeta } from "./widgetRegistry";
 import { useTranslation } from "react-i18next";
+import { Button } from "../components/ui";
 import type { BoardSizePresetId } from "./boardSizePresets";
 import type { BoardWidgetType } from "./types";
 
@@ -206,8 +207,9 @@ export function BoardWidgetFrame({
                 {sizeMenu}
               </div>
             ) : null}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               className="board-widget-frame__btn"
               title={maximized ? t("board:shell.restore") : t("board:shell.maximize")}
               aria-label={
@@ -220,10 +222,11 @@ export function BoardWidgetFrame({
               ) : (
                 <Maximize2 size={12} strokeWidth={2} aria-hidden="true" />
               )}
-            </button>
+            </Button>
             {editMode ? (
-              <button
-                type="button"
+              <Button
+                variant="danger"
+                size="icon"
                 className="board-widget-frame__btn board-widget-frame__btn--danger"
                 title={t("board:shell.removeWidget")}
                 aria-label={t("board:shell.removeWidgetAria", { title: meta.title })}
@@ -231,7 +234,7 @@ export function BoardWidgetFrame({
                 onClick={onRemove}
               >
                 <X size={12} strokeWidth={2} aria-hidden="true" />
-              </button>
+              </Button>
             ) : null}
           </div>
         </header>

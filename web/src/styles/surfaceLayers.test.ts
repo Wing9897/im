@@ -29,12 +29,12 @@ import {
 import {
   itemFormPageFillClass,
   itemsPageFillClass,
-} from "../pages/items/itemsPageChromeClasses";
+} from "./itemsPageChromeClasses";
 import {
   sourceBoardClass,
   sourceBoardFormClass,
   sourceBoardListClass,
-} from "../pages/sources/board/sourceBoardClasses";
+} from "./sourceBoardClasses";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const surfaceCss = readFileSync(resolve(here, "../css/surface-materials.css"), "utf8");
@@ -221,10 +221,13 @@ describe("surface layer tokens", () => {
     expect(buttonBaseClass).not.toContain("transform]");
     expect(segmentedTabActiveClass).not.toContain("font-semibold");
     expect(dialogShellCss).toMatch(
-      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--surface-card\) 80%, transparent\)/s,
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background:\s*var\(--surface-panel\)/s,
     );
     expect(dialogShellCss).toMatch(
-      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*backdrop-filter:\s*blur\(8px\)/s,
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*backdrop-filter:\s*blur\(var\(--surface-blur-panel\)\)/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*color-mix\(in srgb, var\(--surface-card\) 80%, transparent\)/s,
     );
     expect(dialogShellCss).toMatch(
       /\.im-sidebar-overlay\.fixed\s*\{[^}]*backdrop-filter:\s*none/s,

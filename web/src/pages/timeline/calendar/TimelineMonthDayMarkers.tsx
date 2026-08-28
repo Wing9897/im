@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { CircleCheck, Timer, type LucideIcon } from "lucide-react";
+import { ScheduleEventCompactEmoji } from "../../../components/timeline/ScheduleEventTitleMark";
 import type { TimelineItem } from "../../../types";
 import { itemDateKindMarkerClass } from "../../../domain/items/itemCalendarProjection";
 import { lookupScheduleEmoji } from "../../../domain/schedule/scheduleEmoji";
@@ -21,9 +22,7 @@ import {
   monthSpanOngoingIconClass,
   monthSpanOngoingTextClass,
   truncateMonthEventTitle,
-} from "./timelineCalendarClasses";
-import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
-
+} from "../timelineCalendarClasses";
 const MONTH_SPAN_ICON_PROPS = { size: 10, strokeWidth: 2.5 } as const;
 
 export const MONTH_EVENT_PREVIEW_LIMIT = 4;
@@ -135,6 +134,7 @@ export function MonthDayEventPreview({
     <div className={monthEventsPreviewClass}>
       {previewEvents.map((event) => {
         const leading = resolveCalendarLeadingGlyph(event);
+        const scheduleEmoji = leading ? "" : lookupScheduleEmoji(event);
         const rowTitle = monthPreviewTitle(event);
         return (
           <button
@@ -164,7 +164,7 @@ export function MonthDayEventPreview({
               >
                 {leading.emoji}
               </span>
-            ) : lookupScheduleEmoji(event) ? (
+            ) : scheduleEmoji ? (
               <ScheduleEventCompactEmoji event={event} />
             ) : (
               <span className={monthEventDotClass} aria-hidden="true" />

@@ -28,6 +28,7 @@ vi.mock("../../api/calendarWindow", () => ({
 
 vi.mock("../../api/llmProfiles", () => ({
   listLlmProfiles: (...args: unknown[]) => mockListProfiles(...args),
+  listLlmGlobalSlots: vi.fn(async () => []),
 }));
 
 vi.mock("../../context/TaskCatalogContext", async () =>
@@ -53,6 +54,7 @@ describe("new board widgets (schedule / items / llm-health)", () => {
           id: "ue-1",
           title: "Kickoff",
           body: "",
+          emoji: "🎂",
           startTime: "2026-08-12T10:00:00.000Z",
           endTime: null,
           location: null,
@@ -182,9 +184,13 @@ describe("new board widgets (schedule / items / llm-health)", () => {
     ).not.toMatch(/N\/A/);
     expect(
       container
-        .querySelector('[data-testid="board-schedule-event-ue-1"] [data-testid="card-title-icon"]')
-        ?.classList.contains("lucide-calendar-days"),
-    ).toBe(true);
+        .querySelector('[data-testid="board-schedule-event-ue-1"] [data-testid="schedule-event-emoji"]')
+        ?.textContent,
+    ).toContain("🎂");
+    expect(
+      container
+        .querySelector('[data-testid="board-schedule-event-ue-1"] [data-testid="card-title-icon"]'),
+    ).toBeNull();
     expect(
       container
         .querySelector('[data-testid="board-schedule-series-ser-1"] [data-testid="card-title-icon"]')
@@ -207,6 +213,7 @@ describe("new board widgets (schedule / items / llm-health)", () => {
       }),
     );
     expect(container.querySelector('[data-testid="board-items-row-item:i1:remind"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="board-items-kind-item:i1:remind"]')).toBeTruthy();
     expect(container.textContent).toContain("Milk");
     expect(container.textContent).not.toContain("Meeting");
     expect(container.querySelector('[data-testid="board-items-hint"]')).toBeTruthy();
@@ -220,6 +227,8 @@ describe("new board widgets (schedule / items / llm-health)", () => {
     expect(container.querySelector('[data-testid="board-llm-health-alert"]')?.textContent).toMatch(
       /No LLM profiles|尚未配置/,
     );
+    expect(container.querySelector('[data-testid="board-llm-health-slots"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="board-llm-slot-assistant"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="board-llm-health-stats"]')?.textContent).toContain(
       "0",
     );
@@ -245,13 +254,25 @@ describe("new board widgets (schedule / items / llm-health)", () => {
         updatedAt: null,
       },
     ]);
+    const { listLlmGlobalSlots } = await import("../../api/llmProfiles");
+    vi.mocked(listLlmGlobalSlots).mockResolvedValue([
+      {
+        slot: "assistant",
+        profileId: "p1",
+        profileName: "Default Ollama",
+        profileProvider: "ollama",
+        profileModel: "llama3",
+      },
+      { slot: "liaison", profileId: null, profileName: null, profileProvider: null, profileModel: null },
+      { slot: "taskEditor", profileId: null, profileName: null, profileProvider: null, profileModel: null },
+    ]);
     act(() => {
       root.render(wrapBoardProviders(createElement(LlmHealthBoardWidget)));
     });
     await flush();
     expect(container.querySelector('[data-testid="board-llm-health-alert"]')).toBeNull();
-    expect(container.querySelector('[data-testid="board-llm-health-default"]')?.textContent).toContain(
-      "Default Ollama",
+    expect(container.querySelector('[data-testid="board-llm-slot-assistant"]')?.textContent).toMatch(
+      /Default Ollama|Assistant|助手/,
     );
   });
 });

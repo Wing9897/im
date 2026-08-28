@@ -50,7 +50,10 @@ def _server_content_hash(payload: Any) -> str:
 def _workset_catalog(row: dict[str, Any] | None) -> tuple[str, str]:
     if not row:
         return "", ""
-    return str(row.get("emoji") or ""), str(row.get("description") or "")
+    return (
+        str(row.get("description") or ""),
+        str(row.get("cover_data_url") or ""),
+    )
 
 
 @dataclass(frozen=True)
@@ -121,20 +124,21 @@ async def push_workset_calendar_result(
         visibility,
     )
     workset_row = await fetch_workset_row(db, workset_id)
-    emoji, description = _workset_catalog(workset_row)
-    skip_catalog = str(entry.get("lastEmoji") or "") == emoji and str(entry.get("lastDescription") or "") == description
+    description, cover = _workset_catalog(workset_row)
+    skip_catalog = str(entry.get("lastDescription") or "") == description and str(entry.get("lastCover") or "") == cover
     skip_grants = str(entry.get("lastGrantsHash") or "") == grants_hash
+    needs_catalog_push = not skip_catalog
     remote_payload: Any = None
     snapshot_written = False
     grants_written = skip_grants
     try:
-        if not skip_events or not skip_catalog:
+        if not skip_events or needs_catalog_push:
             remote_payload = await patch_or_put_snapshot(
                 db,
                 slug=slug,
                 public_visibility=visibility,
-                emoji=emoji,
                 description=description,
+                cover=cover,
                 events=events,
                 series=series,
                 entry=entry,
@@ -171,9 +175,9 @@ async def push_workset_calendar_result(
     if grants_written:
         next_entry["lastGrantsHash"] = grants_hash
     next_entry.pop("lastEventsHash", None)
-    if not skip_events or not skip_catalog:
-        next_entry["lastEmoji"] = emoji
+    if not skip_events or needs_catalog_push:
         next_entry["lastDescription"] = description
+        next_entry["lastCover"] = cover
         server_hash = _server_content_hash(remote_payload)
         if server_hash:
             next_entry["lastServerEventsHash"] = server_hash

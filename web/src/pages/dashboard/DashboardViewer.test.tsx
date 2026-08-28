@@ -6,6 +6,7 @@ import "../../components/items/emoji/emojiPickerReactMock";
 // --- Mocks ---
 
 const mockNavigate = vi.fn();
+const mockSetSearchParams = vi.fn();
 let mockPathname = "/tasks";
 let mockSearch = "";
 
@@ -23,7 +24,7 @@ vi.mock("react-router-dom", () => ({
   useLocation: () => ({ pathname: mockPathname, search: mockSearch }),
   useSearchParams: () => [
     new URLSearchParams(mockSearch.startsWith("?") ? mockSearch.slice(1) : mockSearch),
-    vi.fn(),
+    mockSetSearchParams,
   ],
   Link: ({ children, to }: { children?: unknown; to: string }) => (
     <a href={typeof to === "string" ? to : ""}>{children as never}</a>
@@ -69,6 +70,11 @@ vi.mock("../../api/items", () => ({
 
 vi.mock("../../hooks/usePipelineReadiness", () => ({
   usePipelineReadiness: () => mockPipeline.current,
+}));
+
+vi.mock("../../components/settings/AnalysisSchedulingDialog", () => ({
+  AnalysisSchedulingDialog: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="global-scheduling-dialog" /> : null,
 }));
 
 vi.mock("../../api/userEvents", () => ({
@@ -153,6 +159,7 @@ describe("DashboardViewer", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     mockNavigate.mockReset();
+    mockSetSearchParams.mockReset();
     mockPathname = "/tasks";
     mockSearch = "";
     mockPipeline.current = {
@@ -279,7 +286,63 @@ describe("DashboardViewer", () => {
     expect(search.getAttribute("aria-hidden")).not.toBe("true");
     expect(search.placeholder).toBe("搜尋任務…");
     expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
+    expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
     expect(toolbar.textContent).toContain("新增任務");
+  });
+
+  it("opens the global scheduling dialog from the tasks toolbar icon", () => {
+    mockPathname = "/tasks";
+    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.querySelector('[data-testid="global-scheduling-dialog"]')).toBeNull();
+    const button = container.querySelector(
+      '[data-testid="open-global-scheduling"]',
+    ) as HTMLButtonElement;
+    expect(button.getAttribute("aria-label")).toBe("全局調度設定");
+    act(() => {
+      button.click();
+    });
+    expect(container.querySelector('[data-testid="global-scheduling-dialog"]')).not.toBeNull();
+  });
+
+  it("opens the scheduling dialog from ?scheduling=open then clears the query", () => {
+    mockPathname = "/tasks";
+    mockSearch = "?scheduling=open";
+    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.querySelector('[data-testid="global-scheduling-dialog"]')).not.toBeNull();
+    expect(mockSetSearchParams).toHaveBeenCalled();
+    const next = mockSetSearchParams.mock.calls[0]?.[0] as URLSearchParams;
+    expect(next.get("scheduling")).toBeNull();
+    expect(mockSetSearchParams.mock.calls[0]?.[1]).toEqual({ replace: true });
+  });
+
+  it("does not open scheduling from query on the worksets catalog", () => {
+    mockPathname = "/worksets";
+    mockSearch = "?scheduling=open";
+    taskCatalogState.tasks = [];
+    taskCatalogState.worksets = [
+      { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
+    expect(container.querySelector('[data-testid="global-scheduling-dialog"]')).toBeNull();
+    expect(mockSetSearchParams).not.toHaveBeenCalled();
   });
 
   it("filters tasks by name from the toolbar search", () => {
@@ -474,7 +537,7 @@ describe("DashboardViewer", () => {
     });
 
     expect(promptSpy).not.toHaveBeenCalled();
-    expect(mockCreateWorkset).toHaveBeenCalledWith("Alpha", { emoji: "", description: "" });
+    expect(mockCreateWorkset).toHaveBeenCalledWith("Alpha", { description: "" });
     promptSpy.mockRestore();
   });
 
@@ -500,6 +563,7 @@ describe("DashboardViewer", () => {
     expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
+    expect(container.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
     expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
     expect(container.textContent).not.toContain("顯示系統工作集");
     expect(container.textContent).not.toContain("隱藏系統工作集");

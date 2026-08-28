@@ -2,7 +2,7 @@ import { Archive, ArchiveRestore, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui";
 import { ItemsPageChrome } from "../ItemsPageChrome";
-import { itemsPageChromePrimaryActionClass } from "../itemsPageChromeClasses";
+import { itemsPageChromePrimaryActionClass } from "../../../styles/itemsPageChromeClasses";
 
 interface ItemFormToolbarProps {
   isEditMode: boolean;

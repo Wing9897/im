@@ -14,6 +14,7 @@ import { focusBoardEvent } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
 import { CalendarBoardEmbed } from "../embeds/CalendarBoardEmbed";
+import { useEventListMetaLookups } from "../../domain/timeline/useEventListMetaLookups";
 
 type CalendarMode = "day" | "month";
 
@@ -59,6 +60,7 @@ function CalendarBoardWidgetContent({
     () => filteredEvents.filter((event) => Boolean(event.startTime)),
     [filteredEvents],
   );
+  const metaLookups = useEventListMetaLookups();
 
   return (
     <div className="board-widget-body board-widget-calendar" data-testid="board-calendar-widget">
@@ -82,6 +84,7 @@ function CalendarBoardWidgetContent({
           events={timedEvents}
           mode={mode}
           onSelectEvent={handleSelectEvent}
+          metaLookups={metaLookups}
         />
       </BoardWidgetShell>
     </div>

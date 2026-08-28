@@ -100,6 +100,37 @@
   min-height: 4px;
 }
 
+.board-calendar-month__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 2px;
+  min-height: 10px;
+}
+
+.board-calendar-month__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--info) 22%, transparent);
+  overflow: hidden;
+}
+
+.board-calendar-month__chip-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  font-size: 8px;
+  line-height: 1;
+  margin: 0 !important;
+}
+
 .board-calendar-month__dot {
   width: 4px;
   height: 4px;

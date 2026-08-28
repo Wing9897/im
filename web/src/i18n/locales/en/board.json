@@ -63,23 +63,19 @@
     "empty": "No analysis stats yet",
     "analyzed": "Analyzed",
     "unanalyzed": "Pending",
-    "queued": "Queued",
-    "rowMeta": "Done {analyzed} · Pending {unanalyzed}",
-    "rowQueued": " · Queue {count}"
+    "queued": "Queued"
   },
   "logs": {
     "empty": "No logs yet"
   },
   "actions": {
-    "empty": "No notification actions yet",
-    "neverTriggered": "Never triggered"
+    "empty": "No notification actions yet"
   },
   "tasks": {
     "empty": "No tasks yet"
   },
   "leaderboard": {
     "empty": "No ranked topics yet",
-    "score": "Score {score}",
     "messages_one": " · {count} msg",
     "messages_other": " · {count} msgs"
   },
@@ -197,8 +193,6 @@
     "total": "Profiles",
     "complete": "Complete",
     "incomplete": "Incomplete",
-    "default": "Usable profile",
-    "noDefault": "None",
     "alertNone": "No LLM profiles configured",
     "alertNoDefault": "No complete profile available",
     "alertIncomplete": "Some profiles are incomplete"

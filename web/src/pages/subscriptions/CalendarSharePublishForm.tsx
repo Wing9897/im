@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, type MutableRefObject } from
 import { useTranslation } from "react-i18next";
 import { AlertBanner, Button, SelectField, SettingsRow, TextField } from "../../components/ui";
 import { formHelpClass, sectionTitleClass, cardBodyClass } from "../../components/ui/pageTypography";
-import { TaskLogoMark } from "../../components/task/TaskLogoMark";
 import { useToast } from "../../context/ToastContext";
 import {
   fetchCalendarSharePublish,
@@ -20,18 +19,17 @@ import {
   subscribePageStatus,
 } from "../../domain/calendarShare/subscribedCalendars";
 import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { resolveWorksetCoverSrc } from "../../domain/worksets/worksetCover";
 import { coercePublishSlug, defaultPublishSlug, isValidPublishSlug } from "../../domain/calendarShare/publishSlug";
 import { toErrorMessage } from "../../utils/errors";
 
 type GrantDraft = CalendarShareGrant & { key: string };
 
-export { defaultPublishSlug } from "../../domain/calendarShare/publishSlug";
-
 type Props = {
   worksetId: string;
   worksetTitle: string;
   isSystem: boolean;
-  worksetEmoji?: string;
+  worksetCover?: string;
   worksetDescription?: string;
   onSaved?: (result: CalendarSharePublishResult) => void;
   /** Parent footer calls this to save settings and push a remote snapshot. */
@@ -45,7 +43,7 @@ export function CalendarSharePublishForm({
   worksetId,
   worksetTitle,
   isSystem,
-  worksetEmoji = "",
+  worksetCover = "",
   worksetDescription = "",
   onSaved,
   submitRef,
@@ -127,8 +125,8 @@ export function CalendarSharePublishForm({
         { ...payload, slug, syncNow: true },
         {
           worksetName: worksetTitle,
-          emoji: worksetEmoji,
           description: worksetDescription,
+          cover: worksetCover,
           worksetMissing: false,
         },
       );
@@ -147,7 +145,7 @@ export function CalendarSharePublishForm({
     } finally {
       setBusy(false);
     }
-  }, [locked, onSaved, payload, showToast, t, worksetDescription, worksetEmoji, worksetId, worksetTitle]);
+  }, [locked, onSaved, payload, showToast, t, worksetCover, worksetDescription, worksetId, worksetTitle]);
 
   useEffect(() => {
     if (!submitRef) return;
@@ -160,6 +158,7 @@ export function CalendarSharePublishForm({
   const lastSyncLabel = state?.lastSyncAt
     ? t("published.form.lastSync", { time: new Date(state.lastSyncAt).toLocaleString() })
     : t("published.form.neverSynced");
+  const coverSrc = resolveWorksetCoverSrc(worksetCover);
 
   if (!ready || status === "loading") {
     const loading = (
@@ -173,8 +172,19 @@ export function CalendarSharePublishForm({
   return (
     <div className="flex flex-col gap-lg">
         <p className={`mb-0 ${formHelpClass}`}>{t("published.form.help")}</p>
-        <div className="flex items-start gap-md" data-testid="calendar-share-catalog-preview">
-          <TaskLogoMark emoji={worksetEmoji} sizePx={48} testId="calendar-share-catalog-emoji" />
+        <div className="flex flex-col gap-sm" data-testid="calendar-share-catalog-preview">
+          <div
+            className="relative aspect-[2.4/1] w-full overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--surface-border)_40%,transparent)]"
+            data-testid="calendar-share-catalog-cover"
+          >
+            <img
+              src={coverSrc}
+              alt=""
+              className="h-full w-full border-0 object-cover"
+              data-testid="calendar-share-catalog-cover-preview"
+              draggable={false}
+            />
+          </div>
           <div className="min-w-0">
             <p className={`mb-0 ${formHelpClass}`}>{t("published.form.catalogHelp")}</p>
             {worksetDescription.trim() ? (
@@ -187,10 +197,6 @@ export function CalendarSharePublishForm({
           <AlertBanner variant="warning" role="alert" data-testid="calendar-share-general-warning">
             {t("published.form.generalWarning")}
           </AlertBanner>
-        ) : null}
-
-        {status === "loggedOut" ? (
-          <p className={`mb-0 ${formHelpClass}`}>{t("published.needLogin")}</p>
         ) : null}
 
         <div className={locked ? SUBSCRIBE_UNAVAILABLE_CLASS : undefined}>

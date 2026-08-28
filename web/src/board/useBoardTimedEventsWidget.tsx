@@ -25,6 +25,15 @@ import {
 } from "./boardSourceFilterOptions";
 import { useBoardSourceFilter } from "./useBoardSourceFilter";
 import { useBoardWidgetPoll } from "./useBoardWidgetPoll";
+import {
+  pruneSubscribedCalendarSelection,
+  resolveSubscribeAvailability,
+} from "../domain/calendarShare/subscribedCalendars";
+import {
+  subscribeFilterCalendarsFromCatalog,
+  useCalendarShareCatalog,
+} from "../domain/calendarShare/useCalendarShareCatalog";
+import { usePersistedSubscribeFilter } from "../domain/calendarShare/usePersistedSubscribeFilter";
 
 export function useBoardTimedEventsWidget(options: {
   widgetId: string;
@@ -46,6 +55,25 @@ export function useBoardTimedEventsWidget(options: {
   const taskNameById = useTaskNameById();
   const worksetNameById = useWorksetNameById();
   const generalWorksetLabel = useGeneralWorksetLabel();
+  const catalog = useCalendarShareCatalog();
+  const subscribeCalendars = useMemo(
+    () => subscribeFilterCalendarsFromCatalog(catalog.items),
+    [catalog.items],
+  );
+  const subscribeCatalogKeys = useMemo(
+    () => subscribeCalendars.map((row) => row.key),
+    [subscribeCalendars],
+  );
+  const [selectedSubscribeKeys, setSelectedSubscribeKeys] = usePersistedSubscribeFilter();
+  const subscribeAvailability = resolveSubscribeAvailability({
+    connected: Boolean(catalog.session),
+    catalogUnreachable: catalog.unreachable,
+    eventsError: catalog.error,
+  });
+
+  useEffect(() => {
+    setSelectedSubscribeKeys((prev) => pruneSubscribedCalendarSelection(prev, subscribeCatalogKeys));
+  }, [subscribeCatalogKeys, setSelectedSubscribeKeys]);
 
   useEffect(
     () =>
@@ -94,6 +122,10 @@ export function useBoardTimedEventsWidget(options: {
           onChange={setSelection}
           ariaLabelPrefix={ariaLabelPrefix}
           variant="board"
+          subscribeCalendars={subscribeCalendars}
+          selectedSubscribeKeys={selectedSubscribeKeys}
+          onChangeSubscribeKeys={setSelectedSubscribeKeys}
+          subscribeAvailability={subscribeAvailability}
         />
         {headerExtra}
       </>
@@ -105,6 +137,10 @@ export function useBoardTimedEventsWidget(options: {
       headerExtra,
       selection,
       setSelection,
+      subscribeAvailability,
+      subscribeCalendars,
+      selectedSubscribeKeys,
+      setSelectedSubscribeKeys,
       tasks,
       worksets,
     ],

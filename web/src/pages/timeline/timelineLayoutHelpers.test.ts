@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
-import { isWeekendDay, truncateMonthEventTitle } from "./calendar/timelineCalendarClasses";
+import { isWeekendDay, truncateMonthEventTitle } from "./timelineCalendarClasses";
 import {
   GANTT_COLUMN_WIDTH_PX,
   ganttColumnGap,

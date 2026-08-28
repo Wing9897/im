@@ -83,10 +83,11 @@
     "keyEventsMap": "Intel events · Map",
     "keyEventsList": "Intel events · List",
     "keyEventsCard": "Intel events · Cards",
-    "notifyVoice": "Notifications · Local notifications",
-    "notifyHistory": "Notifications · Trigger history",
+    "notifyVoice": "Notify & actions · Local notify",
+    "notifyHistory": "Notify & actions · Trigger history",
     "subscriptionsPublished": "Subscriptions · My published",
     "subscriptionsSearch": "Subscriptions · Find calendars",
+    "subscriptionsAccount": "Subscriptions · Calendar share",
     "sourcesRss": "Sources · RSS",
     "sourcesTelegram": "Sources · Telegram",
     "sourcesDiscord": "Sources · Discord",
@@ -102,6 +103,7 @@
     "settingsIntegrations": "External interfaces",
     "settingsDeeplink": "Calendar link",
     "settingsMcp": "External interfaces · MCP",
+    "settingsSystem": "External interfaces · System APIs",
     "newTask": "New task",
     "newAction": "New notification",
     "newActionHint": "Open notifications",
@@ -216,7 +218,6 @@
   "dialog": {
     "cancel": "Cancel",
     "close": "Close",
-    "confirm": "Confirm",
     "deleteConfirmTitle": "Delete task?",
     "deleteEntityTask": "task",
     "deleteConfirmPrefix": "Delete {entity}",
@@ -388,7 +389,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 4 / SemVer 1.3.0 (SCHEMA_FLOOR 1; stamp 1 auto-upgrades via SCHEMA_MIGRATIONS). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 5 / SemVer 1.4.0 (SCHEMA_FLOOR 5; SCHEMA_MIGRATIONS is empty. Stamp 1–4: back up, then reset). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

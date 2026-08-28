@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiWorkspaceNavItems, settingsWorkspaceNavItems } from "./workspaceNav";
+import { aiWorkspaceNavItems, settingsWorkspaceNavItems, subscriptionsWorkspaceNavItems } from "./workspaceNav";
 
 describe("settingsWorkspaceNavItems", () => {
   it("keeps a single chrome bar: External interfaces is one category, not four nav rows", () => {
@@ -29,12 +29,28 @@ describe("settingsWorkspaceNavItems", () => {
 });
 
 describe("aiWorkspaceNavItems", () => {
-  it("keeps provider / voice / analysis-strategy / staff", () => {
+  it("keeps provider / voice / staff", () => {
     expect(aiWorkspaceNavItems.map((item) => item.to)).toEqual([
       "/ai/provider",
       "/ai/voice",
-      "/ai/analysis-strategy",
       "/ai/staff",
+    ]);
+  });
+});
+
+describe("subscriptionsWorkspaceNavItems", () => {
+  it("keeps mine / published / account / search with search last", () => {
+    expect(subscriptionsWorkspaceNavItems.map((item) => item.to)).toEqual([
+      "/subscriptions/mine",
+      "/subscriptions/published",
+      "/subscriptions/account",
+      "/subscriptions/search",
+    ]);
+    expect(subscriptionsWorkspaceNavItems.map((item) => item.labelKey)).toEqual([
+      "tabs.mine",
+      "tabs.published",
+      "tabs.account",
+      "tabs.search",
     ]);
   });
 });

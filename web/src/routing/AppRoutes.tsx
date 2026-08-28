@@ -69,6 +69,10 @@ const SubscriptionsPublishedPage = lazyNamed(
   () => import("../pages/subscriptions/SubscriptionsPublishedPage"),
   "SubscriptionsPublishedPage",
 );
+const SubscriptionsAccountPage = lazyNamed(
+  () => import("../pages/subscriptions/SubscriptionsAccountPage"),
+  "SubscriptionsAccountPage",
+);
 const ItemsPage = lazyNamed(() => import("../pages/items/ItemsPage"), "ItemsPage");
 const ItemFormPage = lazyNamed(() => import("../pages/items/form/ItemFormPage"), "ItemFormPage");
 const ItemsFinancePage = lazyNamed(
@@ -94,10 +98,6 @@ const SettingsAiStaffPage = lazyNamed(
   "SettingsAiStaffPage",
 );
 const SettingsVoicePage = lazyNamed(() => import("../pages/ai/SettingsVoicePage"), "SettingsVoicePage");
-const SettingsAnalysisStrategyPage = lazyNamed(
-  () => import("../pages/ai/SettingsAnalysisStrategyPage"),
-  "SettingsAnalysisStrategyPage",
-);
 const SettingsShellPage = lazyNamed(() => import("../pages/settings/SettingsShared"), "SettingsShellPage");
 const SettingsGeneralPage = lazyNamed(() => import("../pages/settings/SettingsGeneralPage"), "SettingsGeneralPage");
 const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThemePage"), "SettingsThemePage");
@@ -147,6 +147,7 @@ export function AppRoutes() {
           <Route index element={<Navigate to="/subscriptions/mine" replace />} />
           <Route path="mine" element={<LazyPage Page={SubscriptionsMinePage} />} />
           <Route path="published" element={<LazyPage Page={SubscriptionsPublishedPage} />} />
+          <Route path="account" element={<LazyPage Page={SubscriptionsAccountPage} />} />
           <Route path="search" element={<LazyPage Page={SubscriptionsSearchPage} />} />
         </Route>
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
@@ -168,7 +169,7 @@ export function AppRoutes() {
             <Route index element={<Navigate to="/ai/provider" replace />} />
             <Route path="provider" element={<LazyPage Page={SettingsAiProviderPage} />} />
             <Route path="voice" element={<LazyPage Page={SettingsVoicePage} />} />
-            <Route path="analysis-strategy" element={<LazyPage Page={SettingsAnalysisStrategyPage} />} />
+            <Route path="analysis-strategy" element={<Navigate to="/tasks?scheduling=open" replace />} />
             <Route path="staff" element={<LazyPage Page={SettingsAiStaffPage} />} />
           </Route>
           <Route path="settings" element={<LazyPage Page={SettingsShellPage} />}>

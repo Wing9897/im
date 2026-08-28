@@ -13,7 +13,6 @@ const PRESET_SCHEDULE_EVENTS = "schedule-events";
 interface PipelineGuideChecklistProps {
   state: PipelineReadinessState;
   assistantSlotReady?: boolean;
-  compact?: boolean;
 }
 
 type PipelineGuideStep = 1 | 2 | 3 | 4;
@@ -77,7 +76,6 @@ function StepMark({
 export function PipelineGuideChecklist({
   state,
   assistantSlotReady = false,
-  compact = false,
 }: PipelineGuideChecklistProps) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
@@ -198,9 +196,8 @@ export function PipelineGuideChecklist({
   return (
     <div data-testid="pipeline-guide-checklist">
       <EmptyState
-        compact={compact}
         className="im-enter-rise"
-        illustration={compact ? undefined : <EmptyStateGlyph icon={ListChecks} />}
+        illustration={<EmptyStateGlyph icon={ListChecks} />}
         title={t("pipelineGuide.title")}
         description={t("pipelineGuide.description")}
         actions={steps}

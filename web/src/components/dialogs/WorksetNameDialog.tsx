@@ -1,22 +1,24 @@
 /**
  * Create / rename workset dialog (Electron-safe; no window.prompt).
- * Create and edit both accept emoji + description; system rename locks the name.
+ * Create accepts optional cover + description; system rename locks the name.
  */
 
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { EmojiPickerField } from "../items/emoji/EmojiPickerField";
 import { ModalDialog } from "../ModalDialog";
 import { Button, TextArea, TextField } from "../ui";
 import { WORKSET_DESCRIPTION_MAX } from "../../domain/worksets/worksetFields";
+import { compressWorksetCoverToDataUrl } from "../../domain/worksets/worksetCover";
+import { useToast } from "../../context/ToastContext";
+import { WorksetCardCover } from "../WorksetCardCover";
 
 export type WorksetNameDialogMode = "create" | "rename";
 
 export type WorksetEditorValues = {
   name: string;
-  emoji: string;
   description: string;
+  cover: string;
 };
 
 interface WorksetNameDialogProps {
@@ -24,7 +26,6 @@ interface WorksetNameDialogProps {
   mode: WorksetNameDialogMode;
   /** Prefill for rename; ignored when closed. */
   initialName?: string;
-  initialEmoji?: string;
   initialDescription?: string;
   /** Lock the name field (builtin 「一般」). */
   nameDisabled?: boolean;
@@ -38,7 +39,6 @@ export function WorksetNameDialog({
   open,
   mode,
   initialName = "",
-  initialEmoji = "",
   initialDescription = "",
   nameDisabled = false,
   busy = false,
@@ -46,21 +46,21 @@ export function WorksetNameDialog({
   onSubmit,
 }: WorksetNameDialogProps) {
   const { t } = useTranslation("common");
+  const { showToast } = useToast();
   const fieldId = useId();
-  const emojiId = useId();
   const descriptionId = useId();
   const [name, setName] = useState(initialName);
-  const [emoji, setEmoji] = useState(initialEmoji);
   const [description, setDescription] = useState(initialDescription);
+  const [cover, setCover] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setName(mode === "rename" ? initialName : "");
-    setEmoji(mode === "rename" ? initialEmoji : "");
     setDescription(mode === "rename" ? initialDescription : "");
+    setCover("");
     setSubmitting(false);
-  }, [open, mode, initialName, initialEmoji, initialDescription]);
+  }, [open, mode, initialName, initialDescription]);
 
   if (!open) return null;
 
@@ -68,13 +68,12 @@ export function WorksetNameDialog({
   const cleaned = name.trim();
   const trimmedDescription = description.trim();
   const nameUnchanged = mode === "rename" && cleaned === initialName.trim();
-  const emojiUnchanged = mode === "rename" && emoji.trim() === initialEmoji.trim();
   const descriptionUnchanged =
     mode === "rename" && trimmedDescription === initialDescription.trim();
   const canSubmit =
     cleaned.length > 0 &&
     trimmedDescription.length <= WORKSET_DESCRIPTION_MAX &&
-    (mode === "create" || !nameUnchanged || !emojiUnchanged || !descriptionUnchanged);
+    (mode === "create" || !nameUnchanged || !descriptionUnchanged);
 
   const handleSubmit = async () => {
     if (!canSubmit || disabled) return;
@@ -82,8 +81,8 @@ export function WorksetNameDialog({
     try {
       await onSubmit({
         name: cleaned,
-        emoji: emoji.trim(),
         description: trimmedDescription,
+        cover: cover.trim(),
       });
     } finally {
       setSubmitting(false);
@@ -140,16 +139,26 @@ export function WorksetNameDialog({
           }}
           data-testid="workset-name-input"
         />
-        <label className="text-caption text-text-secondary" htmlFor={emojiId}>
-          {t("workset:emojiLabel")}
-        </label>
-        <EmojiPickerField
-          id={emojiId}
-          value={emoji}
-          onChange={setEmoji}
-          disabled={disabled}
-          dialogTitle={t("workset:changeEmojiAria", { name: cleaned || t("workset:label") })}
-        />
+        {mode === "create" ? (
+          <WorksetCardCover
+            cover={cover}
+            name={cleaned || t("workset:label")}
+            disabled={disabled}
+            onPickFile={async (file) => {
+              try {
+                const dataUrl = await compressWorksetCoverToDataUrl(file);
+                setCover(dataUrl);
+              } catch (err) {
+                const code = err instanceof Error ? err.message : "";
+                showToast(
+                  code === "too_large" ? t("account:avatarTooLarge") : t("account:avatarReadFailed"),
+                  "error",
+                );
+              }
+            }}
+            onClear={() => setCover("")}
+          />
+        ) : null}
         <label className="text-caption text-text-secondary" htmlFor={descriptionId}>
           {t("workset:descriptionLabel")}
         </label>

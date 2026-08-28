@@ -1,6 +1,6 @@
 import { startTransition } from "react";
 import type { TFunction } from "i18next";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Gauge } from "lucide-react";
 
 import {
   Button,
@@ -60,6 +60,7 @@ interface DashboardViewerToolbarProps {
   onToggleSystemTasks: () => void;
   onCreateTask: () => void;
   onCreateWorkset: () => void;
+  onOpenScheduling?: () => void;
   hideSearch?: boolean;
   hideCreateWorkset?: boolean;
 }
@@ -83,6 +84,7 @@ export function DashboardViewerToolbar({
   onToggleSystemTasks,
   onCreateTask,
   onCreateWorkset,
+  onOpenScheduling,
   hideSearch = false,
   hideCreateWorkset = false,
 }: DashboardViewerToolbarProps) {
@@ -136,6 +138,16 @@ export function DashboardViewerToolbar({
         )}
         {isTaskView ? (
           <>
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={onOpenScheduling}
+              aria-label={t("tasks:globalSchedulingSettings")}
+              title={t("tasks:globalSchedulingSettings")}
+              data-testid="open-global-scheduling"
+            >
+              <Gauge size={16} aria-hidden="true" />
+            </Button>
             <VisibilityEyeButton
               visible={showSystemTasks}
               showLabel={showSystemTasksLabel}

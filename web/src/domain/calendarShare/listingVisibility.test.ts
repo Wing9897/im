@@ -8,11 +8,13 @@ import {
 } from "./listingVisibility";
 
 describe("listingVisibility", () => {
-  it("maps legacy listing JSON to canonical values", () => {
-    expect(canonicalizeListingVisibility("off")).toBe("private_group");
-    expect(canonicalizeListingVisibility("details")).toBe("public");
-    expect(canonicalizeListingVisibility("busy")).toBe("public_busy");
+  it("accepts canonical listing values and defaults unknown", () => {
     expect(canonicalizeListingVisibility("public")).toBe("public");
+    expect(canonicalizeListingVisibility("public_busy")).toBe("public_busy");
+    expect(canonicalizeListingVisibility("private_group")).toBe("private_group");
+    expect(canonicalizeListingVisibility("off")).toBe("private_group");
+    expect(canonicalizeListingVisibility("details")).toBe("private_group");
+    expect(canonicalizeListingVisibility("busy")).toBe("private_group");
     expect(canonicalizeListingVisibility("mystery")).toBe("private_group");
   });
 

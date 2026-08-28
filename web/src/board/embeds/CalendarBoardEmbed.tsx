@@ -2,22 +2,28 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
+import { EventListRow } from "../../components/timeline/EventListRow";
 import {
   buildCalendarDays,
   eventStartsOnDay,
-  formatTimeLabel,
   isToday,
   startOfDay,
   startOfMonth,
 } from "../../domain/timeline/dateUtils";
+import {
+  resolveEventCardDisplay,
+  type EventListCardMetaLookups,
+} from "../../domain/timeline/eventListCardMeta";
 import { holidayNamesForDay, useMonthHolidays } from "../../hooks/useMonthHolidays";
 import { dateKey } from "../../utils/dateFormat";
+import { EventListTitleMark } from "../../components/timeline/EventListTitleMark";
 
 interface CalendarBoardEmbedProps {
   /** Timed board events (analysis / user / recurring / item_remind). */
   events: AnalysisEvent[];
   mode: "day" | "month";
   onSelectEvent?: (event: AnalysisEvent) => void;
+  metaLookups?: EventListCardMetaLookups;
 }
 
 /**
@@ -29,16 +35,16 @@ export function CalendarBoardEmbed({
   events: rawEvents,
   mode,
   onSelectEvent,
+  metaLookups = {},
 }: CalendarBoardEmbedProps) {
   const { t } = useTranslation();
   const weekdayLabels = t("board:calendar.weekdays", { returnObjects: true }) as string[];
   const now = useMemo(() => new Date(), []);
-  // eventStartsOnDay expects a midnight day boundary; passing `now` would
-  // exclude earlier-today events once the clock moves past their startTime.
   const todayStart = useMemo(() => startOfDay(now), [now]);
   const monthCursor = useMemo(() => startOfMonth(now), [now]);
   const monthDays = useMemo(() => buildCalendarDays(monthCursor), [monthCursor]);
   const { holidaysByDate } = useMonthHolidays(mode === "month", monthDays);
+  const eventAvatarAria = t("timeline:eventList.eventAvatarAria");
 
   const events = useMemo(
     () =>
@@ -106,12 +112,28 @@ export function CalendarBoardEmbed({
                   {hasHoliday ? <BoardMonthHolidayWatermark names={holidayNames} /> : null}
                   {dayEvents.length > 0 ? (
                     <span
-                      className="board-calendar-month__dots"
+                      className="board-calendar-month__chips"
                       aria-label={t("board:calendar.dayCountAria", { count: dayEvents.length })}
                     >
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <span key={event.id} className="board-calendar-month__dot" />
-                      ))}
+                      {dayEvents.slice(0, 3).map((event) => {
+                        const leading = resolveEventCardDisplay(event, day).leading;
+                        return (
+                          <span
+                            key={event.id}
+                            className="board-calendar-month__chip"
+                            title={event.title}
+                            data-testid={`board-calendar-month-chip-${event.id}`}
+                          >
+                            <EventListTitleMark
+                              event={event}
+                              leading={leading}
+                              metaLookups={metaLookups}
+                              eventAvatarAria={eventAvatarAria}
+                              markerClassName="board-calendar-month__chip-mark"
+                            />
+                          </span>
+                        );
+                      })}
                     </span>
                   ) : null}
                 </button>
@@ -129,19 +151,17 @@ export function CalendarBoardEmbed({
           ) : (
             <div className="board-calendar-day__list" data-testid="board-calendar-day-list">
               {todayEvents.map((event) => (
-                <button
+                <EventListRow
                   key={event.id}
-                  type="button"
-                  className="board-calendar-day__event"
-                  onClick={() => handleDayClick(now, [event])}
-                >
-                  {!event.isAllDay ? (
-                    <span className="board-calendar-day__time">
-                      {formatTimeLabel(new Date(event.startTime))}
-                    </span>
-                  ) : null}
-                  <span className="board-calendar-day__title">{event.title}</span>
-                </button>
+                  event={event}
+                  metaLookups={metaLookups}
+                  focusedDay={todayStart}
+                  testId={`board-calendar-day-row-${event.id}`}
+                  onSelect={() => {
+                    const raw = eventById.get(event.id);
+                    if (raw && onSelectEvent) onSelectEvent(raw);
+                  }}
+                />
               ))}
             </div>
           )}

@@ -11,6 +11,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/subscriptions": () => import("../pages/subscriptions/SubscriptionsShell"),
   "/subscriptions/mine": () => import("../pages/subscriptions/SubscriptionsMinePage"),
   "/subscriptions/published": () => import("../pages/subscriptions/SubscriptionsPublishedPage"),
+  "/subscriptions/account": () => import("../pages/subscriptions/SubscriptionsAccountPage"),
   "/subscriptions/search": () => import("../pages/subscriptions/SubscriptionsSearchPage"),
   "/items": () => import("../pages/items/ItemsPage"),
   "/notify": () => import("../pages/notify/NotifyWorkspacePage"),
@@ -20,8 +21,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/ai": () => import("../pages/ai/AiWorkspacePage"),
   "/ai/provider": () => import("../pages/ai/SettingsAiProviderPage"),
   "/ai/voice": () => import("../pages/ai/SettingsVoicePage"),
-  "/ai/analysis-strategy": () =>
-    import("../pages/ai/SettingsAnalysisStrategyPage"),
+  "/ai/analysis-strategy": () => import("../pages/dashboard/DashboardViewer"),
   "/ai/staff": () => import("../pages/ai/SettingsAiStaffPage"),
   "/settings": () => import("../pages/settings/SettingsShared"),
   "/settings/integrations": () => import("../pages/settings/SettingsIntegrationsPage"),

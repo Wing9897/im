@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button, TextField } from "./ui";
 import { TriStateCheckbox } from "./TriStateCheckbox";
+import { WorksetCoverThumb } from "./WorksetCoverThumb";
 import type { FilterTreeRow } from "../domain/tasks/sourceFilterSelection";
 import {
   resolveGroupCheckState,
@@ -21,8 +22,6 @@ import {
 } from "../domain/tasks/sourceFilterDialogDraft";
 import { resolveSourceFilterTaskLabel } from "../domain/timeline/sourceFilterOptions";
 import { formatAnalysisMode } from "../utils/analysis";
-
-export { matchesSourceFilterQuery } from "../domain/tasks/sourceFilterDialogDraft";
 
 type SourceFilterTreeProps = {
   rows: FilterTreeRow[];
@@ -295,6 +294,11 @@ export function SourceFilterTree({
                     state={groupState}
                     testId={`board-workset-filter-${row.id}`}
                     onChange={() => onToggleWorkset(row.id)}
+                  />
+                  <WorksetCoverThumb
+                    cover={row.cover}
+                    name={row.name}
+                    testId={`source-filter-workset-cover-${row.id}`}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
                     {row.name}

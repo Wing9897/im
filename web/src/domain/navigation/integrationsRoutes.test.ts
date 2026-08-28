@@ -24,11 +24,13 @@ describe("integrationsRoutes", () => {
     expect(src).not.toContain("/settings/mcp");
   });
 
-  it("accepts only the four integration tabs", () => {
+  it("accepts only the five integration tabs", () => {
     expect(isIntegrationTabKey("webhook")).toBe(true);
     expect(isIntegrationTabKey("a2a")).toBe(true);
     expect(isIntegrationTabKey("deeplink")).toBe(true);
     expect(isIntegrationTabKey("mcp")).toBe(true);
+    expect(isIntegrationTabKey("system")).toBe(true);
+    expect(settingsIntegrationsPath("system")).toBe("/settings/integrations?tab=system");
     expect(isIntegrationTabKey("api")).toBe(false);
     expect(isIntegrationTabKey(null)).toBe(false);
   });

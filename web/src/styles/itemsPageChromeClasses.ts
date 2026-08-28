@@ -7,7 +7,7 @@ import {
   pageChromeTitleClass,
   pageChromeTitleClusterClass,
   pageShellGridClass,
-} from "../../components/ui/pageChrome";
+} from "../components/ui/pageChrome";
 
 /**
  * Items page chrome — shared sticky tokens + ``pageShellGridClass`` live in

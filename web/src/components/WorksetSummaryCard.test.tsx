@@ -2,8 +2,8 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetTaskCatalogState, taskCatalogState } from "../test/context-mocks";
+import { DEFAULT_WORKSET_COVER_URL } from "../domain/worksets/worksetCover";
 import { WorksetSummaryCard } from "./WorksetSummaryCard";
-import "./items/emoji/emojiPickerReactMock";
 
 const updateWorkset = vi.fn(() => Promise.resolve({}));
 const onOpen = vi.fn();
@@ -21,9 +21,12 @@ vi.mock("../context/ToastContext", async () =>
   (await import("../test/context-mocks")).toastContextModuleMock());
 
 vi.mock("react-i18next", () => ({
-  useTranslation: (ns?: string) => ({
+  useTranslation: (ns?: string | string[]) => ({
     t: (key: string, opts?: Record<string, unknown>) => {
-      if (ns === "workset" || ns === "common") {
+      const namespaces = Array.isArray(ns) ? ns : [ns];
+      if (
+        namespaces.some((value) => value === "workset" || value === "common" || value === "account")
+      ) {
         if (key === "notifyToggle" || key === "workset:notifyToggle") return "Notify";
         if (key === "externalToggle" || key === "workset:externalToggle") return "External API";
         if (key === "notifyToggleAria" || key === "workset:notifyToggleAria") {
@@ -32,18 +35,31 @@ vi.mock("react-i18next", () => ({
         if (key === "externalToggleAria" || key === "workset:externalToggleAria") {
           return `External ${opts?.name ?? ""}`;
         }
-        if (key === "workset:openDetailAria") return `Open ${opts?.name ?? ""}`;
-        if (key === "workset:systemBadge") return "Built-in";
-        if (key === "workset:label") return "Workset";
-        if (key === "workset:systemDescription") return "system";
-        if (key === "workset:assetSummary") return `${opts?.tasks} tasks`;
-        if (key === "workset:rename") return "rename";
-        if (key === "workset:renameAria") return `Rename ${opts?.name ?? ""}`;
-        if (key === "workset:delete") return "delete";
-        if (key === "workset:deleteAria") return `Delete ${opts?.name ?? ""}`;
-        if (key === "workset:nameAria") return "Workset name";
-        if (key === "workset:changeEmojiAria") return `Change emoji ${opts?.name ?? ""}`;
-        if (key === "changeEmojiAria") return `Change emoji ${opts?.name ?? ""}`;
+        if (key === "workset:openDetailAria" || key === "openDetailAria") {
+          return `Open ${opts?.name ?? ""}`;
+        }
+        if (key === "workset:systemBadge" || key === "systemBadge") return "Built-in";
+        if (key === "workset:label" || key === "label") return "Workset";
+        if (key === "workset:systemDescription" || key === "systemDescription") return "system";
+        if (key === "workset:assetSummary" || key === "assetSummary") {
+          return `${opts?.tasks} tasks`;
+        }
+        if (key === "workset:rename" || key === "rename") return "rename";
+        if (key === "workset:renameAria" || key === "renameAria") {
+          return `Rename ${opts?.name ?? ""}`;
+        }
+        if (key === "workset:delete" || key === "delete") return "delete";
+        if (key === "workset:deleteAria" || key === "deleteAria") {
+          return `Delete ${opts?.name ?? ""}`;
+        }
+        if (key === "workset:nameAria" || key === "nameAria") return "Workset name";
+        if (key === "workset:changeCoverAria" || key === "changeCoverAria") {
+          return `Change cover ${opts?.name ?? ""}`;
+        }
+        if (key === "workset:uploadCover" || key === "uploadCover") return "Upload cover";
+        if (key === "workset:resetCover" || key === "resetCover") return "Remove cover";
+        if (key === "account:avatarTooLarge") return "too large";
+        if (key === "account:avatarReadFailed") return "read failed";
       }
       return key;
     },
@@ -67,6 +83,7 @@ describe("WorksetSummaryCard", () => {
         updatedAt: "",
         emoji: "🎯",
         description: "Ops notes that should appear truncated on the card",
+        cover: "",
       },
     ];
     updateWorkset.mockClear();
@@ -103,13 +120,16 @@ describe("WorksetSummaryCard", () => {
     });
   }
 
-  it("puts a 48px emoji avatar beside the workset name", async () => {
+  it("shows a magazine cover strip instead of the emoji avatar", async () => {
     await renderCard({ onRename: undefined, onDelete: undefined });
-    const avatar = container.querySelector('[data-testid="item-emoji-avatar"]') as HTMLElement | null;
-    expect(avatar).toBeTruthy();
-    expect(avatar?.style.width).toBe("48px");
-    expect(avatar?.textContent).toContain("🎯");
-    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-card-cover"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="item-emoji-avatar"]')).toBeNull();
+    const label = container.querySelector('[data-testid="workset-card-cover-upload-label"]');
+    expect(label?.textContent ?? "").toContain("Upload cover");
+    const preview = container.querySelector(
+      '[data-testid="workset-card-cover-preview"]',
+    ) as HTMLImageElement | null;
+    expect(preview?.getAttribute("src")).toBe(DEFAULT_WORKSET_COVER_URL);
   });
 
   it("shows a truncated custom description", async () => {

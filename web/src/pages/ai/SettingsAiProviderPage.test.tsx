@@ -30,6 +30,16 @@ vi.mock("../../context/CollectorStatusContext", () => ({
   useCollectorStatus: () => ({ requestAiStatusRefresh: vi.fn() }),
 }));
 
+vi.mock("../../components/settings/useSettingsPageState", () => ({
+  useSettingsPageState: () => ({
+    settingsObject: { llmGenerationTimeout: "120" },
+    handleSettingChange: vi.fn(),
+    handleSave: vi.fn(),
+    saving: false,
+    saveSuccess: false,
+  }),
+}));
+
 function completeProfile(overrides: Record<string, unknown> = {}) {
   return {
     id: "profile-1",
@@ -169,5 +179,16 @@ describe("SettingsAiProviderPage", () => {
     expect(
       Array.from(document.body.querySelectorAll("button")).some((btn) => btn.textContent === "重試"),
     ).toBe(true);
+  });
+
+  it("shows LLM generation timeout in the advanced section without expanding", async () => {
+    await harness.render(SettingsAiProviderPage, {});
+
+    expect(document.body.querySelector('[data-testid="llm-provider-advanced"]')).toBeTruthy();
+    expect(document.body.textContent).toContain("進階設定");
+    expect(document.body.textContent).toContain("AI 生成超時（秒）");
+    const timeout = document.body.querySelector<HTMLInputElement>("#llm-generation-timeout");
+    expect(timeout).toBeTruthy();
+    expect(timeout!.value).toBe("120");
   });
 });

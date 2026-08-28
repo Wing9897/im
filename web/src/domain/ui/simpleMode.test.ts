@@ -45,7 +45,7 @@ describe("simpleMode", () => {
     expect(isSimpleModeHiddenPath("/settings/general")).toBe(false);
   });
 
-  it("hides analysis-strategy AI tab only", () => {
+  it("hides the legacy analysis-strategy URL only", () => {
     expect(isSimpleModeHiddenAiTab("/ai/analysis-strategy")).toBe(true);
     expect(isSimpleModeHiddenAiTab("/ai/provider")).toBe(false);
     expect(isSimpleModeHiddenAiTab("/ai/staff")).toBe(false);

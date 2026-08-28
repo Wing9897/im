@@ -23,7 +23,7 @@ import { toItemWriteBody } from "./itemFormSaveBody";
 import {
   itemFormPageFillClass,
   itemsFormPageMaxWidthClass,
-} from "../itemsPageChromeClasses";
+} from "../../../styles/itemsPageChromeClasses";
 import {
   buildItemsEditPath,
   resolveCreateInitialCategoryId,

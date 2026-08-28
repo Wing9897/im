@@ -162,7 +162,7 @@ def test_workset_entry_ignores_legacy_last_events_hash():
             "publicVisibility": "public_busy",
             "lastEventsHash": "legacy-local-aggregate",
             "lastServerEventsHash": "srv-hash",
-            "lastPublicVisibility": "busy",
+            "lastPublicVisibility": "public_busy",
             "lastFingerprints": {"events": {"a": "fp"}, "series": {}},
         },
     )
@@ -174,18 +174,17 @@ def test_workset_entry_ignores_legacy_last_events_hash():
     assert cleaned["lastFingerprints"]["events"] == {"a": "fp"}
 
 
-def test_clean_workset_entry_maps_legacy_listing_visibility():
+def test_clean_workset_entry_keeps_canonical_listing_only():
     from server.calendar_share.store import _clean_workset_entry
 
-    mapping = {"off": "private_group", "details": "public", "busy": "public_busy"}
-    for raw, want in mapping.items():
+    for raw in ("off", "details", "busy", "mystery"):
         cleaned = _clean_workset_entry(
             "ws",
             {"slug": "Work", "publicVisibility": raw, "lastPublicVisibility": raw},
         )
         assert cleaned is not None
-        assert cleaned["publicVisibility"] == want
-        assert cleaned["lastPublicVisibility"] == want
+        assert cleaned["publicVisibility"] == "private_group"
+        assert cleaned["lastPublicVisibility"] is None
     canonical = _clean_workset_entry("ws", {"slug": "Work", "publicVisibility": "public"})
     assert canonical is not None
     assert canonical["publicVisibility"] == "public"

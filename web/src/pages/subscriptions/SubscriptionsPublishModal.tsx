@@ -61,6 +61,7 @@ export function SubscriptionsPublishModal({
             type="button"
             variant="primary"
             size="sm"
+            loading={formBusy}
             disabled={!selected || !formReady || formBusy || !canMutate}
             onClick={() => void onConfirm()}
             data-testid="subscriptions-publish-confirm"
@@ -92,7 +93,7 @@ export function SubscriptionsPublishModal({
             key={selected.id}
             worksetId={selected.id}
             worksetTitle={selected.name}
-            worksetEmoji={selected.emoji}
+            worksetCover={selected.cover}
             worksetDescription={selected.description}
             isSystem={selected.isSystem}
             submitRef={publishSubmitRef}

@@ -25,8 +25,8 @@ const labels: PipelineGraphLabels = {
   assistant: "助手",
   timeline: "時間規劃",
   intel: "情報頁",
-  notify: "通知",
-  external: "外部接口",
+  notify: "本機通知",
+  external: "動作",
 };
 
 describe("worksetPipelineGraph", () => {
@@ -315,10 +315,16 @@ describe("worksetPipelineGraph", () => {
     });
 
     const assistant = graph.blocks.find((block) => block.kind === "assistant");
+    const notify = graph.blocks.find((block) => block.kind === "notify")?.points[0];
+    const external = graph.blocks.find((block) => block.kind === "external")?.points[0];
     expect(graph.blocks.find((block) => block.kind === "intel")?.column).toBe(3);
     expect(graph.blocks.find((block) => block.kind === "timeline")?.column).toBe(3);
     expect(graph.blocks.find((block) => block.kind === "notify")?.column).toBe(3);
     expect(graph.blocks.find((block) => block.kind === "external")?.column).toBe(3);
+    expect(notify?.href).toBe("/notify?tab=notify");
+    expect(notify?.label).toBe("本機通知");
+    expect(external?.href).toBe("/notify?tab=types");
+    expect(external?.label).toBe("動作");
     expect(assistant?.column).toBe(1);
     expect(assistant?.points.map((point) => point.id)).toEqual([PIPELINE_PAGE.assistant]);
     expect(assistant?.points[0]?.gates ?? []).toEqual([]);

@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { WorksetCoverThumb } from "../../components/WorksetCoverThumb";
+import { EventListTitleMark } from "../../components/timeline/EventListTitleMark";
 import { boardGanttBarClass } from "../../domain/gantt/ganttStatusTokens";
+import {
+  resolveEventCardDisplay,
+  type EventListCardMetaLookups,
+} from "../../domain/timeline/eventListCardMeta";
 import type { AnalysisEvent, TaskActivitySpan } from "../../types";
+import { asTimedAnalysisEvent } from "../../types/timelineItem";
 import {
   activityToSingletonRow,
   buildGanttAxis,
@@ -29,6 +36,8 @@ interface GanttBoardEmbedProps {
   emptyLabel?: string;
   spans?: TaskActivitySpan[];
   events?: AnalysisEvent[];
+  worksetCoverById?: ReadonlyMap<string, string>;
+  metaLookups?: EventListCardMetaLookups;
 }
 
 /**
@@ -42,8 +51,11 @@ export function GanttBoardEmbed({
   emptyLabel,
   spans,
   events,
+  worksetCoverById,
+  metaLookups = {},
 }: GanttBoardEmbedProps) {
   const { t } = useTranslation();
+  const eventAvatarAria = t("timeline:eventList.eventAvatarAria");
   const resolvedLabelHeader = labelHeader ?? t("board:gantt.defaultLabelHeader");
   const resolvedEmptyLabel = emptyLabel ?? t("board:gantt.defaultEmptyLabel");
   const chart = useMemo(() => {
@@ -108,6 +120,14 @@ export function GanttBoardEmbed({
           const rangeLabel = bars
             .map(({ activity }) => formatActivityRange(activity.start, activity.end))
             .join(" · ");
+          const cover = worksetCoverById?.get(row.id);
+          const sourceEvent = events?.find((item) => item.id === representative.id);
+          const timedSourceEvent =
+            sourceEvent != null ? asTimedAnalysisEvent(sourceEvent) : null;
+          const leading =
+            timedSourceEvent != null
+              ? resolveEventCardDisplay(timedSourceEvent, new Date()).leading
+              : null;
           return (
             <li key={row.id} className="board-gantt-embed__row">
               <button
@@ -121,6 +141,22 @@ export function GanttBoardEmbed({
                   <span
                     className="board-gantt-embed__active-dot"
                     aria-label={t("board:gantt.activeAria")}
+                  />
+                ) : null}
+                {cover ? (
+                  <WorksetCoverThumb
+                    cover={cover}
+                    name={row.label}
+                    size="sm"
+                    testId={`board-gantt-cover-${row.id}`}
+                  />
+                ) : timedSourceEvent ? (
+                  <EventListTitleMark
+                    event={timedSourceEvent}
+                    leading={leading}
+                    metaLookups={metaLookups}
+                    eventAvatarAria={eventAvatarAria}
+                    markerClassName="board-gantt-embed__lane-mark"
                   />
                 ) : null}
                 <span className="board-gantt-embed__name">{row.label}</span>

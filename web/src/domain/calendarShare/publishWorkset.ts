@@ -24,8 +24,8 @@ export type CalendarSharePublishResult = {
 
 export type CalendarSharePublishHint = {
   worksetName?: string;
-  emoji?: string;
   description?: string;
+  cover?: string;
   worksetMissing?: boolean;
 };
 
@@ -45,8 +45,8 @@ function optimisticItem(
     ...state,
     worksetName: hint?.worksetName ?? "",
     worksetMissing: hint?.worksetMissing ?? false,
-    emoji: hint?.emoji ?? "",
     description: hint?.description ?? "",
+    cover: hint?.cover ?? "",
   };
 }
 

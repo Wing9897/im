@@ -195,7 +195,7 @@ html:not([data-theme-bg="custom"]):not([data-theme-bg="focal"]):not([data-theme-
  * --theme-bg-image (not a separate DOM layer). Wash % is inverse of the opacity
  * slider (higher opacity → lower wash → stronger photo). background-color stays
  * transparent so nested .im-page-shell regions and frosted panels can see the
- * shared photo plane. Overlay sidebar is a translucent im-sidebar-panel — no
+ * shared photo plane. Overlay sidebar is a frosted im-sidebar-panel — no
  * duplicate background-image on the drawer.
  */
 html[data-theme-bg="custom"] :is(.im-page-canvas, .im-fs-atmosphere:fullscreen),

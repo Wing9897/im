@@ -13,8 +13,8 @@ class WorksetResponse(BaseModel):
     notifyEnabled: bool = True
     #: MCP/A2A visibility (builtin 「一般」 can be turned off).
     externalEnabled: bool = True
-    emoji: str = ""
     description: str = ""
+    cover: str = ""
     createdAt: str | None = None
     updatedAt: str | None = None
 

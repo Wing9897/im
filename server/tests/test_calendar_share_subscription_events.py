@@ -17,7 +17,9 @@ async def test_subscribe_and_fetch_events(client, fake_remote):
     await subscribe_calendar_share(client)
     listed = await client.get("/api/v1/calendar-share/subscriptions")
     assert listed.status_code == 200, listed.text
-    assert listed.json()["items"] == [{"handle": "Alice", "slug": "Work", "emoji": "", "description": ""}]
+    assert listed.json()["items"] == [
+        {"handle": "Alice", "slug": "Work", "description": "", "ownerAvatar": "", "cover": ""},
+    ]
     assert listed.json()["ownHandle"] == "Wing"
     events = await client.get(
         "/api/v1/calendar-share/subscriptions/events",
@@ -91,7 +93,7 @@ async def test_subscription_events_follow_ic_subscriptions(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     listed = await client.get("/api/v1/calendar-share/subscriptions")
     assert listed.json()["items"] == [
-        {**row, "emoji": row.get("emoji", ""), "description": row.get("description", "")}
+        {**row, "description": row.get("description", ""), "ownerAvatar": "", "cover": ""}
         for row in fake_remote.remote_subs
     ]
     resp = await client.get(
@@ -197,18 +199,21 @@ def test_project_ic_payload_dedupes_events():
 
 def test_project_rejects_legacy_aliases_and_bare_lists():
     start, end = _window()
-    assert project_subscription_window(
-        [
-            {
-                "uid": "evt-1",
-                "start": "2026-08-15T09:00:00Z",
-                "handle": "Alice",
-                "slug": "Work",
-            }
-        ],
-        start,
-        end,
-    ) == []
+    assert (
+        project_subscription_window(
+            [
+                {
+                    "uid": "evt-1",
+                    "start": "2026-08-15T09:00:00Z",
+                    "handle": "Alice",
+                    "slug": "Work",
+                }
+            ],
+            start,
+            end,
+        )
+        == []
+    )
     nested_only = {
         "calendars": [
             {

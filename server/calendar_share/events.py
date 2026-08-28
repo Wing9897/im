@@ -14,6 +14,7 @@ from server.calendar.rrule import expand_calendar_occurrences
 from server.calendar_share.snapshot import json_array_text
 from server.calendar_share.store import calendar_key, normalize_handle, normalize_slug
 from server.time_iso import parse_iso
+from server.wire.serializers import serialize_calendar_share_event
 
 
 def subscribed_source(handle: str, slug: str) -> str:
@@ -94,32 +95,19 @@ def project_subscribed_events(payload: Any) -> list[dict[str, Any]]:
         all_day = bool(item.get("allDay"))
         source = subscribed_source(handle, slug)
         out.append(
-            {
-                "id": f"{handle}/{slug}:{uid}",
-                "source": source,
-                "title": title,
-                "startTime": start,
-                "endTime": end if isinstance(end, str) and end.strip() else None,
-                "location": str(location) if location else None,
-                "isAllDay": all_day,
-                "timezone": None,
-                "emoji": None,
-                "taskId": None,
-                "seriesId": None,
-                "worksetId": None,
-                "itemId": None,
-                "origin": None,
-                "itemDateKind": None,
-                "notifyPref": None,
-                "dismissed": False,
-                "important": False,
-                "taskName": f"{handle}/{slug}",
-                "isLastOccurrence": False,
-                "remindBeforeDays": None,
-                "body": str(description) if description else None,
-                "handle": handle,
-                "slug": slug,
-            }
+            serialize_calendar_share_event(
+                event_id=f"{handle}/{slug}:{uid}",
+                source=source,
+                title=title,
+                start_time=start,
+                end_time=end if isinstance(end, str) and end.strip() else None,
+                location=str(location) if location else None,
+                is_all_day=all_day,
+                body=str(description) if description else None,
+                task_name=f"{handle}/{slug}",
+                handle=handle,
+                slug=slug,
+            )
         )
     return out
 
@@ -187,32 +175,24 @@ def project_subscribed_series(
             occ_id = str(occ.get("id") or "")
             uid = str(occ.get("seriesId") or row["id"])
             out.append(
-                {
-                    "id": f"{handle}/{slug}:{occ_id}" if occ_id else f"{handle}/{slug}:{uid}",
-                    "source": source,
-                    "title": str(occ.get("title") or ""),
-                    "startTime": occ.get("startTime"),
-                    "endTime": occ.get("endTime"),
-                    "location": occ.get("location") or None,
-                    "isAllDay": bool(occ.get("isAllDay")),
-                    "timezone": occ.get("timezone"),
-                    "emoji": occ.get("emoji"),
-                    "taskId": None,
-                    "seriesId": uid,
-                    "worksetId": None,
-                    "itemId": None,
-                    "origin": None,
-                    "itemDateKind": None,
-                    "notifyPref": "off",
-                    "dismissed": False,
-                    "important": False,
-                    "taskName": occ.get("taskName") or f"{handle}/{slug}",
-                    "isLastOccurrence": bool(occ.get("isLastOccurrence")),
-                    "remindBeforeDays": None,
-                    "body": occ.get("description") or None,
-                    "handle": handle,
-                    "slug": slug,
-                }
+                serialize_calendar_share_event(
+                    event_id=f"{handle}/{slug}:{occ_id}" if occ_id else f"{handle}/{slug}:{uid}",
+                    source=source,
+                    title=str(occ.get("title") or ""),
+                    start_time=occ.get("startTime"),
+                    end_time=occ.get("endTime"),
+                    location=occ.get("location") or None,
+                    is_all_day=bool(occ.get("isAllDay")),
+                    timezone=occ.get("timezone"),
+                    emoji=occ.get("emoji"),
+                    series_id=uid,
+                    notify_pref="off",
+                    task_name=occ.get("taskName") or f"{handle}/{slug}",
+                    is_last_occurrence=bool(occ.get("isLastOccurrence")),
+                    body=occ.get("description") or None,
+                    handle=handle,
+                    slug=slug,
+                )
             )
     return out
 

@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { queryAppLogsPage } from "../../api/logs";
-import { Badge } from "../../components/ui";
-import { getDateTimeLocale } from "../../i18n/locale";
+import { Badge, ListRowMain, ListRowMeta, ListRowTime } from "../../components/ui";
 import {
   ANALYSIS_TRACE_KIND,
   filterAnalysisTraceLogs,
@@ -11,30 +10,20 @@ import {
 import { resolveLogDisplayMessage } from "../../domain/logs/resolveLogDisplayMessage";
 import type { AppLogEntryPayload } from "../../types";
 import { levelTone } from "../../utils/logLevelTone";
+import { formatOsDateTime } from "../../utils/time";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 
-function formatLogTime(value: string): string {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleTimeString(getDateTimeLocale(), {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
 /** Compact recent application logs for the ops board. */
 export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["board", "logs"]);
   const showAnalysisTrace = readShowAnalysisTracePref();
   const fetcher = useCallback(
     () =>
       queryAppLogsPage({
         cursor: null,
         limit: 20,
-        // Prefer server-side exclusion (`?excludeKind=`); client filter is safety.
         excludeKind: showAnalysisTrace ? undefined : ANALYSIS_TRACE_KIND,
       }).then((page) => page.logs),
     [showAnalysisTrace],
@@ -59,22 +48,25 @@ export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
         emptyLabel={t("board:logs.empty")}
       >
         {visibleLogs.length > 0 ? (
-          <ul className="board-widget-list">
+          <ul className="board-widget-list board-widget-list--logs">
             {visibleLogs.map((entry) => (
               <li key={entry.id} className="board-widget-list__item">
                 <div
-                  className="board-widget-list__row"
+                  className="board-widget-list__row board-widget-list__row--logs"
                   data-testid={`board-logs-row-${entry.id}`}
                 >
-                  <span className="board-widget-list__primary">
-                    <Badge tone={levelTone(entry.level)}>{entry.level}</Badge>
-                    <span className="board-logs-msg">
-                      {resolveLogDisplayMessage(entry)}
-                    </span>
-                  </span>
-                  <span className="board-widget-list__meta">
-                    {entry.category} · {formatLogTime(entry.time)}
-                  </span>
+                  <div className="board-logs-row__line">
+                    <ListRowTime dateTime={entry.time}>
+                      {formatOsDateTime(entry.time)}
+                    </ListRowTime>
+                    <Badge tone={levelTone(entry.level)}>{entry.level.toUpperCase()}</Badge>
+                    <ListRowMeta>
+                      {t(`logs:category.${entry.category}`, { defaultValue: entry.category })}
+                    </ListRowMeta>
+                  </div>
+                  <ListRowMain className="board-logs-msg">
+                    {resolveLogDisplayMessage(entry)}
+                  </ListRowMain>
                 </div>
               </li>
             ))}

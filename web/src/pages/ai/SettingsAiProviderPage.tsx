@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { testAiEngine } from "../../api/system";
+import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
+import { SettingsRow, TextField } from "../../components/ui";
+import { formHelpClass, sectionTitleClass } from "../../components/ui/pageTypography";
 import {
   bindLlmGlobalSlot,
   copyLlmProfile,
@@ -45,6 +49,13 @@ export function SettingsAiProviderPage() {
   const { t } = useTranslation("settings");
   const { showToast } = useToast();
   const { requestAiStatusRefresh } = useCollectorStatus();
+  const {
+    settingsObject,
+    handleSettingChange,
+    handleSave: saveTimeoutSettings,
+    saving: timeoutSaving,
+    saveSuccess: timeoutSaveSuccess,
+  } = useSettingsPageState();
 
   const [profiles, setProfiles] = useState<LlmProfile[]>([]);
   const [slots, setSlots] = useState<LlmGlobalSlotBinding[]>([]);
@@ -237,6 +248,39 @@ export function SettingsAiProviderPage() {
           onTest={(draft, profileId) => void handleTest(draft, profileId)}
         />
       </SettingsFieldGroup>
+
+      {settingsObject ? (
+        <SettingsFieldGroup showDivider>
+          <section className="flex flex-col gap-md" data-testid="llm-provider-advanced">
+            <div className="min-w-0">
+              <h2 className={sectionTitleClass}>{t("provider.advancedTitle")}</h2>
+              <p className={`mt-xs mb-0 ${formHelpClass}`}>{t("provider.advancedHelp")}</p>
+            </div>
+            <SettingsRow
+              label={t("analysis.advanced.timeoutLabel")}
+              htmlFor="llm-generation-timeout"
+              help={t("analysis.advanced.timeoutHelp")}
+            >
+              <TextField
+                id="llm-generation-timeout"
+                type="number"
+                min={30}
+                max={1800}
+                className="max-w-[200px]"
+                value={settingsObject.llmGenerationTimeout}
+                onChange={(e) => handleSettingChange("llmGenerationTimeout", e.target.value)}
+              />
+            </SettingsRow>
+            <SettingsSaveBar
+              inline
+              saving={timeoutSaving}
+              saveSuccess={timeoutSaveSuccess}
+              saveLabel={t("provider.saveTimeoutLabel")}
+              onSave={saveTimeoutSettings}
+            />
+          </section>
+        </SettingsFieldGroup>
+      ) : null}
 
       {editor ? (
         <LlmProfileEditorDialog

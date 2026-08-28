@@ -31,7 +31,7 @@ describe("SubscriptionsMinePage", () => {
       status: "connected",
     });
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
-      items: [{ handle: "DemoPub", slug: "Open", emoji: "🌞", description: "Open to everyone" }],
+      items: [{ handle: "DemoPub", slug: "Open", cover: "data:image/jpeg;base64,cover", description: "Open to everyone" }],
       ownHandle: "Wing",
     });
     calendarShareApiMocks.removeCalendarShareSubscription.mockResolvedValue({
@@ -49,6 +49,41 @@ describe("SubscriptionsMinePage", () => {
     });
     mount.remove();
     resetCalendarShareCatalogForTests();
+  });
+
+  it("shows removing wait state while unsubscribe is in flight", async () => {
+    let resolveRemove: (value: unknown) => void = () => {};
+    calendarShareApiMocks.removeCalendarShareSubscription.mockReturnValue(
+      new Promise((resolve) => {
+        resolveRemove = resolve;
+      }),
+    );
+    await act(async () => {
+      root.render(
+        wrapWithI18n(
+          createElement(MemoryRouter, null, createElement(SubscriptionsMinePage)),
+        ),
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const remove = document.querySelector(
+      '[data-testid="subscriptions-remove-DemoPub/Open"]',
+    ) as HTMLButtonElement;
+    expect(remove.textContent).toContain("Remove");
+    await act(async () => {
+      remove.click();
+      await Promise.resolve();
+    });
+    expect(remove.disabled).toBe(true);
+    expect(remove.getAttribute("aria-busy")).toBe("true");
+    expect(remove.textContent).toContain("Removing…");
+    await act(async () => {
+      resolveRemove({ items: [], ownHandle: "Wing" });
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
   });
 
   it("lists subscriptions and removes one", async () => {
@@ -84,7 +119,7 @@ describe("SubscriptionsMinePage", () => {
       await Promise.resolve();
     });
     expect(calendarShareApiMocks.removeCalendarShareSubscription).toHaveBeenCalledWith("DemoPub", "Open");
-    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions.mock.calls.length).toBeGreaterThan(1);
+    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions.mock.calls.length).toBe(1);
     expect(document.querySelector('[data-testid="subscriptions-mine-empty"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="subscriptions-mine-filter"]')).toBeTruthy();
     expect(mount.textContent).toContain("No subscriptions yet.");

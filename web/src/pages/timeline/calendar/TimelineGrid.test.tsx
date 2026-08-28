@@ -4,6 +4,16 @@ import { createRoot } from "react-dom/client";
 import { makeEvent, makeDayColumns } from "../../../test/timelineTestHelpers";
 import { TimelinePageProvider, type TimelinePageContextValue } from "../TimelinePageContext";
 
+vi.mock("../../../domain/timeline/useEventListMetaLookups", () => ({
+  useEventListMetaLookups: () => ({
+    generalWorksetLabel: "General",
+    worksetNameById: new Map<string, string>(),
+    taskWorksetById: new Map<string, string>(),
+    subscribeOwnerAvatarByHandle: new Map<string, string>(),
+    subscribeDescriptionByKey: new Map<string, string>(),
+  }),
+}));
+
 vi.mock("../gantt/TimelineGanttView", () => ({
   TimelineGanttView: ({
     events,

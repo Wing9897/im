@@ -1,6 +1,6 @@
 /**
  * Per-task analysis scheduling: event overlap is task-owned; other batch fields
- * optionally override AI Settings defaults (null = follow global).
+ * optionally override global scheduling defaults (null = follow global).
  * Agent message-threshold presets show the same overrides when channels are bound.
  */
 import { useTranslation } from "react-i18next";

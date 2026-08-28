@@ -52,11 +52,12 @@ class FakeRemote:
                     "slug": "Open",
                     "hitKind": "listing",
                     "publicVisibility": "public",
-                    "emoji": "",
                     "description": "",
                 }
             ],
         }
+        # When set, /search returns per-query payloads (mirrors IC search semantics in proxy tests).
+        self.search_by_query: dict[str, Any] | None = None
         self.events_status = 200
         self.events_payload: Any = {
             "calendars": [{"handle": "Alice", "slug": "Work", "visibility": "busy", "timezone": ""}],
@@ -119,9 +120,15 @@ class FakeRemote:
         if access_token and access_token in self.expired_access_tokens:
             return 401, {"message": "expired"}
         if path == "/search":
+            if self.search_by_query is not None:
+                q = str((query or {}).get("q") or "")
+                return self.search_status, self.search_by_query.get(q, {"items": []})
             return self.search_status, self.search_payload
         if path == "/me/timezone":
             return self.put_timezone_status, {"timezone": (json_body or {}).get("timezone")}
+        if path == "/me" and method == "PUT":
+            avatar = str((json_body or {}).get("avatar") or "")
+            return 200, {"handle": "Wing", "timezone": "UTC", "avatar": avatar}
         if path == "/me/subscriptions":
             if method == "GET":
                 return self.get_sub_status, {"items": list(self.remote_subs)}

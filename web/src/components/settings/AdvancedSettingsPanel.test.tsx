@@ -16,13 +16,11 @@ describe("AdvancedSettingsPanel", () => {
     const defaults = {
       analysisMaxTotalChars: "100000",
       analysisMaxEstimatedInputTokens: "8000",
-      llmGenerationTimeout: "120",
       maxConcurrentBatches: "1",
       maxBatchRetries: "3",
       preferLocalConcurrencyHint: true,
       onAnalysisMaxTotalCharsChange: vi.fn(),
       onAnalysisMaxEstimatedInputTokensChange: vi.fn(),
-      onLlmGenerationTimeoutChange: vi.fn(),
       onMaxConcurrentBatchesChange: vi.fn(),
       onMaxBatchRetriesChange: vi.fn(),
     };
@@ -61,7 +59,7 @@ describe("AdvancedSettingsPanel", () => {
     const container = document.createElement("div");
     renderPanel(container);
     expandSection(container, "批次與重試");
-    expect(container.textContent).toContain("AI 生成超時（秒）");
+    expect(container.textContent).not.toContain("AI 生成超時（秒）");
     expect(container.textContent).toContain("批次最大重試次數");
     expect(container.textContent).toContain("最大並行分析批次數");
     expect(container.textContent).not.toContain("全域每批上限");
@@ -75,20 +73,20 @@ describe("AdvancedSettingsPanel", () => {
     expect(container.textContent).toContain(i18n.t("settings:analysis.advanced.maxTokensLabel"));
   });
 
-  it("calls onLlmGenerationTimeoutChange when timeout input changes", () => {
+  it("calls onMaxBatchRetriesChange when retries input changes", () => {
     const container = document.createElement("div");
     const props = renderPanel(container);
     expandSection(container, "批次與重試");
     const inputs = container.querySelectorAll<HTMLInputElement>("input[type='number']");
-    const timeoutInput = inputs[0];
+    const retriesInput = inputs[0];
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
     )!.set!;
     act(() => {
-      nativeInputValueSetter.call(timeoutInput, "180");
-      timeoutInput.dispatchEvent(new Event("input", { bubbles: true }));
+      nativeInputValueSetter.call(retriesInput, "5");
+      retriesInput.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    expect(props.onLlmGenerationTimeoutChange).toHaveBeenCalledWith("180");
+    expect(props.onMaxBatchRetriesChange).toHaveBeenCalledWith("5");
   });
 });

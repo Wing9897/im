@@ -5685,6 +5685,7 @@
     "/api/v1/calendar-share/session": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Get Session",
@@ -5704,6 +5705,7 @@
       },
       "post": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Login Session",
@@ -5743,6 +5745,7 @@
       },
       "delete": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Logout Session",
@@ -5764,6 +5767,7 @@
     "/api/v1/calendar-share/timezone": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Get Timezone",
@@ -5783,6 +5787,7 @@
       },
       "put": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Put Timezone",
@@ -5821,9 +5826,53 @@
         }
       }
     },
+    "/api/v1/calendar-share/profile": {
+      "put": {
+        "tags": [
+          "calendar-share",
+          "calendar-share"
+        ],
+        "summary": "Put Profile",
+        "description": "Sync local profile avatar to IntelligenceCalendar ``PUT /me``.",
+        "operationId": "put_profile_api_v1_calendar_share_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarShareProfileBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarShareProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/calendar-share/publish": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "List Publish States",
@@ -5846,6 +5895,7 @@
     "/api/v1/calendar-share/publish/{workset_id}": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Get Publish State",
@@ -5886,6 +5936,7 @@
       },
       "put": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Put Publish State",
@@ -5936,6 +5987,7 @@
       },
       "delete": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Delete Publish State",
@@ -5979,6 +6031,7 @@
     "/api/v1/calendar-share/search": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Search Calendars",
@@ -6022,6 +6075,7 @@
     "/api/v1/calendar-share/subscriptions": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "List Subscriptions",
@@ -6041,6 +6095,7 @@
       },
       "post": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Add Remote Subscription",
@@ -6080,6 +6135,7 @@
       },
       "delete": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "Delete Subscription",
@@ -6161,6 +6217,7 @@
     "/api/v1/calendar-share/subscriptions/events": {
       "get": {
         "tags": [
+          "calendar-share",
           "calendar-share"
         ],
         "summary": "List Subscription Events",
@@ -10334,6 +10391,40 @@
         ],
         "title": "CalendarShareLoginBody"
       },
+      "CalendarShareProfileBody": {
+        "properties": {
+          "avatar": {
+            "type": "string",
+            "maxLength": 204800,
+            "title": "Avatar",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CalendarShareProfileBody"
+      },
+      "CalendarShareProfileResponse": {
+        "properties": {
+          "handle": {
+            "type": "string",
+            "title": "Handle",
+            "default": ""
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": ""
+          },
+          "avatar": {
+            "type": "string",
+            "title": "Avatar",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "CalendarShareProfileResponse"
+      },
       "CalendarSharePublishBody": {
         "properties": {
           "slug": {
@@ -10441,14 +10532,14 @@
             "title": "Worksetmissing",
             "default": false
           },
-          "emoji": {
-            "type": "string",
-            "title": "Emoji",
-            "default": ""
-          },
           "description": {
             "type": "string",
             "title": "Description",
+            "default": ""
+          },
+          "cover": {
+            "type": "string",
+            "title": "Cover",
             "default": ""
           }
         },
@@ -10589,14 +10680,19 @@
             ],
             "title": "Visibility"
           },
-          "emoji": {
-            "type": "string",
-            "title": "Emoji",
-            "default": ""
-          },
           "description": {
             "type": "string",
             "title": "Description",
+            "default": ""
+          },
+          "ownerAvatar": {
+            "type": "string",
+            "title": "Owneravatar",
+            "default": ""
+          },
+          "cover": {
+            "type": "string",
+            "title": "Cover",
             "default": ""
           }
         },
@@ -10719,14 +10815,19 @@
             "type": "string",
             "title": "Slug"
           },
-          "emoji": {
-            "type": "string",
-            "title": "Emoji",
-            "default": ""
-          },
           "description": {
             "type": "string",
             "title": "Description",
+            "default": ""
+          },
+          "ownerAvatar": {
+            "type": "string",
+            "title": "Owneravatar",
+            "default": ""
+          },
+          "cover": {
+            "type": "string",
+            "title": "Cover",
             "default": ""
           }
         },
@@ -18708,16 +18809,16 @@
             "title": "Externalenabled",
             "default": true
           },
-          "emoji": {
-            "type": "string",
-            "maxLength": 16,
-            "title": "Emoji",
-            "default": ""
-          },
           "description": {
             "type": "string",
             "maxLength": 280,
             "title": "Description",
+            "default": ""
+          },
+          "cover": {
+            "type": "string",
+            "maxLength": 204800,
+            "title": "Cover",
             "default": ""
           }
         },
@@ -18764,14 +18865,14 @@
             "title": "Externalenabled",
             "default": true
           },
-          "emoji": {
-            "type": "string",
-            "title": "Emoji",
-            "default": ""
-          },
           "description": {
             "type": "string",
             "title": "Description",
+            "default": ""
+          },
+          "cover": {
+            "type": "string",
+            "title": "Cover",
             "default": ""
           },
           "createdAt": {
@@ -18841,18 +18942,6 @@
             ],
             "title": "Externalenabled"
           },
-          "emoji": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 16
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Emoji"
-          },
           "description": {
             "anyOf": [
               {
@@ -18864,6 +18953,18 @@
               }
             ],
             "title": "Description"
+          },
+          "cover": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 204800
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover"
           }
         },
         "additionalProperties": false,

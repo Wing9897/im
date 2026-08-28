@@ -1,28 +1,21 @@
+import { Clock, Zap } from "lucide-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { listActions } from "../../api/actions";
-import { Badge } from "../../components/ui";
-import { getDateTimeLocale } from "../../i18n/locale";
+import { Badge, CardFieldRow } from "../../components/ui";
+import {
+  ACTION_TYPE_LABELS,
+  formatTriggerSummary,
+} from "../../domain/actions/actionLabels";
+import { formatOptionalOsDateTime } from "../../utils/time";
 import type { Action } from "../../types";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 
-function formatTriggeredAt(value: string | null, neverLabel: string): string {
-  if (!value) return neverLabel;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString(getDateTimeLocale(), {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 /** Compact automation-actions status list for the ops board. */
 export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["board", "actions"]);
   const fetcher = useCallback(() => listActions(), []);
   const { data: actions, error, loading, refresh } = useBoardWidgetPoll<Action[]>(
     fetcher,
@@ -55,10 +48,21 @@ export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
                       {action.isEnabled ? t("board:common.enabled") : t("board:common.disabled")}
                     </Badge>
                   </span>
-                  <span className="board-widget-list__meta">
-                    {action.actionType} ·{" "}
-                    {formatTriggeredAt(action.lastTriggeredAt, t("board:actions.neverTriggered"))}
-                  </span>
+                  <CardFieldRow
+                    icon={Zap}
+                    text={`${ACTION_TYPE_LABELS[action.actionType] ?? action.actionType} · ${t("actions:card.triggeredPrefix")}${formatTriggerSummary(action, (key, options) =>
+                      key === "specificTask"
+                        ? t("actions:card.specificTaskWithId", options)
+                        : t(`actions:card.${key}`, options),
+                    )}`}
+                    className="board-widget-list__meta"
+                  />
+                  <CardFieldRow
+                    icon={Clock}
+                    text={`${t("actions:card.lastTriggeredPrefix")}${formatOptionalOsDateTime(action.lastTriggeredAt, undefined, t("actions:card.never"))}`}
+                    empty={!action.lastTriggeredAt}
+                    className="board-widget-list__meta"
+                  />
                 </div>
               </li>
             ))}

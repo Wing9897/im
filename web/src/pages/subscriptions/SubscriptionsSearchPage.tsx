@@ -5,13 +5,14 @@ import { ApiRequestError } from "../../api/parseApiError";
 import {
   addCalendarShareSubscription,
   fetchCalendarShareSearch,
+  removeCalendarShareSubscription,
   type CalendarShareSearchHit,
-  type CalendarShareSubscription,
 } from "../../api/calendarShare";
 import { Badge, Button, OpsControlBar, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {
   isCalendarShareNotFound,
+  isCatalogSubscribed,
   isOwnCalendarHandle,
   looksLikeCalendarSharePath,
   parseCalendarSharePath,
@@ -20,7 +21,7 @@ import {
 } from "../../domain/calendarShare/subscribedCalendars";
 import { isSearchGrantHit, searchHitToneKey } from "../../domain/calendarShare/listingVisibility";
 import {
-  invalidateCalendarShareCatalog,
+  applyCalendarShareCatalogItems,
   useCalendarShareCatalog,
 } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
@@ -29,17 +30,8 @@ import {
   visibilityAccentClass,
   visibilityBadgeTone,
 } from "./SubscriptionCalendarCard";
+import { SubscriptionMembershipButton } from "./SubscriptionMembershipButton";
 import { SubscriptionsCardSection, SubscriptionsPageChrome } from "./SubscriptionsPageChrome";
-
-function isSubscribed(
-  items: readonly CalendarShareSubscription[],
-  handle: string,
-  slug: string,
-): boolean {
-  return items.some(
-    (row) => row.handle.toLowerCase() === handle.toLowerCase() && row.slug === slug,
-  );
-}
 
 function subscribeFailureMessage(error: unknown, noGrant: string, rejectOwn: string): string {
   if (error instanceof ApiRequestError) {
@@ -59,7 +51,7 @@ export function SubscriptionsSearchPage() {
   const [hits, setHits] = useState<CalendarShareSearchHit[]>([]);
   const [searched, setSearched] = useState(false);
   const [searchBusy, setSearchBusy] = useState(true);
-  const [addBusy, setAddBusy] = useState(false);
+  const [membershipBusyKey, setMembershipBusyKey] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
@@ -110,16 +102,31 @@ export function SubscriptionsSearchPage() {
   }, [loadRecommended]);
 
   const onAdd = async (handle: string, slug: string, clearQuery = false) => {
-    setAddBusy(true);
+    const key = subscribeCalendarIdentity({ handle, slug }).key;
+    setMembershipBusyKey(key);
     setFieldError(null);
     try {
-      await addCalendarShareSubscription({ handle, slug });
-      await invalidateCalendarShareCatalog();
+      const payload = await addCalendarShareSubscription({ handle, slug });
+      applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
       if (clearQuery) setQuery("");
     } catch (err) {
       setFieldError(subscribeFailureMessage(err, t("search.noGrant"), t("search.rejectOwn")));
     } finally {
-      setAddBusy(false);
+      setMembershipBusyKey(null);
+    }
+  };
+
+  const onRemove = async (handle: string, slug: string) => {
+    const key = subscribeCalendarIdentity({ handle, slug }).key;
+    setMembershipBusyKey(key);
+    setFieldError(null);
+    try {
+      const payload = await removeCalendarShareSubscription(handle, slug);
+      applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
+    } catch (err) {
+      setFieldError(toErrorMessage(err));
+    } finally {
+      setMembershipBusyKey(null);
     }
   };
 
@@ -164,19 +171,22 @@ export function SubscriptionsSearchPage() {
 
   const renderHit = (row: CalendarShareSearchHit) => {
     const identity = subscribeCalendarIdentity(row);
-    const already = isSubscribed(catalog.items, row.handle, row.slug);
+    const already = isCatalogSubscribed(catalog.items, row.handle, row.slug);
     const grantHit = isSearchGrantHit(row);
     const tone = searchHitToneKey(row);
     const badgeLabel = grantHit
       ? tone === "busy"
         ? t("published.form.grantVisibilityBusy")
-        : t("published.form.grantVisibilityDetails")
+        : t("visibility.private_group")
       : t(`visibility.${tone}`);
+    const rowMembershipBusy = membershipBusyKey === identity.key;
     return (
       <SubscriptionCalendarCard
         key={identity.key}
         title={identity.label}
-        emoji={identity.emoji}
+        ownerLabel={identity.handle}
+        ownerAvatar={identity.ownerAvatar}
+        cover={row.cover ?? identity.cover}
         description={row.description}
         accentClass={visibilityAccentClass(tone)}
         data-testid={`subscriptions-search-card-${identity.key}`}
@@ -186,28 +196,24 @@ export function SubscriptionsSearchPage() {
           </Badge>
         }
         actions={
-          already ? (
-            <span className="text-caption text-text-secondary">{t("search.already")}</span>
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={!canMutate || addBusy}
-              onClick={() => void onAdd(row.handle, row.slug)}
-              data-testid={`subscriptions-add-${identity.key}`}
-            >
-              {t("search.add")}
-            </Button>
-          )
+          <SubscriptionMembershipButton
+            subscribed={already}
+            canMutate={canMutate}
+            busy={rowMembershipBusy}
+            actionsLocked={membershipBusyKey !== null}
+            identityKey={identity.key}
+            onSubscribe={() => void onAdd(row.handle, row.slug)}
+            onUnsubscribe={() => void onRemove(row.handle, row.slug)}
+          />
         }
       />
     );
   };
 
   const submitDisabled = pathMode
-    ? addBusy || !canMutate || !parsed || own
+    ? membershipBusyKey !== null || !canMutate || !parsed || own
     : searchBusy;
+  const submitLoading = pathMode ? membershipBusyKey !== null : searchBusy;
 
   return (
     <SubscriptionsPageChrome status={status} error={chromeError}>
@@ -230,12 +236,13 @@ export function SubscriptionsSearchPage() {
             <Button
               type="submit"
               variant={pathMode ? "primary" : "secondary"}
+              loading={submitLoading}
               disabled={submitDisabled}
               data-testid="subscriptions-search-submit"
             >
-              {pathMode ? null : <Search size={16} strokeWidth={2} aria-hidden />}
+              {!pathMode && !searchBusy ? <Search size={16} strokeWidth={2} aria-hidden /> : null}
               {pathMode
-                ? addBusy
+                ? membershipBusyKey !== null
                   ? t("search.adding")
                   : t("search.add")
                 : searchBusy

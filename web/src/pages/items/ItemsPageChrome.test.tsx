@@ -12,7 +12,7 @@ import {
   itemsPageChromeTitleClass,
   itemsPageChromeTitleClusterClass,
   itemsPageFillClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 
 describe("ItemsPageChrome", () => {
   let container: HTMLDivElement;

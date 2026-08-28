@@ -30,6 +30,14 @@ const INTERNAL_CONFIG_KEYS = new Set([
   "llm_global_slot_assistant",
   "llm_global_slot_liaison",
   "llm_global_slot_task_editor",
+  // Calendar-share proxy — dedicated /api/v1/calendar-share routes, not Settings wire.
+  "calendar_share_base_url",
+  "calendar_share_handle",
+  "calendar_share_access_token",
+  "calendar_share_refresh_token",
+  "calendar_share_timezone",
+  "calendar_share_timezone_pending",
+  "calendar_share_timezone_last_public",
 ]);
 
 /** Retired CONFIG_DEFAULTS keys that must stay absent (mirror server _RETIRED_CONFIG_KEYS). */

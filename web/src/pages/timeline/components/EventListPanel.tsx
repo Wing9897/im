@@ -1,20 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { FilterChip } from "../../../components/ui";
 import { captionClass } from "../../../components/ui/pageTypography";
-import {
-  useTaskCatalog,
-  useWorksetNameById,
-} from "../../../context/TaskCatalogContext";
-import { type EventListCardMetaLookups } from "../../../domain/timeline/eventListCardMeta";
 import {
   filterSidebarDayGroups,
   groupSidebarDayEvents,
   type SidebarDayPhaseFilter,
 } from "../../../domain/timeline/eventTimePhase";
 import { startOfDay } from "../../../domain/timeline/dateUtils";
-import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
+import { useEventListMetaLookups } from "../../../domain/timeline/useEventListMetaLookups";
 import type { TimelineItem } from "../../../types";
 import { resolveSidebarDay } from "../timelinePageUtils";
 import { EventListEmpty } from "./EventListEmpty";
@@ -42,22 +37,7 @@ export function EventListPanel({
   onSelectEvent: (event: TimelineItem | null) => void;
 }) {
   const { t } = useTranslation("timeline");
-  const { tasks } = useTaskCatalog();
-  const worksetNameById = useWorksetNameById();
-  const generalWorksetLabel = useGeneralWorksetLabel();
-  const taskWorksetById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const task of tasks) {
-      if (typeof task.worksetId === "string" && task.worksetId.trim()) {
-        map.set(task.id, task.worksetId.trim());
-      }
-    }
-    return map;
-  }, [tasks]);
-  const metaLookups = useMemo<EventListCardMetaLookups>(
-    () => ({ generalWorksetLabel, worksetNameById, taskWorksetById }),
-    [generalWorksetLabel, worksetNameById, taskWorksetById],
-  );
+  const metaLookups = useEventListMetaLookups();
   const day = resolveSidebarDay(focusedDay);
   const dayKey = startOfDay(day).getTime();
   const [phaseFilter, setPhaseFilter] = useState<SidebarDayPhaseFilter>("all");

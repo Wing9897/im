@@ -71,9 +71,7 @@ def fingerprint_maps(
 ) -> dict[str, dict[str, str]]:
     return {
         "events": {
-            row["uid"]: item_fingerprint(_canonical_event(row))
-            for row in events
-            if str(row.get("uid") or "").strip()
+            row["uid"]: item_fingerprint(_canonical_event(row)) for row in events if str(row.get("uid") or "").strip()
         },
         "series": {
             row["uid"]: item_fingerprint(_canonical_series(row))

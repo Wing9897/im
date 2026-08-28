@@ -2,7 +2,7 @@
  * Dashboard task catalog page orchestration.
  */
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -33,6 +33,7 @@ import { buildChannelNameById, useDetailSelection } from "../../components/detai
 import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
 import { DashboardViewerDialogs } from "./components/DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./components/DashboardViewerToolbar";
+import { AnalysisSchedulingDialog } from "../../components/settings/AnalysisSchedulingDialog";
 import { WorksetPipelineGraphPanel } from "../worksets/WorksetPipelineGraphPanel";
 import { PipelineGuideChecklist } from "../../components/pipeline/PipelineGuideChecklist";
 import { usePipelineReadiness } from "../../hooks/usePipelineReadiness";
@@ -61,7 +62,8 @@ export function DashboardViewer() {
     navigate,
   } = useDashboardViewer();
   const pipeline = usePipelineReadiness();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [schedulingOpen, setSchedulingOpen] = useState(false);
   useErrorToast(error);
   const { channels } = useChannelsWithSources();
   const channelNameById = useMemo(() => buildChannelNameById(channels), [channels]);
@@ -119,6 +121,16 @@ export function DashboardViewer() {
 
   const isTaskView = !shell.isWorksetView;
   const isWorksetView = shell.isWorksetView;
+
+  useEffect(() => {
+    if (!isTaskView) return;
+    if (searchParams.get("scheduling") !== "open") return;
+    setSchedulingOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("scheduling");
+    setSearchParams(next, { replace: true });
+  }, [isTaskView, searchParams, setSearchParams]);
+
   const worksetCatalogTab = parseWorksetCatalogTab(searchParams.get("tab"));
   const isWorksetGraph = isWorksetView && worksetCatalogTab === "graph";
   const searchQueryForView = isWorksetView ? shell.worksetSearchQuery : searchQuery;
@@ -153,12 +165,14 @@ export function DashboardViewer() {
           onToggleSystemTasks={() => shell.setShowSystemTasks((prev) => !prev)}
           onCreateTask={() => navigate("/tasks/new")}
           onCreateWorkset={shell.openCreateWorkset}
+          onOpenScheduling={() => setSchedulingOpen(true)}
         />
       ) : null}
 
       {loading ? <SkeletonScreen variant="card-grid" count={6} columns={3} /> : null}
 
-      {!loading && !error && pipeline.showChecklist && isTaskView && tasks.length === 0 ? (
+      {/* Pipeline wizard is catalog-empty only; any task (incl. inactive demo) hides it. */}
+      {!loading && !error && isTaskView && tasks.length === 0 && pipeline.showChecklist ? (
         <PipelineGuideChecklist
           state={pipeline.state}
           assistantSlotReady={pipeline.assistantSlotReady}
@@ -250,6 +264,13 @@ export function DashboardViewer() {
       ) : null}
 
       {systemTasksSection}
+
+      {schedulingOpen ? (
+        <AnalysisSchedulingDialog
+          open
+          onClose={() => setSchedulingOpen(false)}
+        />
+      ) : null}
 
       <DashboardViewerDialogs
         t={t}

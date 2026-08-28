@@ -1,4 +1,5 @@
 import { LocateFixed, Save } from "lucide-react";
+import { PillButton } from "../../components/ui";
 import {
   lazy,
   Suspense,
@@ -104,8 +105,8 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const headerActions = useMemo(
     () => (
       <>
-        <button
-          type="button"
+        <PillButton
+          padding="square"
           className="board-widget-frame__btn"
           title={t("board:mapWidget.resetView")}
           aria-label={t("board:mapWidget.resetView")}
@@ -113,21 +114,18 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
           onClick={resetWorldView}
         >
           <LocateFixed size={12} strokeWidth={2} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className={
-            savedFlash
-              ? "board-widget-frame__btn board-widget-frame__btn--active"
-              : "board-widget-frame__btn"
-          }
+        </PillButton>
+        <PillButton
+          padding="square"
+          active={savedFlash}
+          className="board-widget-frame__btn"
           title={t("board:mapWidget.saveView")}
           aria-label={t("board:mapWidget.saveView")}
           data-testid="board-map-save-view"
           onClick={saveView}
         >
           <Save size={12} strokeWidth={2} aria-hidden="true" />
-        </button>
+        </PillButton>
       </>
     ),
     [resetWorldView, saveView, savedFlash, t],

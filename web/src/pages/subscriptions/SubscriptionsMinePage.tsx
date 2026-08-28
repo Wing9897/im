@@ -11,7 +11,7 @@ import {
   subscribePageStatus,
 } from "../../domain/calendarShare/subscribedCalendars";
 import {
-  invalidateCalendarShareCatalog,
+  applyCalendarShareCatalogItems,
   useCalendarShareCatalog,
 } from "../../domain/calendarShare/useCalendarShareCatalog";
 import { toErrorMessage } from "../../utils/errors";
@@ -34,8 +34,8 @@ export function SubscriptionsMinePage() {
     const key = calendarShareKey(handle, slug);
     setBusyKey(key);
     try {
-      await removeCalendarShareSubscription(handle, slug);
-      await invalidateCalendarShareCatalog();
+      const payload = await removeCalendarShareSubscription(handle, slug);
+      applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
       setActionError(null);
     } catch (error) {
       setActionError(toErrorMessage(error));
@@ -86,11 +86,14 @@ export function SubscriptionsMinePage() {
       >
         {visible.map((row) => {
           const identity = subscribeCalendarIdentity(row);
+          const isRemoving = busyKey === identity.key;
           return (
             <SubscriptionCalendarCard
               key={identity.key}
               title={identity.label}
-              emoji={identity.emoji}
+              ownerLabel={identity.handle}
+              ownerAvatar={identity.ownerAvatar}
+              cover={row.cover ?? identity.cover}
               description={row.description}
               data-testid={`subscriptions-mine-card-${identity.key}`}
               actions={
@@ -105,11 +108,12 @@ export function SubscriptionsMinePage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={!canMutate || busyKey === identity.key}
+                    loading={isRemoving}
+                    disabled={!canMutate || busyKey !== null}
                     onClick={() => void onRemove(row.handle, row.slug)}
                     data-testid={`subscriptions-remove-${identity.key}`}
                   >
-                    {t("mine.remove")}
+                    {isRemoving ? t("mine.removing") : t("mine.remove")}
                   </Button>
                 </>
               }

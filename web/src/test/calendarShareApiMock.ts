@@ -45,6 +45,7 @@ export const calendarShareApiMocks = {
   loginCalendarShare: vi.fn(),
   logoutCalendarShare: vi.fn(),
   putCalendarShareTimezone: vi.fn(),
+  putCalendarShareProfile: vi.fn(),
   fetchCalendarSharePublish: vi.fn().mockResolvedValue({ ...emptyPublish }),
   fetchCalendarSharePublishList: vi.fn().mockResolvedValue({ items: [] as unknown[] }),
   putCalendarSharePublish: vi.fn(),
@@ -73,6 +74,8 @@ export function calendarShareApiModuleMock() {
     logoutCalendarShare: (...args: unknown[]) => calendarShareApiMocks.logoutCalendarShare(...args),
     putCalendarShareTimezone: (...args: unknown[]) =>
       calendarShareApiMocks.putCalendarShareTimezone(...args),
+    putCalendarShareProfile: (...args: unknown[]) =>
+      calendarShareApiMocks.putCalendarShareProfile(...args),
     fetchCalendarSharePublish: (...args: unknown[]) =>
       calendarShareApiMocks.fetchCalendarSharePublish(...args),
     fetchCalendarSharePublishList: (...args: unknown[]) =>
@@ -100,6 +103,7 @@ export function resetCalendarShareApiMocks(): void {
   calendarShareApiMocks.loginCalendarShare.mockReset();
   calendarShareApiMocks.logoutCalendarShare.mockReset();
   calendarShareApiMocks.putCalendarShareTimezone.mockReset();
+  calendarShareApiMocks.putCalendarShareProfile.mockReset();
   calendarShareApiMocks.fetchCalendarSharePublish.mockReset().mockResolvedValue({ ...emptyPublish });
   calendarShareApiMocks.fetchCalendarSharePublishList.mockReset().mockResolvedValue({ items: [] });
   calendarShareApiMocks.putCalendarSharePublish.mockReset();

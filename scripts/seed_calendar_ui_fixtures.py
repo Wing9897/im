@@ -2,8 +2,8 @@
 
 Prefix: ``[cal-ui]`` on titles so they are easy to spot and delete later.
 Run against the live app DB (default data dir) while the server may be running.
-Requires current stamp 4 (``SCHEMA_SEMVER`` ``1.3.0``); stamp-1 files
-auto-upgrade; reset first if the file is a future or corrupt stamp.
+Requires current stamp 5 (``SCHEMA_SEMVER`` ``1.4.0``); stamp 1–4 files
+reject (backup then reset). Reset first if the file is a future or corrupt stamp.
 
   python scripts/seed_calendar_ui_fixtures.py
   python scripts/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first

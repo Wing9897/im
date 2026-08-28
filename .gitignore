@@ -29,6 +29,8 @@ __pycache__/
 # Smoke-test log files at workspace root
 /*.stderr.log
 /*.stdout.log
+.browser-smoke/
+.browser-smoke-tmp/
 
 # Local build / test debug output (agent or manual redirects)
 /build-log*.txt
