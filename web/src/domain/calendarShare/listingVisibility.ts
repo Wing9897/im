@@ -19,12 +19,6 @@ export type CalendarShareSearchHitFields = {
   visibility?: CalendarShareGrantVisibility | null;
 };
 
-const LEGACY_LISTING: Record<string, CalendarShareListingVisibility> = {
-  off: "private_group",
-  details: "public",
-  busy: "public_busy",
-};
-
 export function isListingVisibility(value: string): value is CalendarShareListingVisibility {
   return (LISTING_VISIBILITY as readonly string[]).includes(value);
 }
@@ -38,7 +32,7 @@ export function canonicalizeListingVisibility(
 ): CalendarShareListingVisibility {
   const text = (value ?? "").trim();
   if (isListingVisibility(text)) return text;
-  return LEGACY_LISTING[text] ?? "private_group";
+  return "private_group";
 }
 
 export function isPublicListing(visibility: CalendarShareListingVisibility): boolean {
@@ -55,7 +49,8 @@ export function searchHitToneKey(hit: {
   visibility?: string | null;
 }): CalendarShareListingVisibility | CalendarShareGrantVisibility {
   if (hit.hitKind === "grant") {
-    return isGrantVisibility(hit.visibility ?? "") ? hit.visibility! : "details";
+    const grant = hit.visibility ?? "";
+    return isGrantVisibility(grant) ? grant : "details";
   }
   const listing = hit.publicVisibility ?? "";
   return isListingVisibility(listing) ? listing : "public";

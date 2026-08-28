@@ -15,7 +15,6 @@
     "logs": "System logs",
     "aiProvider": "AI profiles",
     "voice": "Voice",
-    "analysisStrategy": "Analysis scheduling",
     "aiStaff": "AI staff"
   },
   "shared": {
@@ -37,20 +36,13 @@
     "followSystem": "Follow system",
     "weatherLocationCurrent": "Current location: {location}",
     "simpleModeLabel": "Simple mode (basic calendar)",
-    "simpleModeHelp": "A basic calendar: keep Timeline, My schedule, Items, Assistant, Notifications, Settings / AI Settings, and Logs. No Tasks page. Hide Monitor, Sources, Intelligence map, and Leaderboard.",
-    "simpleModeHint": "Basic calendar: Timeline, schedule, Items, Assistant, and Notifications — no Tasks page",
+    "simpleModeHelp": "A basic calendar: keep Timeline, My schedule, Items, Assistant, Notify & actions, Settings / AI Settings, and Logs. No Tasks page. Hide Monitor, Sources, Intelligence map, and Leaderboard.",
+    "simpleModeHint": "Basic calendar: Timeline, schedule, Items, Assistant, and Notify & actions — no Tasks page",
     "weatherLocationPlaceholder": "e.g. Taipei, Hong Kong, Tokyo",
     "weatherLocationAria": "Custom weather / holiday region",
     "weatherLocationRequired": "Enter a location name, or choose Follow system",
     "weatherLocationSaved": "Weather / holiday region saved",
     "saveWeatherLocation": "Save location",
-    "cartoApiKeyLabel": "Map basemap / CARTO API key",
-    "cartoApiKeyHelp": "Optional. Without a key, CARTO tiles show a watermark. Stored on this device so each installer can paste their own key.",
-    "cartoApiKeyLink": "Get a CARTO basemap API key",
-    "cartoApiKeyAria": "CARTO basemap API key",
-    "cartoApiKeyPlaceholder": "Paste API key",
-    "cartoApiKeySaved": "CARTO API key saved",
-    "saveCartoApiKey": "Save key",
     "collectorRestartDescription": "Restarts the message collector and reconnects all source adapters. Does not delete the database or account sessions.",
     "restartCollectorButton": "Restart collector",
     "collectorRestartConfirmTitle": "Restart the collector?",
@@ -185,7 +177,10 @@
     "testPreviewSuffix": ", reply: {preview}",
     "testFailedDefault": "AI test failed",
     "testing": "Testing…",
-    "testButton": "AI test"
+    "testButton": "AI test",
+    "advancedTitle": "Advanced settings",
+    "advancedHelp": "Max wait per LLM call for Assistant, A2A, and task-mode profiles.",
+    "saveTimeoutLabel": "Save timeout"
   },
   "globalSlots": {
     "title": "Global AI roles",
@@ -451,11 +446,41 @@
     "a2a": "A2A",
     "deeplink": "Calendar link",
     "mcp": "MCP",
+    "systemTab": "System APIs & URLs",
     "linkKeys": "Create a key in Account",
     "referenceTitle": "Reference",
     "copy": "Copy",
     "copied": "Copied",
-    "copyFailed": "Copy failed"
+    "copyFailed": "Copy failed",
+    "system": {
+      "cartoApiKeyLabel": "Map basemap / CARTO API key",
+      "cartoApiKeyHelp": "Optional. Without a key, CARTO tiles show a watermark. Stored on this device so each installer can paste their own key.",
+      "cartoApiKeyLink": "Get a CARTO basemap API key",
+      "cartoApiKeyAria": "CARTO basemap API key",
+      "cartoApiKeyPlaceholder": "Paste API key",
+      "cartoApiKeySaved": "CARTO API key saved",
+      "saveCartoApiKey": "Save key",
+      "outboundTitle": "Outbound URLs",
+      "outboundHelp": "Read-only list of third-party endpoints the app calls. URLs are fixed in code; edit server or web constants to change wiring.",
+      "outbound": {
+        "cartoTiles": "CARTO map tiles",
+        "cartoTilesHelp": "Dark basemap for Intelligence map and dashboard map boards.",
+        "openMeteoGeocoding": "Open-Meteo geocoding",
+        "openMeteoGeocodingHelp": "Resolves the weather / holiday region to coordinates.",
+        "openMeteoForecast": "Open-Meteo forecast",
+        "openMeteoForecastHelp": "16-day weather forecast for the calendar.",
+        "metNoForecast": "MET Norway weather (fallback)",
+        "metNoForecastHelp": "Fallback forecast when Open-Meteo is unavailable.",
+        "wttrWeather": "wttr.in weather (last resort)",
+        "wttrWeatherHelp": "Last-resort forecast when Open-Meteo and MET Norway both fail.",
+        "nominatimGeocoding": "Nominatim geocoding (OSM)",
+        "nominatimGeocodingHelp": "Resolves analysis event locations to coordinates for the map.",
+        "bingFocalBackground": "Bing daily wallpaper",
+        "bingFocalBackgroundHelp": "Theme focal background metadata (HPImageArchive) and image bytes from https://www.bing.com.",
+        "nagerHolidays": "Nager.Date public holidays",
+        "nagerHolidaysHelp": "Country-level public holidays for the weather region."
+      }
+    }
   },
   "apiDocs": {
     "baseUrl": {

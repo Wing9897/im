@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { AnalysisTask } from "../../types/tasks";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
+  buildBoardWorksetGroups,
   buildDashboardWorksetGroups,
   filterWorksetGroupsByName,
-} from "./dashboardViewerGroups";
+} from "./worksetTaskGroups";
 
 const t = ((key: string) => key) as import("i18next").TFunction;
 
@@ -36,6 +37,9 @@ describe("buildDashboardWorksetGroups", () => {
           isSystem: true,
           notifyEnabled: true,
           externalEnabled: true,
+          emoji: "",
+          description: "",
+          cover: "",
           createdAt: "",
           updatedAt: "",
         },
@@ -45,6 +49,9 @@ describe("buildDashboardWorksetGroups", () => {
           isSystem: false,
           notifyEnabled: true,
           externalEnabled: true,
+          emoji: "",
+          description: "",
+          cover: "",
           createdAt: "",
           updatedAt: "",
         },
@@ -67,6 +74,9 @@ describe("buildDashboardWorksetGroups", () => {
           isSystem: true,
           notifyEnabled: true,
           externalEnabled: true,
+          emoji: "",
+          description: "",
+          cover: "",
           createdAt: "",
           updatedAt: "",
         },
@@ -75,6 +85,42 @@ describe("buildDashboardWorksetGroups", () => {
     });
     expect(groups.map((g) => g.key)).toEqual([SYSTEM_WORKSET_ID]);
     expect(groups[0].isSystem).toBe(true);
+  });
+});
+
+describe("buildBoardWorksetGroups", () => {
+  it("drops empty workset groups", () => {
+    const groups = buildBoardWorksetGroups({
+      visibleTasks: [task({ id: "t1", name: "Only", worksetId: "ws-2" })],
+      worksets: [
+        {
+          id: SYSTEM_WORKSET_ID,
+          name: "General",
+          isSystem: true,
+          notifyEnabled: true,
+          externalEnabled: true,
+          emoji: "",
+          description: "",
+          cover: "",
+          createdAt: "",
+          updatedAt: "",
+        },
+        {
+          id: "ws-2",
+          name: "Alpha",
+          isSystem: false,
+          notifyEnabled: true,
+          externalEnabled: true,
+          emoji: "",
+          description: "",
+          cover: "",
+          createdAt: "",
+          updatedAt: "",
+        },
+      ],
+      t,
+    });
+    expect(groups.map((g) => g.key)).toEqual(["ws-2"]);
   });
 });
 

@@ -80,7 +80,7 @@ describe("CalendarSharePublishForm", () => {
     });
   }
 
-  it("shows the login hint and keeps publish controls disabled when logged out", async () => {
+  it("keeps publish controls disabled when logged out", async () => {
     calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
       connected: false,
       baseUrl: "http://127.0.0.1:8787",
@@ -90,7 +90,6 @@ describe("CalendarSharePublishForm", () => {
     await renderForm();
     expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
     expect(calendarShareApiMocks.fetchCalendarSharePublish).toHaveBeenCalledWith("ws-1");
-    expect(container.textContent).toContain("請先到帳戶 → 身分登入日曆分享服務，才能發佈或取消上載。");
     expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
     expect(
       (container.querySelector('[data-testid="calendar-share-slug"]') as HTMLInputElement).disabled,
@@ -109,7 +108,7 @@ describe("CalendarSharePublishForm", () => {
     expect(container.textContent).toContain("誰能訂這本私人群組日曆");
     const listing = container.querySelector('[data-testid="calendar-share-public"]') as HTMLSelectElement;
     expect([...listing.options].map((option) => option.textContent)).toEqual([
-      "私人群組",
+      "私人",
       "公開",
       "公開閒忙",
     ]);
@@ -124,7 +123,7 @@ describe("CalendarSharePublishForm", () => {
     const grantSelect = container
       .querySelector('[data-testid="calendar-share-grants"]')
       ?.querySelector("select") as HTMLSelectElement;
-    expect([...grantSelect.options].map((option) => option.textContent)).toEqual(["忙碌", "詳情"]);
+    expect([...grantSelect.options].map((option) => option.textContent)).toEqual(["私人閒忙", "詳情"]);
     expect(grantSelect.textContent).not.toContain("公開閒忙");
     expect(grantSelect.textContent).not.toContain("公開");
   });

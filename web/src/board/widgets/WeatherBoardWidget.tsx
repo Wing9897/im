@@ -1,4 +1,5 @@
 import { RefreshCw } from "lucide-react";
+import { PillButton } from "../../components/ui";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchSystemSettings } from "../../api/config";
@@ -94,8 +95,8 @@ export function WeatherBoardWidget({ active = true }: BoardWidgetProps) {
 
   const headerActions = useMemo(
     () => (
-      <button
-        type="button"
+      <PillButton
+        padding="square"
         className="board-widget-frame__btn"
         title={t("board:weather.refresh")}
         aria-label={t("board:weather.refresh")}
@@ -103,7 +104,7 @@ export function WeatherBoardWidget({ active = true }: BoardWidgetProps) {
         onClick={refresh}
       >
         <RefreshCw size={12} strokeWidth={2} aria-hidden="true" />
-      </button>
+      </PillButton>
     ),
     [refresh, t],
   );

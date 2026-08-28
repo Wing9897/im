@@ -1,21 +1,17 @@
-import { useMemo } from "react";
-import { ChevronLeft, ListChecks, X } from "lucide-react";
+import { ChevronLeft, ListChecks, Trash2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge, CardFieldIcon, PillButton, TextField } from "../../../components/ui";
+import { Badge, Button, CardFieldIcon, PillButton, TextField } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
-import {
-  useTaskCatalog,
-  useWorksetNameById,
-} from "../../../context/TaskCatalogContext";
 import { itemDateKindLabel } from "../../../domain/items/itemCalendarProjection";
 import {
   eventListAllowsDismiss,
   eventListCardTitle,
   eventShowsRemindBadge,
+  formatEventListAffiliationLabel,
   formatEventListProvenanceLabel,
   resolveEventListProvenanceKind,
-  resolveEventListWorksetName,
-  type EventListCardMetaLookups,
+  resolveSubscribedCalendarDescription,
+  eventListShowsProvenance,
 } from "../../../domain/timeline/eventListCardMeta";
 import {
   getEventStatusColor,
@@ -26,14 +22,14 @@ import type { TimelineItem } from "../../../types";
 import { joinList } from "../../../i18n/formatMessage";
 import { formatOsDateTime } from "../../../utils/time";
 import { EventListPanel } from "./EventListPanel";
-import { ScheduleEventCompactEmoji } from "./ScheduleEventEmojiMark";
-import { IntelEventMark } from "../../../components/task/IntelEventAvatarStack";
+import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
+import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { dismissedTitleClass } from "../timelineDismissUtils";
-import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
 import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
-import { isUserScheduleTimelineEvent } from "../../../domain/schedule/scheduleCardFields";
 import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
+import { resolveCalendarLeadingGlyph } from "../../../domain/timeline/importantEventDisplay";
+import { useEventListMetaLookups } from "../../../domain/timeline/useEventListMetaLookups";
 
 const asideClass =
   "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";
@@ -69,22 +65,7 @@ export function TimelineSidebar({
     userEventActionBusy,
   } = useTimelinePageContext();
   const { t: ti } = useTranslation("items");
-  const { tasks } = useTaskCatalog();
-  const worksetNameById = useWorksetNameById();
-  const generalWorksetLabel = useGeneralWorksetLabel();
-  const taskWorksetById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const task of tasks) {
-      if (typeof task.worksetId === "string" && task.worksetId.trim()) {
-        map.set(task.id, task.worksetId.trim());
-      }
-    }
-    return map;
-  }, [tasks]);
-  const metaLookups = useMemo<EventListCardMetaLookups>(
-    () => ({ generalWorksetLabel, worksetNameById, taskWorksetById }),
-    [generalWorksetLabel, worksetNameById, taskWorksetById],
-  );
+  const metaLookups = useEventListMetaLookups();
 
   const isUserEvent = selectedEvent?.source === "user";
   const isItemEvent = selectedEvent?.source === "item_remind";
@@ -97,6 +78,17 @@ export function TimelineSidebar({
   const detailTitle = selectedEvent
     ? eventListCardTitle(selectedEvent, { showRemindBadge })
     : "";
+  const detailLeading =
+    selectedEvent && !isImportant && !showRemindBadge
+      ? resolveCalendarLeadingGlyph(selectedEvent)
+      : null;
+  const detailStatus = selectedEvent
+    ? (eventStatuses[selectedEvent.id] ?? "pending")
+    : "pending";
+  const detailStatusColor = getEventStatusColor(detailStatus);
+  const detailStatusLabel = t("eventList.statusWithLabel", {
+    value: getEventStatusLabel(detailStatus),
+  });
 
   return (
     <aside className={asideClass}>
@@ -124,25 +116,54 @@ export function TimelineSidebar({
             <ChevronLeft size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>
 
-          <h2
-            className={`m-0 flex min-w-0 items-center gap-sm pr-8 ${cardTitleClass} ${
-              isDismissed ? dismissedTitleClass : ""
-            }`}
-            data-testid="timeline-sidebar-title"
-          >
-            {selectedEvent && !isImportant ? (
-              isUserScheduleTimelineEvent(selectedEvent.source) ? (
-                <ScheduleEventCompactEmoji event={selectedEvent} />
-              ) : resolveEventListProvenanceKind(selectedEvent) === "task" ? (
-                <IntelEventMark
+          <div className="flex min-w-0 items-start justify-between gap-sm pr-8">
+            <h2
+              className={`m-0 flex min-w-0 flex-1 items-center gap-sm ${cardTitleClass} ${
+                isDismissed ? dismissedTitleClass : ""
+              }`}
+              data-testid="timeline-sidebar-title"
+            >
+              {selectedEvent && !isImportant ? (
+                <EventListTitleMark
                   event={selectedEvent}
-                  size="compact"
-                  label={t("eventList.eventAvatarAria")}
+                  leading={detailLeading}
+                  metaLookups={metaLookups}
+                  eventAvatarAria={t("eventList.eventAvatarAria")}
+                  markerClassName=""
                 />
-              ) : null
+              ) : null}
+              {isSubscribed ? <SubscribedEventSubscribeIcon /> : null}
+              {detailTitle}
+            </h2>
+            {isDismissed ? (
+              <PillButton
+                type="button"
+                padding="square"
+                className="shrink-0"
+                disabled={userEventActionBusy}
+                aria-label={t("sidebar.restore")}
+                title={t("sidebar.restore")}
+                data-testid="timeline-sidebar-restore"
+                onClick={() => onRestoreTimelineEvent?.(selectedEvent)}
+              >
+                <Undo2 size={16} strokeWidth={2.5} aria-hidden="true" />
+              </PillButton>
+            ) : eventListAllowsDismiss(selectedEvent) ? (
+              <Button
+                type="button"
+                variant="danger"
+                size="icon"
+                className="shrink-0"
+                disabled={userEventActionBusy}
+                aria-label={t("sidebar.dismiss")}
+                title={t("sidebar.dismiss")}
+                data-testid="timeline-sidebar-dismiss"
+                onClick={() => onDismissTimelineEvent?.(selectedEvent)}
+              >
+                <Trash2 size={16} strokeWidth={2.5} aria-hidden="true" />
+              </Button>
             ) : null}
-            {detailTitle}
-          </h2>
+          </div>
 
           {isImportant ? (
             <Badge
@@ -171,6 +192,12 @@ export function TimelineSidebar({
           ) : null}
 
           <dl className={`${captionClass} m-0 grid gap-1`}>
+            <div
+              data-testid="timeline-sidebar-status"
+              style={{ color: detailStatusColor }}
+            >
+              {detailStatusLabel}
+            </div>
             <div>
               {t("sidebar.start", { value: formatOsDateTime(selectedEvent.startTime) })}
             </div>
@@ -190,10 +217,17 @@ export function TimelineSidebar({
               </div>
             ) : null}
             <div data-testid="timeline-sidebar-workset">
-              {t("sidebar.workset", {
-                value: resolveEventListWorksetName(selectedEvent, metaLookups),
-              })}
+              {formatEventListAffiliationLabel(selectedEvent, t, metaLookups)}
             </div>
+            {resolveSubscribedCalendarDescription(selectedEvent, metaLookups) ? (
+              <div
+                className="text-[11px] leading-snug text-text-muted"
+                data-testid="timeline-sidebar-calendar-description"
+              >
+                {resolveSubscribedCalendarDescription(selectedEvent, metaLookups)}
+              </div>
+            ) : null}
+            {eventListShowsProvenance(selectedEvent) ? (
             <div
               className="flex min-w-0 items-center gap-xs"
               data-testid="timeline-sidebar-provenance"
@@ -203,6 +237,7 @@ export function TimelineSidebar({
               ) : null}
               {formatEventListProvenanceLabel(selectedEvent, t)}
             </div>
+            ) : null}
           </dl>
 
           <section className="grid gap-sm border-t border-surface-border pt-md">
@@ -236,25 +271,6 @@ export function TimelineSidebar({
                 {isImportant ? t("sidebar.unmarkImportant") : t("sidebar.markImportant")}
               </PillButton>
               )}
-              {isDismissed ? (
-                <PillButton
-                  type="button"
-                  disabled={userEventActionBusy}
-                  data-testid="timeline-sidebar-restore"
-                  onClick={() => onRestoreTimelineEvent?.(selectedEvent)}
-                >
-                  {t("sidebar.restore")}
-                </PillButton>
-              ) : eventListAllowsDismiss(selectedEvent) ? (
-                <PillButton
-                  type="button"
-                  disabled={userEventActionBusy}
-                  data-testid="timeline-sidebar-dismiss"
-                  onClick={() => onDismissTimelineEvent?.(selectedEvent)}
-                >
-                  {t("sidebar.dismiss")}
-                </PillButton>
-              ) : null}
             </div>
           </section>
 

@@ -17,7 +17,7 @@ import {
   itemsPageChromeEntryOuterClass,
   itemsPageChromeInnerClass,
   itemsPageChromeOuterClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 
 vi.mock("../../utils/accessContext", () => ({
   useAccessContext: () => "local",

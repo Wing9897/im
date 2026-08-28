@@ -1,4 +1,4 @@
-import type { MenuSelectOption } from "../../components/ui";
+type TimezoneSelectOption = { value: string; label: string };
 
 /** Common household IANA cities. The live OS zone is prepended at render time. */
 export const COMMON_IANA_TIMEZONES = [
@@ -27,10 +27,10 @@ export function systemIanaTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
-export function calendarTimezoneOptions(preferred: string, selected = ""): MenuSelectOption[] {
+export function calendarTimezoneOptions(preferred: string, selected = ""): TimezoneSelectOption[] {
   const first = preferred.trim() || systemIanaTimezone();
   const seen = new Set<string>();
-  const options: MenuSelectOption[] = [];
+  const options: TimezoneSelectOption[] = [];
   const push = (value: string) => {
     const id = value.trim();
     if (!id || seen.has(id)) return;

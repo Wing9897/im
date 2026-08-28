@@ -22,8 +22,8 @@ const LISTED = {
   ...STATE,
   worksetName: "一般",
   worksetMissing: false,
-  emoji: "",
   description: "",
+  cover: "",
 };
 
 const BODY = {

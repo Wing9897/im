@@ -556,7 +556,7 @@ describe("TimelineGanttView", () => {
   });
 
   describe("schedule emojis from entity columns", () => {
-    it("shows the series emoji on the gantt label, keyed by seriesId", () => {
+    it("shows status dot and title on gantt labels without compact schedule emoji", () => {
       const calEvent = makeEvent({
         id: "cal-task-1:20250115T090000Z",
         seriesId: "cal-task-1",
@@ -571,9 +571,8 @@ describe("TimelineGanttView", () => {
           events: [calEvent],
         }),
       );
-      expect(
-        container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent,
-      ).toBe("🔁");
+      expect(container.querySelector('[data-testid="schedule-event-emoji"]')).toBeNull();
+      expect(container.querySelector('[data-testid^="gantt-label-status-"]')).toBeTruthy();
       expect(container.textContent).toContain("Weekly Standup");
     });
   });

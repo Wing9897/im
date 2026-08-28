@@ -19,7 +19,7 @@ export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/tasks",
 ] as const;
 
-/** AI workspace tabs that only matter for analysis pipelines. */
+/** Legacy analysis-strategy URL (now a redirect to Tasks scheduling). */
 export const SIMPLE_MODE_HIDDEN_AI_TABS = ["/ai/analysis-strategy"] as const;
 
 export function readSimpleMode(): boolean {

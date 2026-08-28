@@ -8,7 +8,7 @@ import {
   ITEMS_SEARCH_DEBOUNCE_MS,
   ItemsChromeSearch,
 } from "./ItemsChromeSearch";
-import { itemsPageChromeSearchClass } from "./itemsPageChromeClasses";
+import { itemsPageChromeSearchClass } from "../../styles/itemsPageChromeClasses";
 
 function setInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(

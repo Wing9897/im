@@ -15,7 +15,6 @@
     "logs": "系統日誌",
     "aiProvider": "AI 設定檔",
     "voice": "語音",
-    "analysisStrategy": "分析調度",
     "aiStaff": "AI員工介紹"
   },
   "shared": {
@@ -37,20 +36,13 @@
     "followSystem": "跟系統",
     "weatherLocationCurrent": "目前地區：{location}",
     "simpleModeLabel": "簡化模式（基本日曆）",
-    "simpleModeHelp": "以基本日曆為核心：保留時間規劃、我的日程、物品、助手、通知、設定／AI 設定與日誌；不含任務頁。隱藏監控、來源、情報地圖與排行榜。",
-    "simpleModeHint": "基本日曆：時間規劃、日程、物品、助手與通知；不含任務頁",
+    "simpleModeHelp": "以基本日曆為核心：保留時間規劃、我的日程、物品、助手、通知與動作、設定／AI 設定與日誌；不含任務頁。隱藏監控、來源、情報地圖與排行榜。",
+    "simpleModeHint": "基本日曆：時間規劃、日程、物品、助手、通知與動作；不含任務頁",
     "weatherLocationPlaceholder": "例如：臺北、Hong Kong、Tokyo",
     "weatherLocationAria": "自訂天氣／假日地區",
     "weatherLocationRequired": "請輸入地區名稱，或選擇跟系統",
     "weatherLocationSaved": "天氣／假日地區已儲存",
     "saveWeatherLocation": "儲存地區",
-    "cartoApiKeyLabel": "地圖底圖／CARTO API 金鑰",
-    "cartoApiKeyHelp": "選填。沒有金鑰時 CARTO 底圖會顯示浮水印。儲存在此裝置，方便每位安裝／使用者貼上自己的金鑰。",
-    "cartoApiKeyLink": "取得 CARTO 底圖 API 金鑰",
-    "cartoApiKeyAria": "CARTO 底圖 API 金鑰",
-    "cartoApiKeyPlaceholder": "貼上 API 金鑰",
-    "cartoApiKeySaved": "CARTO API 金鑰已儲存",
-    "saveCartoApiKey": "儲存金鑰",
     "collectorRestartDescription": "重啟訊息收集器並重新連線各來源適配器。不會刪除資料庫或帳號 session。",
     "restartCollectorButton": "重啟收集器",
     "collectorRestartConfirmTitle": "確定要重啟收集器？",
@@ -184,7 +176,10 @@
     "testPreviewSuffix": "，回覆：{preview}",
     "testFailedDefault": "AI 測試失敗",
     "testing": "測試中…",
-    "testButton": "AI 測試"
+    "testButton": "AI 測試",
+    "advancedTitle": "進階設定",
+    "advancedHelp": "套用至助手、A2A 與任務模式的單次 LLM 呼叫等待上限。",
+    "saveTimeoutLabel": "儲存超時設定"
   },
   "webSearch": {
     "sectionTitle": "聯網搜尋",
@@ -386,11 +381,41 @@
     "a2a": "A2A",
     "deeplink": "日曆連結",
     "mcp": "MCP",
+    "systemTab": "系統 API 及網址",
     "linkKeys": "到帳戶產生金鑰",
     "referenceTitle": "參考說明",
     "copy": "複製",
     "copied": "已複製",
-    "copyFailed": "複製失敗"
+    "copyFailed": "複製失敗",
+    "system": {
+      "cartoApiKeyLabel": "地圖底圖／CARTO API 金鑰",
+      "cartoApiKeyHelp": "選填。沒有金鑰時 CARTO 底圖會顯示浮水印。儲存在此裝置，方便每位安裝／使用者貼上自己的金鑰。",
+      "cartoApiKeyLink": "取得 CARTO 底圖 API 金鑰",
+      "cartoApiKeyAria": "CARTO 底圖 API 金鑰",
+      "cartoApiKeyPlaceholder": "貼上 API 金鑰",
+      "cartoApiKeySaved": "CARTO API 金鑰已儲存",
+      "saveCartoApiKey": "儲存金鑰",
+      "outboundTitle": "對外網址",
+      "outboundHelp": "唯讀清單：應用程式會呼叫的第三方端點。網址在程式碼中固定；若要改接線請修改 server 或 web 常數。",
+      "outbound": {
+        "cartoTiles": "CARTO 地圖底圖",
+        "cartoTilesHelp": "情報地圖與儀表板地圖板塊使用的深色底圖。",
+        "openMeteoGeocoding": "Open-Meteo 地理編碼",
+        "openMeteoGeocodingHelp": "將天氣／假期地區解析為座標。",
+        "openMeteoForecast": "Open-Meteo 天氣預報",
+        "openMeteoForecastHelp": "日曆使用的 16 日天氣預報。",
+        "metNoForecast": "MET Norway 天氣（備援）",
+        "metNoForecastHelp": "Open-Meteo 不可用時的備用天氣預報。",
+        "wttrWeather": "wttr.in 天氣（最後備援）",
+        "wttrWeatherHelp": "Open-Meteo 與 MET Norway 均失敗時的最後備用預報。",
+        "nominatimGeocoding": "Nominatim 地理編碼（OSM）",
+        "nominatimGeocodingHelp": "將分析事件地點解析為地圖座標。",
+        "bingFocalBackground": "Bing 每日桌布",
+        "bingFocalBackgroundHelp": "主題焦點背景中繼資料（HPImageArchive）及自 https://www.bing.com 取得的圖片。",
+        "nagerHolidays": "Nager.Date 公眾假期",
+        "nagerHolidaysHelp": "依天氣地區對應國家的公眾假期。"
+      }
+    }
   },
   "apiDocs": {
     "baseUrl": {

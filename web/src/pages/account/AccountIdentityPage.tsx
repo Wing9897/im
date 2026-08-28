@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, SettingsRow, TextArea, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
@@ -21,7 +22,6 @@ import {
 } from "../../components/settings/SettingsFormLayout";
 import { AccountAvatarControl } from "./components/AccountAvatarControl";
 import { AccountChangePasswordSection } from "./components/AccountChangePasswordSection";
-import { CalendarShareLoginSection } from "./components/CalendarShareLoginSection";
 
 /** Account → Identity: display name, avatar, background, change password. */
 export function AccountIdentityPage() {
@@ -168,11 +168,12 @@ export function AccountIdentityPage() {
         </SettingsContentCard>
       </div>
 
-      <div className="mt-lg">
-        <SettingsContentCard>
-          <CalendarShareLoginSection />
-        </SettingsContentCard>
-      </div>
+      <p className={`mb-0 mt-lg max-w-[56ch] ${formHelpClass}`} data-testid="account-calendar-share-hint">
+        {t("account:calendarShareMoved")}{" "}
+        <Link to="/subscriptions/account" className="font-medium text-accent no-underline hover:underline">
+          {t("account:calendarShareMovedLink")}
+        </Link>
+      </p>
     </div>
   );
 }

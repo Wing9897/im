@@ -6,7 +6,7 @@ import {
   monthEventDotClass,
   monthSpanEndingIconClass,
   monthSpanOngoingIconClass,
-} from "../pages/timeline/calendar/timelineCalendarClasses";
+} from "../pages/timeline/timelineCalendarClasses";
 
 const themeCss = [
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../theme.css"), "utf8"),

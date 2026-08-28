@@ -27,8 +27,8 @@ const EXPAND_TASKS = [
 ];
 
 const SUBSCRIBE_CALENDARS = [
-  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" }),
-  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", emoji: "🚧" }),
+  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", ownerAvatar: "data:image/png;base64,a" }),
+  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", ownerAvatar: "data:image/png;base64,b" }),
 ];
 
 describe("TimelineSourceFilterDialog", () => {
@@ -120,12 +120,10 @@ describe("TimelineSourceFilterDialog", () => {
     );
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-subscribe-toggle-Carol/Team"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="timeline-subscribe-emoji-Carol/Team"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="timeline-subscribe-avatar-Alice/Work"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="timeline-subscribe-avatar-Carol/Team"]')).toBeTruthy();
     expect(group?.textContent).toContain("Alice/Work");
     expect(group?.textContent).toContain("Carol/Team");
-    expect(group?.textContent).toContain("🌞");
-    expect(group?.textContent).toContain("🚧");
     expect(document.querySelector('[data-testid="timeline-filter-local-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="timeline-filter-subscribe-select-all"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-__general__"]')).toBeTruthy();
@@ -323,7 +321,7 @@ describe("TimelineSourceFilterDialog", () => {
     const status = document.querySelector('[data-testid="timeline-subscribe-disabled"]');
     expect(status?.textContent).toMatch(/sign in/i);
     expect(status?.textContent).not.toMatch(/unreachable/i);
-    expect(status?.querySelector('a[href="/account/identity"]')).toBeTruthy();
+    expect(status?.querySelector('a[href="/subscriptions/account"]')).toBeTruthy();
     act(() => {
       (document.querySelector('[data-testid="timeline-filter-local-clear"]') as HTMLButtonElement).click();
     });

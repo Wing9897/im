@@ -87,6 +87,10 @@ describe("WorksetWorkspacePage", () => {
     expect(harness.container.querySelector('[data-testid="workset-workspace-tabs"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-contents-panel"]')).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="workset-catalog-tabs"]')).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="workset-workspace-cover"]')).toBeTruthy();
+    expect(
+      harness.container.querySelector('[data-testid="workset-card-cover-upload-label"]'),
+    ).toBeTruthy();
     expect(harness.container.textContent).toContain("目錄");
     expect(harness.container.textContent).toContain("流程圖");
     expect(harness.container.textContent).toContain("Ops");

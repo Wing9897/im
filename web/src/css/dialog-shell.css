@@ -52,13 +52,15 @@
 }
 
 /*
- * Overlay nav fill: translucent card over the real canvas (no cloned wallpaper).
- * Light frost stays on this panel only — the scrim must not blur the main screen.
+ * Overlay nav fill: frosted panel over the real canvas (no cloned wallpaper).
+ * Uses --surface-panel + blur tokens (same as .im-material-panel) — not a low-alpha wash.
+ * Scroll/clip lives on an inner pane in AppSidebar — overflow on this shell kills blur.
+ * The scrim must not blur the main screen.
  */
 .im-material-panel.im-sidebar-panel {
-  background: color-mix(in srgb, var(--surface-card) 80%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--surface-panel);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
 }
 
 /*

@@ -14,7 +14,7 @@ import {
   itemsPageChromeFilterChipClass,
   itemsPageChromeSearchClass,
   itemsPageChromeTitleClusterWithControlsClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 
 describe("ItemsEntryToolbar chrome", () => {
   let container: HTMLDivElement;

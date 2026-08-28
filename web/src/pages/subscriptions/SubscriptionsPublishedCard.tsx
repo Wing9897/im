@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { TFunction } from "i18next";
-import { Lock } from "lucide-react";
 import { Badge, Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
 import type { CalendarSharePublishListItem } from "../../api/calendarShare";
@@ -13,11 +12,14 @@ import {
   visibilityBadgeTone,
 } from "./SubscriptionCalendarCard";
 
+type PublishedBusyAction = { worksetId: string; action: "sync" | "unpublish" } | null;
+
 type Props = {
   row: CalendarSharePublishListItem;
   handle: string;
+  ownerAvatar: string;
   canMutate: boolean;
-  busyId: string | null;
+  busyAction: PublishedBusyAction;
   onSync: (row: CalendarSharePublishListItem) => void;
   onEdit: (worksetId: string) => void;
   onUnpublish: (row: CalendarSharePublishListItem) => void;
@@ -28,8 +30,9 @@ type Props = {
 export function SubscriptionsPublishedCard({
   row,
   handle,
+  ownerAvatar,
   canMutate,
-  busyId,
+  busyAction,
   onSync,
   onEdit,
   onUnpublish,
@@ -38,13 +41,17 @@ export function SubscriptionsPublishedCard({
   const path = handle ? calendarShareKey(handle, row.slug) : row.slug;
   const name = row.worksetName.trim() || row.worksetId;
   const grants = grantsNote(row, t);
+  const rowBusy = busyAction?.worksetId === row.worksetId;
+  const syncLoading = rowBusy && busyAction?.action === "sync";
+  const unpublishLoading = rowBusy && busyAction?.action === "unpublish";
   return (
     <SubscriptionCalendarCard
       key={row.worksetId}
       title={path}
-      emoji={row.emoji}
+      ownerLabel={handle}
+      ownerAvatar={ownerAvatar}
+      cover={row.cover}
       description={row.description}
-      icon={row.publicVisibility === "private_group" ? Lock : undefined}
       accentClass={visibilityAccentClass(row.publicVisibility)}
       data-testid={`subscriptions-published-${row.worksetId}`}
       badge={
@@ -58,11 +65,12 @@ export function SubscriptionsPublishedCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={!canMutate || busyId === row.worksetId}
+                loading={syncLoading}
+                disabled={!canMutate || rowBusy}
                 onClick={() => void onSync(row)}
                 data-testid={`subscriptions-published-sync-${row.worksetId}`}
               >
-                {t("published.syncNow")}
+                {syncLoading ? t("published.syncing") : t("published.syncNow")}
               </Button>
               <Button
                 type="button"
@@ -79,11 +87,12 @@ export function SubscriptionsPublishedCard({
             type="button"
             variant="ghost"
             size="sm"
-            disabled={!canMutate || busyId === row.worksetId}
+            loading={unpublishLoading}
+            disabled={!canMutate || rowBusy}
             onClick={() => void onUnpublish(row)}
             data-testid={`subscriptions-unpublish-${row.worksetId}`}
           >
-            {t("published.unpublish")}
+            {unpublishLoading ? t("published.unpublishing") : t("published.unpublish")}
           </Button>
         </>
       }

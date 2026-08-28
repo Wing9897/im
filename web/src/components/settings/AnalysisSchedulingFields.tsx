@@ -24,14 +24,14 @@ export type AnalysisSchedulingFieldsProps = {
   onBatchLimitChange: (value: string) => void;
   onEvidenceStyleChange: (value: string) => void;
   labels: AnalysisSchedulingLabels;
-  /** Empty number fields + empty evidence option mean follow AI Settings. */
+  /** Empty number fields + empty evidence option mean follow global scheduling. */
   allowFollowGlobal?: boolean;
   idPrefix?: string;
 };
 
 /**
- * Shared trigger / batch-limit / evidence-style controls for AI Settings
- * and per-task override forms.
+ * Shared trigger / batch-limit / evidence-style controls for global
+ * scheduling settings and per-task override forms.
  */
 export function AnalysisSchedulingFields({
   triggerThreshold,

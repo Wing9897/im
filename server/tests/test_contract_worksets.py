@@ -10,8 +10,8 @@ WORKSET_KEYS = [
     "isSystem",
     "notifyEnabled",
     "externalEnabled",
-    "emoji",
     "description",
+    "cover",
     "createdAt",
     "updatedAt",
 ]
@@ -200,54 +200,72 @@ async def test_task_create_without_workset_id_defaults_to_system(client):
     assert resp.json()["worksetId"] == "__general__"
 
 
-async def test_workset_create_and_patch_emoji_and_description(client):
+async def test_workset_create_and_patch_cover(client):
+    avatar = "data:image/jpeg;base64,abcd"
     created = await client.post(
         "/api/v1/worksets",
-        json={"name": "Desk", "emoji": "📚", "description": "  Research notes  "},
+        json={"name": "Desk", "cover": avatar},
     )
     assert created.status_code == 201
     body = created.json()
     assert_keys(body, WORKSET_KEYS, "WorksetResponse")
-    assert body["emoji"] == "📚"
+    assert body["cover"] == avatar
+
+    patched = await client.put(
+        f"/api/v1/worksets/{body['id']}",
+        json={"cover": ""},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["cover"] == ""
+
+
+async def test_workset_cover_rejects_non_data_url(client):
+    created = await client.post("/api/v1/worksets", json={"name": "Desk"})
+    assert created.status_code == 201
+    workset_id = created.json()["id"]
+    resp = await client.put(
+        f"/api/v1/worksets/{workset_id}",
+        json={"cover": "https://example.com/x.png"},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == "VALIDATION_ERROR"
+
+
+async def test_workset_create_and_patch_description(client):
+    created = await client.post(
+        "/api/v1/worksets",
+        json={"name": "Desk", "description": "  Research notes  "},
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert_keys(body, WORKSET_KEYS, "WorksetResponse")
     assert body["description"] == "Research notes"
 
     patched = await client.put(
         f"/api/v1/worksets/{body['id']}",
-        json={"emoji": "🎯", "description": "Focus"},
+        json={"description": "Focus"},
     )
     assert patched.status_code == 200
-    assert patched.json()["emoji"] == "🎯"
     assert patched.json()["description"] == "Focus"
     assert patched.json()["name"] == "Desk"
 
     cleared = await client.put(
         f"/api/v1/worksets/{body['id']}",
-        json={"emoji": "", "description": ""},
+        json={"description": ""},
     )
     assert cleared.status_code == 200
-    assert cleared.json()["emoji"] == ""
     assert cleared.json()["description"] == ""
 
 
-async def test_system_workset_can_set_emoji_and_description(client):
+async def test_system_workset_can_set_description(client):
     patched = await client.put(
         "/api/v1/worksets/__general__",
-        json={"emoji": "🏠", "description": "Default bucket"},
+        json={"description": "Default bucket"},
     )
     assert patched.status_code == 200
-    assert patched.json()["emoji"] == "🏠"
     assert patched.json()["description"] == "Default bucket"
     assert patched.json()["name"] == "一般"
     assert patched.json()["isSystem"] is True
-
-
-async def test_workset_emoji_rejects_multiple_graphemes(client):
-    resp = await client.post(
-        "/api/v1/worksets",
-        json={"name": "Bad glyph", "emoji": "😀😀"},
-    )
-    assert resp.status_code == 422
-    assert resp.json()["error_code"] == "VALIDATION_ERROR"
 
 
 async def test_workset_description_rejects_over_max(client):

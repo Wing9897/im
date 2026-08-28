@@ -373,6 +373,7 @@ describe("Empty state rendering for list components", () => {
 
       // Should show empty state for no results
       expect(container.textContent).toContain("目前還沒有情報");
+      expect(container.textContent).not.toContain("開始情報管線");
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
   });

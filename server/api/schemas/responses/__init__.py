@@ -28,6 +28,9 @@ from server.api.schemas.responses.auth import (
 from server.api.schemas.responses.calendar_share import (
     CalendarShareEventResponse,
     CalendarShareGrantResponse,
+    CalendarShareProfileResponse,
+    CalendarSharePublishListItemResponse,
+    CalendarSharePublishListResponse,
     CalendarSharePublishStateResponse,
     CalendarShareSearchHitResponse,
     CalendarShareSearchResponse,

@@ -14,6 +14,7 @@ import {
   subscribePageStatus,
 } from "../../domain/calendarShare/subscribedCalendars";
 import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { useUserProfile } from "../../domain/user/userProfile";
 import { toErrorMessage } from "../../utils/errors";
 import { SubscriptionsPublishedCard } from "./SubscriptionsPublishedCard";
 import { SubscriptionsPublishModal } from "./SubscriptionsPublishModal";
@@ -29,16 +30,19 @@ import {
 
 export { PUBLISHED_PENDING_SYNC_POLL_MS };
 
+type PublishedBusyAction = { worksetId: string; action: "sync" | "unpublish" } | null;
+
 /** This device's public calendars: list, unpublish, and publish/update from a local workset. */
 export function SubscriptionsPublishedPage() {
   const { t } = useTranslation("subscriptions");
   const catalog = useCalendarShareCatalog();
+  const { profile } = useUserProfile();
   const { items, setItems, worksets, listReady, loadError, load, onPublishSaved } =
     useSubscriptionsPublishedList();
   const [selectedId, setSelectedId] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<PublishedBusyAction>(null);
   const [listFilter, setListFilter] = useState("");
   const [formBusy, setFormBusy] = useState(false);
   const [formReady, setFormReady] = useState(false);
@@ -46,7 +50,7 @@ export function SubscriptionsPublishedPage() {
 
   const onUnpublish = useCallback(
     async (row: CalendarSharePublishListItem) => {
-      setBusyId(row.worksetId);
+      setBusyAction({ worksetId: row.worksetId, action: "unpublish" });
       try {
         await unpublishCalendarSharePublish(row);
         setActionError(null);
@@ -58,7 +62,7 @@ export function SubscriptionsPublishedPage() {
       } catch (error) {
         setActionError(toErrorMessage(error));
       } finally {
-        setBusyId(null);
+        setBusyAction(null);
       }
     },
     [load, setItems],
@@ -66,7 +70,7 @@ export function SubscriptionsPublishedPage() {
 
   const onSync = useCallback(
     async (row: CalendarSharePublishListItem) => {
-      setBusyId(row.worksetId);
+      setBusyAction({ worksetId: row.worksetId, action: "sync" });
       try {
         await syncCalendarSharePublish(row);
         setActionError(null);
@@ -82,7 +86,7 @@ export function SubscriptionsPublishedPage() {
       } catch (error) {
         setActionError(toErrorMessage(error));
       } finally {
-        setBusyId(null);
+        setBusyAction(null);
       }
     },
     [load],
@@ -95,6 +99,7 @@ export function SubscriptionsPublishedPage() {
   });
   const canMutate = status === "ok";
   const handle = catalog.ownHandle || catalog.session?.handle || "";
+  const ownerAvatar = (profile.avatarDataUrl ?? "").trim();
   const error = actionError ?? loadError;
   const visible = useMemo(
     () =>
@@ -171,8 +176,9 @@ export function SubscriptionsPublishedPage() {
             key={row.worksetId}
             row={row}
             handle={handle}
+            ownerAvatar={ownerAvatar}
             canMutate={canMutate}
-            busyId={busyId}
+            busyAction={busyAction}
             onSync={(item) => void onSync(item)}
             onEdit={openPublishForm}
             onUnpublish={(item) => void onUnpublish(item)}

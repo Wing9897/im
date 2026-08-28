@@ -11,7 +11,7 @@ import {
   itemsPageChromeEntryToolsClass,
   itemsPageChromeSelectClass,
   itemsPageFillClass,
-} from "../itemsPageChromeClasses";
+} from "../../../styles/itemsPageChromeClasses";
 import type { ItemsFinancePlFilter, ItemsFinancePreset, ItemsFinanceSortKey } from "../../../domain/items/itemFinance";
 import { useItemsFinancePage } from "./useItemsFinancePage";
 

@@ -20,7 +20,7 @@ SoT: [`agent/mcp.md`](./agent/mcp.md) (`/api/v1/mcp`)、[`agent/a2a.md`](./agent
 
 ## Frontend usage deltas
 
-Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats.ts`（待分析／排隊中／已分析）. Intelligence sort／display／page-by-page timeline／voice: [`ARCHITECTURE.md` Unified event analysis](./ARCHITECTURE.md#unified-event-analysis-pipeline); FE quirks below under [Intelligence](#intelligence--events-time-semantics).
+Dashboard maps `useTaskAnalysisStats` → `web/src/domain/dashboard/taskCardStats.ts`（待分析／排隊中／已分析）. Intelligence sort／display／page-by-page timeline／voice: [`ARCHITECTURE.md` Unified event analysis](./ARCHITECTURE.md#unified-event-analysis-pipeline); FE quirks below under [Intelligence](#intelligence--events-time-semantics).
 
 **Viewer** (`/viewer/*`) is a **secondary read-only projection** of live task／batch／status — not a second control plane. Prefer the main app for edits and ops.
 
@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler (schema floor 1 / current stamp 4): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (schema floor 5 / current stamp 5): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -66,11 +66,11 @@ Still update sources routes／OpenAPI／pipeline／UI when adding — registry i
 
 ## Schema baseline
 
-Pointer only — stamp / semver / floor + `1→2→3→4` registry SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
+Pointer only — stamp / semver / floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
 
 ## LLM simplifications (intentional)
 
-Still in force under schema floor **1** / current stamp **4** / `SCHEMA_SEMVER` `1.3.0`. Do **not** restore without a new contract:
+Still in force under schema floor **5** / current stamp **5** / `SCHEMA_SEMVER` `1.4.0`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|

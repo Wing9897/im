@@ -9,13 +9,14 @@ import {
   type IntegrationTabKey,
 } from "../../domain/navigation/integrationsRoutes";
 import { SettingsIntegrationsMcpPanel } from "./SettingsIntegrationsMcpPanel";
+import { SettingsIntegrationsSystemPanel } from "./SettingsIntegrationsSystemPanel";
 import {
   SettingsIntegrationsA2aPanel,
   SettingsIntegrationsDeeplinkPanel,
   SettingsIntegrationsWebhookPanel,
 } from "./SettingsIntegrationsPanels";
 
-/** Settings → 外部接口: in-page pills for Webhook | A2A | 日曆連結 | MCP. */
+/** Settings → 外部接口: in-page pills for Webhook | A2A | 日曆連結 | MCP | 系統 API 及網址. */
 export function SettingsIntegrationsPage() {
   const { t } = useTranslation("settings");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,7 +62,7 @@ export function SettingsIntegrationsPage() {
           onChange={(id) => setActiveTab(id as IntegrationTabKey)}
           items={INTEGRATION_TABS.map((id) => ({
             id,
-            label: t(`integrations.${id}`),
+            label: id === "system" ? t("integrations.systemTab") : t(`integrations.${id}`),
           }))}
         />
       </div>
@@ -70,6 +71,7 @@ export function SettingsIntegrationsPage() {
       {activeTab === "a2a" ? <SettingsIntegrationsA2aPanel /> : null}
       {activeTab === "deeplink" ? <SettingsIntegrationsDeeplinkPanel /> : null}
       {activeTab === "mcp" ? <SettingsIntegrationsMcpPanel /> : null}
+      {activeTab === "system" ? <SettingsIntegrationsSystemPanel /> : null}
     </FormStack>
   );
 }

@@ -1,17 +1,15 @@
 /**
  * Compact ownership workset card for the dashboard「工作集」grouping view.
- * 48px emoji avatar (Layers fallback) plus optional truncated description.
+ * Magazine layout: cover strip + title / description / counts (no emoji avatar).
  */
 
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { updateWorkset } from "../api/worksets";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
-import { useToast } from "../context/ToastContext";
-import { normalizeWorksetDescription, normalizeWorksetEmoji } from "../domain/worksets/worksetFields";
-import { toError } from "../utils/errors";
-import { WorksetCardEmoji } from "./WorksetCardEmoji";
+import { normalizeWorksetDescription } from "../domain/worksets/worksetFields";
+import { normalizeWorksetCover } from "../domain/worksets/worksetCover";
+import { WorksetCoverField } from "./WorksetCoverField";
 import { WorksetPermissionToggles } from "./WorksetPermissionToggles";
 import { AccentBarCard, Badge, TextField, cardTitleHeaderClass, cardTitleLeadClass } from "./ui";
 import { cardBodyClass, cardTitleClass } from "./ui/pageTypography";
@@ -46,11 +44,10 @@ export function WorksetSummaryCard({
   onRename,
   onDelete,
 }: WorksetSummaryCardProps) {
-  const { t } = useTranslation("common");
-  const { worksets, refreshWorksets } = useTaskCatalog();
-  const { showToast } = useToast();
+  const { t } = useTranslation(["common", "workset", "account"]);
+  const { worksets } = useTaskCatalog();
   const ws = worksets.find((row) => row.id === id);
-  const emoji = normalizeWorksetEmoji(ws?.emoji);
+  const cover = normalizeWorksetCover(ws?.cover);
   const customDescription = normalizeWorksetDescription(ws?.description);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -70,16 +67,6 @@ export function WorksetSummaryCard({
       input.select();
     }
   }, [editing, id]);
-
-  const persistEmoji = async (next: string) => {
-    try {
-      await updateWorkset(id, { emoji: next.trim() });
-      await refreshWorksets();
-    } catch (error) {
-      showToast(toError(error).message, "error");
-      throw error;
-    }
-  };
 
   const startRename = (event: MouseEvent) => {
     event.stopPropagation();
@@ -159,9 +146,9 @@ export function WorksetSummaryCard({
       }
       aria-label={t("workset:openDetailAria", { name: title })}
     >
-      <div className="flex items-start gap-md">
-        <WorksetCardEmoji emoji={emoji} name={title} onSelect={persistEmoji} />
-        <div className="flex min-w-0 flex-1 flex-col gap-sm">
+      <div className="flex flex-col gap-md">
+        <WorksetCoverField worksetId={id} cover={cover} name={title} />
+        <div className="flex min-w-0 flex-col gap-sm">
           <div className={cardTitleHeaderClass}>
             <span className={cardTitleLeadClass}>
               {editing ? (

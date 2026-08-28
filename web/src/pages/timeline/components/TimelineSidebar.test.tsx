@@ -257,13 +257,25 @@ describe("TimelineSidebar detail provenance", () => {
     expect(container.querySelector('[data-testid="timeline-sidebar-dismiss"]')).toBeNull();
     expect(container.textContent).not.toContain("從時間軸拿掉");
     expect(
-      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
-    ).toContain("訂閱：DemoPub/Open");
+      container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
+    ).toBe("日曆：DemoPub/Open");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-status"]')?.textContent,
+    ).toContain("狀態：");
+    expect(container.querySelector('[data-testid="timeline-sidebar-provenance"]')).toBeNull();
+    expect(container.querySelector('[data-testid="subscribed-event-icon"]')).toBeTruthy();
   });
 
   it("keeps dismiss on local user events", () => {
     renderSidebar(makeUserEvent());
-    expect(container.querySelector('[data-testid="timeline-sidebar-dismiss"]')).not.toBeNull();
-    expect(container.textContent).toContain("從時間軸拿掉");
+    const dismiss = container.querySelector('[data-testid="timeline-sidebar-dismiss"]');
+    expect(dismiss).not.toBeNull();
+    expect(dismiss?.getAttribute("aria-label")).toBe("從時間軸拿掉");
+    expect(dismiss?.getAttribute("title")).toBe("從時間軸拿掉");
+    expect(dismiss?.className).toContain("text-error");
+    expect(container.textContent).not.toContain("從時間軸拿掉");
+    const title = container.querySelector('[data-testid="timeline-sidebar-title"]');
+    expect(dismiss?.parentElement).toBe(title?.parentElement);
+    expect(dismiss?.parentElement?.className).toContain("justify-between");
   });
 });

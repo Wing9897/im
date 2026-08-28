@@ -26,8 +26,8 @@ const labels: PipelineGraphLabels = {
   assistant: "助手",
   timeline: "時間規劃",
   intel: "情報頁",
-  notify: "通知",
-  external: "外部接口",
+  notify: "本機通知",
+  external: "動作",
 };
 
 function handlePos(

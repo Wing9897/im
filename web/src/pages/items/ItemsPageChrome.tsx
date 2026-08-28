@@ -10,7 +10,7 @@ import {
   itemsPageChromeTitleClass,
   itemsPageChromeTitleClusterClass,
   itemsPageChromeTitleClusterWithControlsClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 
 type BackProps = {
   onClick: () => void;

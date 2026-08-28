@@ -338,15 +338,48 @@ describe("TimelinePage user-event CRUD", () => {
     });
   }
 
-  async function confirmPendingDialog() {
-    const dialog = document.body.querySelector('[role="alertdialog"]');
-    expect(dialog).not.toBeNull();
-    const buttons = dialog!.querySelectorAll("button");
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
+  it("dismisses the selected event, clears selection, and refreshes", async () => {
+    const event = makeUserEvent();
+    mockUseTimelinePageContainer.mockReturnValue(makeContainer(event));
+    await renderPage();
+
     await flushAction(() => {
-      (buttons[1] as HTMLButtonElement).click();
+      const context = captures.context as TimelinePageContextValue;
+      void context.onDismissTimelineEvent!(event);
     });
-  }
+
+    expect(mockDismissTimelineEvent).toHaveBeenCalledWith("user", "user-1");
+    expect(mockSetSelectedEvent).toHaveBeenCalledWith(null);
+    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows dismiss failures instead of swallowing them", async () => {
+    const event = makeUserEvent();
+    mockDismissTimelineEvent.mockRejectedValue(new Error("Dismiss denied"));
+    await renderPage();
+
+    await flushAction(() => {
+      const context = captures.context as TimelinePageContextValue;
+      void context.onDismissTimelineEvent!(event);
+    });
+
+    expect(mockShowToast).toHaveBeenCalledWith("Dismiss denied", "error");
+    expect(mockRefreshEvents).not.toHaveBeenCalled();
+  });
+
+  it("restores a dismissed event and refreshes", async () => {
+    const event = { ...makeUserEvent(), dismissed: true };
+    mockUseTimelinePageContainer.mockReturnValue(makeContainer(event));
+    await renderPage();
+
+    await flushAction(() => {
+      const context = captures.context as TimelinePageContextValue;
+      void context.onRestoreTimelineEvent!(event);
+    });
+
+    expect(mockRestoreTimelineEvent).toHaveBeenCalledWith("user", "user-1");
+    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
+  });
 
   it("creates an event and refreshes the visible data", async () => {
     await renderPage();
@@ -442,52 +475,6 @@ describe("TimelinePage user-event CRUD", () => {
       "user-1",
       expect.objectContaining({ title: "Updated" }),
     );
-    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
-  });
-
-  it("dismisses the selected event, clears selection, and refreshes", async () => {
-    const event = makeUserEvent();
-    mockUseTimelinePageContainer.mockReturnValue(makeContainer(event));
-    await renderPage();
-
-    await flushAction(() => {
-      const context = captures.context as TimelinePageContextValue;
-      context.onDismissTimelineEvent!(event);
-    });
-    await confirmPendingDialog();
-
-    expect(mockDismissTimelineEvent).toHaveBeenCalledWith("user", "user-1");
-    expect(mockSetSelectedEvent).toHaveBeenCalledWith(null);
-    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows dismiss failures instead of swallowing them", async () => {
-    const event = makeUserEvent();
-    mockDismissTimelineEvent.mockRejectedValue(new Error("Dismiss denied"));
-    await renderPage();
-
-    await flushAction(() => {
-      const context = captures.context as TimelinePageContextValue;
-      context.onDismissTimelineEvent!(event);
-    });
-    await confirmPendingDialog();
-
-    expect(mockShowToast).toHaveBeenCalledWith("Dismiss denied", "error");
-    expect(mockRefreshEvents).not.toHaveBeenCalled();
-  });
-
-  it("restores a dismissed event and refreshes", async () => {
-    const event = { ...makeUserEvent(), dismissed: true };
-    mockUseTimelinePageContainer.mockReturnValue(makeContainer(event));
-    await renderPage();
-
-    await flushAction(() => {
-      const context = captures.context as TimelinePageContextValue;
-      context.onRestoreTimelineEvent!(event);
-    });
-    await confirmPendingDialog();
-
-    expect(mockRestoreTimelineEvent).toHaveBeenCalledWith("user", "user-1");
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
   });
 });

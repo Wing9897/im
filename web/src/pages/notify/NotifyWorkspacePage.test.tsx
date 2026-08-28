@@ -87,13 +87,13 @@ describe("NotifyWorkspacePage smoke test", () => {
     await harness.render(NotifyWorkspacePageUnderTest);
 
     // Component should render the heading
-    expect(harness.container.textContent).toContain("通知");
+    expect(harness.container.textContent).toContain("本機通知");
     // Empty state should be shown when no actions exist
     expect(harness.container.textContent).toContain("尚未設定任何通知");
     // The "新增通知" button should be present on the default channels tab
     expect(harness.container.textContent).toContain("新增通知");
     // Workspace tabs separate types / notify / history
-    expect(harness.container.textContent).toContain("外發通知");
+    expect(harness.container.textContent).toContain("動作");
     expect(harness.container.textContent).not.toContain("語音提醒");
     expect(harness.container.textContent).toContain("觸發紀錄");
   });
@@ -108,7 +108,7 @@ describe("NotifyWorkspacePage smoke test", () => {
     }
     await harness.render(VoiceTabGone);
     expect(harness.container.querySelector('[data-testid="local-notify-panel"]')).toBeNull();
-    expect(harness.container.textContent).toContain("外發通知");
+    expect(harness.container.textContent).toContain("動作");
   });
 
   it("does not keep a ?tab=voice redirect in source", () => {

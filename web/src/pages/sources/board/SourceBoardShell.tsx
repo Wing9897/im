@@ -3,7 +3,7 @@ import {
   sourceBoardClass,
   sourceBoardFormClass,
   sourceBoardListClass,
-} from "./sourceBoardClasses";
+} from "../../../styles/sourceBoardClasses";
 
 /** Shared two-column Sources board shell (sticky form + list). */
 export function SourceBoardShell({

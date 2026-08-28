@@ -95,6 +95,13 @@
   flex-shrink: 0;
 }
 
+.board-gantt-embed__lane-mark {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
 .board-gantt-embed__name {
   overflow: hidden;
   text-overflow: ellipsis;

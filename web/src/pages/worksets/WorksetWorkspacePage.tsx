@@ -9,6 +9,7 @@ import { Layers } from "lucide-react";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { WorksetNameDialog } from "../../components/dialogs/WorksetNameDialog";
+import { WorksetCoverField } from "../../components/WorksetCoverField";
 import { WorksetPermissionToggles } from "../../components/WorksetPermissionToggles";
 import { AppPageShell, Badge, Button, OpsControlBar, pageTitleClass } from "../../components/ui";
 import { deleteWorkset, updateWorkset } from "../../api/worksets";
@@ -56,13 +57,12 @@ export function WorksetWorkspacePage() {
   }, [navigate]);
 
   const handleSave = useCallback(
-    async (values: { name: string; emoji: string; description: string }) => {
+    async (values: { name: string; description: string; cover: string }) => {
       if (!workset) return;
       setRenameBusy(true);
       try {
         await updateWorkset(workset.id, {
           ...(isSystem ? {} : { name: values.name }),
-          emoji: values.emoji,
           description: values.description,
         });
         await refreshWorksets();
@@ -174,6 +174,14 @@ export function WorksetWorkspacePage() {
         </div>
       </OpsControlBar>
 
+      <div className="mb-md max-w-xl" data-testid="workset-workspace-cover">
+        <WorksetCoverField
+          worksetId={workset.id}
+          cover={workset.cover ?? ""}
+          name={title}
+        />
+      </div>
+
       <WorksetContentsPanel
         workset={{
           id: workset.id,
@@ -187,7 +195,6 @@ export function WorksetWorkspacePage() {
         open={renameOpen}
         mode="rename"
         initialName={workset.name}
-        initialEmoji={workset.emoji ?? ""}
         initialDescription={workset.description ?? ""}
         nameDisabled={isSystem}
         busy={renameBusy}

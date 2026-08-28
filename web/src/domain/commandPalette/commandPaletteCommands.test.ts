@@ -55,8 +55,14 @@ describe("commandPaletteCommands", () => {
   });
 
   it("includes actions voice and history tab shortcuts", () => {
+    const workspace = filterCommandPaletteItems("通知與動作");
+    expect(workspace.some((item) => item.to === "/notify" && item.id === "notify")).toBe(true);
+    const actionsTab = filterCommandPaletteItems("動作");
+    expect(actionsTab.some((item) => item.to === "/notify")).toBe(true);
     const voice = filterCommandPaletteItems("本機通知");
     expect(voice.some((item) => item.to === "/notify?tab=notify")).toBe(true);
+    const localNotify = filterCommandPaletteItems("local notify");
+    expect(localNotify.some((item) => item.to === "/notify?tab=notify")).toBe(true);
     const legacyVoice = filterCommandPaletteItems("語音提醒");
     expect(legacyVoice.some((item) => item.to === "/notify?tab=notify")).toBe(true);
     const history = filterCommandPaletteItems("觸發");
@@ -75,13 +81,15 @@ describe("commandPaletteCommands", () => {
     expect(canvas.some((item) => item.id === "board")).toBe(true);
   });
 
-  it("includes subscription mine / published / search shortcuts", () => {
+  it("includes subscription mine / published / account / search shortcuts", () => {
     const published = filterCommandPaletteItems("發佈");
     expect(published.some((item) => item.to === "/subscriptions/published")).toBe(true);
     const privateGroup = filterCommandPaletteItems("私人群組");
     expect(privateGroup.some((item) => item.to === "/subscriptions/published")).toBe(true);
     const search = filterCommandPaletteItems("搜尋訂閱");
     expect(search.some((item) => item.to === "/subscriptions/search")).toBe(true);
+    const account = filterCommandPaletteItems("日曆分享");
+    expect(account.some((item) => item.to === "/subscriptions/account")).toBe(true);
     const mine = filterCommandPaletteItems("訂閱");
     expect(mine.some((item) => item.to === "/subscriptions/mine")).toBe(true);
   });
@@ -126,7 +134,7 @@ describe("commandPaletteCommands", () => {
     const items = filterCommandPaletteItems("資料");
     expect(items.some((item) => item.to === "/settings/data")).toBe(true);
     const strategy = filterCommandPaletteItems("調度");
-    expect(strategy.some((item) => item.to === "/ai/analysis-strategy")).toBe(true);
+    expect(strategy.some((item) => item.to === "/tasks?scheduling=open")).toBe(true);
     const assistant = filterCommandPaletteItems("助手");
     expect(assistant.some((item) => item.to === "/assistant")).toBe(true);
     const voice = filterCommandPaletteItems("語音");
@@ -145,6 +153,9 @@ describe("commandPaletteCommands", () => {
     expect(mcp.some((item) => item.to === "/settings/integrations?tab=mcp")).toBe(true);
     expect(mcp.some((item) => item.to === "/settings/mcp")).toBe(false);
     expect(mcp.some((item) => item.label === "外部接口 · MCP")).toBe(true);
+    const systemApis = filterCommandPaletteItems("CARTO");
+    expect(systemApis.some((item) => item.to === "/settings/integrations?tab=system")).toBe(true);
+    expect(systemApis.some((item) => item.label === "外部接口 · 系統 API 及網址")).toBe(true);
     const integrations = filterCommandPaletteItems("外部接口");
     expect(integrations.some((item) => item.to === "/settings/integrations?tab=webhook")).toBe(true);
     expect(integrations.some((item) => item.to === "/settings/api")).toBe(false);

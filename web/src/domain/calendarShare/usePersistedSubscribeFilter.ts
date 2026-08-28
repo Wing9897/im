@@ -19,7 +19,7 @@ export function usePersistedSubscribeFilter(): readonly [
   const value = parseSubscribedCalendarSelection(raw);
   const setValue = useCallback(
     (update: SetStateAction<SubscribedCalendarSelection>) => {
-      setRaw((prev) => {
+      setRaw((prev: unknown) => {
         const current = parseSubscribedCalendarSelection(prev);
         return typeof update === "function" ? update(current) : update;
       });

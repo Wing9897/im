@@ -56,16 +56,16 @@ describe("worksets API", () => {
       expect(result).toEqual(response);
     });
 
-    it("posts emoji and description when provided", async () => {
-      const response = { id: "w-2", name: "New", emoji: "📚", description: "Notes" };
+    it("posts description and cover when provided", async () => {
+      const response = { id: "w-2", name: "New", description: "Notes", cover: "data:image/jpeg;base64,x" };
       vi.mocked(apiClient.post).mockResolvedValue(response);
 
-      await createWorkset("New", { emoji: "📚", description: "Notes" });
+      await createWorkset("New", { description: "Notes", cover: "data:image/jpeg;base64,x" });
 
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/worksets", {
         name: "New",
-        emoji: "📚",
         description: "Notes",
+        cover: "data:image/jpeg;base64,x",
       });
     });
 
@@ -100,6 +100,16 @@ describe("worksets API", () => {
         externalEnabled: false,
       });
       expect(result).toEqual(response);
+    });
+    it("puts cover on updateWorkset when provided", async () => {
+      const response = { id: "w-1", name: "Ops", cover: "data:image/jpeg;base64,x" };
+      vi.mocked(apiClient.put).mockResolvedValue(response);
+
+      await updateWorkset("w-1", { cover: "data:image/jpeg;base64,x" });
+
+      expect(apiClient.put).toHaveBeenCalledWith("/api/v1/worksets/w-1", {
+        cover: "data:image/jpeg;base64,x",
+      });
     });
   });
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useToast } from "../../context/ToastContext";
@@ -33,7 +33,7 @@ const intelligencePageClass = "im-intelligence-page";
 export function IntelligencePage() {
   const { t } = useTranslation("intelligence");
   const feed = useIntelligenceFeed();
-  const { worksets } = useTaskCatalog();
+  const { worksets, tasks } = useTaskCatalog();
   const { showToast } = useToast();
   useErrorToast(feed.pageError);
   useSlashFocusSearch(!feed.loading);
@@ -48,6 +48,13 @@ export function IntelligencePage() {
   const [resetViewTrigger, setResetViewTrigger] = useState(0);
   const [notIntelBusy, setNotIntelBusy] = useState(false);
   const pipeline = usePipelineReadiness();
+  const pipelineForList = useMemo(
+    () => ({
+      ...pipeline,
+      showChecklist: pipeline.showChecklist && tasks.length === 0,
+    }),
+    [pipeline, tasks.length],
+  );
 
   const handleSelectedIdFromUrl = useCallback((id: string | null) => {
     setPendingSelectedId(id);
@@ -151,7 +158,7 @@ export function IntelligencePage() {
           read={{ readIntelligenceIdSet, isConsumed, onAutoRead: handleAutoRead }}
           selection={{ selectedItem, setSelectedItem }}
           mapUi={{ resetViewTrigger, onResetView: handleResetView }}
-          pipeline={pipeline}
+          pipeline={pipelineForList}
           notIntelBusy={notIntelBusy}
           onNotIntel={(item) => {
             void handleNotIntel(item);

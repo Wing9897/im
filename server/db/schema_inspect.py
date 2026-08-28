@@ -22,16 +22,14 @@ from server.db.schema_fingerprint import (
     _quoted_identifier,
 )
 
-CURRENT_SCHEMA_VERSION = 4
-SCHEMA_FLOOR = 1
+CURRENT_SCHEMA_VERSION = 5
+SCHEMA_FLOOR = 5
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
-#: Stamp 1 is the schema floor. Stamp 2 adds ``schema_meta`` (seeded singleton
-#: ``id=1`` / ``schema_semver``). Stamp 3 adds ``worksets.emoji`` and
-#: ``worksets.description``. Stamp 4 adds ``calendar_share_publish`` (SQL
-#: publish map; unpublished worksets have no row). Retired stamps 27/45 still
-#: hard-reject as future.
-SCHEMA_SEMVER = "1.3.0"
+#: Stamp 5 is floor and current: ``worksets.cover_data_url``, publish table,
+#: ``schema_meta``, workset description (no emoji). Stamp 1–4 files hard-reject —
+#: backup then reset. Retired stamps 27/45 still hard-reject as future.
+SCHEMA_SEMVER = "1.4.0"
 
 
 class SchemaEvolutionError(RuntimeError):

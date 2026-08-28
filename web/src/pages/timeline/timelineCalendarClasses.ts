@@ -1,5 +1,5 @@
-import { timelinePanelClass } from "../timelineViewLayout";
-import i18n from "../../../i18n";
+import { timelinePanelClass } from "./timelineViewLayout";
+import i18n from "../../i18n";
 
 /** Month panel: less padding, fills available height in the timeline column. */
 export const calendarMonthPanelClass = `${timelinePanelClass} box-border flex h-full min-h-0 flex-col p-sm`;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calendarShareKey,
+  isCatalogSubscribed,
   isOwnCalendarHandle,
   isSubscribedTimelineSource,
   looksLikeCalendarSharePath,
@@ -33,22 +34,40 @@ describe("subscribedCalendars", () => {
     expect(isOwnCalendarHandle("Wing", "wing")).toBe(true);
     expect(isOwnCalendarHandle("Alice", "Wing")).toBe(false);
     expect(calendarShareKey("Alice", "Work")).toBe("Alice/Work");
-    expect(subscribeCalendarIdentity({ handle: " Alice ", slug: " Work ", emoji: "🌞" })).toEqual({
+    expect(isCatalogSubscribed([{ handle: "DemoPub", slug: "Open" }], "demopub", "open")).toBe(true);
+    expect(isCatalogSubscribed([{ handle: "DemoPub", slug: "Open" }], "Alice", "Work")).toBe(false);
+    expect(isCatalogSubscribed([], "Alice", "Work")).toBe(false);
+    expect(subscribeCalendarIdentity({ handle: " Alice ", slug: " Work ", ownerAvatar: "data:image/png;base64,a", cover: "data:image/jpeg;base64,c" })).toEqual({
       key: "Alice/Work",
       label: "Alice/Work",
-      emoji: "🌞",
+      ownerAvatar: "data:image/png;base64,a",
+      cover: "data:image/jpeg;base64,c",
       handle: "Alice",
       slug: "Work",
     });
-    expect(subscribeCalendarIdentity({ handle: "Alice", slug: "Work" }).emoji).toBe("");
+    expect(subscribeCalendarIdentity({ handle: "Alice", slug: "Work" }).ownerAvatar).toBe("");
     expect(
       subscribeFilterCalendarsFromCatalog([
-        { handle: "Alice", slug: "Work", emoji: "🌞" },
+        { handle: "Alice", slug: "Work", ownerAvatar: "data:image/png;base64,a", cover: "data:image/jpeg;base64,c" },
         { handle: "Carol", slug: "Team" },
       ]),
     ).toEqual([
-      { key: "Alice/Work", label: "Alice/Work", emoji: "🌞", handle: "Alice", slug: "Work" },
-      { key: "Carol/Team", label: "Carol/Team", emoji: "", handle: "Carol", slug: "Team" },
+      {
+        key: "Alice/Work",
+        label: "Alice/Work",
+        ownerAvatar: "data:image/png;base64,a",
+        cover: "data:image/jpeg;base64,c",
+        handle: "Alice",
+        slug: "Work",
+      },
+      {
+        key: "Carol/Team",
+        label: "Carol/Team",
+        ownerAvatar: "",
+        cover: "",
+        handle: "Carol",
+        slug: "Team",
+      },
     ]);
     expect(subscribedTimelineSource("Alice", "Work")).toBe("subscribed:Alice/Work");
     expect(isSubscribedTimelineSource("subscribed:Alice/Work")).toBe(true);

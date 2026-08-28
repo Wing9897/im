@@ -13,8 +13,8 @@ def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
         "isSystem": bool(row.get("is_system")),
         "notifyEnabled": bool(row.get("notify_enabled", 1)),
         "externalEnabled": bool(row.get("external_enabled", 1)),
-        "emoji": str(row.get("emoji") or ""),
         "description": str(row.get("description") or ""),
+        "cover": str(row.get("cover_data_url") or ""),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

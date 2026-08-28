@@ -91,7 +91,7 @@ describe("SimpleModeGate", () => {
       expect(home()).toBeNull();
     });
 
-    it("renders the analysis-strategy AI tab untouched", async () => {
+    it("renders the legacy analysis-strategy URL untouched in full mode", async () => {
       await renderAt("/ai/analysis-strategy");
 
       expect(gated()).toBeTruthy();
@@ -146,7 +146,7 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
-    it("redirects the hidden analysis-strategy AI tab", async () => {
+    it("redirects the legacy analysis-strategy URL", async () => {
       await renderAt("/ai/analysis-strategy");
 
       expect(home()).toBeTruthy();
@@ -157,6 +157,14 @@ describe("SimpleModeGate", () => {
       // The AI-tab rule must not degrade into a bare "/ai" prefix match, or
       // simple mode would lose the whole AI workspace.
       await renderAt("/ai/provider");
+
+      expect(gated()).toBeTruthy();
+      expect(home()).toBeNull();
+    });
+
+    it("keeps /subscriptions reachable in simple mode", async () => {
+      simpleModeState.simpleMode = true;
+      await renderAt("/subscriptions/mine");
 
       expect(gated()).toBeTruthy();
       expect(home()).toBeNull();

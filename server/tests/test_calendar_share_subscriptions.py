@@ -25,8 +25,9 @@ async def test_search_calendars_without_login(client, fake_remote):
             "hitKind": "listing",
             "publicVisibility": "public",
             "visibility": None,
-            "emoji": "",
             "description": "",
+            "ownerAvatar": "",
+            "cover": "",
         }
     ]
     assert fake_remote.calls[0]["path"] == "/search"
@@ -42,7 +43,6 @@ async def test_search_keeps_listing_and_grant_visibility_distinct(client, fake_r
                 "slug": "Open",
                 "hitKind": "listing",
                 "publicVisibility": "public",
-                "emoji": "🌞",
                 "description": "Open cal",
             },
             {
@@ -50,7 +50,6 @@ async def test_search_keeps_listing_and_grant_visibility_distinct(client, fake_r
                 "slug": "Busy",
                 "hitKind": "listing",
                 "publicVisibility": "public_busy",
-                "emoji": "🚧",
                 "description": "",
             },
             {
@@ -58,7 +57,6 @@ async def test_search_keeps_listing_and_grant_visibility_distinct(client, fake_r
                 "slug": "Closed",
                 "hitKind": "grant",
                 "visibility": "details",
-                "emoji": "🔒",
                 "description": "Grant",
             },
             {
@@ -66,7 +64,6 @@ async def test_search_keeps_listing_and_grant_visibility_distinct(client, fake_r
                 "slug": "ClosedBusy",
                 "hitKind": "grant",
                 "visibility": "busy",
-                "emoji": "🙈",
                 "description": "",
             },
             {"handle": "Skip", "slug": "Old", "publicVisibility": "private_group"},
@@ -78,7 +75,6 @@ async def test_search_keeps_listing_and_grant_visibility_distinct(client, fake_r
     by_slug = {row["slug"]: row for row in items}
     assert by_slug["Open"]["publicVisibility"] == "public"
     assert by_slug["Open"]["hitKind"] == "listing"
-    assert by_slug["Open"]["emoji"] == "🌞"
     assert by_slug["Open"]["description"] == "Open cal"
     assert by_slug["Busy"]["publicVisibility"] == "public_busy"
     assert by_slug["Closed"]["visibility"] == "details"
@@ -115,6 +111,104 @@ async def test_search_calendars_maps_logged_in_404_to_empty(client, fake_remote)
     assert "not found" not in resp.text.lower()
 
 
+async def test_search_empty_q_excludes_grants_even_when_signed_in(client, fake_remote):
+    """Mirror IC test_search: empty q lists public calendars only, never grant hits."""
+    fake_remote.search_by_query = {
+        "": {
+            "items": [
+                {
+                    "handle": "DemoPub",
+                    "slug": "Open",
+                    "hitKind": "listing",
+                    "publicVisibility": "public",
+                    "description": "",
+                },
+            ],
+        },
+    }
+    await login_calendar_share(client, fake_remote)
+    for params in (None, {"q": ""}):
+        fake_remote.calls.clear()
+        resp = await client.get("/api/v1/calendar-share/search", params=params)
+        assert resp.status_code == 200, resp.text
+        items = resp.json()["items"]
+        demo_slugs = {row["slug"] for row in items if row["handle"] == "DemoPub"}
+        assert demo_slugs == {"Open"}
+        assert all(row.get("hitKind") != "grant" for row in items)
+        search_call = next(call for call in fake_remote.calls if call["path"] == "/search")
+        assert search_call["query"] == {"q": ""}
+        assert search_call["access_token"] == "acc-1"
+
+
+async def test_search_grant_requires_exact_match_not_like(client, fake_remote):
+    """Mirror IC test_search: grant hits require exact slug or handle/slug path, not LIKE partials."""
+    grant_hit = {
+        "handle": "DemoPub",
+        "slug": "Closed",
+        "hitKind": "grant",
+        "visibility": "busy",
+        "description": "",
+        "ownerAvatar": "",
+        "cover": "",
+    }
+    fake_remote.search_by_query = {
+        "Clos": {"items": []},
+        "Closed": {"items": [grant_hit]},
+        "DemoPub/Closed": {"items": [grant_hit]},
+    }
+    await login_calendar_share(client, fake_remote)
+
+    partial = await client.get("/api/v1/calendar-share/search", params={"q": "Clos"})
+    assert partial.status_code == 200, partial.text
+    assert partial.json()["items"] == []
+
+    exact_slug = await client.get("/api/v1/calendar-share/search", params={"q": "Closed"})
+    assert exact_slug.status_code == 200, exact_slug.text
+    row = exact_slug.json()["items"][0]
+    assert row["handle"] == "DemoPub"
+    assert row["slug"] == "Closed"
+    assert row["hitKind"] == "grant"
+    assert row["visibility"] == "busy"
+    assert row["publicVisibility"] is None
+
+    exact_path = await client.get("/api/v1/calendar-share/search", params={"q": "DemoPub/Closed"})
+    assert exact_path.status_code == 200, exact_path.text
+    assert len(exact_path.json()["items"]) == 1
+    assert exact_path.json()["items"][0]["slug"] == "Closed"
+    assert exact_path.json()["items"][0]["hitKind"] == "grant"
+
+
+async def test_search_forwards_owner_avatar_and_cover(client, fake_remote):
+    fake_remote.search_payload = {
+        "items": [
+            {
+                "handle": "DemoPub",
+                "slug": "Open",
+                "hitKind": "listing",
+                "publicVisibility": "public",
+                "description": "Open cal",
+                "ownerAvatar": "data:image/png;base64,abc",
+                "cover": "data:image/jpeg;base64,cover",
+            },
+        ]
+    }
+    resp = await client.get("/api/v1/calendar-share/search", params={"q": "Demo"})
+    assert resp.status_code == 200, resp.text
+    row = resp.json()["items"][0]
+    assert row["ownerAvatar"] == "data:image/png;base64,abc"
+    assert row["cover"] == "data:image/jpeg;base64,cover"
+
+
+async def test_put_profile_syncs_avatar_to_ic(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    avatar = "data:image/png;base64,avatar"
+    resp = await client.put("/api/v1/calendar-share/profile", json={"avatar": avatar})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["avatar"] == avatar
+    put_call = next(call for call in fake_remote.calls if call["path"] == "/me" and call["method"] == "PUT")
+    assert put_call["json_body"] == {"avatar": avatar}
+
+
 async def test_subscribe_duplicate_is_idempotent(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     first = await client.post(
@@ -130,7 +224,7 @@ async def test_subscribe_duplicate_is_idempotent(client, fake_remote):
     assert (
         first.json()["items"]
         == second.json()["items"]
-        == [{"handle": "Alice", "slug": "Work", "emoji": "", "description": ""}]
+        == [{"handle": "Alice", "slug": "Work", "description": "", "ownerAvatar": "", "cover": ""}]
     )
     remote_posts = [
         call for call in fake_remote.calls if call["path"] == "/me/subscriptions" and call["method"] == "POST"
@@ -168,26 +262,22 @@ async def test_list_subscriptions_proxies_ic(client, fake_remote):
     listed = await client.get("/api/v1/calendar-share/subscriptions")
     assert listed.status_code == 200, listed.text
     assert listed.json()["items"] == [
-        {**row, "emoji": row.get("emoji", ""), "description": row.get("description", "")}
+        {
+            **row,
+            "description": row.get("description", ""),
+            "ownerAvatar": row.get("ownerAvatar", ""),
+            "cover": row.get("cover", ""),
+        }
         for row in fake_remote.remote_subs
     ]
     assert any(call["path"] == "/me/subscriptions" and call["method"] == "GET" for call in fake_remote.calls)
 
 
-async def test_list_subscriptions_502_fails_closed(client, app, fake_remote):
-    await app.state.db.execute(
-        "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?)",
-        ("calendar_share_subscriptions", '[{"handle":"Ghost","slug":"Old"}]', "2026-01-01T00:00:00Z"),
-    )
+async def test_list_subscriptions_502_fails_closed(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     fake_remote.get_sub_status = 502
     listed = await client.get("/api/v1/calendar-share/subscriptions")
     assert listed.status_code == 502
-    leftover = await app.state.db.fetch_one(
-        "SELECT value FROM system_config WHERE key = ?",
-        ("calendar_share_subscriptions",),
-    )
-    assert leftover is None
 
 
 async def test_list_subscriptions_remote_404_is_empty(client, fake_remote):
@@ -198,7 +288,7 @@ async def test_list_subscriptions_remote_404_is_empty(client, fake_remote):
     assert listed.json()["items"] == []
 
 
-async def test_subscribe_get_502_fails_closed(client, app, fake_remote):
+async def test_subscribe_get_502_fails_closed(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     fake_remote.get_sub_status = 502
     resp = await client.post(
@@ -206,14 +296,9 @@ async def test_subscribe_get_502_fails_closed(client, app, fake_remote):
         json={"handle": "Alice", "slug": "Work"},
     )
     assert resp.status_code == 502
-    leftover = await app.state.db.fetch_one(
-        "SELECT value FROM system_config WHERE key = ?",
-        ("calendar_share_subscriptions",),
-    )
-    assert leftover is None
 
 
-async def test_delete_get_502_fails_closed(client, app, fake_remote):
+async def test_delete_get_502_fails_closed(client, fake_remote):
     await login_calendar_share(client, fake_remote)
     await subscribe_calendar_share(client)
     fake_remote.get_sub_status = 502
@@ -222,11 +307,6 @@ async def test_delete_get_502_fails_closed(client, app, fake_remote):
         params={"handle": "Alice", "slug": "Work"},
     )
     assert deleted.status_code == 502
-    leftover = await app.state.db.fetch_one(
-        "SELECT value FROM system_config WHERE key = ?",
-        ("calendar_share_subscriptions",),
-    )
-    assert leftover is None
 
 
 async def test_delete_subscription_hits_remote_unsubscribe(client, fake_remote):

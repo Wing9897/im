@@ -67,7 +67,7 @@ const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
 
 /**
  * Global left navigation — overlay drawer (matches 通知 RecentDayInboxDrawer:
- * OverlayPortal + light scrim + translucent im-dialog-drawer). Does not push page layout.
+ * OverlayPortal + light scrim + frosted im-dialog-drawer). Does not push page layout.
  *
  * Pages + canvas: this overlay is for pages mode. On ops board (canvas) the
  * component returns null so the left-edge `>` chevron never sits on the
@@ -164,12 +164,13 @@ export function AppSidebar() {
             >
             <nav
               id="app-main-sidebar"
-              className="im-dialog-drawer im-dialog-drawer-start im-material-panel im-sidebar-panel relative flex h-full w-[var(--app-sidebar-width,200px)] shrink-0 flex-col items-stretch gap-0.5 overflow-x-hidden overflow-y-auto border-r border-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] px-2 pb-3 pt-3 [-webkit-app-region:no-drag] [pointer-events:auto] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="im-dialog-drawer im-dialog-drawer-start im-material-panel im-sidebar-panel relative flex h-full min-h-0 w-[var(--app-sidebar-width,200px)] shrink-0 flex-col items-stretch border-r border-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] [-webkit-app-region:no-drag] [pointer-events:auto]"
               aria-label={t("mainNav")}
               data-testid="app-sidebar"
               data-collapsed="false"
               data-rail-mode={mode}
             >
+              <div className="shrink-0 px-2 pt-3">
               <div
                 className="mb-2 flex h-8 shrink-0 items-center gap-1 px-0.5"
                 role="tablist"
@@ -202,73 +203,84 @@ export function AppSidebar() {
                   <span>{t("history")}</span>
                 </button>
               </div>
+              </div>
 
               {mode === "history" ? (
-                <AssistantHistoryRail collapsed={false} />
+                <div className="im-auto-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3">
+                  <AssistantHistoryRail collapsed={false} />
+                </div>
               ) : (
                 <>
-                  {visibleGroups.map((group, groupIndex) => (
-                    <div key={group.labelKey ?? `group-${groupIndex}`} className="flex flex-col gap-0.5">
-                      {group.labelKey ? (
-                        <SidebarSectionLabel label={t(group.labelKey)} collapsed={false} />
-                      ) : null}
-                      {group.items.map((item) => {
-                        const Icon = SIDEBAR_ICONS[item.icon];
-                        const isActive = isSidebarItemActive(item, location.pathname);
-                        const label = t(item.labelKey);
-                        if (item.to === "/tasks") {
-                          return (
-                            <TasksNavLink
-                              key={item.to}
-                              to={lastTasksPath}
-                              collapsed={false}
-                              isActive={isActive}
-                            />
-                          );
-                        }
-                        return (
-                          <SidebarNavLink
-                            key={item.to}
-                            to={item.to}
-                            label={label}
-                            collapsed={false}
-                            isActive={isActive}
-                            Icon={Icon}
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
-                  <div className="min-h-md flex-1" />
-                  <div className="mx-1 my-2 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]" />
                   <div
-                    className="mx-1 mb-1 mt-0.5 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted"
-                    aria-hidden="true"
+                    className="im-auto-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2"
+                    data-testid="app-sidebar-nav-scroll"
                   >
-                    {t("settingsSection")}
+                    <div className="flex flex-col gap-0.5">
+                      {visibleGroups.map((group, groupIndex) => (
+                        <div key={group.labelKey ?? `group-${groupIndex}`} className="flex flex-col gap-0.5">
+                          {group.labelKey ? (
+                            <SidebarSectionLabel label={t(group.labelKey)} collapsed={false} />
+                          ) : null}
+                          {group.items.map((item) => {
+                            const Icon = SIDEBAR_ICONS[item.icon];
+                            const isActive = isSidebarItemActive(item, location.pathname);
+                            const label = t(item.labelKey);
+                            if (item.to === "/tasks") {
+                              return (
+                                <TasksNavLink
+                                  key={item.to}
+                                  to={lastTasksPath}
+                                  collapsed={false}
+                                  isActive={isActive}
+                                />
+                              );
+                            }
+                            return (
+                              <SidebarNavLink
+                                key={item.to}
+                                to={item.to}
+                                label={label}
+                                collapsed={false}
+                                isActive={isActive}
+                                Icon={Icon}
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {SIDEBAR_BOTTOM_ITEMS.map((item) => {
-                    const Icon = SIDEBAR_ICONS[item.icon];
-                    const isActive = isSidebarItemActive(item, location.pathname);
-                    const label = t(item.labelKey);
-                    return (
-                      <SidebarNavLink
-                        key={item.to}
-                        to={item.to}
-                        label={label}
-                        collapsed={false}
-                        isActive={isActive}
-                        Icon={Icon}
-                        compactLabel
-                      />
-                    );
-                  })}
-                  <p
-                    className="mt-sm px-2 text-[10px] leading-none text-text-muted/60"
-                    title={t("appVersionTitle")}
-                  >
-                    {formatAppVersionLabel()}
-                  </p>
+                  <div className="shrink-0 px-2 pb-3">
+                    <div className="mx-1 my-2 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]" />
+                    <div
+                      className="mx-1 mb-1 mt-0.5 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted"
+                      aria-hidden="true"
+                    >
+                      {t("settingsSection")}
+                    </div>
+                    {SIDEBAR_BOTTOM_ITEMS.map((item) => {
+                      const Icon = SIDEBAR_ICONS[item.icon];
+                      const isActive = isSidebarItemActive(item, location.pathname);
+                      const label = t(item.labelKey);
+                      return (
+                        <SidebarNavLink
+                          key={item.to}
+                          to={item.to}
+                          label={label}
+                          collapsed={false}
+                          isActive={isActive}
+                          Icon={Icon}
+                          compactLabel
+                        />
+                      );
+                    })}
+                    <p
+                      className="mt-sm px-2 text-[10px] leading-none text-text-muted/60"
+                      title={t("appVersionTitle")}
+                    >
+                      {formatAppVersionLabel()}
+                    </p>
+                  </div>
                 </>
               )}
             </nav>

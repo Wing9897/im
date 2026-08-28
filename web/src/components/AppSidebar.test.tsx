@@ -138,6 +138,18 @@ describe("AppSidebar", () => {
     expect(overlay?.className).not.toMatch(/background-image/);
   });
 
+  it("pairs im-sidebar-panel with im-material-panel frost (not a translucent wash)", () => {
+    renderSidebar({ overlayOpen: true });
+    const nav = document.body.querySelector("[data-testid='app-sidebar']");
+    expect(nav?.className).toContain("im-material-panel");
+    expect(nav?.className).toContain("im-sidebar-panel");
+    expect(nav?.className).not.toMatch(/opacity-/);
+    expect(nav?.className).not.toMatch(/bg-.*\/\d+/);
+    expect(nav?.className).not.toMatch(/overflow-/);
+    const scrollPane = nav?.querySelector("[data-testid='app-sidebar-nav-scroll']");
+    expect(scrollPane?.className).toMatch(/overflow-y-auto/);
+  });
+
   it("does not blur the main canvas when the overlay is open", () => {
     renderSidebar({ overlayOpen: true });
     const overlay = document.body.querySelector("[data-testid='app-sidebar-overlay']");
@@ -263,7 +275,7 @@ describe("AppSidebar", () => {
       "情報事件",
       "時間規劃",
       "訂閱",
-      "通知",
+      "通知與動作",
       "助手",
       "AI 設定",
       "系統設定",
@@ -282,7 +294,7 @@ describe("AppSidebar", () => {
     expect(document.body.textContent).toContain("Live Monitor");
     expect(document.body.textContent).toContain("Tasks");
     expect(document.body.textContent).toContain("Worksets");
-    expect(document.body.textContent).toContain("Account");
+    expect(document.body.textContent).toContain("Notify & actions");
   });
 
   it("marks the current route as active", () => {
@@ -303,7 +315,7 @@ describe("AppSidebar", () => {
 
   it("marks bottom entries active by route prefix without highlighting /assistant", () => {
     for (const [pathname, label] of [
-      ["/ai/analysis-strategy", "AI 設定"],
+      ["/ai/provider", "AI 設定"],
       ["/settings/theme", "系統設定"],
       ["/settings/logs", "系統設定"],
       ["/account/identity", "帳戶"],

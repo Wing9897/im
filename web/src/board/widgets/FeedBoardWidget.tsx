@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { queryMessagesPage } from "../../api/messages";
 import { MessageCard } from "../../components/common/MessageCard";
 import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
+import { MONITOR_READ_IDS_STORAGE_KEY } from "../../domain/prefs";
+import { useIdReadTracking } from "../../hooks/useIdReadTracking";
 import type { Message } from "../../types";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -14,6 +16,7 @@ const FEED_LIMIT = 10;
 export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
   const { lastMessagesUpdate } = useAnalysisStatus();
+  const { isConsumed: isMessageRead } = useIdReadTracking(MONITOR_READ_IDS_STORAGE_KEY);
   const fetcher = useCallback(
     () =>
       queryMessagesPage({ filters: {}, limit: FEED_LIMIT, includeTotal: false }).then(
@@ -49,7 +52,7 @@ export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
                   className="board-feed-cards__hit"
                   data-testid={`board-feed-row-${msg.id}`}
                 >
-                  <MessageCard message={msg} />
+                  <MessageCard message={msg} isRead={isMessageRead(msg.id)} />
                 </div>
               </li>
             ))}

@@ -7,7 +7,6 @@ import {
   Mic,
   Palette,
   ScrollText,
-  SlidersHorizontal,
   Users,
 } from "lucide-react";
 
@@ -19,6 +18,5 @@ export const workspaceTabIcons: Record<string, LucideIcon> = {
   "/assistant": MessageSquare,
   "/ai/provider": Bot,
   "/ai/voice": Mic,
-  "/ai/analysis-strategy": SlidersHorizontal,
   "/ai/staff": Users,
 };

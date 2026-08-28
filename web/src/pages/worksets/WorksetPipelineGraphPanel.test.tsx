@@ -81,8 +81,8 @@ const graphLabels: PipelineGraphLabels = {
   assistant: "助手",
   timeline: "時間規劃",
   intel: "情報頁",
-  notify: "通知",
-  external: "外部接口",
+  notify: "本機通知",
+  external: "動作",
 };
 
 function catalogConnectData() {
@@ -395,6 +395,15 @@ describe("WorksetPipelineGraphPanel", () => {
         harness.container.querySelector(`[data-handleid="${pipelinePointHandleId(pageId, "in")}"]`),
       ).toBeTruthy();
     }
+    expect(
+      harness.container.querySelector('[data-testid="workset-graph-point-page-page:notify"]')?.textContent,
+    ).toBe("本機通知");
+    expect(
+      harness.container.querySelector('[data-testid="workset-graph-point-page-page:external"]')?.textContent,
+    ).toBe("動作");
+    expect(
+      harness.container.querySelector('[data-testid="workset-graph-block-external"]')?.textContent,
+    ).toContain("動作");
   });
 
   it("onConnect PATCHes a legal task→workset pair", async () => {

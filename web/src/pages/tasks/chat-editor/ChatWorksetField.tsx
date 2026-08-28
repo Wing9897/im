@@ -29,12 +29,12 @@ export function ChatWorksetField({ worksetId, onWorksetIdChange }: ChatWorksetFi
     [t, worksets],
   );
 
-  const handleCreateWorkset = async (values: { name: string; emoji: string; description: string }) => {
+  const handleCreateWorkset = async (values: { name: string; description: string; cover: string }) => {
     setCreateBusy(true);
     try {
       const created = await createWorkset(values.name, {
-        emoji: values.emoji,
         description: values.description,
+        ...(values.cover.trim() ? { cover: values.cover.trim() } : {}),
       });
       await refreshWorksets();
       onWorksetIdChange(created.id);

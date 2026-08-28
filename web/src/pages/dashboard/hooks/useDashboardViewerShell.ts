@@ -129,22 +129,21 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
   );
 
   const handleWorksetNameSubmit = useCallback(
-    async (values: { name: string; emoji: string; description: string }) => {
+    async (values: { name: string; description: string; cover: string }) => {
       if (!worksetNameDialog) return;
       setWorksetNameBusy(true);
       const cleaned = values.name.trim();
       try {
         if (worksetNameDialog.mode === "create") {
           await createWorkset(cleaned, {
-            emoji: values.emoji,
             description: values.description,
+            ...(values.cover.trim() ? { cover: values.cover.trim() } : {}),
           });
           await refreshWorksets();
           showToast(t("workset:createdToast", { name: cleaned }), "success");
         } else {
           await updateWorkset(worksetNameDialog.id, {
             name: cleaned,
-            emoji: values.emoji,
             description: values.description,
           });
           await refreshWorksets();

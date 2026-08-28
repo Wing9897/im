@@ -117,6 +117,11 @@
     "phaseFilterAria": "依進行狀態篩選本日事件",
     "emptyFiltered": "目前篩選沒有對應事件",
     "eventAvatarAria": "情報事件與任務標記",
+    "statusWithLabel": "狀態：{value}",
+    "subscribeIconAria": "訂閱",
+    "affiliation": {
+      "calendar": "日曆：{path}"
+    },
     "provenance": {
       "task": "任務",
       "user": "用戶",
@@ -149,8 +154,6 @@
     "dismissFailed": "從時間軸拿掉失敗",
     "restoreFailed": "還原到時間軸失敗",
     "importantFailed": "更新重要標記失敗",
-    "dismissConfirm": "將「{title}」從時間軸拿掉？之後可以還原。",
-    "restoreConfirm": "將「{title}」還原到時間軸？",
     "ganttLoadTimeout": "載入任務活動資料逾時，請重試"
   },
   "userEvent": {

@@ -44,8 +44,8 @@ class CalendarSharePublishListItemResponse(CalendarSharePublishStateResponse):
 
     worksetName: str = ""
     worksetMissing: bool = False
-    emoji: str = ""
     description: str = ""
+    cover: str = ""
 
 
 class CalendarSharePublishListResponse(BaseModel):
@@ -55,8 +55,15 @@ class CalendarSharePublishListResponse(BaseModel):
 class CalendarShareSubscriptionResponse(BaseModel):
     handle: str
     slug: str
-    emoji: str = ""
     description: str = ""
+    ownerAvatar: str = ""
+    cover: str = ""
+
+
+class CalendarShareProfileResponse(BaseModel):
+    handle: str = ""
+    timezone: str = ""
+    avatar: str = ""
 
 
 class CalendarShareSubscriptionsResponse(BaseModel):
@@ -103,8 +110,9 @@ class CalendarShareSearchHitResponse(BaseModel):
     hitKind: Literal["listing", "grant"]
     publicVisibility: PublicVisibility | None = None
     visibility: Literal["busy", "details"] | None = None
-    emoji: str = ""
     description: str = ""
+    ownerAvatar: str = ""
+    cover: str = ""
 
 
 class CalendarShareSearchResponse(BaseModel):

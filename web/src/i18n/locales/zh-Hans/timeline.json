@@ -117,6 +117,11 @@
     "phaseFilterAria": "按进行状态筛选本日事件",
     "emptyFiltered": "当前筛选没有对应事件",
     "eventAvatarAria": "情报事件与任务标记",
+    "statusWithLabel": "状态：{value}",
+    "subscribeIconAria": "订阅",
+    "affiliation": {
+      "calendar": "日历：{path}"
+    },
     "provenance": {
       "task": "任务",
       "user": "用户",
@@ -149,8 +154,6 @@
     "dismissFailed": "从时间轴拿掉失败",
     "restoreFailed": "还原到时间轴失败",
     "importantFailed": "更新重要标记失败",
-    "dismissConfirm": "将「{title}」从时间轴拿掉？之后可以还原。",
-    "restoreConfirm": "将「{title}」还原到时间轴？",
     "ganttLoadTimeout": "载入任务活动资料逾时，请重试"
   },
   "userEvent": {

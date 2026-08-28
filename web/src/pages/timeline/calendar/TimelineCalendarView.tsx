@@ -7,6 +7,7 @@ import {
   isToday,
   type TimelineScale,
 } from "../../../domain/timeline/dateUtils";
+import type { EventListCardMetaLookups } from "../../../domain/timeline/eventListCardMeta";
 import type { DailyHoliday } from "../../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../../types";
@@ -35,7 +36,7 @@ import {
 import {
   calendarScrollableClass,
   monthCalendarFillClass,
-} from "./timelineCalendarClasses";
+} from "../timelineCalendarClasses";
 import { TimelineDayEventCard } from "./TimelineDayEventCard";
 import { TimelineHolidayChip } from "./TimelineHolidayChip";
 import { TimelineMonthGrid } from "./TimelineMonthGrid";
@@ -68,6 +69,7 @@ type TimelineCalendarViewProps = {
   onCreateOnDay?: (day: Date) => void;
   /** Page toolbar 顯示日期: stronger bottom watermarks; event rows hide. Header (day number, 進行中/結束, weather) stays. */
   datesRevealed?: boolean;
+  metaLookups?: EventListCardMetaLookups;
 };
 
 export function TimelineCalendarView({
@@ -90,6 +92,7 @@ export function TimelineCalendarView({
   onFocusDay,
   onCreateOnDay,
   datesRevealed = false,
+  metaLookups = {},
 }: TimelineCalendarViewProps) {
   const { t } = useTranslation("timeline");
 
@@ -201,6 +204,7 @@ export function TimelineCalendarView({
                           event={event}
                           focusedDay={day}
                           status={eventStatuses[event.id] ?? "pending"}
+                          metaLookups={metaLookups}
                           onSelect={onSelectEvent}
                         />
                       ))

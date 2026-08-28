@@ -1,5 +1,6 @@
 import { CalendarDays, Clock3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PillButton } from "../../components/ui";
 
 export type GanttViewMode = "day" | "month";
 
@@ -25,13 +26,10 @@ export function GanttViewModeControls({
 
   return (
     <>
-      <button
-        type="button"
-        className={
-          viewMode === "day"
-            ? "board-widget-frame__btn board-widget-frame__btn--active"
-            : "board-widget-frame__btn"
-        }
+      <PillButton
+        padding="square"
+        active={viewMode === "day"}
+        className="board-widget-frame__btn"
         title={dayLabel}
         aria-label={t("board:common.viewModeAria", { prefix: ariaLabelPrefix, mode: dayLabel })}
         aria-pressed={viewMode === "day"}
@@ -39,14 +37,11 @@ export function GanttViewModeControls({
         onClick={() => onChange("day")}
       >
         <Clock3 size={12} strokeWidth={2} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className={
-          viewMode === "month"
-            ? "board-widget-frame__btn board-widget-frame__btn--active"
-            : "board-widget-frame__btn"
-        }
+      </PillButton>
+      <PillButton
+        padding="square"
+        active={viewMode === "month"}
+        className="board-widget-frame__btn"
         title={monthLabel}
         aria-label={t("board:common.viewModeAria", { prefix: ariaLabelPrefix, mode: monthLabel })}
         aria-pressed={viewMode === "month"}
@@ -54,7 +49,7 @@ export function GanttViewModeControls({
         onClick={() => onChange("month")}
       >
         <CalendarDays size={12} strokeWidth={2} aria-hidden="true" />
-      </button>
+      </PillButton>
     </>
   );
 }

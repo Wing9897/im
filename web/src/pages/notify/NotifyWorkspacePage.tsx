@@ -8,8 +8,8 @@ import { isActionsTabKey, type ActionsTabKey } from "./actionsTab";
 import { LocalNotifyPanel } from "./components/LocalNotifyPanel";
 
 /**
- * Notifications workspace — three concerns stay separate:
- * outbound ActionType rules, local notifications, and trigger history.
+ * Notify & actions workspace — three concerns stay separate:
+ * ActionType rules, local notifications, and trigger history.
  * Tab state is `?tab=` (same pattern as source management).
  * Default wire tab id is `"types"` (ActionTypesTab).
  * Unknown `?tab=` values (including retired `voice`) fall back to types — no redirect.

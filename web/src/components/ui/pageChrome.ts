@@ -8,7 +8,7 @@ import { pageTitleClass } from "./pageTypography";
  *
  * Page fills: use ``pageShellGridClass`` / ``stickyChromePageFillClass`` here;
  * Items markers (``items-page-fill`` / ``item-form-page-fill``) live in
- * ``itemsPageChromeClasses`` and compose the same grid base — do not fork a
+ * ``styles/itemsPageChromeClasses`` and compose the same grid base — do not fork a
  * third ``im-page-shell`` fill string.
  */
 
@@ -53,7 +53,7 @@ export const pageShellGridClass =
 /**
  * Sticky chrome + scroll-body editors (Chat editor / recurring series).
  * Height accounts for the app top bar; Items browse/form use ``pageShellGridClass``
- * + ``h-full`` via ``itemsPageChromeClasses``.
+ * + ``h-full`` via ``styles/itemsPageChromeClasses``.
  */
 export const stickyChromePageFillClass =
   `${pageShellGridClass} h-[calc(100vh-var(--app-top-bar-height,48px))]`;

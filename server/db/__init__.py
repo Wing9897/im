@@ -3,8 +3,9 @@
 Authoritative schema: domain fragments under ``schema_domains/`` aggregated by
 ``schema.py`` (``PRAGMA user_version`` = current stamp).
 Bootstrap／migrate／reject policy lives in ``schema_bootstrap.py`` — create empty
-DBs from DDL, walk ``SCHEMA_FLOOR <= v < CURRENT`` via ``schema_migrate.py``,
-hard-reject future or corrupt stamps. Reset does **not** auto-seed demo data.
+DBs from current DDL, walk ``SCHEMA_FLOOR <= v < CURRENT`` via ``schema_migrate.py``
+(empty while floor equals current), hard-reject below-floor / future / corrupt
+stamps. Reset does **not** auto-seed demo data.
 """
 
 from server.db.database import Database

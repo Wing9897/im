@@ -32,13 +32,6 @@ VISIBILITY_PUBLIC: Final[tuple[PublicVisibility, ...]] = (
 VISIBILITY_GRANT: Final[tuple[GrantVisibility, ...]] = ("busy", "details")
 VISIBILITY_SEARCH_HIT: Final[tuple[str, ...]] = ("public", "public_busy", "busy", "details")
 
-#: Old listing values still accepted on read (and on write, then stored as canonical).
-LEGACY_LISTING_VISIBILITY: Final[dict[str, PublicVisibility]] = {
-    "off": LISTING_PRIVATE_GROUP,
-    "details": LISTING_PUBLIC,
-    "busy": LISTING_PUBLIC_BUSY,
-}
-
 SLUG_MAX_LEN: Final = 64
 HANDLE_MAX_LEN: Final = 64
 #: Builtin workset id ``__general__`` is not a valid write slug (leading ``_``).
@@ -54,24 +47,20 @@ def canonicalize_listing_visibility(
     *,
     default: PublicVisibility = LISTING_PRIVATE_GROUP,
 ) -> PublicVisibility:
-    """Map legacy listing strings to canonical; unknown → ``private_group``."""
+    """Accept canonical listing strings only; unknown → ``private_group``."""
     if not isinstance(value, str):
         return default
     text = value.strip()
-    mapped = LEGACY_LISTING_VISIBILITY.get(text, text)
-    if mapped in VISIBILITY_PUBLIC:
-        return mapped  # type: ignore[return-value]
+    if text in VISIBILITY_PUBLIC:
+        return text  # type: ignore[return-value]
     return default
 
 
 def try_canonicalize_listing_visibility(value: object) -> PublicVisibility | None:
-    """Map legacy listing strings; return None when empty or unknown."""
+    """Return a canonical listing string, or None when empty or unknown."""
     if not isinstance(value, str):
         return None
     text = value.strip()
-    if not text:
-        return None
-    mapped = LEGACY_LISTING_VISIBILITY.get(text, text)
-    if mapped in VISIBILITY_PUBLIC:
-        return mapped  # type: ignore[return-value]
+    if text in VISIBILITY_PUBLIC:
+        return text  # type: ignore[return-value]
     return None

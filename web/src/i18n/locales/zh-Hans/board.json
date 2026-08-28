@@ -61,23 +61,19 @@
     "empty": "尚无分析统计",
     "analyzed": "已分析",
     "unanalyzed": "未分析",
-    "queued": "队列中",
-    "rowMeta": "已析 {analyzed} · 未析 {unanalyzed}",
-    "rowQueued": " · 队列 {count}"
+    "queued": "队列中"
   },
   "logs": {
     "empty": "尚无日志"
   },
   "actions": {
-    "empty": "尚未设定通知动作",
-    "neverTriggered": "尚未触发"
+    "empty": "尚未设定通知动作"
   },
   "tasks": {
     "empty": "尚未设定任务"
   },
   "leaderboard": {
     "empty": "尚无排行主题",
-    "score": "分数 {score}",
     "messages": " · {count} 则"
   },
   "mapWidget": {
@@ -193,8 +189,6 @@
     "total": "设定档",
     "complete": "完整",
     "incomplete": "不完整",
-    "default": "可用设定档",
-    "noDefault": "无",
     "alertNone": "尚未配置任何 LLM 设定档",
     "alertNoDefault": "没有可用的完整设定档",
     "alertIncomplete": "有设定档不完整"

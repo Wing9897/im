@@ -13,7 +13,6 @@ import {
   CollapsePanel,
   FormGrid,
   FormStack,
-  PasswordField,
   SelectTile,
   SettingsRow,
   SurfaceCard,
@@ -23,11 +22,7 @@ import { useToast } from "../../context/ToastContext";
 import { useSimpleMode } from "../../context/SimpleModeContext";
 import { toErrorMessage } from "../../utils/errors";
 import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
-import { captionClass, formHelpClass } from "../../components/ui/pageTypography";
-import {
-  readCartoApiKey,
-  writeCartoApiKey,
-} from "../../domain/intelligence/mapTiles";
+import { captionClass } from "../../components/ui/pageTypography";
 import {
   resolveWeatherLocation,
   SYSTEM_WEATHER_LOCATION,
@@ -65,9 +60,7 @@ export function SettingsGeneralPage() {
   const { showToast } = useToast();
   const { simpleMode, setSimpleMode } = useSimpleMode();
   const [weatherLocation, setWeatherLocation] = useState(SYSTEM_LOCATION);
-  const [cartoApiKey, setCartoApiKey] = useState("");
   const [saving, setSaving] = useState(false);
-  const [savingCartoKey, setSavingCartoKey] = useState(false);
   const [debugSaving, setDebugSaving] = useState(false);
   const [analysisTraceVerbose, setAnalysisTraceVerbose] = useState(false);
   const [restartingCollector, setRestartingCollector] = useState(false);
@@ -77,10 +70,6 @@ export function SettingsGeneralPage() {
   useEffect(() => {
     setWeatherLocation(settings?.weatherLocation || SYSTEM_LOCATION);
   }, [settings?.weatherLocation]);
-
-  useEffect(() => {
-    setCartoApiKey(readCartoApiKey());
-  }, []);
 
   useEffect(() => {
     setAnalysisTraceVerbose(Boolean(settings?.analysisTraceVerbose));
@@ -103,16 +92,6 @@ export function SettingsGeneralPage() {
       showToast(toErrorMessage(error), "error");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const saveCartoBasemapKey = () => {
-    setSavingCartoKey(true);
-    try {
-      setCartoApiKey(writeCartoApiKey(cartoApiKey));
-      showToast(t("general.cartoApiKeySaved"), "success");
-    } finally {
-      setSavingCartoKey(false);
     }
   };
 
@@ -221,49 +200,6 @@ export function SettingsGeneralPage() {
             <div className="w-fit">
               <Button variant="secondary" size="sm" disabled={saving} onClick={() => void saveWeatherLocation()}>
                 {saving ? t("shared.saving") : t("general.saveWeatherLocation")}
-              </Button>
-            </div>
-          </FormStack>
-        </GeneralPrefCard>
-        <GeneralPrefCard title={t("general.cartoApiKeyLabel")} testId="general-carto-card">
-          <FormStack gap="md">
-            <SettingsRow
-              layout="stack"
-              label={t("general.cartoApiKeyLabel")}
-              htmlFor="carto-api-key"
-            >
-              <PasswordField
-                id="carto-api-key"
-                className="w-full"
-                value={cartoApiKey}
-                placeholder={t("general.cartoApiKeyPlaceholder")}
-                autoComplete="off"
-                spellCheck={false}
-                onChange={(event) => setCartoApiKey(event.target.value)}
-                aria-label={t("general.cartoApiKeyAria")}
-                data-testid="carto-api-key"
-              />
-            </SettingsRow>
-            <p className={`m-0 ${formHelpClass}`}>
-              {t("general.cartoApiKeyHelp")}{" "}
-              <a
-                href="https://carto.com/basemaps/apikey"
-                target="_blank"
-                rel="noreferrer"
-                data-testid="carto-api-key-docs"
-              >
-                {t("general.cartoApiKeyLink")}
-              </a>
-            </p>
-            <div className="w-fit">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={savingCartoKey}
-                onClick={saveCartoBasemapKey}
-                data-testid="save-carto-api-key"
-              >
-                {savingCartoKey ? t("shared.saving") : t("general.saveCartoApiKey")}
               </Button>
             </div>
           </FormStack>

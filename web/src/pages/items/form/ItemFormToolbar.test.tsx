@@ -10,7 +10,7 @@ import {
   itemsPageChromeOuterClass,
   itemsPageChromePrimaryActionClass,
   itemsPageChromeTitleClusterClass,
-} from "../itemsPageChromeClasses";
+} from "../../../styles/itemsPageChromeClasses";
 
 describe("ItemFormToolbar", () => {
   let container: HTMLDivElement;

@@ -6,7 +6,7 @@ import {
   monthGridRootClass,
   monthWeekdayHeaderClass,
   monthWeekdayLabelClass,
-} from "./timelineCalendarClasses";
+} from "../timelineCalendarClasses";
 import type { DailyHoliday } from "../../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { TimelineMonthDayCell } from "./TimelineMonthDayCell";

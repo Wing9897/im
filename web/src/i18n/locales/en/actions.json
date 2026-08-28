@@ -1,9 +1,9 @@
 {
   "tabs": {
-    "types": "Outbound",
-    "notify": "Notifications",
+    "types": "Actions",
+    "notify": "Local notify",
     "history": "Trigger history",
-    "navAria": "Notification tabs"
+    "navAria": "Notify & actions tabs"
   },
   "types": {
     "statTotal": "Total",
@@ -98,8 +98,8 @@
   },
   "history": {
     "title": "Recent triggers",
-    "intro": "Success and failure logs when outbound rules or local notifications fire. Local notifications stay on this device only.",
-    "loadErrorPrefix": "Failed to load outbound history: ",
+    "intro": "Success and failure logs when action rules or local notifications fire. Local notifications stay on this device only.",
+    "loadErrorPrefix": "Failed to load action history: ",
     "loading": "Loading trigger history…",
     "empty": "No trigger history yet.",
     "statusSuccess": "Success",

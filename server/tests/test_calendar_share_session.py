@@ -26,7 +26,10 @@ def test_message_from_payload_reads_fastapi_validation_list():
         )
         == "Field required"
     )
-    assert _message_from_payload({"detail": "Event end must be after start"}, "fallback") == "Event end must be after start"
+    assert (
+        _message_from_payload({"detail": "Event end must be after start"}, "fallback")
+        == "Event end must be after start"
+    )
 
 
 async def test_session_login_encrypts_tokens(client, app, fake_remote):
@@ -74,20 +77,6 @@ async def test_logout_clears_tokens(client, app, fake_remote):
         (KEY_ACCESS_TOKEN,),
     )
     assert unprotect_text(str(access_raw or "")) == ""
-
-
-async def test_session_get_wipes_legacy_subscription_cache(client, app):
-    await app.state.db.execute(
-        "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?)",
-        ("calendar_share_subscriptions", '[{"handle":"Ghost","slug":"Old"}]', "2026-01-01T00:00:00Z"),
-    )
-    resp = await client.get("/api/v1/calendar-share/session")
-    assert resp.status_code == 200
-    leftover = await app.state.db.fetch_one(
-        "SELECT value FROM system_config WHERE key = ?",
-        ("calendar_share_subscriptions",),
-    )
-    assert leftover is None
 
 
 async def test_concurrent_authorized_requests_refresh_once(app, client, fake_remote, monkeypatch):

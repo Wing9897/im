@@ -9,8 +9,8 @@ import { i18n, wrapWithI18n } from "../test/i18nHarness";
 import { setAppLocale } from "../i18n/locale";
 
 const CALENDARS = [
-  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" }),
-  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", emoji: "🚧" }),
+  subscribeCalendarIdentity({ handle: "Alice", slug: "Work", ownerAvatar: "data:image/png;base64,a" }),
+  subscribeCalendarIdentity({ handle: "Carol", slug: "Team", ownerAvatar: "data:image/png;base64,b" }),
 ];
 
 describe("SubscribeFilterGroup", () => {
@@ -62,14 +62,22 @@ describe("SubscribeFilterGroup", () => {
     return { onToggleKey, onSelectAll, onClearAll };
   }
 
-  it("renders catalog emoji and does not keep an invisible chevron spacer", () => {
+  it("renders publisher avatar instead of catalog emoji", () => {
     renderGroup({
-      calendars: [subscribeCalendarIdentity({ handle: "Alice", slug: "Work", emoji: "🌞" })],
+      calendars: [
+        subscribeCalendarIdentity({
+          handle: "Alice",
+          slug: "Work",
+          ownerAvatar: "data:image/png;base64,abc",
+        }),
+      ],
     });
-    expect(container.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="timeline-subscribe-emoji-Alice/Work"]')?.textContent).toContain(
-      "🌞",
-    );
+    expect(container.querySelector('[data-testid="timeline-subscribe-avatar-Alice/Work"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="timeline-subscribe-avatar-mark-Alice/Work"]')?.getAttribute(
+        "data-custom-src",
+      ),
+    ).toBe("true");
     expect(container.querySelector('[data-testid="timeline-subscribe-toggle-Alice/Work"]')).toBeTruthy();
     expect(container.textContent).toContain("Alice/Work");
     const chevrons = [...container.querySelectorAll("svg")].filter((node) =>
@@ -172,6 +180,6 @@ describe("SubscribeFilterGroup", () => {
     const status = container.querySelector('[data-testid="timeline-subscribe-disabled"]');
     expect(status?.textContent).toMatch(/sign in/i);
     expect(status?.textContent).not.toMatch(/unreachable/i);
-    expect(status?.querySelector('a[href="/account/identity"]')?.textContent).toMatch(/sign-in/i);
+    expect(status?.querySelector('a[href="/subscriptions/account"]')?.textContent).toMatch(/calendar share/i);
   });
 });

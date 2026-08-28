@@ -211,15 +211,9 @@ export function TimelinePage() {
         dialogBusy={dialogs.dialogBusy}
         dialogError={dialogs.dialogError}
         worksetOptions={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
-        pendingConfirm={dialogs.pendingConfirm}
-        userEventActionBusy={dialogs.userEventActionBusy}
         onCloseDialog={dialogs.closeDialog}
         onSubmitDialog={(values) => {
           void dialogs.handleDialogSubmit(values);
-        }}
-        onCancelConfirm={dialogs.cancelPendingConfirm}
-        onConfirmPending={() => {
-          void dialogs.confirmPendingAction();
         }}
       />
     </TimelinePageProvider>

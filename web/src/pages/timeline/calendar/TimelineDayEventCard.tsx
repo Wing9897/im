@@ -2,18 +2,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlignLeft, Clock, MapPin } from "lucide-react";
 
-import { Badge, CardFieldIcon, CardFieldRow } from "../../../components/ui";
-import {
-  itemDateKindLabel,
-  itemDateKindMarkerClass,
-} from "../../../domain/items/itemCalendarProjection";
+import { CardFieldIcon, CardFieldRow } from "../../../components/ui";
+import { EventListPhaseBadges } from "../../../components/timeline/EventListPhaseBadges";
 import {
   isUserScheduleTimelineEvent,
   scheduleCardText,
 } from "../../../domain/schedule/scheduleCardFields";
+import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 import {
-  EVENT_LIST_DAY_PHASE_TAG_CLASS,
-  EVENT_LIST_DAY_PHASE_TAG_META,
   calendarLocationDisplay,
   resolveEventCardDisplay,
 } from "../../../domain/timeline/eventListCardMeta";
@@ -39,7 +35,8 @@ import {
   dayEventCardClass,
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
-import { ScheduleEventTitleMark } from "../components/ScheduleEventEmojiMark";
+import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
+import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
 
 type DayEventCardProps = {
   event: TimelineItem;
@@ -59,6 +56,7 @@ export function TimelineDayEventCard({
   const dismissed = Boolean(event.dismissed);
   const statusColor = getEventStatusColor(status);
   const scheduleCard = isUserScheduleTimelineEvent(event.source);
+  const isSubscribed = isSubscribedTimelineSource(event.source);
   const emptyValue = t("calendar.emptyValue");
   const location = scheduleCard
     ? scheduleCardText(event.location, emptyValue)
@@ -67,27 +65,12 @@ export function TimelineDayEventCard({
   const { leading, showRemindBadge, dayPhaseTag, title } =
     resolveEventCardDisplay(event, focusedDay);
   const timeLabel = dayCardTimeLabel(event, t("userEvent.allDay"));
+  const statusLabel = t("eventList.statusWithLabel", {
+    value: getEventStatusLabel(status),
+  });
 
   const badges = (
-    <>
-      {showRemindBadge ? (
-        <Badge
-          tone="warning"
-          className="normal-case tracking-normal shrink-0"
-          data-testid="timeline-remind-badge"
-        >
-          {itemDateKindLabel("remind")}
-        </Badge>
-      ) : null}
-      {dayPhaseTag ? (
-        <span
-          className={EVENT_LIST_DAY_PHASE_TAG_CLASS}
-          data-testid={EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].testId}
-        >
-          {t(EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].labelKey)}
-        </span>
-      ) : null}
-    </>
+    <EventListPhaseBadges showRemindBadge={showRemindBadge} dayPhaseTag={dayPhaseTag} />
   );
 
   const titleBlock = (
@@ -95,23 +78,15 @@ export function TimelineDayEventCard({
       className={`${dayCardTitleClass} ${dismissed ? dismissedTitleClass : ""}`}
       title={title}
     >
-      {leading ? (
-        <span
-          className={`inline-flex shrink-0 ${itemDateKindMarkerClass(
-            leading.type === "item" ? leading.itemDateKind : null,
-          )}`}
-          aria-hidden="true"
-          data-testid={
-            leading.type === "important"
-              ? "day-important-marker"
-              : "day-item-kind-marker"
-          }
-        >
-          {leading.emoji}
-        </span>
-      ) : scheduleCard ? (
-        <ScheduleEventTitleMark event={event} />
-      ) : null}
+      <EventListTitleMark
+        event={event}
+        leading={leading}
+        eventAvatarAria={t("eventList.eventAvatarAria")}
+        markerClassName=""
+        importantMarkerTestId="day-important-marker"
+        itemKindMarkerTestId="day-item-kind-marker"
+      />
+      {isSubscribed ? <SubscribedEventSubscribeIcon /> : null}
       <span className="min-w-0 truncate">{title}</span>
     </div>
   );
@@ -192,10 +167,8 @@ export function TimelineDayEventCard({
               />
             </>
           )}
-          <div className={dayCardMetadataClass}>
-            <span style={{ color: statusColor }}>
-              {getEventStatusLabel(status)}
-            </span>
+          <div className={dayCardMetadataClass} data-testid="timeline-day-event-status">
+            <span style={{ color: statusColor }}>{statusLabel}</span>
           </div>
         </div>
       </div>

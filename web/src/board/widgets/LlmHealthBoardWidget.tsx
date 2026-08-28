@@ -1,7 +1,13 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { listLlmProfiles, type LlmProfile } from "../../api/llmProfiles";
+import {
+  listLlmGlobalSlots,
+  listLlmProfiles,
+  type LlmGlobalSlotBinding,
+  type LlmProfile,
+} from "../../api/llmProfiles";
 import { isLlmProfileComplete } from "../../domain/settings/llmProfileCompleteness";
+import { LLM_GLOBAL_SLOTS, type LlmGlobalSlotId } from "../../types/llmProfiles";
 import { Badge } from "../../components/ui";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -11,17 +17,19 @@ type LlmHealthSummary = {
   total: number;
   complete: number;
   incomplete: number;
-  sampleName: string | null;
+  slots: LlmGlobalSlotBinding[];
+  profilesById: Map<string, LlmProfile>;
 };
 
-function summarizeProfiles(profiles: LlmProfile[]): LlmHealthSummary {
+function summarizeLlmHealth(
+  profiles: LlmProfile[],
+  slots: LlmGlobalSlotBinding[],
+): LlmHealthSummary {
   let complete = 0;
   let incomplete = 0;
-  let sampleName: string | null = null;
   for (const profile of profiles) {
     if (isLlmProfileComplete(profile)) {
       complete += 1;
-      if (sampleName == null) sampleName = profile.name;
     } else {
       incomplete += 1;
     }
@@ -30,15 +38,34 @@ function summarizeProfiles(profiles: LlmProfile[]): LlmHealthSummary {
     total: profiles.length,
     complete,
     incomplete,
-    sampleName,
+    slots,
+    profilesById: new Map(profiles.map((profile) => [profile.id, profile])),
   };
 }
 
-/** AI profile health: count and completeness (slots bind profiles separately). */
+function slotBindingLabel(
+  slot: LlmGlobalSlotBinding,
+  profilesById: Map<string, LlmProfile>,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const profileId = (slot.profileId ?? "").trim();
+  if (!profileId) return t("settings:globalSlots.unbound");
+  const profile = profilesById.get(profileId);
+  if (!profile) return slot.profileName || t("board:common.unnamed");
+  if (!isLlmProfileComplete(profile)) {
+    return `${profile.name} — ${t("settings:globalSlots.incompleteBadge")}`;
+  }
+  return profile.name;
+}
+
+/** AI profile health + global slot bindings (read-only summary). */
 export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["board", "settings"]);
   const fetcher = useCallback(
-    () => listLlmProfiles().then(summarizeProfiles),
+    () =>
+      Promise.all([listLlmProfiles(), listLlmGlobalSlots()]).then(([profiles, slots]) =>
+        summarizeLlmHealth(profiles, slots),
+      ),
     [],
   );
   const { data, error, loading, refresh } = useBoardWidgetPoll<LlmHealthSummary>(
@@ -47,7 +74,12 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
     { active },
   );
 
-  const alert = data != null && (data.total === 0 || data.incomplete > 0 || data.complete === 0);
+  const slotsById = new Map<LlmGlobalSlotId, LlmGlobalSlotBinding>(
+    (data?.slots ?? []).map((row) => [row.slot, row]),
+  );
+
+  const alert =
+    data != null && (data.total === 0 || data.incomplete > 0 || data.complete === 0);
 
   return (
     <div className="board-widget-body board-widget-llm-health" data-testid="board-llm-health-widget">
@@ -80,16 +112,38 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
                 </span>
               </div>
             </div>
-            <div className="board-system-grid" data-testid="board-llm-health-default">
-              <div className="board-system-tile">
-                <span className="board-system-tile__label">{t("board:llmHealth.default")}</span>
-                <Badge tone={data.complete > 0 ? "success" : "warning"}>
-                  {data.complete > 0
-                    ? data.sampleName || t("board:common.unnamed")
-                    : t("board:llmHealth.noDefault")}
-                </Badge>
-              </div>
-            </div>
+            <ul
+              className="board-widget-list board-llm-slots-list"
+              data-testid="board-llm-health-slots"
+            >
+              {LLM_GLOBAL_SLOTS.map((slotId) => {
+                const binding = slotsById.get(slotId);
+                const profileId = (binding?.profileId ?? "").trim();
+                const profile = profileId ? data.profilesById.get(profileId) : undefined;
+                const boundReady = Boolean(profile && isLlmProfileComplete(profile));
+                const label = binding
+                  ? slotBindingLabel(binding, data.profilesById, t)
+                  : t("settings:globalSlots.unbound");
+                return (
+                  <li key={slotId} className="board-widget-list__item">
+                    <div
+                      className="board-widget-list__row"
+                      data-testid={`board-llm-slot-${slotId}`}
+                    >
+                      <span className="board-widget-list__primary">
+                        {t(`settings:globalSlots.slot.${slotId}.title`)}
+                        <Badge tone={boundReady ? "info" : "neutral"}>
+                          {boundReady
+                            ? t("settings:globalSlots.boundBadge")
+                            : t("settings:globalSlots.needsSetupBadge")}
+                        </Badge>
+                      </span>
+                      <span className="board-widget-list__meta">{label}</span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
             {alert ? (
               <p
                 className="board-widget-list__error"

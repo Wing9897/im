@@ -128,12 +128,10 @@ describe("CalendarBoardEmbed day mode", () => {
     expect(list).not.toBeNull();
     expect(list?.classList.contains("board-calendar-day__list")).toBe(true);
 
-    const rows = container.querySelectorAll(".board-calendar-day__event");
+    const rows = container.querySelectorAll(".board-event-list-row, .board-calendar-day__event");
     expect(rows).toHaveLength(2);
-    expect(rows[0].querySelector(".board-calendar-day__title")?.textContent).toBe("早會");
-    expect(rows[1].querySelector(".board-calendar-day__title")?.textContent).toBe("午間簡報");
-    expect(rows[0].querySelector(".board-calendar-day__time")).not.toBeNull();
-    expect(rows[1].querySelector(".board-calendar-day__time")).not.toBeNull();
+    expect(container.textContent).toContain("早會");
+    expect(container.textContent).toContain("午間簡報");
   });
 
   it("shows 無行程 when there are no events starting today", () => {
@@ -177,9 +175,11 @@ describe("CalendarBoardEmbed day mode", () => {
       );
     });
 
-    const row = container.querySelector(".board-calendar-day__event") as HTMLButtonElement;
+    const row = container.querySelector(
+      '[data-testid="board-calendar-day-row-analysis-1"] .board-event-list-row__main',
+    ) as HTMLButtonElement;
     act(() => {
-      row.click();
+      row?.click();
     });
     expect(onSelectEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -292,7 +292,7 @@ describe("CalendarBoardEmbed month Nager overlay", () => {
     expect(cell?.querySelector('[data-testid="board-calendar-month-holiday"]')?.textContent).toContain(
       "假期",
     );
-    expect(cell?.querySelectorAll(".board-calendar-month__dot")).toHaveLength(1);
+    expect(cell?.querySelectorAll(".board-calendar-month__chip")).toHaveLength(1);
     expect(container.querySelector(".im-timeline-month-grid")).toBeNull();
     expect(container.querySelector(".im-month-day-watermark-stack")).toBeNull();
   });

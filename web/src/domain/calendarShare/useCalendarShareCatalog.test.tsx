@@ -7,6 +7,7 @@ vi.mock("../../api/calendarShare", async () =>
 
 import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
 import {
+  applyCalendarShareCatalogItems,
   invalidateCalendarShareCatalog,
   refreshCalendarShareCatalog,
   resetCalendarShareCatalogForTests,
@@ -68,6 +69,16 @@ describe("useCalendarShareCatalog", () => {
     expect(resultRef.current?.items).toEqual([{ handle: "DemoPub", slug: "Open" }]);
     expect(resultRef.current?.ownHandle).toBe("Wing");
     expect(resultRef.current?.session?.connected).toBe(true);
+  });
+
+  it("applyCalendarShareCatalogItems updates items without fetch", async () => {
+    await renderHook();
+    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalledTimes(1);
+    act(() => {
+      applyCalendarShareCatalogItems([{ handle: "Alice", slug: "Work" }], "Wing");
+    });
+    expect(resultRef.current?.items).toEqual([{ handle: "Alice", slug: "Work" }]);
+    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalledTimes(1);
   });
 
   it("shares one fetch across subscribers and refreshes all of them on invalidate", async () => {

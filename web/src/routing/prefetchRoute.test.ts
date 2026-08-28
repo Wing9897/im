@@ -31,6 +31,7 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/notify?tab=notify")).not.toThrow();
     expect(() => prefetchRoute("/subscriptions")).not.toThrow();
     expect(() => prefetchRoute("/subscriptions/published")).not.toThrow();
+    expect(() => prefetchRoute("/subscriptions/account")).not.toThrow();
     expect(() => prefetchRoute("/subscriptions/search")).not.toThrow();
   });
 });

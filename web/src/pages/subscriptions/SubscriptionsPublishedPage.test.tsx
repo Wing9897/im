@@ -14,6 +14,15 @@ vi.mock("../../api/worksets", () => ({
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 
+vi.mock("../../domain/user/userProfile", () => ({
+  useUserProfile: () => ({
+    profile: { displayName: "Wing", avatarDataUrl: null, background: "" },
+    setProfile: vi.fn(),
+  }),
+  resolveUserDisplayName: (profile: { displayName: string }, fallback: string) =>
+    profile.displayName.trim() || fallback,
+}));
+
 import { PUBLISHED_PENDING_SYNC_POLL_MS, SubscriptionsPublishedPage } from "./SubscriptionsPublishedPage";
 import { SubscriptionsShell } from "./SubscriptionsShell";
 import { i18n, wrapWithI18n } from "../../test/i18nHarness";
@@ -32,7 +41,7 @@ const LIVE = {
   isSystemWorkset: false,
   worksetName: "Ops",
   worksetMissing: false,
-  emoji: "🌞",
+  cover: "data:image/jpeg;base64,cover",
   description: "Ops calendar",
 };
 
@@ -54,7 +63,7 @@ const WORKSET = {
   isSystem: false,
   notifyEnabled: true,
   externalEnabled: true,
-  emoji: "🌞",
+  cover: "data:image/jpeg;base64,cover",
   description: "Ops calendar",
   createdAt: "",
   updatedAt: "",
@@ -129,6 +138,7 @@ describe("SubscriptionsPublishedPage", () => {
                   path: "published",
                   element: createElement(SubscriptionsPublishedPage),
                 }),
+                createElement(Route, { path: "account", element: createElement("div", { "data-testid": "account-stub" }) }),
                 createElement(Route, { path: "search", element: createElement("div", { "data-testid": "search-stub" }) }),
               ),
             ),
@@ -141,15 +151,17 @@ describe("SubscriptionsPublishedPage", () => {
     });
   }
 
-  it("shows mine / published / search tabs and the published route", async () => {
+  it("shows mine / published / account / search tabs and the published route", async () => {
     await renderShell("/subscriptions/published");
     const shell = document.querySelector('[data-testid="subscriptions-shell"]');
     expect(shell?.textContent).toContain("My subscriptions");
     expect(shell?.textContent).toContain("My published");
+    expect(shell?.textContent).toContain("Calendar share");
     expect(shell?.textContent).toContain("Find calendars");
     const hrefs = [...document.querySelectorAll("a")].map((el) => el.getAttribute("href"));
     expect(hrefs).toContain("/subscriptions/mine");
     expect(hrefs).toContain("/subscriptions/published");
+    expect(hrefs).toContain("/subscriptions/account");
     expect(hrefs).toContain("/subscriptions/search");
     expect(document.querySelector('[data-testid="subscriptions-published-list"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="subscriptions-published-list"]')?.textContent).toContain(
@@ -164,7 +176,8 @@ describe("SubscriptionsPublishedPage", () => {
     expect(document.querySelector('[data-testid="subscriptions-published-filter"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="subscriptions-shell"] > .mt-lg')).toBeNull();
     expect(hrefs.indexOf("/subscriptions/mine")).toBeLessThan(hrefs.indexOf("/subscriptions/published"));
-    expect(hrefs.indexOf("/subscriptions/published")).toBeLessThan(hrefs.indexOf("/subscriptions/search"));
+    expect(hrefs.indexOf("/subscriptions/published")).toBeLessThan(hrefs.indexOf("/subscriptions/account"));
+    expect(hrefs.indexOf("/subscriptions/account")).toBeLessThan(hrefs.indexOf("/subscriptions/search"));
   });
 
   it("surfaces lastError on the published card", async () => {
@@ -323,6 +336,33 @@ describe("SubscriptionsPublishedPage", () => {
     expect(document.querySelector('[data-testid="subscriptions-published-empty"]')).toBeTruthy();
   });
 
+  it("shows syncing wait state while update public copy is in flight", async () => {
+    let resolveSync: (value: unknown) => void = () => {};
+    calendarShareApiMocks.syncCalendarSharePublish.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSync = resolve;
+      }),
+    );
+    await renderPage();
+    const sync = document.querySelector(
+      '[data-testid="subscriptions-published-sync-ws-1"]',
+    ) as HTMLButtonElement;
+    expect(sync.textContent).toContain("Update public copy");
+    await act(async () => {
+      sync.click();
+      await Promise.resolve();
+    });
+    expect(sync.disabled).toBe(true);
+    expect(sync.getAttribute("aria-busy")).toBe("true");
+    expect(sync.textContent).toContain("Updating…");
+    await act(async () => {
+      resolveSync(LIVE);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  });
+
   it("updates the public copy without deleting the workset", async () => {
     await renderPage();
     await act(async () => {
@@ -469,16 +509,17 @@ describe("SubscriptionsPublishedPage", () => {
     expect(calendarShareApiMocks.putCalendarSharePublish).toHaveBeenCalled();
   });
 
-  it("shows a login banner and disables unpublish when logged out", async () => {
+  it("shows a need-login banner and disables unpublish when logged out", async () => {
     calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
       connected: false,
       baseUrl: "http://127.0.0.1:8787",
       handle: "",
       status: "disconnected",
     });
-    await renderPage();
-    expect(mount.textContent).toContain("Sign in to calendar share");
-    expect([...document.querySelectorAll("a")].some((el) => el.getAttribute("href") === "/account/identity")).toBe(
+    await renderShell("/subscriptions/published");
+    expect(document.querySelector('[data-testid="subscriptions-need-login"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="calendar-share-login"]')).toBeNull();
+    expect([...document.querySelectorAll("a")].some((el) => el.getAttribute("href") === "/subscriptions/account")).toBe(
       true,
     );
     const button = document.querySelector('[data-testid="subscriptions-unpublish-ws-1"]') as HTMLButtonElement;

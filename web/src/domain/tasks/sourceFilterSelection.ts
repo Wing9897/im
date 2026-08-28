@@ -147,6 +147,7 @@ export type FilterTreeRow = {
   kind: "workset" | "unassigned";
   id: string;
   name: string;
+  cover?: string;
   children: WorksetMemberTask[];
 };
 
@@ -158,7 +159,7 @@ export const UNASSIGNED_FILTER_GROUP_ID = "__unassigned__";
  * members). Tasks always belong to a workset (omit / empty → 一般).
  */
 export function buildFilterTreeRows(
-  worksets: readonly { id: string; name: string }[],
+  worksets: readonly { id: string; name: string; cover?: string }[],
   tasks: readonly WorksetMemberTask[],
   _unassignedLabel = "Unassigned",
 ): FilterTreeRow[] {
@@ -175,6 +176,7 @@ export function buildFilterTreeRows(
       kind: "workset",
       id: ws.id,
       name: ws.name,
+      cover: ws.cover,
       children: membersByWorkset.get(ws.id) ?? [],
     });
   }

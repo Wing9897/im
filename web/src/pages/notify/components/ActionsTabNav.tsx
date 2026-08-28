@@ -17,7 +17,7 @@ interface ActionsTabNavProps {
   onTabChange: (tab: ActionsTabKey) => void;
 }
 
-/** Segmented sub-nav for the notifications workspace (types / notify / history). */
+/** Segmented sub-nav for the notify & actions workspace (types / notify / history). */
 export function ActionsTabNav({ activeTab, onTabChange }: ActionsTabNavProps) {
   const { t } = useTranslation("actions");
 

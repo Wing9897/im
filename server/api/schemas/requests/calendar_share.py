@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
-from server.calendar_share.constants import PublicVisibility, canonicalize_listing_visibility
+from server.calendar_share.constants import PublicVisibility
 
 
 class CalendarShareLoginBody(BaseModel):
@@ -32,11 +32,6 @@ class CalendarSharePublishBody(BaseModel):
     grants: list[CalendarShareGrantBody] = Field(default_factory=list)
     syncNow: bool = False
 
-    @field_validator("publicVisibility", mode="before")
-    @classmethod
-    def _map_listing_visibility(cls, value: object) -> object:
-        return canonicalize_listing_visibility(value)
-
 
 class CalendarShareSubscribeBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -50,3 +45,12 @@ class CalendarShareTimezoneBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     timezone: str = Field(min_length=1, max_length=64)
+
+
+USER_AVATAR_MAX_CHARS = 200 * 1024
+
+
+class CalendarShareProfileBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    avatar: str = Field(default="", max_length=USER_AVATAR_MAX_CHARS)

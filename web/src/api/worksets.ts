@@ -16,16 +16,16 @@ export function createWorkset(
   opts?: {
     notifyEnabled?: boolean;
     externalEnabled?: boolean;
-    emoji?: string;
     description?: string;
+    cover?: string;
   },
 ): Promise<Workset> {
   return apiClient.post<Workset>("/api/v1/worksets", {
     name,
     ...(opts?.notifyEnabled === undefined ? {} : { notifyEnabled: opts.notifyEnabled }),
     ...(opts?.externalEnabled === undefined ? {} : { externalEnabled: opts.externalEnabled }),
-    ...(opts?.emoji === undefined ? {} : { emoji: opts.emoji }),
     ...(opts?.description === undefined ? {} : { description: opts.description }),
+    ...(opts?.cover === undefined ? {} : { cover: opts.cover }),
   });
 }
 
@@ -39,8 +39,8 @@ export function updateWorkset(
     name?: string;
     notifyEnabled?: boolean;
     externalEnabled?: boolean;
-    emoji?: string;
     description?: string;
+    cover?: string;
   },
 ): Promise<Workset> {
   return apiClient.put<Workset>(`/api/v1/worksets/${encodeURIComponent(worksetId)}`, body);

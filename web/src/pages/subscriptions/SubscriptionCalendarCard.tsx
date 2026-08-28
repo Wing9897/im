@@ -1,18 +1,15 @@
-import type { LucideIcon } from "lucide-react";
-import { CalendarDays } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   AccentBarCard,
   type BadgeTone,
 } from "../../components/ui";
-import { TaskLogoMark } from "../../components/task/TaskLogoMark";
+import { IdentityAvatar } from "../../components/user/IdentityAvatar";
 import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
 import {
   type CalendarShareGrantVisibility,
   type CalendarShareListingVisibility,
 } from "../../domain/calendarShare/listingVisibility";
-
-const AVATAR_PX = 48;
+import { resolveWorksetCoverSrc } from "../../domain/worksets/worksetCover";
 
 export function visibilityAccentClass(
   visibility: CalendarShareListingVisibility | CalendarShareGrantVisibility,
@@ -32,11 +29,12 @@ export function visibilityBadgeTone(
 
 type Props = {
   title: string;
-  /** Remote / workset emoji; empty uses the Lucide fallback. */
-  emoji?: string;
+  /** Publisher handle for initials when ``ownerAvatar`` is empty. */
+  ownerLabel?: string;
+  ownerAvatar?: string;
+  cover?: string;
   /** Truncated when present. */
   description?: string;
-  icon?: LucideIcon;
   accentClass?: string;
   badge?: ReactNode;
   children?: ReactNode;
@@ -45,12 +43,13 @@ type Props = {
   className?: string;
 };
 
-/** Entity card for subscription lists — 48px emoji avatar, same chrome as workset cards. */
+/** Subscription list card — publisher avatar + calendar cover + handle/slug path. */
 export function SubscriptionCalendarCard({
   title,
-  emoji = "",
+  ownerLabel = title,
+  ownerAvatar = "",
+  cover = "",
   description = "",
-  icon = CalendarDays,
   accentClass = "bg-accent",
   badge,
   children,
@@ -59,6 +58,8 @@ export function SubscriptionCalendarCard({
   className,
 }: Props) {
   const blurb = description.trim();
+  const coverSrc = resolveWorksetCoverSrc(cover);
+  const avatarLabel = ownerLabel.trim() || title;
   return (
     <AccentBarCard
       accentClass={accentClass}
@@ -66,22 +67,42 @@ export function SubscriptionCalendarCard({
       data-testid={dataTestId}
       className={className}
     >
-      <div className="flex items-start gap-md">
-        <TaskLogoMark
-          emoji={emoji}
-          sizePx={AVATAR_PX}
-          fallbackIcon={icon}
-          testId="subscription-card-emoji"
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-sm">
-          <div className="flex min-w-0 items-start justify-between gap-sm">
-            <span className={`min-w-0 truncate ${cardTitleClass}`} title={title}>
-              {title}
-            </span>
-            {badge}
+      <div className="flex flex-col gap-md">
+        <div
+          className="relative aspect-[2.4/1] w-full overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--surface-border)_40%,transparent)]"
+          data-testid="subscription-card-cover"
+        >
+          <img
+            src={coverSrc}
+            alt=""
+            className="h-full w-full border-0 object-cover"
+            data-testid="subscription-card-cover-preview"
+            draggable={false}
+          />
+        </div>
+        <div className="flex min-w-0 flex-col gap-sm">
+          <div className="flex min-w-0 items-start gap-sm">
+            <IdentityAvatar
+              label={avatarLabel}
+              src={ownerAvatar}
+              size="md"
+              testId="subscription-card-avatar"
+            />
+            <div className="min-w-0 flex-1 flex-col gap-xs">
+              <div className="flex min-w-0 items-start justify-between gap-sm">
+                <span className={`min-w-0 truncate ${cardTitleClass}`} title={title}>
+                  {title}
+                </span>
+                {badge}
+              </div>
+            </div>
           </div>
           {blurb ? (
-            <p className={`m-0 line-clamp-2 ${cardBodyClass}`} title={blurb} data-testid="subscription-card-description">
+            <p
+              className={`m-0 line-clamp-2 ${cardBodyClass}`}
+              title={blurb}
+              data-testid="subscription-card-description"
+            >
               {blurb}
             </p>
           ) : null}

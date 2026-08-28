@@ -9,6 +9,7 @@ import {
   eventListCardTitle,
   eventListTimeLabel,
   eventShowsRemindBadge,
+  formatEventListAffiliationLabel,
   formatEventListProvenanceLabel,
   previewEventBody,
   resolveEventCardDisplay,
@@ -16,35 +17,14 @@ import {
   resolveEventListProvenanceKind,
   resolveEventListWorksetName,
   eventListAllowsDismiss,
+  eventListShowsProvenance,
+  resolveSubscribedCalendarDescription,
 } from "./eventListCardMeta";
 import { IMPORTANT_EVENT_EMOJI } from "../../api/timelineImportance";
 
 describe("eventListCardMeta", () => {
   beforeEach(async () => {
     await setAppLocale("zh-Hant");
-  });
-
-  it("resolves workset from worksetId with general fallback", () => {
-    expect(
-      resolveEventListWorksetName(
-        makeTimelineItem({ worksetId: SYSTEM_WORKSET_ID }),
-        { generalWorksetLabel: "一般" },
-      ),
-    ).toBe("一般");
-    expect(
-      resolveEventListWorksetName(
-        makeTimelineItem({ worksetId: "ws-ops" }),
-        {
-          generalWorksetLabel: "一般",
-          worksetNameById: new Map([["ws-ops", "營運"]]),
-        },
-      ),
-    ).toBe("營運");
-    expect(
-      resolveEventListWorksetName(makeTimelineItem({}), {
-        generalWorksetLabel: "一般",
-      }),
-    ).toBe("一般");
   });
 
   it("resolves provenance kinds per source/origin", () => {
@@ -84,6 +64,48 @@ describe("eventListCardMeta", () => {
         (key, opts) => (key === "eventList.provenance.subscribed" ? `Subscribed: ${opts?.path}` : key),
       ),
     ).toBe("Subscribed: Alice/Work");
+  });
+
+  it("resolves workset from worksetId with general fallback", () => {
+    expect(
+      resolveEventListWorksetName(
+        makeTimelineItem({ worksetId: SYSTEM_WORKSET_ID }),
+        { generalWorksetLabel: "一般" },
+      ),
+    ).toBe("一般");
+    expect(
+      resolveEventListWorksetName(
+        makeTimelineItem({ worksetId: "ws-ops" }),
+        {
+          generalWorksetLabel: "一般",
+          worksetNameById: new Map([["ws-ops", "營運"]]),
+        },
+      ),
+    ).toBe("營運");
+    expect(
+      resolveEventListWorksetName(makeTimelineItem({}), {
+        generalWorksetLabel: "一般",
+      }),
+    ).toBe("一般");
+    expect(
+      resolveEventListWorksetName(
+        makeTimelineItem({ source: "subscribed:DemoPub/Open" }),
+        { generalWorksetLabel: "一般" },
+      ),
+    ).toBe("");
+  });
+
+  it("uses calendar affiliation for subscribed rows and hides provenance", () => {
+    const subscribed = makeTimelineItem({ source: "subscribed:DemoPub/Open" });
+    const t = (key: string, opts?: Record<string, string>) =>
+      key === "eventList.affiliation.calendar" ? `日曆：${opts?.path}` : key;
+    expect(formatEventListAffiliationLabel(subscribed, t)).toBe("日曆：DemoPub/Open");
+    expect(eventListShowsProvenance(subscribed)).toBe(false);
+    expect(
+      resolveSubscribedCalendarDescription(subscribed, {
+        subscribeDescriptionByKey: new Map([["DemoPub/Open", "Public office hours"]]),
+      }),
+    ).toBe("Public office hours");
   });
 
   it("allows local dismiss only for non-subscribed events", () => {

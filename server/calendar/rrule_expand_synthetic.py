@@ -84,9 +84,7 @@ def expand_series_occurrences(
         # Writers reject the prefix; refuse to expand non-canonical stored forms.
         return []
     if str(task_value(series, "event_start_local") or "").strip():
-        return _expand_imported_occurrences(
-            series, range_start, range_end, budget, calendar_tz=calendar_tz
-        )
+        return _expand_imported_occurrences(series, range_start, range_end, budget, calendar_tz=calendar_tz)
 
     local_tz = calendar_tz or rrule_mod._system_tzinfo()
     is_all_day = bool(task_value(series, "event_is_all_day"))
@@ -206,10 +204,6 @@ def expand_calendar_occurrences(
         remaining = MAX_OCCURRENCES - len(results)
         if remaining <= 0:
             break
-        results.extend(
-            expand_series_occurrences(
-                series, range_start, range_end, remaining, calendar_tz=calendar_tz
-            )
-        )
+        results.extend(expand_series_occurrences(series, range_start, range_end, remaining, calendar_tz=calendar_tz))
     results.sort(key=lambda o: (o["startTime"], o["seriesId"]))
     return results

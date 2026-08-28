@@ -8,7 +8,7 @@ import {
 
 /**
  * When simple mode is on, bounce users off collect/analyze routes,
- * the Tasks page, and the analysis-strategy AI tab onto the calendar home.
+ * the Tasks page, and the legacy analysis-strategy URL onto the calendar home.
  */
 export function SimpleModeGate({ children }: { children: React.ReactNode }) {
   const { simpleMode } = useSimpleMode();

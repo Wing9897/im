@@ -10,6 +10,7 @@ import {
   Upload,
 } from "lucide-react";
 import { ConfirmDialog } from "../components/dialogs/ConfirmDialog";
+import { Button, PillButton } from "../components/ui";
 import { useTranslation } from "react-i18next";
 import { BOARD_WIDGET_TYPES, getWidgetMeta } from "./widgetRegistry";
 import type { BoardEditMode, BoardWidgetType } from "./types";
@@ -114,8 +115,8 @@ export function BoardChrome({
               data-testid="board-fab-actions"
             >
               <div className="board-chrome__add">
-                <button
-                  type="button"
+                <PillButton
+                  padding="square"
                   className="board-chrome__fab"
                   data-testid="board-add-widget"
                   title={t("board:shell.addWidget")}
@@ -124,7 +125,7 @@ export function BoardChrome({
                   onClick={() => setAddOpen((v) => !v)}
                 >
                   <Plus size={18} strokeWidth={2} aria-hidden="true" />
-                </button>
+                </PillButton>
                 {addOpen ? (
                   <div className="board-chrome__menu" role="menu" data-testid="board-add-menu">
                     {BOARD_WIDGET_TYPES.map((type) => {
@@ -148,8 +149,9 @@ export function BoardChrome({
                   </div>
                 ) : null}
               </div>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 className="board-chrome__fab"
                 data-testid="board-export-layout"
                 title={t("board:shell.exportLayout")}
@@ -157,9 +159,10 @@ export function BoardChrome({
                 onClick={onExportLayout}
               >
                 <Download size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 className="board-chrome__fab"
                 data-testid="board-import-layout"
                 title={t("board:shell.importLayout")}
@@ -167,7 +170,7 @@ export function BoardChrome({
                 onClick={() => importInputRef.current?.click()}
               >
                 <Upload size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
+              </Button>
               <input
                 ref={importInputRef}
                 type="file"
@@ -180,8 +183,9 @@ export function BoardChrome({
                   event.currentTarget.value = "";
                 }}
               />
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 className="board-chrome__fab"
                 data-testid="board-reset-layout"
                 title={t("board:shell.resetLayout")}
@@ -189,9 +193,10 @@ export function BoardChrome({
                 onClick={() => setResetConfirmOpen(true)}
               >
                 <RotateCcw size={16} strokeWidth={2} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 className="board-chrome__fab board-chrome__fab--primary"
                 data-testid="board-done-edit"
                 title={t("board:shell.doneEdit")}
@@ -202,13 +207,14 @@ export function BoardChrome({
                 }}
               >
                 <Check size={18} strokeWidth={2} aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           ) : null}
 
           {onToggleFullscreen ? (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               className="board-chrome__fab"
               data-testid="board-toggle-fullscreen"
               title={isFullscreen ? t("board:shell.exitFullscreen") : t("board:shell.fullscreen")}
@@ -223,11 +229,12 @@ export function BoardChrome({
               ) : (
                 <Maximize2 size={16} strokeWidth={2} aria-hidden="true" />
               )}
-            </button>
+            </Button>
           ) : null}
 
-          <button
-            type="button"
+          <PillButton
+            padding="square"
+            active={isEdit}
             className={
               isEdit
                 ? "board-chrome__fab board-chrome__fab--anchor board-chrome__fab--active"
@@ -241,7 +248,7 @@ export function BoardChrome({
             onClick={handleAnchorClick}
           >
             <Pencil size={16} strokeWidth={2} aria-hidden="true" />
-          </button>
+          </PillButton>
         </div>
       </div>
       {resetConfirmOpen ? (

@@ -4,9 +4,10 @@ import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import { LazyLoadErrorBoundary } from "../../../components/common/LazyLoadErrorBoundary";
 import { TimelineCalendarView } from "./TimelineCalendarView";
-import { calendarMonthPanelClass } from "./timelineCalendarClasses";
+import { calendarMonthPanelClass } from "../timelineCalendarClasses";
 import { timelinePanelClass } from "../timelineViewLayout";
 import { useTimelinePageContext } from "../TimelinePageContext";
+import { useEventListMetaLookups } from "../../../domain/timeline/useEventListMetaLookups";
 
 const LazyTimelineGanttView = React.lazy(() =>
   import("../gantt/TimelineGanttView").then((m) => ({ default: m.TimelineGanttView }))
@@ -98,6 +99,7 @@ export function TimelineGrid({
     monthDatesRevealed = false,
     onCreateOnDay,
   } = useTimelinePageContext();
+  const metaLookups = useEventListMetaLookups();
 
   const isCompactMonth = viewMode === "calendar" && timeScale === "month";
   const shellClassName = isCompactMonth ? calendarMonthPanelClass : timelinePanelClass;
@@ -125,6 +127,7 @@ export function TimelineGrid({
           onSelectEvent={onSelectEvent}
           onFocusDay={onFocusDay}
           onCreateOnDay={onCreateOnDay}
+          metaLookups={metaLookups}
         />
       ) : (
         <LazyLoadErrorBoundary fallbackHeight={320}>

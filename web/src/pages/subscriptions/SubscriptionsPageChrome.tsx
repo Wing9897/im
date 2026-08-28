@@ -17,7 +17,7 @@ type ChromeProps = {
   children: ReactNode;
 };
 
-/** Shared login / offline / error chrome for Mine, Published, and Search. Tabs label the page. */
+/** Shared login / offline / error chrome for Mine, Published, and Search. */
 export function SubscriptionsPageChrome({
   status,
   error,
@@ -33,9 +33,9 @@ export function SubscriptionsPageChrome({
       {showStatus ? (
         <div className="flex flex-col gap-sm">
           {status === "loggedOut" ? (
-            <AlertBanner variant="warning" role="status" className="mb-0 max-w-[56ch]">
+            <AlertBanner variant="warning" role="status" className="mb-0 max-w-[56ch]" data-testid="subscriptions-need-login">
               {loginMessage ?? t("needLogin")}{" "}
-              <Link to="/account/identity" className="font-medium text-accent no-underline hover:underline">
+              <Link to="/subscriptions/account" className="font-medium text-accent no-underline hover:underline">
                 {t("loginLink")}
               </Link>
             </AlertBanner>

@@ -46,7 +46,7 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
                   </span>
                   <span className="board-widget-list__meta">
                     {topic.taskName ? `${topic.taskName} · ` : ""}
-                    {t("board:leaderboard.score", { score: topic.score })}
+                    {topic.score.toFixed(1)}
                     {topic.messageCount != null
                       ? t("board:leaderboard.messages", { count: topic.messageCount })
                       : ""}

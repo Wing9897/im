@@ -1700,6 +1700,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar-share/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Put Profile
+         * @description Sync local profile avatar to IntelligenceCalendar ``PUT /me``.
+         */
+        put: operations["put_profile_api_v1_calendar_share_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar-share/publish": {
         parameters: {
             query?: never;
@@ -3190,6 +3210,32 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** CalendarShareProfileBody */
+        CalendarShareProfileBody: {
+            /**
+             * Avatar
+             * @default
+             */
+            avatar: string;
+        };
+        /** CalendarShareProfileResponse */
+        CalendarShareProfileResponse: {
+            /**
+             * Handle
+             * @default
+             */
+            handle: string;
+            /**
+             * Timezone
+             * @default
+             */
+            timezone: string;
+            /**
+             * Avatar
+             * @default
+             */
+            avatar: string;
+        };
         /** CalendarSharePublishBody */
         CalendarSharePublishBody: {
             /** Slug */
@@ -3250,15 +3296,15 @@ export interface components {
              */
             worksetMissing: boolean;
             /**
-             * Emoji
-             * @default
-             */
-            emoji: string;
-            /**
              * Description
              * @default
              */
             description: string;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
         };
         /** CalendarSharePublishListResponse */
         CalendarSharePublishListResponse: {
@@ -3310,15 +3356,20 @@ export interface components {
             /** Visibility */
             visibility?: ("busy" | "details") | null;
             /**
-             * Emoji
-             * @default
-             */
-            emoji: string;
-            /**
              * Description
              * @default
              */
             description: string;
+            /**
+             * Owneravatar
+             * @default
+             */
+            ownerAvatar: string;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
         };
         /** CalendarShareSearchResponse */
         CalendarShareSearchResponse: {
@@ -3360,15 +3411,20 @@ export interface components {
             /** Slug */
             slug: string;
             /**
-             * Emoji
-             * @default
-             */
-            emoji: string;
-            /**
              * Description
              * @default
              */
             description: string;
+            /**
+             * Owneravatar
+             * @default
+             */
+            ownerAvatar: string;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
         };
         /** CalendarShareSubscriptionsResponse */
         CalendarShareSubscriptionsResponse: {
@@ -5867,15 +5923,15 @@ export interface components {
              */
             externalEnabled: boolean;
             /**
-             * Emoji
-             * @default
-             */
-            emoji: string;
-            /**
              * Description
              * @default
              */
             description: string;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
         };
         /** WorksetDeleteResponse */
         WorksetDeleteResponse: {
@@ -5907,15 +5963,15 @@ export interface components {
              */
             externalEnabled: boolean;
             /**
-             * Emoji
-             * @default
-             */
-            emoji: string;
-            /**
              * Description
              * @default
              */
             description: string;
+            /**
+             * Cover
+             * @default
+             */
+            cover: string;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -5929,10 +5985,10 @@ export interface components {
             notifyEnabled?: boolean | null;
             /** Externalenabled */
             externalEnabled?: boolean | null;
-            /** Emoji */
-            emoji?: string | null;
             /** Description */
             description?: string | null;
+            /** Cover */
+            cover?: string | null;
         };
         /**
          * SseMessagesUpdatedPayload
@@ -10070,6 +10126,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarShareTimezoneResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_profile_api_v1_calendar_share_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarShareProfileBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarShareProfileResponse"];
                 };
             };
             /** @description Validation Error */

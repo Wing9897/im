@@ -99,6 +99,7 @@ const RETIRED_SOURCE_PATHS = [
   // Assistant page — per-session LLM profile picker retired (global AI slots only)
   "components/assistant/AssistantSessionLlmProfileSelect.tsx",
   "components/assistant/AssistantSessionLlmProfileSelect.test.tsx",
+  "components/WorksetCardEmoji.tsx",
 ] as const;
 
 // Settings → General LAN bind toggle lived inline (no dedicated module).

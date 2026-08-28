@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "../../../components/ui";
+import { EventListPhaseBadges } from "../../../components/timeline/EventListPhaseBadges";
+import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
+import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 import {
-  itemDateKindLabel,
-  itemDateKindMarkerClass,
-} from "../../../domain/items/itemCalendarProjection";
-import {
-  EVENT_LIST_DAY_PHASE_TAG_CLASS,
-  EVENT_LIST_DAY_PHASE_TAG_META,
   resolveEventCardDisplay,
+  type EventListCardMetaLookups,
 } from "../../../domain/timeline/eventListCardMeta";
 import {
   getEventStatusColor,
@@ -29,12 +27,12 @@ import {
   weekEventChipTitleClass,
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
-import { ScheduleEventCompactEmoji } from "../components/ScheduleEventEmojiMark";
 
 type WeekEventChipProps = {
   event: TimelineItem;
   focusedDay: Date;
   status: TimelineEventStatus;
+  metaLookups?: EventListCardMetaLookups;
   onSelect: (event: TimelineItem) => void;
 };
 
@@ -42,11 +40,13 @@ export function WeekEventChip({
   event,
   focusedDay,
   status,
+  metaLookups = {},
   onSelect,
 }: WeekEventChipProps) {
   const { t } = useTranslation("timeline");
   const [hovered, setHovered] = useState(false);
   const dismissed = Boolean(event.dismissed);
+  const isSubscribed = isSubscribedTimelineSource(event.source);
   const statusColor = getEventStatusColor(status);
   const { leading, showRemindBadge, dayPhaseTag, title } =
     resolveEventCardDisplay(event, focusedDay);
@@ -74,49 +74,27 @@ export function WeekEventChip({
         <div className={weekEventChipBodyClass}>
           <div className="flex min-w-0 items-start gap-0.5">
             <div
-              className={`${weekEventChipTitleClass} min-w-0 flex-1 ${
+              className={`${weekEventChipTitleClass} min-w-0 flex flex-1 items-start gap-0.5 ${
                 dismissed ? dismissedTitleClass : ""
               }`}
             >
-              {leading ? (
-                <span
-                  className={`mr-0.5 inline-flex align-middle ${itemDateKindMarkerClass(
-                    leading.type === "item" ? leading.itemDateKind : null,
-                  )}`}
-                  aria-hidden="true"
-                  data-testid={
-                    leading.type === "important"
-                      ? "week-important-marker"
-                      : "week-item-kind-marker"
-                  }
-                >
-                  {leading.emoji}
-                </span>
-              ) : (
-                <ScheduleEventCompactEmoji
-                  event={event}
-                  className="mr-0.5"
-                />
-              )}
-              {title}
+              <EventListTitleMark
+                event={event}
+                leading={leading}
+                metaLookups={metaLookups}
+                eventAvatarAria={t("eventList.eventAvatarAria")}
+                markerClassName=""
+                importantMarkerTestId="week-important-marker"
+                itemKindMarkerTestId="week-item-kind-marker"
+              />
+              {isSubscribed ? <SubscribedEventSubscribeIcon /> : null}
+              <span className="min-w-0 truncate">{title}</span>
             </div>
-            {showRemindBadge ? (
-              <Badge
-                tone="warning"
-                className="normal-case tracking-normal shrink-0 !px-1 !py-0 text-[9px] leading-none"
-                data-testid="timeline-remind-badge"
-              >
-                {itemDateKindLabel("remind")}
-              </Badge>
-            ) : null}
-            {dayPhaseTag ? (
-              <span
-                className={EVENT_LIST_DAY_PHASE_TAG_CLASS}
-                data-testid={EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].testId}
-              >
-                {t(EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].labelKey)}
-              </span>
-            ) : null}
+            <EventListPhaseBadges
+              showRemindBadge={showRemindBadge}
+              dayPhaseTag={dayPhaseTag}
+              remindBadgeClassName="normal-case tracking-normal shrink-0 !px-1 !py-0 text-[9px] leading-none"
+            />
           </div>
           <div className={weekEventChipTimeClass}>{timeLabel}</div>
         </div>

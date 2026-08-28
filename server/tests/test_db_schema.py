@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Floor SoT (stamp 4 + retired future-stamp hard-reject): ``test_schema_floor.py``.
+Floor SoT (stamp 5 + retired future-stamp hard-reject): ``test_schema_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -28,7 +28,7 @@ from server.tests.schema_fixtures import (
     make_stamped_db,
 )
 
-_REQUIRED_TABLE_COUNT = 31
+_REQUIRED_TABLE_COUNT = 32
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 

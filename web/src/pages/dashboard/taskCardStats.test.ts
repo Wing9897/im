@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { EMPTY_TASK_CARD_STATS, toTaskCardStats } from "./taskCardStats";
+import { EMPTY_TASK_CARD_STATS, toTaskCardStats } from "../../domain/dashboard/taskCardStats";
 import type { TaskAnalysisStats } from "../../types";
 
 function makeStat(overrides: Partial<TaskAnalysisStats> = {}): TaskAnalysisStats {

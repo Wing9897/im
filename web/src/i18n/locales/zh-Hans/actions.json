@@ -1,9 +1,9 @@
 {
   "tabs": {
-    "types": "外发通知",
-    "notify": "通知",
+    "types": "动作",
+    "notify": "本机通知",
     "history": "触发纪录",
-    "navAria": "通知分页"
+    "navAria": "通知与动作分页"
   },
   "types": {
     "statTotal": "总数",
@@ -98,8 +98,8 @@
   },
   "history": {
     "title": "最近触发纪录",
-    "intro": "外发通知规则与本机通知被触发时的成功／失败纪录。本机通知仅保存在此装置。",
-    "loadErrorPrefix": "外发通知纪录载入失败：",
+    "intro": "动作规则与本机通知被触发时的成功／失败纪录。本机通知仅保存在此装置。",
+    "loadErrorPrefix": "动作纪录载入失败：",
     "loading": "载入触发纪录…",
     "empty": "尚无触发纪录。",
     "statusSuccess": "成功",

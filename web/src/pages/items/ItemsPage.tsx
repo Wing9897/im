@@ -13,7 +13,7 @@ import {
   itemsPageChromeEntryToolsClass,
   itemsPageChromeSelectClass,
   itemsPageFillClass,
-} from "./itemsPageChromeClasses";
+} from "../../styles/itemsPageChromeClasses";
 import type { ItemsSortKey } from "../../domain/items/itemsListModel";
 import { useItemsPage } from "./useItemsPage";
 

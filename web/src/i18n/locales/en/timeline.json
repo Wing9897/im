@@ -119,6 +119,11 @@
     "phaseFilterAria": "Filter today’s events by progress",
     "emptyFiltered": "No events match this filter",
     "eventAvatarAria": "Intelligence event and task mark",
+    "statusWithLabel": "Status: {value}",
+    "subscribeIconAria": "Subscribed",
+    "affiliation": {
+      "calendar": "Calendar: {path}"
+    },
     "provenance": {
       "task": "Task",
       "user": "User",
@@ -151,8 +156,6 @@
     "dismissFailed": "Failed to take off the timeline",
     "restoreFailed": "Failed to restore to the timeline",
     "importantFailed": "Failed to update important marker",
-    "dismissConfirm": "Take “{title}” off the timeline? You can restore it later.",
-    "restoreConfirm": "Restore “{title}” to the timeline?",
     "ganttLoadTimeout": "Timed out loading task activity — please retry"
   },
   "userEvent": {

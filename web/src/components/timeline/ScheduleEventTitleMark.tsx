@@ -1,11 +1,11 @@
 import { CalendarDays, Repeat } from "lucide-react";
 
-import { ItemEmojiAvatar } from "../../../components/items/emoji/ItemEmojiAvatar";
-import { CardTitleIcon } from "../../../components/ui";
+import { ItemEmojiAvatar } from "../items/emoji/ItemEmojiAvatar";
+import { CardTitleIcon } from "../ui";
 import {
   lookupScheduleEmoji,
   type ScheduleEmojiEventRef,
-} from "../../../domain/schedule/scheduleEmoji";
+} from "../../domain/schedule/scheduleEmoji";
 
 /** Title-row mark for day / sidebar schedule cards. Empty → CalendarDays / Repeat. */
 export function ScheduleEventTitleMark({
@@ -17,7 +17,7 @@ export function ScheduleEventTitleMark({
   if (glyph) {
     return (
       <span className="shrink-0" data-testid="schedule-event-emoji">
-        <ItemEmojiAvatar emoji={glyph} size="sm" />
+        <ItemEmojiAvatar emoji={glyph} size="md" />
       </span>
     );
   }

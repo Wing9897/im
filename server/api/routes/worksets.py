@@ -1,4 +1,4 @@
-"""Worksets CRUD — ownership dimension for analysis tasks, items, and events."""
+"""Workset CRUD — ownership dimension for analysis tasks, items, and events."""
 
 from __future__ import annotations
 
@@ -6,10 +6,9 @@ from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified, require_row
 from server.api.schemas.requests import WorksetCreateBody, WorksetUpdateBody
-from server.api.schemas.requests.worksets import WORKSET_DESCRIPTION_MAX
+from server.api.schemas.requests.worksets import WORKSET_COVER_MAX_CHARS, WORKSET_DESCRIPTION_MAX
 from server.api.schemas.responses.worksets import WorksetDeleteResponse, WorksetResponse
 from server.db.database import TransactionDb
-from server.domain.emoji import EmojiValidationError, normalize_single_grapheme_emoji
 from server.errors import FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries.worksets_queries import (
     delete_workset,
@@ -37,13 +36,6 @@ def _clean_name(name: str) -> str:
     return cleaned
 
 
-def _clean_emoji(value: str | None) -> str:
-    try:
-        return normalize_single_grapheme_emoji(value)
-    except EmojiValidationError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
-
-
 def _clean_description(value: str | None) -> str:
     cleaned = "" if value is None else str(value).strip()
     if len(cleaned) > WORKSET_DESCRIPTION_MAX:
@@ -55,6 +47,19 @@ def _clean_description(value: str | None) -> str:
     return cleaned
 
 
+def _clean_cover(value: str | None) -> str:
+    cover = "" if value is None else str(value).strip()
+    if not cover:
+        return ""
+    if not cover.startswith("data:image/") or len(cover) > WORKSET_COVER_MAX_CHARS:
+        raise http_error(
+            422,
+            f"Invalid cover: must be a data:image/ URL of at most {WORKSET_COVER_MAX_CHARS} chars",
+            error_code=VALIDATION_ERROR,
+        )
+    return cover
+
+
 @router.get("", response_model=list[WorksetResponse])
 async def list_worksets(request: Request) -> list[WorksetResponse]:
     rows = await fetch_all_workset_rows(get_db(request))
@@ -64,8 +69,8 @@ async def list_worksets(request: Request) -> list[WorksetResponse]:
 @router.post("", status_code=201, response_model=WorksetResponse)
 async def create_workset(request: Request, body: WorksetCreateBody) -> WorksetResponse:
     name = _clean_name(body.name)
-    emoji = _clean_emoji(body.emoji)
     description = _clean_description(body.description)
+    cover = _clean_cover(body.cover)
     workset_id = new_id()
     if workset_id == SYSTEM_WORKSET_ID:
         workset_id = new_id()
@@ -79,8 +84,8 @@ async def create_workset(request: Request, body: WorksetCreateBody) -> WorksetRe
             now=now,
             notify_enabled=bool(body.notifyEnabled),
             external_enabled=bool(body.externalEnabled),
-            emoji=emoji,
             description=description,
+            cover_data_url=cover,
         )
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "created")
@@ -111,8 +116,8 @@ async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody
         )
     notify_enabled = body.notifyEnabled if "notifyEnabled" in fields else None
     external_enabled = body.externalEnabled if "externalEnabled" in fields else None
-    emoji = _clean_emoji(body.emoji) if "emoji" in fields else None
     description = _clean_description(body.description) if "description" in fields else None
+    cover = _clean_cover(body.cover) if "cover" in fields else None
     now = utc_now_iso()
     async with db.transaction() as conn:
         await update_workset(
@@ -122,12 +127,12 @@ async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody
             now=now,
             notify_enabled=notify_enabled,
             external_enabled=external_enabled,
-            emoji=emoji,
             description=description,
+            cover_data_url=cover,
         )
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "updated")
-    if "emoji" in fields or "description" in fields:
+    if "description" in fields or "cover" in fields:
         from server.calendar_share.dirty import mark_published_workset_dirty
 
         await mark_published_workset_dirty(db, workset_id)

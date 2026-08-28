@@ -204,9 +204,7 @@ def test_floating_expand_uses_pinned_calendar_tz_not_live_os(monkeypatch) -> Non
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
     live = expand_series_occurrences(task, range_start, range_end, budget=5)
-    pinned_items = expand_series_occurrences(
-        task, range_start, range_end, budget=5, calendar_tz=pinned
-    )
+    pinned_items = expand_series_occurrences(task, range_start, range_end, budget=5, calendar_tz=pinned)
     assert live[0]["startTime"] == "2026-07-01T02:00:00Z"
     # 10:00 America/New_York in July is UTC-4 → 14:00Z
     assert pinned_items[0]["startTime"] == "2026-07-01T14:00:00Z"
@@ -232,7 +230,5 @@ def test_ics_tzid_expand_ignores_pinned_calendar_tz(monkeypatch) -> None:
     }
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
-    items = expand_series_occurrences(
-        task, range_start, range_end, budget=5, calendar_tz=ZoneInfo("America/New_York")
-    )
+    items = expand_series_occurrences(task, range_start, range_end, budget=5, calendar_tz=ZoneInfo("America/New_York"))
     assert items[0]["startTime"] == "2026-07-01T10:00:00Z"

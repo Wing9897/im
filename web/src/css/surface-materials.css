@@ -7,7 +7,7 @@
    Model (custom / focal): photo is ambient on .im-page-canvas
    (+ .im-fs-atmosphere:fullscreen when Fullscreen API lifts a host off the canvas);
    chrome / panels are frosted layers (im-material-panel); overlay sidebar is a
-   translucent im-sidebar-panel (see-through to the real canvas, no cloned photo);
+   frosted im-sidebar-panel (blur + --surface-panel, no cloned photo);
    nested page shells stay transparent so they do not paint a solid island over
    the photo. data-theme-bg=none stays dense/opaque.
    Never pair im-surface-* / im-material-* / im-menu-surface with bg-surface-card.

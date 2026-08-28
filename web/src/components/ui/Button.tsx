@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { buttonBaseClass, buttonSizeClass, type ButtonSize } from "./controlStyles";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -6,7 +7,17 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Shows a spinner, sets aria-busy, and disables the control while true. */
+  loading?: boolean;
 }
+
+const spinnerSize: Record<ButtonSize, number> = {
+  sm: 14,
+  md: 16,
+  lg: 16,
+  icon: 14,
+  inline: 14,
+};
 
 const variantClass: Record<ButtonVariant, string> = {
   primary:
@@ -28,10 +39,26 @@ export function Button({
   size = "md",
   className,
   type,
+  loading = false,
+  disabled,
+  children,
   ...rest
 }: ButtonProps) {
   const cls = [buttonBaseClass, buttonSizeClass[size], variantClass[variant], className ?? ""]
     .filter(Boolean)
     .join(" ");
-  return <button type={type ?? "button"} className={cls} {...rest} />;
+  return (
+    <button
+      type={type ?? "button"}
+      className={cls}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...rest}
+    >
+      {loading ? (
+        <Loader2 size={spinnerSize[size]} strokeWidth={2.5} className="animate-spin shrink-0" aria-hidden />
+      ) : null}
+      {children as ReactNode}
+    </button>
+  );
 }

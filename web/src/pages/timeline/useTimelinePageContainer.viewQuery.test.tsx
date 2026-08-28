@@ -128,7 +128,7 @@ describe("useTimelinePageContainer URL view query", () => {
     expect(resultRef.current!.sources.viewMode).toBe("calendar");
   });
 
-  it("maps catalog handle/slug/emoji onto subscribeCalendars for the filter column", async () => {
+  it("maps catalog handle/slug/cover onto subscribeCalendars for the filter column", async () => {
     calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
       connected: true,
       baseUrl: "http://127.0.0.1:8787",
@@ -136,12 +136,27 @@ describe("useTimelinePageContainer URL view query", () => {
       status: "connected",
     });
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
-      items: [{ handle: "DemoPub", slug: "Open", emoji: "🌞", description: "Open to everyone" }],
+      items: [
+        {
+          handle: "DemoPub",
+          slug: "Open",
+          description: "Open to everyone",
+          ownerAvatar: "data:image/png;base64,pub",
+          cover: "data:image/jpeg;base64,cov",
+        },
+      ],
       ownHandle: "Wing",
     });
     await renderAt("/timeline");
     expect(resultRef.current!.sources.subscribeCalendars).toEqual([
-      { key: "DemoPub/Open", label: "DemoPub/Open", emoji: "🌞", handle: "DemoPub", slug: "Open" },
+      {
+        key: "DemoPub/Open",
+        label: "DemoPub/Open",
+        ownerAvatar: "data:image/png;base64,pub",
+        cover: "data:image/jpeg;base64,cov",
+        handle: "DemoPub",
+        slug: "Open",
+      },
     ]);
   });
 });

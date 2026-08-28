@@ -1,8 +1,59 @@
-"""Entity emoji columns — tasks / user_events / recurring."""
+"""Entity emoji columns — items / tasks / user_events / recurring."""
 
 from __future__ import annotations
 
 import pytest
+
+from server.items.normalize import EMOJI_MAX
+
+
+async def test_item_emoji_roundtrip(client) -> None:
+    created = await client.post(
+        "/api/v1/items",
+        json={"title": "Milk", "emoji": "📦"},
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    item_id = body["id"]
+    assert body["emoji"] == "📦"
+
+    listed = await client.get("/api/v1/items")
+    row = next(item for item in listed.json() if item["id"] == item_id)
+    assert row["emoji"] == "📦"
+
+    fetched = await client.get(f"/api/v1/items/{item_id}")
+    assert fetched.status_code == 200
+    assert fetched.json()["emoji"] == "📦"
+
+    patched = await client.patch(f"/api/v1/items/{item_id}", json={"emoji": "🥛"})
+    assert patched.status_code == 200, patched.text
+    assert patched.json()["emoji"] == "🥛"
+
+    cleared = await client.patch(f"/api/v1/items/{item_id}", json={"emoji": ""})
+    assert cleared.status_code == 200
+    assert cleared.json()["emoji"] is None
+
+
+async def test_item_emoji_rejects_invalid(client) -> None:
+    too_long = "x" * (EMOJI_MAX + 1)
+    bad_create = await client.post(
+        "/api/v1/items",
+        json={"title": "Bad emoji", "emoji": too_long},
+    )
+    assert bad_create.status_code == 422
+
+    created = await client.post(
+        "/api/v1/items",
+        json={"title": "Valid emoji", "emoji": "📦"},
+    )
+    assert created.status_code == 201
+    item_id = created.json()["id"]
+
+    bad_patch = await client.patch(
+        f"/api/v1/items/{item_id}",
+        json={"emoji": too_long},
+    )
+    assert bad_patch.status_code == 422
 
 
 async def test_task_emoji_create_and_patch(client) -> None:
