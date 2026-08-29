@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { act } from "react";
+import type { Root } from "react-dom/client";
 import { ensureZhHantLocale } from "../../../test/i18nHarness";
 import { makeTimelineItem } from "../../../test/analysisEventFixtures";
 import {
@@ -8,6 +9,26 @@ import {
 } from "../../../test/context-mocks";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { renderPanel } from "./eventListPanelTestUtils";
+
+type PanelMount = { container: HTMLDivElement; root: Root };
+const panelMounts: PanelMount[] = [];
+
+function renderTrackedPanel(
+  ...args: Parameters<typeof renderPanel>
+): ReturnType<typeof renderPanel> {
+  const result = renderPanel(...args);
+  panelMounts.push({ container: result.container, root: result.root });
+  return result;
+}
+
+function cleanupPanelMounts() {
+  for (const { container, root } of panelMounts.splice(0)) {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  }
+}
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
@@ -30,6 +51,10 @@ describe("EventListPanel", () => {
   });
 
   afterEach(() => {
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    cleanupPanelMounts();
     vi.useRealTimers();
   });
 
@@ -68,7 +93,7 @@ describe("EventListPanel", () => {
       endTime: new Date(2026, 7, 9, 8, 0, 0).toISOString(),
     });
 
-    const { container } = renderPanel({
+    const { container } = renderTrackedPanel({
       rangeEvents: [trip, overnight, alreadyCovering, later, startsTonight],
       focusedDay: new Date(2026, 7, 8),
     });
@@ -146,7 +171,7 @@ describe("EventListPanel", () => {
       endTime: new Date(2026, 7, 8, 15, 0, 0).toISOString(),
     });
 
-    const { container } = renderPanel({
+    const { container } = renderTrackedPanel({
       rangeEvents: [overnight, covering, later],
       focusedDay: new Date(2026, 7, 8),
     });
@@ -195,7 +220,7 @@ describe("EventListPanel", () => {
       endTime: new Date(2026, 6, 15, 9, 0, 0).toISOString(),
     });
 
-    const { container } = renderPanel({
+    const { container } = renderTrackedPanel({
       rangeEvents: [upcoming, ongoing, ended],
       focusedDay: new Date(2026, 6, 15),
     });
@@ -238,7 +263,7 @@ describe("EventListPanel", () => {
       startTime: new Date(2026, 6, 15, 10, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 15, 14, 0, 0).toISOString(),
     });
-    const { container } = renderPanel({
+    const { container } = renderTrackedPanel({
       rangeEvents: [upcoming, ongoing],
       focusedDay: new Date(2026, 6, 15),
     });
@@ -269,7 +294,7 @@ describe("EventListPanel", () => {
       endTime: new Date(2026, 6, 15, 15, 0, 0).toISOString(),
     });
 
-    const { container } = renderPanel({
+    const { container } = renderTrackedPanel({
       rangeEvents: [upcoming],
       focusedDay: new Date(2026, 6, 15),
     });
