@@ -9,6 +9,7 @@ let processArgv: string[] = [];
 // Track calls for assertions
 const mockQuit = vi.fn();
 const mockExit = vi.fn();
+const mockRelaunch = vi.fn();
 const mockShowErrorBox = vi.fn();
 const mockWhenReady = vi.fn();
 const mockRequestSingleInstanceLock = vi.fn(() => gotLockReturn);
@@ -102,6 +103,7 @@ vi.mock('electron', () => {
       whenReady: () => mockWhenReady(),
       quit: mockQuit,
       exit: mockExit,
+      relaunch: mockRelaunch,
       getPath: vi.fn(() => '/mock/userData'),
       setAsDefaultProtocolClient: vi.fn(() => true),
     },
@@ -463,18 +465,30 @@ describe('Main Process lifecycle', () => {
       expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it('retries sidecar start after the user resets the database', async () => {
-      mockPMStart
-        .mockRejectedValueOnce(new Error(schemaStderr))
-        .mockResolvedValueOnce(undefined);
-      mockPresentSchemaBaselineRecovery.mockResolvedValueOnce('retry');
+    it('relaunches the app after the user resets the database', async () => {
+      mockPMStart.mockRejectedValueOnce(new Error(schemaStderr));
+      mockPresentSchemaBaselineRecovery.mockResolvedValueOnce('relaunch');
 
       await readyHost();
 
-      expect(mockPMStart).toHaveBeenCalledTimes(2);
+      expect(mockPMStop).toHaveBeenCalledTimes(1);
+      expect(mockPMStart).toHaveBeenCalledTimes(1);
       expect(mockPresentSchemaBaselineRecovery).toHaveBeenCalledTimes(1);
+      expect(mockRelaunch).toHaveBeenCalledTimes(1);
       expect(mockShowErrorBox).not.toHaveBeenCalled();
-      expect(mockExit).not.toHaveBeenCalled();
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('does not quit when the last window closes during schema recovery', async () => {
+      mockPMStart.mockRejectedValueOnce(new Error(schemaStderr));
+      mockPresentSchemaBaselineRecovery.mockResolvedValueOnce('quit');
+
+      await readyHost();
+
+      const handlers = appEventHandlers['window-all-closed'] || [];
+      expect(handlers.length).toBeGreaterThan(0);
+      handlers[0]!();
+      expect(mockQuit).not.toHaveBeenCalled();
     });
   });
 });

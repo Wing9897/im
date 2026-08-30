@@ -4,6 +4,7 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Desktop schema-floor recovery: after backup-and-reset, show 「資料庫已重置」and **Restart** (`app.relaunch`) instead of in-process sidecar retry (avoids Windows `Server startup cancelled` when the dialog was the only window).
 - Timeline **Block** view: same-source month mini-calendars (null expand ≤12), no right rail, standalone compact grid + day popover; per-card colors (14 presets + custom hex) with chrome following the card; selection stays inside one card.
 - P2 contracts: Agent stream and notify validation lock to generated OpenAPI schemas; Settings AI pages move under `/settings`; desktop SSE payload coverage; Viewer copy.
 - Dev `1420`: when IP Helper (`svchost`) and leftover Vite both hold the port, skip killing `svchost` so `npm run dev` no longer aborts the whole session.

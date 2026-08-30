@@ -187,6 +187,82 @@ describe('ProcessManager', () => {
       expect(exitCb).not.toHaveBeenCalled();
       expect(dialog.showErrorBox).not.toHaveBeenCalled();
     });
+
+    it('starts a fresh sidecar after schema-floor failure (reset-then-retry)', async () => {
+      const children = [createMockChild(), createMockChild()];
+      children[1]!.pid = 12346;
+      let spawnCount = 0;
+      spawnHandler = () => children[spawnCount++]!;
+
+      httpGetHandler = (_url, cb) => {
+        const res = new EventEmitter() as any;
+        res.statusCode = 200;
+        Promise.resolve().then(() => {
+          cb(res);
+          res.emit('data', Buffer.from('{"status":"ok"}'));
+          res.emit('end');
+        });
+        return new EventEmitter();
+      };
+
+      const pm = new ProcessManager(getDefaultOptions({ healthTimeout: 30000, healthInterval: 500 }));
+      const first = pm.start();
+      children[0]!.emit('spawn');
+      children[0]!.stderr.emit(
+        'data',
+        Buffer.from('SchemaBaselineError: Unsupported database schema version 2; floor 6\n'),
+      );
+      children[0]!.emit('exit', 3, null);
+      await vi.advanceTimersByTimeAsync(50);
+      await expect(first).rejects.toBeInstanceOf(SchemaBaselineStartupError);
+
+      const second = pm.start();
+      expect(second).not.toBe(first);
+      children[1]!.emit('spawn');
+      await vi.advanceTimersByTimeAsync(10);
+      await second;
+
+      expect(pm.isRunning()).toBe(true);
+      expect(spawnCount).toBe(2);
+      expect(pm.getProcess()).toBe(children[1]);
+    });
+
+    it('starts a fresh sidecar after stop cancels an in-flight start', async () => {
+      const children = [createMockChild(), createMockChild()];
+      children[1]!.pid = 12346;
+      let spawnCount = 0;
+      spawnHandler = () => children[spawnCount++]!;
+
+      httpGetHandler = (_url, cb) => {
+        const res = new EventEmitter() as any;
+        res.statusCode = 200;
+        Promise.resolve().then(() => {
+          cb(res);
+          res.emit('data', Buffer.from('{"status":"ok"}'));
+          res.emit('end');
+        });
+        return new EventEmitter();
+      };
+      mockExec.mockImplementation((_cmd: string, cb: Function) => cb(null));
+
+      const pm = new ProcessManager(getDefaultOptions({ healthInterval: 100, killTimeout: 50 }));
+      const first = pm.start();
+      children[0]!.emit('spawn');
+
+      const stopPromise = pm.stop();
+      children[0]!.emit('exit', 0, null);
+      await expect(first).rejects.toThrow('Server startup cancelled');
+      await stopPromise;
+
+      const second = pm.start();
+      expect(second).not.toBe(first);
+      children[1]!.emit('spawn');
+      await vi.advanceTimersByTimeAsync(10);
+      await second;
+
+      expect(pm.isRunning()).toBe(true);
+      expect(spawnCount).toBe(2);
+    });
   });
 
   describe('health polling', () => {
@@ -286,6 +362,38 @@ describe('ProcessManager', () => {
       expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
       expect(caughtError!.message).toBe('Incompatible database schema');
       expect(dialog.showErrorBox).not.toHaveBeenCalled();
+    });
+
+    it('does not auto-restart after a schema-floor health-timeout kill', async () => {
+      const children = [createMockChild(), createMockChild()];
+      children[1]!.pid = 12346;
+      let spawnCount = 0;
+      spawnHandler = () => children[spawnCount++]!;
+      httpGetHandler = (_url, _cb) => {
+        const req = new EventEmitter();
+        Promise.resolve().then(() => {
+          const err = new Error('connect ECONNREFUSED') as NodeJS.ErrnoException;
+          err.code = 'ECONNREFUSED';
+          req.emit('error', err);
+        });
+        return req;
+      };
+
+      const pm = new ProcessManager(getDefaultOptions({ healthTimeout: 5000, healthInterval: 500 }));
+      const startPromise = pm.start().catch((e) => e);
+      children[0]!.emit('spawn');
+      children[0]!.stderr.emit(
+        'data',
+        Buffer.from('SchemaBaselineError: Unsupported database schema version 2; floor 6\n'),
+      );
+
+      await vi.advanceTimersByTimeAsync(5100);
+      const caughtError = await startPromise;
+      expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
+
+      children[0]!.emit('exit', 1, null);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(spawnCount).toBe(1);
     });
 
     it('keeps retrying on ECONNREFUSED (does not reject immediately)', async () => {

@@ -28,6 +28,7 @@ import {
   unregisterConnectionIpc,
 } from './connection-ipc';
 import { ProcessManager } from './process-manager';
+import { StartupCancelledError } from './process-manager-health';
 import { resolveFrontendDistPath, resolveServerCwd, validatePaths } from './paths';
 import {
   createTray,
@@ -269,8 +270,19 @@ async function startHostSidecar(): Promise<boolean> {
           technicalDetail,
           dataDir: userData,
         });
-        if (action === 'retry') continue;
+        if (action === 'relaunch') {
+          // Fresh process after wipe: avoid joining a cancelled start when
+          // the recovery dialog was the only window (Windows quit-on-last-close).
+          isQuitting = true;
+          await processManager.stop();
+          app.relaunch();
+          app.exit(0);
+          return false;
+        }
         app.exit(1);
+        return false;
+      }
+      if (err instanceof StartupCancelledError && isQuitting) {
         return false;
       }
       const message = err instanceof Error ? err.message : String(err);
@@ -392,6 +404,13 @@ async function handleAppReady(): Promise<void> {
 }
 
 // --- Before Quit ---
+
+// Tray app: closing the last window must not quit. The schema-floor dialog is
+// the only window during sidecar startup; Electron's Windows/Linux default
+// (quit on window-all-closed) would fire app.quit() → before-quit →
+// processManager.stop() and cancel a restart as "Server startup cancelled".
+// After reset we relaunch the whole app instead of in-process retry.
+app.on('window-all-closed', () => {});
 
 app.on('before-quit', (event) => {
   if (!isQuitting) {
