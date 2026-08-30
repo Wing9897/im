@@ -118,6 +118,11 @@ vi.mock('electron', () => {
     BrowserWindow: BrowserWindowMock,
     dialog: {
       showErrorBox: mockShowErrorBox,
+      showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    },
+    shell: {
+      showItemInFolder: vi.fn(),
+      openPath: vi.fn().mockResolvedValue(''),
     },
     globalShortcut: {
       register: mockRegister,

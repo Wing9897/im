@@ -1,8 +1,11 @@
 name: Release
 
-# git push origin main → quality → git tag + push → one Vite web/dist → win/mac/linux Desktop → GitHub Release + GHCR
+# Default shipping path: git push origin main
+#   quality → git tag + push (bump from latest tag; version input unused)
+#   → one Vite web/dist → win/mac/linux Desktop → GitHub Release + GHCR
 # CLI is source (clone the tag). No skipped jobs on this path.
 # web/dist is staged as a GitHub Release asset (not Actions artifacts — private-repo quota).
+# workflow_dispatch is an optional escape hatch only — do not ship via `gh workflow run`.
 
 on:
   push:
@@ -10,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "留空 = 從最新 tag bump。或填 SemVer（不要 v 前綴）"
+        description: "可選逃生口。留空 = 從最新 tag bump（與 push main 相同）。或填 SemVer（不要 v 前綴）"
         required: false
         type: string
 
@@ -34,7 +37,7 @@ jobs:
   tag:
     needs: [quality]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: write
     outputs:
@@ -87,18 +90,41 @@ jobs:
           echo "Pushed ${TAG} @ ${GITHUB_SHA}"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ steps.check.outputs.tag_name }}
-          name: ${{ steps.check.outputs.tag_name }}
-          target_commitish: ${{ github.sha }}
-          body: |
-            Automated release **${{ steps.check.outputs.tag_name }}** from `${{ github.sha }}`.
-
-            Desktop installers (Windows / macOS / Linux) attach as each platform job finishes.
-            CLI is source: clone this tag, `uv sync --locked`, then `uv run python -m server`.
-            Container: GHCR.
-          prerelease: ${{ contains(steps.check.outputs.tag_name, 'beta') || contains(steps.check.outputs.tag_name, 'alpha') || contains(steps.check.outputs.tag_name, 'rc') || contains(steps.check.outputs.tag_name, 'update') }}
+        env:
+          TAG: ${{ steps.check.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PRERELEASE: ${{ contains(steps.check.outputs.tag_name, 'beta') || contains(steps.check.outputs.tag_name, 'alpha') || contains(steps.check.outputs.tag_name, 'rc') || contains(steps.check.outputs.tag_name, 'update') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          retry() {
+            local attempt=1 max=8 delay=15
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+              if (( attempt >= max )); then
+                echo "failed after ${max} attempts: $*" >&2
+                return 1
+              fi
+              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$(( delay < 60 ? delay * 2 : 60 ))
+            done
+          }
+          notes="Automated release **${TAG}** from ${GITHUB_SHA}. Desktop installers (Windows / macOS / Linux) attach as each platform job finishes. CLI is source: clone this tag, uv sync --locked, then uv run python -m server. Container: GHCR."
+          extra=()
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            extra+=(--prerelease)
+          fi
+          # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists"
+          else
+            retry gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes "$notes" "${extra[@]}"
+          fi
 
   web_dist:
     needs: [tag]
@@ -148,7 +174,23 @@ jobs:
             exit 1
           fi
           tar -C web/dist -czf web-dist.tar.gz .
-          gh release upload "$TAG" web-dist.tar.gz --clobber
+          retry() {
+            local attempt=1 max=8 delay=15
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+              if (( attempt >= max )); then
+                echo "failed after ${max} attempts: $*" >&2
+                return 1
+              fi
+              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$(( delay < 60 ? delay * 2 : 60 ))
+            done
+          }
+          retry gh release upload "$TAG" web-dist.tar.gz --clobber
           echo "Staged web-dist.tar.gz on ${TAG}"
 
   package:
@@ -216,7 +258,23 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p web/dist
-          gh release download "$TAG" --pattern web-dist.tar.gz --clobber
+          retry() {
+            local attempt=1 max=8 delay=15
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+              if (( attempt >= max )); then
+                echo "failed after ${max} attempts: $*" >&2
+                return 1
+              fi
+              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$(( delay < 60 ? delay * 2 : 60 ))
+            done
+          }
+          retry gh release download "$TAG" --pattern web-dist.tar.gz --clobber
           tar -xzf web-dist.tar.gz -C web/dist
           rm -f web-dist.tar.gz
           if [[ ! -f web/dist/index.html ]]; then
@@ -252,11 +310,15 @@ jobs:
           fi
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ needs.tag.outputs.tag_name }}
-          fail_on_unmatched_files: false
-          files: |
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(
             desktop/release/*.exe
             desktop/release/*.dmg
             desktop/release/*.zip
@@ -265,6 +327,33 @@ jobs:
             desktop/release/*.yml
             desktop/release/*.yaml
             desktop/release/*.blockmap
+          )
+          if [[ ${#files[@]} -lt 1 ]]; then
+            echo "No Desktop artifacts to upload" >&2
+            ls -la desktop/release || true
+            exit 1
+          fi
+          echo "Uploading ${#files[@]} files to ${TAG}:"
+          printf '  %s\n' "${files[@]}"
+          retry() {
+            local attempt=1 max=8 delay=15
+            while true; do
+              if "$@"; then
+                return 0
+              fi
+              if (( attempt >= max )); then
+                echo "failed after ${max} attempts: $*" >&2
+                return 1
+              fi
+              echo "Upload attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$(( delay < 60 ? delay * 2 : 60 ))
+            done
+          }
+          # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
+          retry gh release upload "$TAG" "${files[@]}" --clobber
+          echo "Uploaded ${#files[@]} assets to ${TAG}"
 
   release:
     needs: [package, tag]
@@ -273,13 +362,24 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Delete staged web-dist.tar.gz
-        if: always()
+        if: needs.package.result == 'success'
         env:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: gh release delete-asset "$TAG" web-dist.tar.gz --yes || true
+
+      - name: Keep web-dist for failed-job reruns
+        if: needs.package.result != 'success'
+        env:
+          TAG: ${{ needs.tag.outputs.tag_name }}
+          PACKAGE_RESULT: ${{ needs.package.result }}
+        shell: bash
+        run: |
+          echo "package result=${PACKAGE_RESULT}. Leaving web-dist.tar.gz on ${TAG} so Re-run failed jobs can still download it." >&2
+          echo "Do not dispatch a new Release; re-run the failed package job on this run." >&2
+          exit 1
 
       - name: Assert Release has three Desktop installers
         if: needs.package.result == 'success'

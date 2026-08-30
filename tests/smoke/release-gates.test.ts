@@ -36,8 +36,10 @@ describe("release safety gates", () => {
     expect(workflow).toContain("dist:win:native");
     expect(workflow).toContain("dist:mac:native");
     expect(workflow).toContain("dist:linux:native");
-    expect(workflow).toContain("softprops/action-gh-release");
+    expect(workflow).toContain("name: Create GitHub Release");
     expect(workflow).toContain("name: Upload to GitHub Release");
+    expect(workflow).toContain("gh release create");
+    expect(workflow).not.toContain("softprops/action-gh-release");
     expect(workflow).toContain("desktop/release/*.exe");
     expect(workflow).toContain("GH_REPO: ${{ github.repository }}");
     expect(workflow).not.toContain("upload-artifact");
@@ -48,7 +50,16 @@ describe("release safety gates", () => {
     expect(workflow).toContain("gh release upload");
     expect(workflow).toContain("gh release download");
     expect(workflow).toContain('gh release delete-asset "$TAG" web-dist.tar.gz --yes || true');
-    expect(workflow).toContain("if: always()");
+    expect(workflow).toContain("if: always() && needs.tag.result == 'success'");
+    expect(workflow).toContain("if: needs.package.result == 'success'");
+    expect(workflow).toContain("Keep web-dist for failed-job reruns");
+    expect(workflow).toContain("retry gh release upload");
+    expect(workflow).toContain("Upload attempt");
+    expect(workflow).not.toMatch(
+      /name: Delete staged web-dist\.tar\.gz\r?\n\s+if: always\(\)/,
+    );
+    expect(workflow).toContain("python3 scripts/bump_version.py --from-tags --print-only");
+    expect(workflow).toContain("required: false");
 
     expect(workflow).not.toContain("package:cli");
     expect(workflow).not.toContain("if: github.event_name == 'workflow_dispatch'");

@@ -1,7 +1,11 @@
 import http, { type ClientRequest } from 'node:http';
 import type { ChildProcess } from 'node:child_process';
 import { dialog } from 'electron';
-import { looksLikeSchemaHardReject, schemaHardRejectHint } from './process-manager-schema';
+import {
+  classifySchemaReject,
+  SchemaBaselineStartupError,
+  schemaHardRejectHint,
+} from './process-manager-schema';
 import { getShellCopy } from './shell-i18n';
 
 export class StartupCancelledError extends Error {
@@ -152,12 +156,11 @@ export function pollServerHealth(options: HealthPollOptions): Promise<void> {
     timeoutTimer = setTimeout(() => {
       if (settled || !options.isCurrent(attempt)) return;
       const managed = options.getManagedProcess();
-      if (looksLikeSchemaHardReject(options.recentStderr())) {
-        const copy = getShellCopy();
-        dialog.showErrorBox(copy.incompatibleDatabaseTitle, schemaHardRejectHint());
+      const schemaKind = classifySchemaReject(options.recentStderr());
+      if (schemaKind) {
         const child = attempt.child;
         if (child && managed === child && !child.killed) child.kill();
-        fail(new Error('Incompatible database schema'));
+        fail(new SchemaBaselineStartupError(schemaKind, options.recentStderr()));
         return;
       }
       const copy = getShellCopy();

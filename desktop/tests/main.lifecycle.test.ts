@@ -9,6 +9,7 @@ let processArgv: string[] = [];
 // Track calls for assertions
 const mockQuit = vi.fn();
 const mockExit = vi.fn();
+const mockShowErrorBox = vi.fn();
 const mockWhenReady = vi.fn();
 const mockRequestSingleInstanceLock = vi.fn(() => gotLockReturn);
 const mockRegister = vi.fn();
@@ -116,7 +117,12 @@ vi.mock('electron', () => {
       removeAllListeners: mockIpcMainRemoveAllListeners,
     },
     dialog: {
-      showErrorBox: vi.fn(),
+      showErrorBox: mockShowErrorBox,
+      showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    },
+    shell: {
+      showItemInFolder: vi.fn(),
+      openPath: vi.fn().mockResolvedValue(''),
     },
     Notification: class {
       static isSupported = () => false;
@@ -156,6 +162,12 @@ vi.mock('../process-manager', () => ({
     this.onUnexpectedExit = vi.fn();
     return this;
   }),
+}));
+
+const mockPresentSchemaBaselineRecovery = vi.fn().mockResolvedValue('quit');
+vi.mock('../schema-baseline-dialog', () => ({
+  presentSchemaBaselineRecovery: (...args: unknown[]) =>
+    mockPresentSchemaBaselineRecovery(...args),
 }));
 
 vi.mock('../tray', () => ({
@@ -224,6 +236,10 @@ describe('Main Process lifecycle', () => {
     pmConstructorOpts = null;
     mockConnectionConfig = { mode: 'host' };
     mockLoadConnection.mockImplementation(() => ({ ...mockConnectionConfig }));
+    mockPMStart.mockReset();
+    mockPMStart.mockResolvedValue(undefined);
+    mockPresentSchemaBaselineRecovery.mockReset();
+    mockPresentSchemaBaselineRecovery.mockResolvedValue('quit');
   });
 
   afterEach(() => {
@@ -408,6 +424,57 @@ describe('Main Process lifecycle', () => {
       expect(mockPMStart).toHaveBeenCalled();
 
       process.argv = originalArgv;
+    });
+  });
+
+  describe('Schema baseline recovery', () => {
+    const schemaStderr =
+      'SchemaBaselineError: Unsupported database schema version 2; floor 6';
+
+    async function readyHost(): Promise<void> {
+      const originalArgv = process.argv;
+      process.argv = ['node', 'main.js'];
+      let readyHandler: Function | null = null;
+      mockWhenReady.mockReturnValue({
+        then: (cb: Function) => {
+          readyHandler = cb;
+          return Promise.resolve();
+        },
+      });
+      await vi.importActual('../main');
+      if (readyHandler) await (readyHandler as Function)();
+      process.argv = originalArgv;
+    }
+
+    it('shows the product schema dialog instead of a traceback error box', async () => {
+      mockPMStart.mockRejectedValueOnce(new Error(schemaStderr));
+      mockPresentSchemaBaselineRecovery.mockResolvedValueOnce('quit');
+
+      await readyHost();
+
+      expect(mockPresentSchemaBaselineRecovery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'reset_required',
+          technicalDetail: expect.stringContaining('Unsupported database schema version 2'),
+          dataDir: '/mock/userData',
+        }),
+      );
+      expect(mockShowErrorBox).not.toHaveBeenCalled();
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('retries sidecar start after the user resets the database', async () => {
+      mockPMStart
+        .mockRejectedValueOnce(new Error(schemaStderr))
+        .mockResolvedValueOnce(undefined);
+      mockPresentSchemaBaselineRecovery.mockResolvedValueOnce('retry');
+
+      await readyHost();
+
+      expect(mockPMStart).toHaveBeenCalledTimes(2);
+      expect(mockPresentSchemaBaselineRecovery).toHaveBeenCalledTimes(1);
+      expect(mockShowErrorBox).not.toHaveBeenCalled();
+      expect(mockExit).not.toHaveBeenCalled();
     });
   });
 });

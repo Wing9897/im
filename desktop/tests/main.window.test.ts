@@ -117,6 +117,11 @@ vi.mock('electron', () => {
     },
     dialog: {
       showErrorBox: vi.fn(),
+      showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+    },
+    shell: {
+      showItemInFolder: vi.fn(),
+      openPath: vi.fn().mockResolvedValue(''),
     },
     Notification: class {
       static isSupported = () => false;

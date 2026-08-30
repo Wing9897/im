@@ -57,6 +57,9 @@ describe('shell-i18n', () => {
     expect(getShellCopy('zh-Hans').languageAuto).toBe('自动');
     expect(getShellCopy('en').pauseAnalysis).toBe('Pause analysis');
     expect(getShellCopy('zh-Hant').emergencyAbort).toBe('緊急中止…');
+    expect(getShellCopy('zh-Hant').schemaResetAndRetry).toBe('重置資料庫並重試');
+    expect(getShellCopy('zh-Hans').schemaDetailsToggle).toBe('详细资料');
+    expect(getShellCopy('en').schemaOpenFolder).toBe('Open folder');
   });
 
   it('includes analysis notification copy', () => {

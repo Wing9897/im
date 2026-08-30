@@ -40,6 +40,8 @@ import {
 import { buildApplicationMenu, refreshApplicationMenu } from './menu';
 import { initAnalysisNotifications, stopAnalysisNotifications } from './notifications';
 import { registerWindowControls, unregisterWindowControls } from './window-controls';
+import { classifyStartupSchemaFailure } from './process-manager-schema';
+import { presentSchemaBaselineRecovery } from './schema-baseline-dialog';
 import { getProductName, getShellCopy, onShellLocaleChange } from './shell-i18n';
 import { DEFAULT_SERVER_PORT, DEFAULT_VITE_DEV_PORT } from './ports';
 
@@ -248,19 +250,38 @@ async function startHostSidecar(): Promise<boolean> {
     }
   });
 
-  // Start the server; on failure show error dialog and exit
-  try {
-    await processManager.start();
-    return true;
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    const copy = getShellCopy();
-    dialog.showErrorBox(
-      copy.serverStartFailedTitle,
-      copy.serverStartFailedBody(message),
-    );
-    app.exit(1);
-    return false;
+  // Start the server; schema floor / reset-required gets a product dialog.
+  for (;;) {
+    try {
+      await processManager.start();
+      return true;
+    } catch (err: unknown) {
+      const schema = classifyStartupSchemaFailure(err);
+      if (schema) {
+        const technicalDetail = [
+          schema.exitCode != null ? `exit code ${schema.exitCode}` : '',
+          schema.detail.trim(),
+        ]
+          .filter(Boolean)
+          .join('\n\n');
+        const action = await presentSchemaBaselineRecovery({
+          kind: schema.kind,
+          technicalDetail,
+          dataDir: userData,
+        });
+        if (action === 'retry') continue;
+        app.exit(1);
+        return false;
+      }
+      const message = err instanceof Error ? err.message : String(err);
+      const copy = getShellCopy();
+      dialog.showErrorBox(
+        copy.serverStartFailedTitle,
+        copy.serverStartFailedBody(message),
+      );
+      app.exit(1);
+      return false;
+    }
   }
 }
 

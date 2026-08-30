@@ -193,7 +193,7 @@ CI 只在 **Release** workflow（`push main`）推送到 `ghcr.io/<owner>/<repo>
 | 觸發 | 行為 |
 |------|------|
 | **PR** | **CI**：只跑 `quality`。不發版 |
-| **push `main`** | **Release**：quality → bump／`git tag`／`git push` → 一次 Vite（共用 `web/dist`）→ 三平台 Desktop 執行檔 → GitHub Release + GHCR。CLI 用該 tag 源碼 |
+| **push `main`** | **Release（正式發版路徑）**：quality → bump／`git tag`／`git push` → 一次 Vite（共用 `web/dist`）→ 三平台 Desktop 執行檔 → GitHub Release + GHCR。CLI 用該 tag 源碼。不必填 version、不必 `workflow_dispatch` |
 
 **版本權威（勿混用）：**
 - **產品 SemVer** = **git tags**（`v*`）／GitHub Release
