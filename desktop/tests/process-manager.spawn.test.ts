@@ -39,6 +39,7 @@ import { app, dialog } from 'electron';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 import { setShellLocale, resetShellLocaleForTests } from '../shell-i18n';
+import { SchemaBaselineStartupError } from '../process-manager-schema';
 
 // --- Helpers ---
 
@@ -141,6 +142,47 @@ describe('ProcessManager', () => {
       );
       expect(pm.isRunning()).toBe(false);
     });
+
+    it('fails startup with SchemaBaselineStartupError on exit code 3 and does not auto-restart', async () => {
+      const children = [createMockChild(), createMockChild()];
+      let spawnCount = 0;
+      spawnHandler = () => children[spawnCount++]!;
+
+      httpGetHandler = (_url, _cb) => {
+        const req = new EventEmitter();
+        Promise.resolve().then(() => {
+          const err = new Error('connect ECONNREFUSED') as NodeJS.ErrnoException;
+          err.code = 'ECONNREFUSED';
+          req.emit('error', err);
+        });
+        return req;
+      };
+
+      const pm = new ProcessManager(getDefaultOptions({ healthTimeout: 30000, healthInterval: 500 }));
+      const exitCb = vi.fn();
+      pm.onUnexpectedExit(exitCb);
+      let caughtError: Error | null = null;
+      const startPromise = pm.start().catch((e) => { caughtError = e as Error; });
+      children[0]!.emit('spawn');
+      children[0]!.stderr.emit(
+        'data',
+        Buffer.from(
+          'Traceback (most recent call last):\nSchemaBaselineError: Unsupported database schema version 2; floor 6\n',
+        ),
+      );
+      children[0]!.emit('exit', 3, null);
+      await vi.advanceTimersByTimeAsync(50);
+      await startPromise;
+
+      expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
+      expect(caughtError!.message).toBe('Incompatible database schema');
+      expect((caughtError as SchemaBaselineStartupError).technicalDetail).toContain(
+        'Unsupported database schema version 2',
+      );
+      expect(spawnCount).toBe(1);
+      expect(exitCb).not.toHaveBeenCalled();
+      expect(dialog.showErrorBox).not.toHaveBeenCalled();
+    });
   });
 
   describe('health polling', () => {
@@ -210,6 +252,36 @@ describe('ProcessManager', () => {
         'Server Startup Timeout',
         expect.stringContaining('Server failed to start within 5 seconds')
       );
+    });
+
+    it('rejects with SchemaBaselineStartupError when stderr is a floor reject, without a traceback dialog', async () => {
+      const mockChild = createMockChild();
+      spawnHandler = () => mockChild;
+      httpGetHandler = (_url, _cb) => {
+        const req = new EventEmitter();
+        Promise.resolve().then(() => {
+          const err = new Error('connect ECONNREFUSED') as NodeJS.ErrnoException;
+          err.code = 'ECONNREFUSED';
+          req.emit('error', err);
+        });
+        return req;
+      };
+
+      const pm = new ProcessManager(getDefaultOptions({ healthTimeout: 5000, healthInterval: 500 }));
+      let caughtError: Error | null = null;
+      const startPromise = pm.start().catch((e) => { caughtError = e as Error; });
+      mockChild.emit('spawn');
+      mockChild.stderr.emit(
+        'data',
+        Buffer.from('SchemaBaselineError: Unsupported database schema version 2; floor 6\n'),
+      );
+
+      await vi.advanceTimersByTimeAsync(5100);
+      await startPromise;
+
+      expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
+      expect(caughtError!.message).toBe('Incompatible database schema');
+      expect(dialog.showErrorBox).not.toHaveBeenCalled();
     });
 
     it('keeps retrying on ECONNREFUSED (does not reject immediately)', async () => {

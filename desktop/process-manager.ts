@@ -6,6 +6,10 @@ import {
 } from './process-manager-health';
 import { spawnServerProcess } from './process-manager-spawn';
 import {
+  classifySchemaReject,
+  SchemaBaselineStartupError,
+} from './process-manager-schema';
+import {
   driveRestartLoop,
   showRepeatedCrashAndExit,
   stopChildProcess,
@@ -204,6 +208,13 @@ export class ProcessManager {
         this.generation++;
         if (this.activeStartup === attempt) {
           const stderr = this.recentStderr.trim().slice(-2_000);
+          const schemaKind = classifySchemaReject(stderr);
+          if (schemaKind) {
+            this.failActiveStartup(
+              new SchemaBaselineStartupError(schemaKind, stderr, code),
+            );
+            return;
+          }
           const detail = stderr
             ? `Server process exited during startup (code ${code}).\n\n${stderr}`
             : `Server process exited during startup (code ${code})`;
@@ -272,7 +283,9 @@ export class ProcessManager {
   }
 
   private assertCurrent(attempt: StartupAttempt): void {
-    if (!this.isCurrent(attempt)) throw new StartupCancelledError();
+    if (!this.isCurrent(attempt)) {
+      throw attempt.rejectReason ?? new StartupCancelledError();
+    }
   }
 
   private cancelActiveStartup(): void {

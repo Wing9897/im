@@ -54,6 +54,22 @@ export type ShellCopy = {
   serverStartFailedBody: (message: string) => string;
   incompatibleDatabaseTitle: string;
   schemaHardRejectHint: string;
+  schemaResetRequiredTitle: string;
+  schemaResetRequiredHeadline: string;
+  schemaResetRequiredBody: string;
+  schemaFutureStampTitle: string;
+  schemaFutureStampHeadline: string;
+  schemaFutureStampBody: string;
+  schemaDetailsToggle: string;
+  schemaOpenFolder: string;
+  schemaResetAndRetry: string;
+  schemaQuit: string;
+  schemaResetConfirmTitle: string;
+  schemaResetConfirmBody: string;
+  schemaResetConfirm: string;
+  schemaResetCancel: string;
+  schemaResetFailedTitle: string;
+  schemaResetFailedBody: string;
   serverStartupTimeoutTitle: string;
   serverStartupTimeoutBody: (seconds: number, schemaHint: string) => string;
   analysisCompleted: string;
@@ -71,7 +87,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
     return (
       `本地数据库结构不兼容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
       `SCHEMA_MIGRATIONS 为空。stamp 1–5 请先备份再重置）。\n\n` +
-      '未来 stamp：请升级应用。坏库／无法识别：请先备份，再到设置 → 数据 重置，或运行：\n' +
+      '未来 stamp：请升级应用。坏库／无法识别：请先备份，再于启动对话框选择“重置数据库并重试”，或运行：\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       '然后重新启动应用程序。'
     );
@@ -80,7 +96,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
     return (
       `The local database schema is incompatible (schema baseline ${baseline} / schemaSemver ${semver} / SCHEMA_FLOOR ${floor}; ` +
       `SCHEMA_MIGRATIONS is empty. Stamp 1–5: back up, then reset).\n\n` +
-      'Future stamps: update the application. Corrupt or unrecognized databases: back up, then reset with Settings → Data, or run:\n' +
+      'Future stamps: update the application. Corrupt or unrecognized databases: back up, then choose “Reset database and retry” in the startup dialog, or run:\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       'Then restart the app.'
     );
@@ -88,9 +104,9 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   return (
     `本機資料庫結構不相容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
     `SCHEMA_MIGRATIONS 為空。stamp 1–5 請先備份再重置）。\n\n` +
-    '未來 stamp：請升級應用。壞庫／無法識別：請先備份，再到設定 → 資料 重置，或執行：\n' +
-    'scripts/reset_local_databases.py --apply\n\n' +
-    '然後重新啟動應用程式。'
+      '未來 stamp：請升級應用。壞庫／無法識別：請先備份，再於啟動對話框選擇「重置資料庫並重試」，或執行：\n' +
+      'scripts/reset_local_databases.py --apply\n\n' +
+      '然後重新啟動應用程式。'
   );
 }
 
@@ -123,6 +139,25 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedBody: (message) => `無法啟動內建伺服器：\n\n${message}`,
     incompatibleDatabaseTitle: '資料庫不相容',
     schemaHardRejectHint: schemaHardRejectHint('zh-Hant'),
+    schemaResetRequiredTitle: '無法使用此資料庫',
+    schemaResetRequiredHeadline: '此版本無法原地升級舊資料庫',
+    schemaResetRequiredBody:
+      '目前安裝的 Intelligence Monitor 無法將這份舊資料庫升級到可用結構，也不會遷移既有資料。請先備份，再重置本機資料庫後重試。重置後會建立全新資料庫；原有內容只會保留在同一資料夾的備份中。',
+    schemaFutureStampTitle: '資料庫版本較新',
+    schemaFutureStampHeadline: '請改安裝較新版本的應用程式',
+    schemaFutureStampBody:
+      '這份資料庫是由較新版本的 Intelligence Monitor 建立的，目前安裝無法讀取。請升級應用程式。重置是最後手段，會清除本機資料且無法遷移。',
+    schemaDetailsToggle: '詳細資料',
+    schemaOpenFolder: '開啟資料夾',
+    schemaResetAndRetry: '重置資料庫並重試',
+    schemaQuit: '結束',
+    schemaResetConfirmTitle: '確定要重置資料庫？',
+    schemaResetConfirmBody:
+      '系統會先把現有資料庫備份到同一資料夾，再刪除本機資料庫檔。此版本不會遷移舊資料。確定後將重新啟動內建伺服器。',
+    schemaResetConfirm: '備份並重置',
+    schemaResetCancel: '取消',
+    schemaResetFailedTitle: '無法重置資料庫',
+    schemaResetFailedBody: '無法備份或刪除本機資料庫。請確認沒有其他 Intelligence Monitor 視窗正在使用該檔案，然後重試。',
     serverStartupTimeoutTitle: '伺服器啟動逾時',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `伺服器未能在 ${seconds} 秒內啟動。請檢查日誌以取得詳細資訊。\n\n${schemaHint}`,
@@ -158,6 +193,25 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedBody: (message) => `无法启动内置服务器：\n\n${message}`,
     incompatibleDatabaseTitle: '数据库不兼容',
     schemaHardRejectHint: schemaHardRejectHint('zh-Hans'),
+    schemaResetRequiredTitle: '无法使用此数据库',
+    schemaResetRequiredHeadline: '此版本无法原地升级旧数据库',
+    schemaResetRequiredBody:
+      '当前安装的 Intelligence Monitor 无法将这份旧数据库升级到可用结构，也不会迁移既有数据。请先备份，再重置本地数据库后重试。重置后会建立全新数据库；原有内容只会保留在同一文件夹的备份中。',
+    schemaFutureStampTitle: '数据库版本较新',
+    schemaFutureStampHeadline: '请改安装较新版本的应用程序',
+    schemaFutureStampBody:
+      '这份数据库由较新版本的 Intelligence Monitor 创建，当前安装无法读取。请升级应用程序。重置是最后手段，会清除本地数据且无法迁移。',
+    schemaDetailsToggle: '详细资料',
+    schemaOpenFolder: '打开文件夹',
+    schemaResetAndRetry: '重置数据库并重试',
+    schemaQuit: '退出',
+    schemaResetConfirmTitle: '确定要重置数据库？',
+    schemaResetConfirmBody:
+      '系统会先把现有数据库备份到同一文件夹，再删除本地数据库文件。此版本不会迁移旧数据。确定后将重新启动内置服务器。',
+    schemaResetConfirm: '备份并重置',
+    schemaResetCancel: '取消',
+    schemaResetFailedTitle: '无法重置数据库',
+    schemaResetFailedBody: '无法备份或删除本地数据库。请确认没有其他 Intelligence Monitor 窗口正在使用该文件，然后重试。',
     serverStartupTimeoutTitle: '服务器启动超时',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `服务器未能在 ${seconds} 秒内启动。请检查日志以获取详细信息。\n\n${schemaHint}`,
@@ -194,6 +248,26 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
       `Failed to start the bundled server:\n\n${message}`,
     incompatibleDatabaseTitle: 'Incompatible Database',
     schemaHardRejectHint: schemaHardRejectHint('en'),
+    schemaResetRequiredTitle: 'This database cannot be used',
+    schemaResetRequiredHeadline: 'This version cannot upgrade this older database in place',
+    schemaResetRequiredBody:
+      'This installation of Intelligence Monitor cannot upgrade this older database in place, and will not migrate existing data. Back up first, then reset the local database and retry. After reset, a new empty database is created; original content is kept only in the backup in the same folder.',
+    schemaFutureStampTitle: 'Database is newer than this app',
+    schemaFutureStampHeadline: 'Install a newer version of the application',
+    schemaFutureStampBody:
+      'This database was created by a newer version of Intelligence Monitor and cannot be opened here. Update the application. Reset is a last resort: it deletes local data and will not migrate it.',
+    schemaDetailsToggle: 'Technical details',
+    schemaOpenFolder: 'Open folder',
+    schemaResetAndRetry: 'Reset database and retry',
+    schemaQuit: 'Quit',
+    schemaResetConfirmTitle: 'Reset the database?',
+    schemaResetConfirmBody:
+      'The current database will be copied into a backup folder next to it, then the live files will be deleted. This version will not migrate old data. The bundled server will then restart.',
+    schemaResetConfirm: 'Back up and reset',
+    schemaResetCancel: 'Cancel',
+    schemaResetFailedTitle: 'Could not reset the database',
+    schemaResetFailedBody:
+      'The local database could not be backed up or deleted. Make sure no other Intelligence Monitor window is using the file, then try again.',
     serverStartupTimeoutTitle: 'Server Startup Timeout',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `Server failed to start within ${seconds} seconds. Check logs for details.\n\n${schemaHint}`,
