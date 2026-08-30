@@ -7,7 +7,7 @@ It does **not** auto-seed demo data — run seed scripts manually when needed.
 
 Restart after ``--apply`` creates a fresh schema at the current stamp
 (SoT: ``server/db/schema_inspect.py`` ``CURRENT_SCHEMA_VERSION`` /
-``SCHEMA_SEMVER``; presently stamp 5 / ``1.4.0``; stamp 1–4 files reject).
+``SCHEMA_SEMVER``; presently stamp 6 / ``1.5.0``; stamp 1–5 files reject).
 
 ``npm run dev`` / ``npm run dev:server`` start Python without Electron env
 overrides, so the active DB is ``server.paths.default_db_path()``

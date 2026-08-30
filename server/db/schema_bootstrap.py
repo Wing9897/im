@@ -1,11 +1,11 @@
 """Schema bootstrap: create current DDL, walk FLOOR..CURRENT-1, or hard-reject.
 
-Stamp **5** is both the schema floor (``SCHEMA_FLOOR``) and current stamp.
+Stamp **6** is both the schema floor (``SCHEMA_FLOOR``) and current stamp.
 Empty databases are created from the authoritative domain DDL aggregated by
 ``schema.py``. Exact unstamped current fingerprints are stamped
 (``PRAGMA user_version`` = current stamp). ``FLOOR <= version < CURRENT``
 backs up once and applies additive ``SCHEMA_MIGRATIONS`` (empty while floor
-equals current). Stamp 1–3 files hard-reject — backup then reset. Future
+equals current). Stamp 1–5 files hard-reject — backup then reset. Future
 stamps (``version > CURRENT``, including retired 27/45) refuse with an
 update-the-app message. Corrupt / lookalike fingerprints hard-reject with the
 explicit reset command. Startup never silently deletes or rebuilds a database.

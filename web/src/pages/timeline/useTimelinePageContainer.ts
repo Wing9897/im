@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -10,12 +10,8 @@ import {
   usePersistedSourceFilter,
   usePruneSourceFilterToCatalog,
 } from "../../hooks/usePersistedSourceFilter";
-import { pruneSubscribedCalendarSelection, resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
-import {
-  subscribeFilterCalendarsFromCatalog,
-  useCalendarShareCatalog,
-} from "../../domain/calendarShare/useCalendarShareCatalog";
-import { usePersistedSubscribeFilter } from "../../domain/calendarShare/usePersistedSubscribeFilter";
+import { useSubscribeFilterState } from "../../domain/calendarShare/useSubscribeFilterState";
+import { resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
@@ -80,20 +76,13 @@ export function useTimelinePageContainer() {
   const { selectedSources, setSelectedSources } = usePersistedSourceFilter(
     timelineSelectedSourcesFilter,
   );
-  const [selectedSubscribeKeys, setSelectedSubscribeKeys] = usePersistedSubscribeFilter();
-  const catalog = useCalendarShareCatalog();
-  const subscribeCalendars = useMemo(
-    () => subscribeFilterCalendarsFromCatalog(catalog.items),
-    [catalog.items],
-  );
-  const subscribeCatalogKeys = useMemo(
-    () => subscribeCalendars.map((row) => row.key),
-    [subscribeCalendars],
-  );
-
-  useEffect(() => {
-    setSelectedSubscribeKeys((prev) => pruneSubscribedCalendarSelection(prev, subscribeCatalogKeys));
-  }, [subscribeCatalogKeys, setSelectedSubscribeKeys]);
+  const {
+    subscribeCalendars,
+    subscribeCatalogKeys,
+    selectedSubscribeKeys,
+    setSelectedSubscribeKeys,
+    catalog,
+  } = useSubscribeFilterState();
 
   const data = useTimelineData({
     selectedSources,

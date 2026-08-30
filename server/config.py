@@ -74,6 +74,8 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "calendar_share_timezone": "",
     "calendar_share_timezone_pending": "false",
     "calendar_share_timezone_last_public": "",
+    "calendar_share_auto_sync": "true",
+    "calendar_share_auto_sync_interval_seconds": "60",
     # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }
 

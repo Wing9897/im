@@ -57,7 +57,11 @@ async def login_remote(base_url: str, handle: str, password: str) -> tuple[str, 
         raise_remote_status(status, payload, fallback_code=CALENDAR_SHARE_REQUEST_FAILED)
     access, refresh = parse_token_pair(payload)
     if not access or not refresh:
-        raise http_error(502, "Calendar share login did not return access and refresh tokens")
+        raise http_error(
+            502,
+            "Calendar share login did not return access and refresh tokens",
+            error_code=CALENDAR_SHARE_REQUEST_FAILED,
+        )
     return access, refresh
 
 

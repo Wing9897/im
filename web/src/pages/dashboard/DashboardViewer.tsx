@@ -231,14 +231,6 @@ export function DashboardViewer() {
           groups={shell.worksetGroups}
           t={t}
           itemCountByWorkset={shell.itemCountByWorkset}
-          statsMap={statsMap}
-          defaultStats={defaultStats}
-          focusedId={focusedId}
-          detailTaskId={detailTask?.id ?? null}
-          onToggleActive={handleToggleActive}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onOpenTask={openTask}
           onOpenWorkset={shell.openWorksetDetail}
           onRenameWorkset={(id, name) => shell.handleRenameWorkset(id, name)}
           onDeleteWorkset={(id, name) => shell.setWorksetDeleteTarget({ id, name })}

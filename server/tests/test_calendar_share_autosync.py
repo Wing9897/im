@@ -2,15 +2,56 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
 from server.calendar.user_events_write import create_user_event
-from server.calendar_share.autosync import SCAN_INTERVAL_SECONDS, WRITE_SPACING_SECONDS, sync_dirty_published_worksets
+from server.calendar_share.auto_sync_config import (
+    AUTO_SYNC_INTERVAL_FLOOR_SECONDS,
+    LOOP_TICK_SECONDS,
+    SCAN_INTERVAL_SECONDS,
+    WRITE_SPACING_SECONDS,
+)
+from server.calendar_share.autosync import (
+    _pending_since,
+    auto_sync_interval_elapsed,
+    reset_auto_sync_pending_since_for_tests,
+    sync_dirty_published_worksets,
+)
 from server.calendar_share.dirty import has_live_public_replica, mark_published_workset_dirty
-from server.calendar_share.store import get_workset_entry
+from server.calendar_share.store import get_workset_entry, load_workset_map
 from server.db.database import TransactionDb
 from server.queries.worksets_queries import insert_workset
 from server.tests.calendar_share_fakes import login_calendar_share
 from server.util import utc_now_iso
 from server.worksets_const import SYSTEM_WORKSET_ID
+
+
+@pytest.fixture(autouse=True)
+def _reset_auto_sync_pending_since():
+    reset_auto_sync_pending_since_for_tests()
+    yield
+    reset_auto_sync_pending_since_for_tests()
+
+
+async def _sync_due(
+    db,
+    *,
+    spacing_seconds: float = 0,
+    advance_seconds: float = AUTO_SYNC_INTERVAL_FLOOR_SECONDS + 1,
+    sleep=None,
+):
+    marked_at = datetime.now(UTC)
+    now = marked_at + timedelta(seconds=advance_seconds)
+    mapping = await load_workset_map(db)
+    for workset_id, entry in mapping.items():
+        if entry.get("pendingSync") and entry.get("autoSync", True):
+            _pending_since[str(workset_id)] = marked_at
+    kwargs = {"spacing_seconds": spacing_seconds, "now": now}
+    if sleep is not None:
+        kwargs["sleep"] = sleep
+    return await sync_dirty_published_worksets(db, **kwargs)
 
 
 def _ic_writes(fake_remote) -> list[dict]:
@@ -108,7 +149,7 @@ async def test_scan_pushes_once_for_two_edits(client, app, fake_remote):
     )
     assert (await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID))["pendingSync"] is True
 
-    synced = await sync_dirty_published_worksets(app.state.db, spacing_seconds=0)
+    synced = await _sync_due(app.state.db)
     assert synced == [SYSTEM_WORKSET_ID]
     writes = _ic_writes(fake_remote)
     assert len(writes) == 1
@@ -127,7 +168,7 @@ async def test_scan_skips_hash_unchanged(client, app, fake_remote):
     await mark_published_workset_dirty(app.state.db, SYSTEM_WORKSET_ID)
     assert (await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID))["pendingSync"] is True
 
-    synced = await sync_dirty_published_worksets(app.state.db, spacing_seconds=0)
+    synced = await _sync_due(app.state.db)
     assert synced == [SYSTEM_WORKSET_ID]
     assert _ic_writes(fake_remote) == []
     entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
@@ -148,7 +189,7 @@ async def test_scan_failure_keeps_dirty(client, app, fake_remote):
     fake_remote.patch_changes_status = 502
     fake_remote.put_calendar_status = 502
 
-    synced = await sync_dirty_published_worksets(app.state.db, spacing_seconds=0)
+    synced = await _sync_due(app.state.db)
     assert synced == []
     entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
     assert entry["pendingSync"] is True
@@ -168,7 +209,7 @@ async def test_offline_keeps_dirty_without_ic_write(client, app, fake_remote):
 
     await clear_tokens(app.state.db)
     fake_remote.calls.clear()
-    synced = await sync_dirty_published_worksets(app.state.db, spacing_seconds=0)
+    synced = await _sync_due(app.state.db)
     assert synced == []
     assert _ic_writes(fake_remote) == []
     entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
@@ -223,7 +264,7 @@ async def test_scan_serializes_worksets_with_write_spacing(client, app, fake_rem
         slept.append(seconds)
 
     fake_remote.calls.clear()
-    synced = await sync_dirty_published_worksets(
+    synced = await _sync_due(
         app.state.db,
         spacing_seconds=WRITE_SPACING_SECONDS,
         sleep=fake_sleep,
@@ -232,7 +273,97 @@ async def test_scan_serializes_worksets_with_write_spacing(client, app, fake_rem
     assert slept == [WRITE_SPACING_SECONDS]
     assert SCAN_INTERVAL_SECONDS == 60.0
     assert WRITE_SPACING_SECONDS == 10.0
+    assert LOOP_TICK_SECONDS == 10.0
+    assert AUTO_SYNC_INTERVAL_FLOOR_SECONDS == 60
     assert len(_ic_writes(fake_remote)) == 2
+
+
+async def test_autosync_skips_when_auto_sync_disabled(client, app, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    await _publish(client)
+    resp = await client.patch(
+        "/api/v1/calendar-share/publish/auto-sync",
+        json={"autoSync": False},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["autoSync"] is False
+    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert entry["pendingSync"] is False
+    fake_remote.calls.clear()
+
+    await create_user_event(
+        app.state.db,
+        title="No auto",
+        start_time="2026-09-01T09:00:00",
+        workset_id=SYSTEM_WORKSET_ID,
+    )
+    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert entry["pendingSync"] is False
+    synced = await sync_dirty_published_worksets(app.state.db, spacing_seconds=0)
+    assert synced == []
+    assert _ic_writes(fake_remote) == []
+
+
+async def test_autosync_respects_household_interval(client, app, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    await _publish(client)
+    resp = await client.patch(
+        "/api/v1/calendar-share/publish/auto-sync",
+        json={"autoSync": True, "autoSyncIntervalSeconds": 300},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["autoSyncIntervalSeconds"] == 300
+    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    base = datetime.now(UTC)
+    from server.calendar_share.store import upsert_workset_entry
+
+    await upsert_workset_entry(
+        app.state.db,
+        SYSTEM_WORKSET_ID,
+        {**entry, "pendingSync": True},
+    )
+    fake_remote.calls.clear()
+    _pending_since[SYSTEM_WORKSET_ID] = base
+    synced = await sync_dirty_published_worksets(
+        app.state.db,
+        spacing_seconds=0,
+        now=base + timedelta(seconds=30),
+    )
+    assert synced == []
+    assert _ic_writes(fake_remote) == []
+
+    synced = await sync_dirty_published_worksets(
+        app.state.db,
+        spacing_seconds=0,
+        now=base + timedelta(seconds=330),
+    )
+    assert synced == [SYSTEM_WORKSET_ID]
+    entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert entry["pendingSync"] is False
+
+
+async def test_patch_auto_sync_rejects_interval_below_floor(client, fake_remote):
+    await login_calendar_share(client, fake_remote)
+    await _publish(client)
+    resp = await client.patch(
+        "/api/v1/calendar-share/publish/auto-sync",
+        json={"autoSyncIntervalSeconds": 30},
+    )
+    assert resp.status_code == 422
+    assert "60" in resp.text
+
+
+def test_auto_sync_interval_elapsed_uses_floor():
+    base = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+    entry = {
+        "autoSync": True,
+        "autoSyncIntervalSeconds": 30,
+        "pendingSync": True,
+    }
+    _pending_since["ws-a"] = base
+    assert auto_sync_interval_elapsed(entry, workset_id="ws-a", now=base + timedelta(seconds=30)) is False
+    _pending_since["ws-b"] = base
+    assert auto_sync_interval_elapsed(entry, workset_id="ws-b", now=base + timedelta(seconds=61)) is True
 
 
 async def test_unpublished_dirty_flag_is_not_scanned(client, app, fake_remote):

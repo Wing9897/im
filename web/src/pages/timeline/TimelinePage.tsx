@@ -16,9 +16,8 @@
  */
 
 import { RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertBanner, AppPageShell, PillButton } from "../../components/ui";
+import { AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { isCalendarShareUnreachable } from "../../domain/calendarShare/subscribedCalendars";
@@ -52,9 +51,7 @@ export function TimelinePage() {
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks } = useTaskCatalog();
   const subscribeAvailability = sources.subscribeAvailability ?? "ok";
-  const subscribeOfflineError =
-    subscribeAvailability === "offline" && isCalendarShareUnreachable(data.pageError);
-  useErrorToast(subscribeOfflineError ? null : data.pageError);
+  useErrorToast(isCalendarShareUnreachable(data.pageError) ? null : data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
   const dialogs = useTimelinePageDialogs({
     refreshEvents: data.refreshEvents,
@@ -160,24 +157,6 @@ export function TimelinePage() {
               />
             </TimelineControlBar>
           </div>
-          {subscribeAvailability === "loggedOut" || subscribeAvailability === "offline" ? (
-            <AlertBanner
-              variant="warning"
-              role="status"
-              className="mb-sm max-w-[56ch] shrink-0"
-              data-testid="timeline-subscribe-status"
-              data-availability={subscribeAvailability}
-            >
-              {subscribeAvailability === "offline"
-                ? t("subscriptions:filter.offline")
-                : t("subscriptions:filter.loggedOut")}{" "}
-              {subscribeAvailability === "loggedOut" ? (
-                <Link to="/account/identity" className="font-medium text-accent no-underline hover:underline">
-                  {t("subscriptions:loginLink")}
-                </Link>
-              ) : null}
-            </AlertBanner>
-          ) : null}
 
           <div className={scrollAreaClass}>
             <TimelineViewSwitch

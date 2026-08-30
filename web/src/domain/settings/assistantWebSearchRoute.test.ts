@@ -15,6 +15,7 @@ import {
   settingsFromWebSearchUiMode,
   webSearchProviderLabelKey,
   webSearchToolStatusKey,
+  DEFAULT_WEB_SEARCH_PROVIDER,
 } from "./assistantWebSearchRoute";
 
 describe("assistantWebSearchRoute", () => {
@@ -26,7 +27,11 @@ describe("assistantWebSearchRoute", () => {
     expect(normalizeWebSearchProviderSetting("serper")).toBe("serper");
     expect(normalizeWebSearchProviderSetting("SERPER")).toBe("serper");
     expect(normalizeWebSearchProviderSetting("auto")).toBe("auto");
-    expect(normalizeWebSearchProviderSetting("nope")).toBe("auto");
+    expect(normalizeWebSearchProviderSetting("nope")).toBe("duckduckgo");
+  });
+
+  it("defaults the tool vendor to DuckDuckGo (server WEB_SEARCH_PROVIDER_DEFAULT)", () => {
+    expect(DEFAULT_WEB_SEARCH_PROVIDER).toBe("duckduckgo");
   });
 
   it("detects official OpenAI / Gemini bases", () => {

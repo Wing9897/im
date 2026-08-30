@@ -1,4 +1,8 @@
-"""Local workset publish state (does not list remote calendars)."""
+"""Local workset publish HTTP routes (does not list remote calendars).
+
+Named ``publish_routes`` so it does not collide with ``server.calendar_share.publish``
+or ``server.calendar_share.store.publish``.
+"""
 
 from __future__ import annotations
 
@@ -7,11 +11,17 @@ from typing import Any
 from fastapi import APIRouter, Request
 
 from server.api.deps import get_db
-from server.api.schemas.requests.calendar_share import CalendarSharePublishBody
+from server.api.schemas.requests.calendar_share import CalendarSharePublishAutoSyncBody, CalendarSharePublishBody
 from server.api.schemas.responses.calendar_share import (
     CalendarSharePublishListItemResponse,
     CalendarSharePublishListResponse,
     CalendarSharePublishStateResponse,
+)
+from server.calendar_share.auto_sync_config import (
+    AUTO_SYNC_INTERVAL_FLOOR_SECONDS,
+    apply_unified_auto_sync,
+    normalize_auto_sync_interval_seconds,
+    read_unified_auto_sync,
 )
 from server.calendar_share.publish import push_workset_calendar, unpublish_workset_calendar
 from server.calendar_share.rate_limit import enforce_calendar_share_rate_limit
@@ -54,7 +64,49 @@ async def list_publish_states(request: Request) -> CalendarSharePublishListRespo
     db = get_db(request)
     rows = await list_publish_joined(db)
     items = [CalendarSharePublishListItemResponse.model_validate(row) for row in rows]
-    return CalendarSharePublishListResponse(items=items)
+    auto_sync, interval = await read_unified_auto_sync(db)
+    return CalendarSharePublishListResponse(
+        items=items,
+        autoSync=auto_sync,
+        autoSyncIntervalSeconds=interval,
+        autoSyncIntervalFloorSeconds=AUTO_SYNC_INTERVAL_FLOOR_SECONDS,
+    )
+
+
+@router.patch("/publish/auto-sync", response_model=CalendarSharePublishListResponse)
+async def patch_publish_auto_sync(
+    request: Request,
+    body: CalendarSharePublishAutoSyncBody,
+) -> CalendarSharePublishListResponse:
+    """Household-wide auto-update for every published workset."""
+    if body.autoSync is None and body.autoSyncIntervalSeconds is None:
+        raise http_error(422, "Provide autoSync and/or autoSyncIntervalSeconds", error_code=VALIDATION_ERROR)
+    enforce_calendar_share_rate_limit(request, "publish")
+    if body.autoSyncIntervalSeconds is not None and body.autoSyncIntervalSeconds < AUTO_SYNC_INTERVAL_FLOOR_SECONDS:
+        raise http_error(
+            422,
+            f"autoSyncIntervalSeconds must be >= {AUTO_SYNC_INTERVAL_FLOOR_SECONDS}",
+            error_code=VALIDATION_ERROR,
+        )
+    db = get_db(request)
+    interval = (
+        None
+        if body.autoSyncIntervalSeconds is None
+        else normalize_auto_sync_interval_seconds(body.autoSyncIntervalSeconds)
+    )
+    auto_sync, saved_interval = await apply_unified_auto_sync(
+        db,
+        auto_sync=body.autoSync,
+        interval_seconds=interval,
+    )
+    rows = await list_publish_joined(db)
+    items = [CalendarSharePublishListItemResponse.model_validate(row) for row in rows]
+    return CalendarSharePublishListResponse(
+        items=items,
+        autoSync=auto_sync,
+        autoSyncIntervalSeconds=saved_interval,
+        autoSyncIntervalFloorSeconds=AUTO_SYNC_INTERVAL_FLOOR_SECONDS,
+    )
 
 
 @router.get("/publish/{workset_id}", response_model=CalendarSharePublishStateResponse)
@@ -87,6 +139,7 @@ async def put_publish_state(
     is_system = _workset_is_system(row, workset_id)
     slug = normalize_slug(coerce_publish_slug(body.slug))
     grants = [{"handle": normalize_handle(g.handle), "visibility": g.visibility} for g in body.grants]
+    auto_sync, interval = await read_unified_auto_sync(db)
     entry = {
         **empty_workset_entry(workset_id, slug=slug),
         **previous,
@@ -95,6 +148,8 @@ async def put_publish_state(
         "grants": grants,
         "lastSyncAt": previous.get("lastSyncAt"),
         "lastError": previous.get("lastError"),
+        "autoSync": auto_sync,
+        "autoSyncIntervalSeconds": interval,
     }
     saved = await upsert_workset_entry(db, workset_id, entry)
     if body.syncNow:

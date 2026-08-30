@@ -33,6 +33,13 @@ class CalendarSharePublishBody(BaseModel):
     syncNow: bool = False
 
 
+class CalendarSharePublishAutoSyncBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    autoSync: bool | None = None
+    autoSyncIntervalSeconds: int | None = None
+
+
 class CalendarShareSubscribeBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

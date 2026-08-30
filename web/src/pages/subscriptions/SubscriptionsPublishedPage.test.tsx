@@ -38,6 +38,9 @@ const LIVE = {
   grants: [],
   lastSyncAt: null,
   lastError: null,
+  pendingSync: false,
+  autoSync: true,
+  autoSyncIntervalSeconds: 60,
   isSystemWorkset: false,
   worksetName: "Ops",
   worksetMissing: false,
@@ -189,6 +192,12 @@ describe("SubscriptionsPublishedPage", () => {
       "Calendar share request failed",
     );
     expect(document.querySelector('[data-testid="subscriptions-published-pending-ws-1"]')).toBeNull();
+  });
+
+  it("keeps auto-update in the toolbar, not on each card", async () => {
+    await renderPage();
+    expect(document.querySelector('[data-testid="subscriptions-published-auto-sync"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="subscriptions-published-auto-sync-ws-1"]')).toBeNull();
   });
 
   it("shows pending automatic update when dirty and not failed", async () => {
@@ -347,14 +356,14 @@ describe("SubscriptionsPublishedPage", () => {
     const sync = document.querySelector(
       '[data-testid="subscriptions-published-sync-ws-1"]',
     ) as HTMLButtonElement;
-    expect(sync.textContent).toContain("Update public copy");
+    expect(sync.getAttribute("aria-label")).toContain("Update public copy");
     await act(async () => {
       sync.click();
       await Promise.resolve();
     });
     expect(sync.disabled).toBe(true);
     expect(sync.getAttribute("aria-busy")).toBe("true");
-    expect(sync.textContent).toContain("Updating…");
+    expect(sync.getAttribute("aria-label")).toContain("Updating…");
     await act(async () => {
       resolveSync(LIVE);
       await Promise.resolve();
@@ -509,7 +518,7 @@ describe("SubscriptionsPublishedPage", () => {
     expect(calendarShareApiMocks.putCalendarSharePublish).toHaveBeenCalled();
   });
 
-  it("shows a need-login banner and disables unpublish when logged out", async () => {
+  it("shows a logged-out connection icon and disables unpublish when logged out", async () => {
     calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
       connected: false,
       baseUrl: "http://127.0.0.1:8787",
@@ -517,11 +526,10 @@ describe("SubscriptionsPublishedPage", () => {
       status: "disconnected",
     });
     await renderShell("/subscriptions/published");
-    expect(document.querySelector('[data-testid="subscriptions-need-login"]')).toBeTruthy();
+    const statusIcon = document.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon?.getAttribute("data-availability")).toBe("loggedOut");
     expect(document.querySelector('[data-testid="calendar-share-login"]')).toBeNull();
-    expect([...document.querySelectorAll("a")].some((el) => el.getAttribute("href") === "/subscriptions/account")).toBe(
-      true,
-    );
     const button = document.querySelector('[data-testid="subscriptions-unpublish-ws-1"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(
@@ -548,7 +556,8 @@ describe("SubscriptionsPublishedPage", () => {
       message: "calendar share 502",
     });
     await renderPage();
-    expect(mount.textContent).toContain("Calendar share is unreachable");
+    const statusIcon = document.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(statusIcon?.getAttribute("data-availability")).toBe("offline");
     const button = document.querySelector('[data-testid="subscriptions-unpublish-ws-1"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(document.querySelector('[data-testid="subscriptions-published-list"]')?.className).toContain("opacity-50");

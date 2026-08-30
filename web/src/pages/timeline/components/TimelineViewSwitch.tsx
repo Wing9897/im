@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { isCalendarShareUnreachable } from "../../../domain/calendarShare/subscribedCalendars";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import type { TimelineItem } from "../../../types";
@@ -74,7 +75,7 @@ export function TimelineViewSwitch({
   const hasEvents = events.length > 0;
   const { timedOut } = useTimelineLoadTimeout(initialLoading, hasEvents);
   const effectiveError = timedOut ? t("view.loadTimeout") : error ?? null;
-  useErrorToast(effectiveError);
+  useErrorToast(isCalendarShareUnreachable(effectiveError) ? null : effectiveError);
 
   const emptyHint = useMemo(
     () => resolveTimelineEmptyHint(events, filteredEvents, emptyState, t),

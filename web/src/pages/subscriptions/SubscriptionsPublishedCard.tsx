@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { TFunction } from "i18next";
+import { RefreshCw, Settings2, Trash2 } from "lucide-react";
 import { Badge, Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
 import type { CalendarSharePublishListItem } from "../../api/calendarShare";
@@ -19,6 +20,7 @@ type Props = {
   handle: string;
   ownerAvatar: string;
   canMutate: boolean;
+  autoSyncEnabled: boolean;
   busyAction: PublishedBusyAction;
   onSync: (row: CalendarSharePublishListItem) => void;
   onEdit: (worksetId: string) => void;
@@ -26,12 +28,13 @@ type Props = {
   t: TFunction;
 };
 
-/** One published-calendar card plus sync / edit / unpublish actions. */
+/** Published-calendar card: cover + path + icon actions. */
 export function SubscriptionsPublishedCard({
   row,
   handle,
   ownerAvatar,
   canMutate,
+  autoSyncEnabled,
   busyAction,
   onSync,
   onEdit,
@@ -44,6 +47,9 @@ export function SubscriptionsPublishedCard({
   const rowBusy = busyAction?.worksetId === row.worksetId;
   const syncLoading = rowBusy && busyAction?.action === "sync";
   const unpublishLoading = rowBusy && busyAction?.action === "unpublish";
+  const syncLabel = syncLoading ? t("published.syncing") : t("published.syncNow");
+  const editLabel = t("published.edit");
+  const unpublishLabel = unpublishLoading ? t("published.unpublishing") : t("published.unpublish");
   return (
     <SubscriptionCalendarCard
       key={row.worksetId}
@@ -55,46 +61,59 @@ export function SubscriptionsPublishedCard({
       accentClass={visibilityAccentClass(row.publicVisibility)}
       data-testid={`subscriptions-published-${row.worksetId}`}
       badge={
-        <Badge tone={visibilityBadgeTone(row.publicVisibility)}>{t(`visibility.${row.publicVisibility}`)}</Badge>
+        <span className="flex shrink-0 flex-wrap items-center justify-end gap-xs">
+          <Badge tone={visibilityBadgeTone(row.publicVisibility)}>{t(`visibility.${row.publicVisibility}`)}</Badge>
+          {row.pendingSync && autoSyncEnabled && !row.lastError ? (
+            <Badge tone="warning" data-testid={`subscriptions-published-pending-${row.worksetId}`}>
+              {t("published.pendingSync")}
+            </Badge>
+          ) : null}
+        </span>
       }
       actions={
-        <>
+        <div className="flex items-center gap-1">
           {row.worksetMissing ? null : (
             <>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 loading={syncLoading}
                 disabled={!canMutate || rowBusy}
+                title={syncLabel}
+                aria-label={syncLabel}
                 onClick={() => void onSync(row)}
                 data-testid={`subscriptions-published-sync-${row.worksetId}`}
               >
-                {syncLoading ? t("published.syncing") : t("published.syncNow")}
+                {syncLoading ? null : <RefreshCw size={16} strokeWidth={2} aria-hidden />}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => onEdit(row.worksetId)}
+                title={editLabel}
+                aria-label={editLabel}
                 data-testid={`subscriptions-published-edit-${row.worksetId}`}
               >
-                {t("published.edit")}
+                <Settings2 size={16} strokeWidth={2} aria-hidden />
               </Button>
             </>
           )}
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="danger"
+            size="icon"
             loading={unpublishLoading}
             disabled={!canMutate || rowBusy}
+            title={unpublishLabel}
+            aria-label={unpublishLabel}
             onClick={() => void onUnpublish(row)}
             data-testid={`subscriptions-unpublish-${row.worksetId}`}
           >
-            {unpublishLoading ? t("published.unpublishing") : t("published.unpublish")}
+            {unpublishLoading ? null : <Trash2 size={16} strokeWidth={2} aria-hidden />}
           </Button>
-        </>
+        </div>
       }
     >
       {row.worksetMissing ? (
@@ -111,13 +130,6 @@ export function SubscriptionsPublishedCard({
           data-testid={`subscriptions-published-error-${row.worksetId}`}
         >
           {toErrorMessage(row.lastError)}
-        </p>
-      ) : row.pendingSync ? (
-        <p
-          className={`mb-0 mt-xs ${captionClass}`}
-          data-testid={`subscriptions-published-pending-${row.worksetId}`}
-        >
-          {t("published.pendingSync")}
         </p>
       ) : null}
     </SubscriptionCalendarCard>

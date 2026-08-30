@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from server.errors import (
     AUTH_REQUIRED,
@@ -77,7 +77,7 @@ def raise_remote_status(
     *,
     fallback_code: str = CALENDAR_SHARE_REQUEST_FAILED,
     fallback: str | None = None,
-) -> None:
+) -> NoReturn:
     """Raise a structured HTTP error. Protocol identity is ``error_code``, not English copy."""
     code = _error_code_from_payload(payload) or fallback_code
     if status == 401:
@@ -100,3 +100,13 @@ def raise_remote_status(
     if 400 <= status < 500:
         raise http_error(422 if status == 400 else status, message, error_code=VALIDATION_ERROR)
     raise http_error(502, message, error_code=code)
+
+
+def raise_mapped_remote_error(exc: CalendarShareRemoteError) -> NoReturn:
+    """Map a transport/remote exception through ``raise_remote_status``."""
+    raise_remote_status(
+        exc.status,
+        exc.payload,
+        fallback_code=exc.error_code or CALENDAR_SHARE_UNREACHABLE,
+        fallback=exc.message,
+    )

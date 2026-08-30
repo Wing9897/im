@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from server.domain.web_search_providers import (
     ALLOWED_TOOL_WEB_SEARCH_PROVIDERS,
     ALLOWED_WEB_SEARCH_PROVIDERS,
+    WEB_SEARCH_PROVIDER_DEFAULT,
     WebSearchToolProviderWire,
 )
 
@@ -51,7 +52,7 @@ def normalize_web_search_setting(raw: str | None) -> str:
     # Legacy / unknown → keep DuckDuckGo (force tool), not auto.
     if value:
         return "duckduckgo"
-    return "auto"
+    return WEB_SEARCH_PROVIDER_DEFAULT
 
 
 def is_official_openai_base(base_url: str) -> bool:

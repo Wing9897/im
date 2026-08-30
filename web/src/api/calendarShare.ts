@@ -32,6 +32,7 @@ export type CalendarShareProfile = components["schemas"]["CalendarShareProfileRe
 export type CalendarShareEvent = components["schemas"]["CalendarShareEventResponse"];
 export type CalendarShareLoginBody = components["schemas"]["CalendarShareLoginBody"];
 export type CalendarSharePublishBody = components["schemas"]["CalendarSharePublishBody"];
+export type CalendarSharePublishAutoSyncBody = components["schemas"]["CalendarSharePublishAutoSyncBody"];
 
 export function fetchCalendarShareSession(): Promise<CalendarShareSession> {
   return apiClient.get<CalendarShareSession>("/api/v1/calendar-share/session");
@@ -83,6 +84,14 @@ export function putCalendarSharePublish(
       body,
       { timeoutMs: CALENDAR_SHARE_PUBLISH_TIMEOUT_MS },
     ),
+  );
+}
+
+export function patchCalendarSharePublishAutoSync(
+  body: CalendarSharePublishAutoSyncBody,
+): Promise<CalendarSharePublishList> {
+  return guarded("publish", () =>
+    apiClient.patch<CalendarSharePublishList>("/api/v1/calendar-share/publish/auto-sync", body),
   );
 }
 

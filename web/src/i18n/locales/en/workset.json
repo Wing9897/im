@@ -49,7 +49,6 @@
   "searchAria": "Search worksets",
   "noMatchTitle": "No matching worksets",
   "noMatchDescription": "No workset name contains “{query}”.",
-  "memberTasksTitle": "{name} · tasks",
   "systemDescription": "Built-in ownership workset. Tasks, assistant, and handwritten events default here.",
   "assetSummary": "{tasks} tasks · {items} items",
   "openDetailAria": "Open workset {name}",

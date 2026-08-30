@@ -10,7 +10,7 @@ from server.api.routes.tasks._common import notify, register_task, unregister_ta
 from server.api.routes.tasks._router import router
 from server.api.schemas.requests import TaskPatchBody
 from server.api.schemas.responses import TaskDeleteResponse, TaskResponse
-from server.errors import VALIDATION_ERROR, http_error
+from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.services.task_crud import (
     delete_task_record,
     patch_task_emoji_record,
@@ -25,7 +25,7 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> T
     try:
         result = await update_task_record(get_db(request), task_id, body)
     except LookupError as exc:
-        raise http_error(404, str(exc)) from exc
+        raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
 
@@ -48,7 +48,7 @@ async def patch_task(request: Request, task_id: str, body: TaskPatchBody) -> Tas
     try:
         payload = await patch_task_emoji_record(get_db(request), task_id, body.emoji)
     except LookupError as exc:
-        raise http_error(404, str(exc)) from exc
+        raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     notify(request, task_id, "updated")
@@ -62,7 +62,7 @@ async def delete_task(request: Request, task_id: str) -> TaskDeleteResponse:
         payload = await delete_task_record(get_db(request), task_id)
     except LookupError as exc:
         await register_task(request, task_id)
-        raise http_error(404, str(exc)) from exc
+        raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
     except Exception:
         await register_task(request, task_id)
         raise
@@ -76,7 +76,7 @@ async def toggle_task_active(request: Request, task_id: str) -> TaskResponse:
     try:
         payload, new_active = await toggle_task_active_record(get_db(request), task_id)
     except LookupError as exc:
-        raise http_error(404, str(exc)) from exc
+        raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
     if new_active:
         await register_task(request, task_id)
     else:

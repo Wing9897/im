@@ -1,21 +1,29 @@
 import { Plus } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  patchCalendarSharePublishAutoSync,
   syncCalendarSharePublish,
   unpublishCalendarSharePublish,
   type CalendarSharePublishListItem,
 } from "../../api/calendarShare";
-import { Button } from "../../components/ui";
+import { Button, MenuSelect } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {
   calendarShareKey,
-  matchesCalendarShareFilter,
   subscribePageStatus,
 } from "../../domain/calendarShare/subscribedCalendars";
+import { isListedPublish } from "../../domain/calendarShare/publishWorkset";
 import { useCalendarShareCatalog } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { useSubscribeCatalogFilter } from "../../domain/calendarShare/useSubscribeCatalogFilter";
 import { useUserProfile } from "../../domain/user/userProfile";
 import { toErrorMessage } from "../../utils/errors";
+import {
+  AUTO_SYNC_PRESET_SECONDS,
+  autoSyncPatchFromPreset,
+  autoSyncPresetFromRow,
+  type AutoSyncPresetValue,
+} from "../../domain/calendarShare/autoSyncPresets";
 import { SubscriptionsPublishedCard } from "./SubscriptionsPublishedCard";
 import { SubscriptionsPublishModal } from "./SubscriptionsPublishModal";
 import {
@@ -37,13 +45,24 @@ export function SubscriptionsPublishedPage() {
   const { t } = useTranslation("subscriptions");
   const catalog = useCalendarShareCatalog();
   const { profile } = useUserProfile();
-  const { items, setItems, worksets, listReady, loadError, load, onPublishSaved } =
-    useSubscriptionsPublishedList();
+  const {
+    items,
+    setItems,
+    worksets,
+    listReady,
+    loadError,
+    load,
+    onPublishSaved,
+    autoSync,
+    setAutoSync,
+    autoSyncIntervalSeconds,
+    setAutoSyncIntervalSeconds,
+    autoSyncIntervalFloorSeconds,
+  } = useSubscriptionsPublishedList();
   const [selectedId, setSelectedId] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<PublishedBusyAction>(null);
-  const [listFilter, setListFilter] = useState("");
   const [formBusy, setFormBusy] = useState(false);
   const [formReady, setFormReady] = useState(false);
   const publishSubmitRef = useRef<(() => Promise<boolean>) | null>(null);
@@ -92,6 +111,26 @@ export function SubscriptionsPublishedPage() {
     [load],
   );
 
+  const [autoSyncBusy, setAutoSyncBusy] = useState(false);
+
+  const onAutoSyncChange = useCallback(
+    async (preset: AutoSyncPresetValue) => {
+      setAutoSyncBusy(true);
+      try {
+        const saved = await patchCalendarSharePublishAutoSync(autoSyncPatchFromPreset(preset));
+        setActionError(null);
+        setAutoSync(saved.autoSync ?? preset !== "off");
+        setAutoSyncIntervalSeconds(saved.autoSyncIntervalSeconds ?? autoSyncIntervalFloorSeconds);
+        setItems((saved.items ?? []).filter(isListedPublish));
+      } catch (error) {
+        setActionError(toErrorMessage(error));
+      } finally {
+        setAutoSyncBusy(false);
+      }
+    },
+    [setItems, setAutoSync, setAutoSyncIntervalSeconds, autoSyncIntervalFloorSeconds],
+  );
+
   const status = subscribePageStatus({
     loading: catalog.loading,
     connected: catalog.session?.connected,
@@ -101,21 +140,17 @@ export function SubscriptionsPublishedPage() {
   const handle = catalog.ownHandle || catalog.session?.handle || "";
   const ownerAvatar = (profile.avatarDataUrl ?? "").trim();
   const error = actionError ?? loadError;
-  const visible = useMemo(
-    () =>
-      items.filter((row) =>
-        matchesCalendarShareFilter(
-          listFilter,
-          handle,
-          row.slug,
-          row.worksetName,
-          row.worksetId,
-          handle ? calendarShareKey(handle, row.slug) : "",
-        ),
-      ),
-    [handle, items, listFilter],
+  const { listFilter, setListFilter, visible, filtering } = useSubscribeCatalogFilter(
+    items,
+    (row) => [
+      handle,
+      row.slug,
+      row.worksetName,
+      row.worksetId,
+      handle ? calendarShareKey(handle, row.slug) : "",
+    ],
+    handle,
   );
-  const filtering = listFilter.trim().length > 0;
 
   const openPublishForm = (worksetId = "") => {
     setSelectedId(worksetId);
@@ -141,24 +176,42 @@ export function SubscriptionsPublishedPage() {
     <SubscriptionsPageChrome
       status={status}
       error={error}
-      loginMessage={t("published.needLogin")}
       toolbar={
         <SubscriptionsListToolbar
           value={listFilter}
           onChange={setListFilter}
           testId="subscriptions-published-filter"
+          status={status}
+          loggedOutTitle={t("published.needLogin")}
           actions={
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              disabled={!canMutate}
-              onClick={() => openPublishForm("")}
-              data-testid="subscriptions-published-open-form"
-            >
-              <Plus size={16} strokeWidth={2} aria-hidden />
-              {t("published.publishCta")}
-            </Button>
+            <>
+              <MenuSelect
+                variant="toolbar"
+                value={String(autoSyncPresetFromRow(autoSync, autoSyncIntervalSeconds, autoSyncIntervalFloorSeconds))}
+                options={AUTO_SYNC_PRESET_SECONDS.map((value) => ({
+                  value: String(value),
+                  label: t(`published.autoSync.presets.${value}`),
+                }))}
+                disabled={!canMutate || autoSyncBusy}
+                onChange={(next) => {
+                  const preset = (next === "off" ? "off" : Number(next)) as AutoSyncPresetValue;
+                  void onAutoSyncChange(preset);
+                }}
+                aria-label={t("published.autoSync.label")}
+                data-testid="subscriptions-published-auto-sync"
+              />
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                disabled={!canMutate}
+                onClick={() => openPublishForm("")}
+                data-testid="subscriptions-published-open-form"
+              >
+                <Plus size={16} strokeWidth={2} aria-hidden />
+                {t("published.publishCta")}
+              </Button>
+            </>
           }
         />
       }
@@ -178,6 +231,7 @@ export function SubscriptionsPublishedPage() {
             handle={handle}
             ownerAvatar={ownerAvatar}
             canMutate={canMutate}
+            autoSyncEnabled={autoSync}
             busyAction={busyAction}
             onSync={(item) => void onSync(item)}
             onEdit={openPublishForm}

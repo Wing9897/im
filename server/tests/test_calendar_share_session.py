@@ -59,11 +59,41 @@ async def test_session_login_failure_does_not_store_tokens(client, app, fake_rem
         json={"baseUrl": DEFAULT_URL, "handle": "Wing", "password": "nope"},
     )
     assert resp.status_code == 401
+    assert resp.json()["error_code"] == "AUTH_REQUIRED"
     stored = await app.state.db.fetch_value(
         "SELECT value FROM system_config WHERE key = ?",
         (KEY_ACCESS_TOKEN,),
     )
     assert stored in (None, "")
+
+
+async def test_session_login_unreachable_uses_remote_error_code(client, monkeypatch):
+    from server.calendar_share.remote_errors import CalendarShareRemoteError
+
+    async def boom(**_kwargs):
+        raise CalendarShareRemoteError(
+            502,
+            "Calendar share server unreachable",
+            error_code="CALENDAR_SHARE_UNREACHABLE",
+        )
+
+    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", boom)
+    resp = await client.post(
+        "/api/v1/calendar-share/session",
+        json={"baseUrl": DEFAULT_URL, "handle": "Wing", "password": "secret"},
+    )
+    assert resp.status_code == 502
+    assert resp.json()["error_code"] == "CALENDAR_SHARE_UNREACHABLE"
+
+
+async def test_session_login_missing_tokens_uses_request_failed_code(client, fake_remote):
+    fake_remote.login_payload = {"accessToken": "only-access"}
+    resp = await client.post(
+        "/api/v1/calendar-share/session",
+        json={"baseUrl": DEFAULT_URL, "handle": "Wing", "password": "secret"},
+    )
+    assert resp.status_code == 502
+    assert resp.json()["error_code"] == "CALENDAR_SHARE_REQUEST_FAILED"
 
 
 async def test_logout_clears_tokens(client, app, fake_remote):

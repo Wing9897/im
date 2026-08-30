@@ -108,7 +108,7 @@ def test_web_search_providers_match_ddl_check_and_routing() -> None:
 
     values = _check_values(
         llm_ddl.DDL,
-        r"web_search_provider\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'auto'\s+"
+        r"web_search_provider\s+TEXT\s+NOT\s+NULL\s+DEFAULT\s+'duckduckgo'\s+"
         r"CHECK\s+\(\s*web_search_provider\s+IN\s+\(([^)]+)\)\s*\)",
         "llm_profiles.web_search_provider",
     )
@@ -117,6 +117,10 @@ def test_web_search_providers_match_ddl_check_and_routing() -> None:
     assert set(ALL_WEB_SEARCH_PROVIDERS) == ALLOWED_WEB_SEARCH_PROVIDERS
     for provider in ALL_WEB_SEARCH_PROVIDERS:
         assert normalize_web_search_setting(provider) == provider
+    from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT
+
+    assert normalize_web_search_setting("") == WEB_SEARCH_PROVIDER_DEFAULT
+    assert normalize_web_search_setting(None) == WEB_SEARCH_PROVIDER_DEFAULT
     from server.api.schemas.requests.llm_profiles import LlmProfileUpsertBody
     from server.api.schemas.responses.llm_profiles import LlmProfileResponse
 
@@ -125,6 +129,7 @@ def test_web_search_providers_match_ddl_check_and_routing() -> None:
     for wire in WEB_SEARCH_SECRET_WIRE_NAMES:
         assert wire in LlmProfileUpsertBody.model_fields
         assert wire in LlmProfileResponse.model_fields
+    assert LlmProfileUpsertBody.model_fields["webSearchProvider"].default == WEB_SEARCH_PROVIDER_DEFAULT
     for column in WEB_SEARCH_SECRET_COLUMNS:
         assert column in llm_ddl.DDL
         assert llm_ddl.DDL.count(column) == 1

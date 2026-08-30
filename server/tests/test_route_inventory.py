@@ -433,6 +433,8 @@ def test_apirouter_modules_are_mounted_or_allowlisted():
 
     assert defined, "router scan found no APIRouter modules — scan is broken"
     assert "server/api/routes/calendar/range.py" not in defined
+    assert not (_ROUTES_DIR / "calendar_share" / "publish.py").exists()
+    assert "server/api/routes/calendar_share/publish_routes.py" in defined
     assert "server/api/routes/calendar/window.py" in defined
     assert "server/api/routes/tasks/_router.py" in defined
 

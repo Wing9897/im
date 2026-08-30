@@ -9,6 +9,10 @@
   },
   "needLogin": "Sign in to calendar share before adding subscriptions.",
   "loginLink": "Open Calendar share tab",
+  "connectionIcon": {
+    "ok": "Calendar share connected",
+    "openAccount": "Click to open Calendar share tab"
+  },
   "identity": {
     "title": "Calendar share",
     "help": "Sign in to the public calendar-share server. Use the other tabs to publish and subscribe; Timeline only displays and filters.",
@@ -70,12 +74,22 @@
     "unpublishing": "Unpublishing…",
     "missingWorkset": "Local workset deleted; the public calendar is still up.",
     "pendingSync": "Pending automatic update",
+    "autoSync": {
+      "label": "Auto-update",
+      "presets": {
+        "off": "Off",
+        "60": "Every 1 min",
+        "300": "Every 5 min",
+        "900": "Every 15 min",
+        "3600": "Every 1 hour"
+      }
+    },
     "publishCta": "Publish a workset",
     "grantsSummary": "{count} granted handles",
     "grantsClosed": "Private group — {count} handles can subscribe",
     "grantsEmpty": "Private group — add handles in Settings so others can subscribe",
     "form": {
-      "help": "Confirm uploads this workset now. Later event changes queue one background update about once a minute. To stop uploading, use Unpublish on the card.",
+      "help": "Confirm uploads this workset now. Later event changes follow the toolbar Auto-update interval (minimum 1 minute). Turn it off to push only with the card refresh icon. Use the trash icon to unpublish.",
       "catalogHelp": "Cover and description are copied from this workset when you upload. Change them on the workset card.",
       "generalWarning": "The General workset includes unfiled events. Confirm nothing private should be published.",
       "slugLabel": "Calendar slug",

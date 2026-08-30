@@ -570,6 +570,24 @@ describe("DashboardViewer", () => {
     expect(container.querySelector('[data-testid="system-task-card-user-or-assistant"]')).toBeNull();
   });
 
+  it("does not hang member task cards under the workset catalog", () => {
+    mockPathname = "/worksets";
+    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Nested Alpha", worksetId: "ws-1" })];
+    taskCatalogState.worksets = [
+      { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
+    expect(container.textContent).not.toContain("Nested Alpha");
+    expect(container.textContent).not.toContain("建立新任務");
+  });
+
   it("filters worksets by name from the toolbar search", () => {
     mockPathname = "/worksets";
     taskCatalogState.tasks = [];
@@ -639,7 +657,7 @@ describe("DashboardViewer", () => {
       ];
     });
 
-    it("groups tasks by workset; omitted worksetId lands on 一般", () => {
+    it("lists workset cards only; task names are not shown on the catalog", () => {
       act(() => {
         root = createRoot(container);
         root.render(<DashboardViewer />);
@@ -648,9 +666,12 @@ describe("DashboardViewer", () => {
       expect(container.textContent).toContain("一般");
       expect(container.textContent).toContain("Ops");
       expect(container.textContent).not.toContain("未歸屬");
-      expect(container.textContent).toContain("Assigned Task");
-      expect(container.textContent).toContain("Unassigned Task");
+      expect(container.textContent).not.toContain("Assigned Task");
+      expect(container.textContent).not.toContain("Unassigned Task");
+      expect(container.querySelector('[data-testid="task-card-t1"]')).toBeNull();
+      expect(container.querySelector('[data-testid="task-card-t2"]')).toBeNull();
       expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
       expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
       expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-create-workset"]')).toBeTruthy();

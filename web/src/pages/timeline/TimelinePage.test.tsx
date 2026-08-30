@@ -214,7 +214,10 @@ function makeUserEvent(): TimelineItem {
   });
 }
 
-function makeContainer(selectedEvent: TimelineItem | null = null) {
+function makeContainer(
+  selectedEvent: TimelineItem | null = null,
+  extra?: { pageError?: string | null; subscribeAvailability?: "ok" | "loggedOut" | "offline" },
+) {
   return {
     sources: {
       selectedSources: null,
@@ -227,12 +230,13 @@ function makeContainer(selectedEvent: TimelineItem | null = null) {
       setEventStatus: vi.fn(),
       focusDay: vi.fn(),
       goToDay: vi.fn(),
+      subscribeAvailability: extra?.subscribeAvailability ?? "ok",
     },
     data: {
       events: [],
       initialLoading: false,
       isRefreshing: false,
-      pageError: null,
+      pageError: extra?.pageError ?? null,
       refreshEvents: mockRefreshEvents,
       taskSpans: [],
       spansInitialLoading: false,
@@ -351,6 +355,22 @@ describe("TimelinePage user-event CRUD", () => {
     expect(mockDismissTimelineEvent).toHaveBeenCalledWith("user", "user-1");
     expect(mockSetSelectedEvent).toHaveBeenCalledWith(null);
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not toast calendar-share unreachable even when catalog still says ok", async () => {
+    mockUseTimelinePageContainer.mockReturnValue(
+      makeContainer(null, { pageError: "calendar share 502", subscribeAvailability: "ok" }),
+    );
+    await renderPage();
+    expect(mockShowToast).not.toHaveBeenCalled();
+  });
+
+  it("still toasts local timeline fetch failures", async () => {
+    mockUseTimelinePageContainer.mockReturnValue(
+      makeContainer(null, { pageError: "local calendar boom" }),
+    );
+    await renderPage();
+    expect(mockShowToast).toHaveBeenCalledWith("local calendar boom", "error");
   });
 
   it("shows dismiss failures instead of swallowing them", async () => {

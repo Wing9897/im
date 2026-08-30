@@ -25,15 +25,7 @@ import {
 } from "./boardSourceFilterOptions";
 import { useBoardSourceFilter } from "./useBoardSourceFilter";
 import { useBoardWidgetPoll } from "./useBoardWidgetPoll";
-import {
-  pruneSubscribedCalendarSelection,
-  resolveSubscribeAvailability,
-} from "../domain/calendarShare/subscribedCalendars";
-import {
-  subscribeFilterCalendarsFromCatalog,
-  useCalendarShareCatalog,
-} from "../domain/calendarShare/useCalendarShareCatalog";
-import { usePersistedSubscribeFilter } from "../domain/calendarShare/usePersistedSubscribeFilter";
+import { useSubscribeFilterState } from "../domain/calendarShare/useSubscribeFilterState";
 
 export function useBoardTimedEventsWidget(options: {
   widgetId: string;
@@ -55,25 +47,12 @@ export function useBoardTimedEventsWidget(options: {
   const taskNameById = useTaskNameById();
   const worksetNameById = useWorksetNameById();
   const generalWorksetLabel = useGeneralWorksetLabel();
-  const catalog = useCalendarShareCatalog();
-  const subscribeCalendars = useMemo(
-    () => subscribeFilterCalendarsFromCatalog(catalog.items),
-    [catalog.items],
-  );
-  const subscribeCatalogKeys = useMemo(
-    () => subscribeCalendars.map((row) => row.key),
-    [subscribeCalendars],
-  );
-  const [selectedSubscribeKeys, setSelectedSubscribeKeys] = usePersistedSubscribeFilter();
-  const subscribeAvailability = resolveSubscribeAvailability({
-    connected: Boolean(catalog.session),
-    catalogUnreachable: catalog.unreachable,
-    eventsError: catalog.error,
-  });
-
-  useEffect(() => {
-    setSelectedSubscribeKeys((prev) => pruneSubscribedCalendarSelection(prev, subscribeCatalogKeys));
-  }, [subscribeCatalogKeys, setSelectedSubscribeKeys]);
+  const {
+    subscribeCalendars,
+    selectedSubscribeKeys,
+    setSelectedSubscribeKeys,
+    subscribeAvailability,
+  } = useSubscribeFilterState(error);
 
   useEffect(
     () =>

@@ -9,6 +9,7 @@ from server.db.database import Database
 from server.domain.llm_providers import ALL_LLM_PROVIDERS, ALLOWED_LLM_PROVIDERS
 from server.domain.web_search_providers import (
     KEYED_WEB_SEARCH_PROVIDERS,
+    WEB_SEARCH_PROVIDER_DEFAULT,
     WEB_SEARCH_SECRET_WIRE_FIELDS,
     empty_web_search_api_keys,
     secret_provider_from_column,
@@ -95,7 +96,7 @@ def _empty_config() -> LlmConfig:
         "ollama_thinking_enabled": False,
         "json_mode": "disabled",
         "web_search_enabled": True,
-        "web_search_provider": "auto",
+        "web_search_provider": WEB_SEARCH_PROVIDER_DEFAULT,
         "web_search_api_keys": empty_web_search_api_keys(),
         "profile_id": "",
     }
@@ -117,7 +118,7 @@ def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
         "ollama_thinking_enabled": bool(int(row.get("thinking_enabled") or 0)),
         "json_mode": str(row.get("json_mode") or "disabled"),
         "web_search_enabled": bool(int(row.get("web_search_enabled") or 0)),
-        "web_search_provider": str(row.get("web_search_provider") or "auto"),
+        "web_search_provider": str(row.get("web_search_provider") or WEB_SEARCH_PROVIDER_DEFAULT),
         "web_search_api_keys": _web_search_api_keys_from_row(row),
         "profile_id": str(row["id"]),
     }
@@ -283,7 +284,7 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
         web_search_enabled = base["web_search_enabled"]
     else:
         web_search_enabled = bool(web_enabled) if not isinstance(web_enabled, str) else parse_bool(web_enabled)
-    web_provider = str(draft.get("webSearchProvider") or base["web_search_provider"] or "auto")
+    web_provider = str(draft.get("webSearchProvider") or base["web_search_provider"] or WEB_SEARCH_PROVIDER_DEFAULT)
     search_keys = dict(base.get("web_search_api_keys") or empty_web_search_api_keys())
     for column, wire in WEB_SEARCH_SECRET_WIRE_FIELDS:
         draft_value = draft.get(wire)

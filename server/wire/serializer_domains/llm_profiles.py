@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_FIELDS
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WEB_SEARCH_SECRET_WIRE_FIELDS
 from server.secrets import MASKED_SECRET, unprotect_text
 
 
@@ -48,7 +48,7 @@ def serialize_llm_profile(
         "thinkingEnabled": bool(int(row.get("thinking_enabled") or 0)),
         "jsonMode": row.get("json_mode") or "disabled",
         "webSearchEnabled": bool(int(row.get("web_search_enabled") or 0)),
-        "webSearchProvider": row.get("web_search_provider") or "auto",
+        "webSearchProvider": row.get("web_search_provider") or WEB_SEARCH_PROVIDER_DEFAULT,
         **search_keys,
         "staffClasses": sorted({str(s.get("staff_class") or "") for s in (staff_rows or ()) if s.get("staff_class")}),
         "staffInstances": staff,

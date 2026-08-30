@@ -217,8 +217,10 @@ async def test_publish_without_sync_now_does_not_push(client, fake_remote):
         },
     )
     assert resp.status_code == 200, resp.text
-    assert "enabled" not in resp.json()
-    assert "autoSync" not in resp.json()
+    body = resp.json()
+    assert "enabled" not in body
+    assert body["autoSync"] is True
+    assert body["autoSyncIntervalSeconds"] == 60
     assert not any(call["path"] == "/me/calendars/Work" for call in fake_remote.calls)
 
 

@@ -162,7 +162,9 @@ describe("SubscriptionsSearchPage", () => {
       ownHandle: "",
     });
     await renderPage();
-    expect(document.querySelector('[data-testid="subscriptions-need-login"]')).toBeTruthy();
+    const statusIcon = document.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon?.getAttribute("data-availability")).toBe("loggedOut");
     expect(document.querySelector('[data-testid="calendar-share-login"]')).toBeNull();
     const add = document.querySelector('[data-testid="subscriptions-add-Alice/Work"]') as HTMLButtonElement;
     expect(add).toBeTruthy();

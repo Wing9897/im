@@ -91,6 +91,7 @@ export function resetTaskCatalogState(tasks: AnalysisTask[] = []) {
 export function taskCatalogModuleMock() {
   return {
     useTaskCatalog: () => taskCatalogState,
+    useOptionalTaskCatalog: () => taskCatalogState,
     useTaskNameById: () => buildTaskNameById(taskCatalogState.tasks),
     useWorksetNameById: () => {
       const map = new Map<string, string>();

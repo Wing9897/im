@@ -30,6 +30,19 @@ def test_disabled_never_injects_or_natives() -> None:
     assert route.native_web_search is None
 
 
+def test_empty_provider_defaults_to_duckduckgo_tool() -> None:
+    route = resolve_web_search_route(
+        web_search_enabled=True,
+        web_search_provider="",
+        llm_provider="gemini",
+        llm_base_url="https://generativelanguage.googleapis.com/v1beta",
+    )
+    assert route.mode == "tool"
+    assert route.tool_provider == "duckduckgo"
+    assert route.inject_web_search_tool is True
+    assert route.native_web_search is None
+
+
 def test_auto_openai_official_uses_native() -> None:
     route = resolve_web_search_route(
         web_search_enabled=True,

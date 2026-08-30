@@ -32,6 +32,7 @@ interface RenderOpts {
   onAddEvent?: () => void;
   showLoadingIndicator?: boolean;
   loadingLabel?: string;
+  subscribeAvailability?: "ok" | "loggedOut" | "offline";
 }
 
 function renderControlBar(opts: RenderOpts = {}) {
@@ -52,6 +53,7 @@ function renderControlBar(opts: RenderOpts = {}) {
     onAddEvent: opts.onAddEvent,
     showLoadingIndicator: opts.showLoadingIndicator,
     loadingLabel: opts.loadingLabel,
+    subscribeAvailability: opts.subscribeAvailability,
   };
   const container = document.createElement("div");
   act(() => {
@@ -250,6 +252,22 @@ describe("TimelineControlBar", () => {
     expect(container.querySelector('[data-testid="board-source-filter"]')).not.toBeNull();
   });
 
+  it("renders calendar-share connection status in the toolbar", () => {
+    const loggedOut = renderControlBar({ subscribeAvailability: "loggedOut" });
+    const loggedOutIcon = loggedOut.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(loggedOutIcon?.getAttribute("data-availability")).toBe("loggedOut");
+
+    const offline = renderControlBar({ subscribeAvailability: "offline" });
+    expect(offline.querySelector('[data-testid="calendar-share-connection-status"]')?.getAttribute("data-availability")).toBe(
+      "offline",
+    );
+
+    const ok = renderControlBar({ subscribeAvailability: "ok" });
+    expect(ok.querySelector('[data-testid="calendar-share-connection-status"]')?.getAttribute("data-availability")).toBe(
+      "ok",
+    );
+  });
+
   it("uses single-row control-bar chrome with toolbar-sized task filter", () => {
     const container = renderControlBar({
       timelineTasks: [{ id: "t1", name: "Task 1" }],
@@ -292,6 +310,22 @@ describe("TimelineControlBar", () => {
     });
     expect(onAddEvent).toHaveBeenCalledTimes(1);
     expect(onAddEvent).toHaveBeenCalledWith();
+  });
+
+  it("keeps calendar-share status in the utilities cluster beside action buttons", () => {
+    const onAddEvent = vi.fn();
+    const container = renderControlBar({ onAddEvent, subscribeAvailability: "loggedOut" });
+    const utilities = container.querySelector('[data-testid="timeline-toolbar-utilities"]');
+    const share = container.querySelector('[data-testid="calendar-share-connection-status"]');
+    const addBtn = container.querySelector<HTMLButtonElement>(
+      `button[aria-label="${i18n.t("timeline:toolbar.addEvent")}"]`,
+    );
+    expect(utilities).not.toBeNull();
+    expect(share?.parentElement).toBe(utilities);
+    expect(addBtn?.parentElement).toBe(utilities);
+    expect(
+      container.querySelector('[data-testid="timeline-toolbar-navigation"]')?.contains(share),
+    ).toBe(false);
   });
 
   it("keeps a reserved loading slot so the spinner does not shift toolbar layout", () => {

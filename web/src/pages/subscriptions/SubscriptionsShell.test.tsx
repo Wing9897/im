@@ -98,7 +98,9 @@ describe("SubscriptionsShell", () => {
     expect(hrefs.indexOf("/subscriptions/published")).toBeLessThan(hrefs.indexOf("/subscriptions/account"));
     expect(hrefs.indexOf("/subscriptions/account")).toBeLessThan(hrefs.indexOf("/subscriptions/search"));
     expect(document.querySelector('[data-testid="subscriptions-identity-panel"]')).toBeNull();
-    expect(document.querySelector('[data-testid="subscriptions-need-login"]')).toBeTruthy();
+    const statusIcon = document.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon?.getAttribute("data-availability")).toBe("loggedOut");
     expect(document.querySelector('[data-testid="subscriptions-mine-empty"]')).toBeTruthy();
   });
 
@@ -106,6 +108,6 @@ describe("SubscriptionsShell", () => {
     await renderShell("/subscriptions/account");
     expect(document.querySelector('[data-testid="subscriptions-identity-panel"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="calendar-share-login"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="subscriptions-need-login"]')).toBeNull();
+    expect(document.querySelector('[data-testid="calendar-share-connection-status"]')).toBeNull();
   });
 });

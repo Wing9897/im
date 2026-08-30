@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final, Literal
 
+from server.analyzer.llm_config import ASSISTANT_SLOT_UNBOUND
 from server.config import get_config
 from server.db.database import Database, TransactionDb
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
@@ -112,7 +113,8 @@ def slot_unbound_message(slot: LlmGlobalSlotId) -> str:
 async def require_slot_profile_id(db: Database, slot: LlmGlobalSlotId) -> str:
     resolved = await get_slot_profile_id(db, slot)
     if not resolved:
-        raise http_error(400, slot_unbound_message(slot), error_code=VALIDATION_ERROR)
+        error_code = ASSISTANT_SLOT_UNBOUND if slot == "assistant" else VALIDATION_ERROR
+        raise http_error(400, slot_unbound_message(slot), error_code=error_code)
     return resolved
 
 

@@ -37,6 +37,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { MONITOR_MODE_KEY, MonitorModeProvider } from "../../context/MonitorModeContext";
 import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import { mockShowToast } from "../../test/context-mocks";
 import { useTimelineData } from "./useTimelineData";
 import type { TimelineDataHookResult } from "./useTimelineData.calendar.testHarness";
 import { TIMELINE_CALENDAR_TEST_RANGE } from "./useTimelineData.calendar.testHarness";
@@ -74,6 +75,7 @@ describe("useTimelineData subscribed merge", () => {
     mockFetchCalendarWindow.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetCalendarShareApiMocks();
+    mockShowToast.mockReset();
     calendarShareApiMocks.fetchCalendarShareSubscriptionEvents.mockResolvedValue([
       {
         id: "Alice/Work:evt-1",
@@ -201,6 +203,27 @@ describe("useTimelineData subscribed merge", () => {
     );
   });
 
+  it("keeps local events when the first subscribed fetch fails", async () => {
+    mockFetchCalendarWindow.mockResolvedValue([
+      {
+        id: "local-1",
+        source: "user",
+        title: "Local meeting",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      },
+    ]);
+    calendarShareApiMocks.fetchCalendarShareSubscriptionEvents.mockRejectedValue(
+      new Error("calendar share 502"),
+    );
+    await render(null);
+    const events = resultRef.current?.events ?? [];
+    expect(events.some((event) => event.id === "local-1")).toBe(true);
+    expect(events.some((event) => event.source === "subscribed:Alice/Work")).toBe(false);
+    expect(resultRef.current?.pageError).toMatch(/502|calendar share/i);
+    expect(mockShowToast).not.toHaveBeenCalled();
+  });
+
   it("surfaces subscribed fetch errors and keeps last good events", async () => {
     await render(null);
     expect((resultRef.current?.events ?? []).some((event) => event.source === "subscribed:Alice/Work")).toBe(true);
@@ -212,6 +235,7 @@ describe("useTimelineData subscribed merge", () => {
     });
     expect((resultRef.current?.events ?? []).some((event) => event.source === "subscribed:Alice/Work")).toBe(true);
     expect(resultRef.current?.pageError).toMatch(/502|calendar share/i);
+    expect(mockShowToast).not.toHaveBeenCalled();
   });
 });
 

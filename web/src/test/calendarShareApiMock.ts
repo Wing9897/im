@@ -51,6 +51,7 @@ export const calendarShareApiMocks = {
   putCalendarSharePublish: vi.fn(),
   unpublishCalendarSharePublish: vi.fn(),
   syncCalendarSharePublish: vi.fn(),
+  patchCalendarSharePublishAutoSync: vi.fn(),
 };
 
 /** Module-shape mock for `vi.mock("<path>/api/calendarShare", ...)`. */
@@ -86,6 +87,8 @@ export function calendarShareApiModuleMock() {
       calendarShareApiMocks.unpublishCalendarSharePublish(...args),
     syncCalendarSharePublish: (...args: unknown[]) =>
       calendarShareApiMocks.syncCalendarSharePublish(...args),
+    patchCalendarSharePublishAutoSync: (...args: unknown[]) =>
+      calendarShareApiMocks.patchCalendarSharePublishAutoSync(...args),
   };
 }
 
@@ -109,4 +112,5 @@ export function resetCalendarShareApiMocks(): void {
   calendarShareApiMocks.putCalendarSharePublish.mockReset();
   calendarShareApiMocks.unpublishCalendarSharePublish.mockReset();
   calendarShareApiMocks.syncCalendarSharePublish.mockReset();
+  calendarShareApiMocks.patchCalendarSharePublishAutoSync.mockReset();
 }

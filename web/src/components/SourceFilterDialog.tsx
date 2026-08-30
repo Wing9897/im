@@ -1,14 +1,13 @@
-import { ListFilter } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ModalDialog } from "./ModalDialog";
 import { SourceFilterTree } from "./SourceFilterTree";
+import { SourceFilterTrigger } from "./SourceFilterTrigger";
 import {
   SubscribeFilterGroup,
   type SubscribeCalendarOption,
-} from "./SubscribeFilterGroup";
-import { Button, PillButton } from "./ui";
+} from "./calendarShare/SubscribeFilterGroup";
+import { Button } from "./ui";
 import type { SourceFilterOption } from "../domain/timeline/sourceFilterOptions";
 import type { SourceFilterSelection } from "../domain/tasks/sourceFilterSelection";
 import {
@@ -16,11 +15,10 @@ import {
   type SourceFilterExpandTask,
   type WorksetFilterOption,
 } from "./useSourceFilterDialogState";
-import {
-  sameSubscribeSelection,
-  toggleSubscribeKey,
-  type SubscribeAvailability,
-  type SubscribedCalendarSelection,
+import { useSourceFilterSubscribeDraft } from "../domain/calendarShare/useSourceFilterSubscribeDraft";
+import type {
+  SubscribeAvailability,
+  SubscribedCalendarSelection,
 } from "../domain/calendarShare/subscribedCalendars";
 
 export type { WorksetFilterOption, SourceFilterExpandTask, SubscribeCalendarOption };
@@ -68,54 +66,27 @@ export function SourceFilterDialog({
     selection,
     onChange,
   });
-  const catalogKeys = subscribeCalendars.map((row) => row.key);
-  const subscribeCatalogReady = catalogKeys.length > 0;
-  const [draftSubscribe, setDraftSubscribe] = useState<SubscribedCalendarSelection>(selectedSubscribeKeys);
-
-  useEffect(() => {
-    if (!state.open) return;
-    setDraftSubscribe(selectedSubscribeKeys);
-  }, [selectedSubscribeKeys, state.open]);
-
-  const subscribeFiltering = selectedSubscribeKeys !== null && subscribeCatalogReady;
-  const isFiltering = state.isFiltering || subscribeFiltering;
-  const filterBadgeCount =
-    (state.isFiltering ? state.filterBadgeCount : 0) +
-    (selectedSubscribeKeys === null || !subscribeCatalogReady ? 0 : selectedSubscribeKeys.length);
-  const subscribeDirty = !sameSubscribeSelection(draftSubscribe, selectedSubscribeKeys);
-  const applyDisabled = state.applyDisabled && !subscribeDirty;
-
-  const apply = () => {
-    state.apply();
-    if (subscribeDirty) {
-      onChangeSubscribeKeys?.(draftSubscribe);
-    }
-  };
+  const subscribe = useSourceFilterSubscribeDraft({
+    open: state.open,
+    subscribeCalendars,
+    selectedSubscribeKeys,
+    onChangeSubscribeKeys,
+    localIsFiltering: state.isFiltering,
+    localFilterBadgeCount: state.filterBadgeCount,
+    localApplyDisabled: state.applyDisabled,
+    applyLocal: state.apply,
+  });
 
   return (
     <>
-      <PillButton
-        active={state.open || isFiltering}
-        aria-expanded={state.open}
-        aria-haspopup="dialog"
-        aria-pressed={isFiltering}
-        aria-label={t("board:shell.sourceFilterSelectAria", { prefix })}
-        title={t("board:shell.sourceFilterSelect")}
-        onClick={() => state.setOpen(true)}
-        className={variant === "toolbar" ? "relative" : "relative size-8 p-0"}
-        data-testid="board-source-filter"
-      >
-        <ListFilter size={16} strokeWidth={2.5} aria-hidden="true" />
-        {isFiltering ? (
-          <span
-            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-0.5 text-[10px] font-semibold text-white"
-            aria-hidden="true"
-            data-testid="board-source-filter-count"
-          >
-            {filterBadgeCount}
-          </span>
-        ) : null}
-      </PillButton>
+      <SourceFilterTrigger
+        open={state.open}
+        isFiltering={subscribe.isFiltering}
+        filterBadgeCount={subscribe.filterBadgeCount}
+        onOpen={() => state.setOpen(true)}
+        prefix={prefix}
+        variant={variant}
+      />
 
       <ModalDialog
         open={state.open}
@@ -138,8 +109,8 @@ export function SourceFilterDialog({
             <Button
               type="button"
               variant="primary"
-              onClick={apply}
-              disabled={applyDisabled}
+              onClick={subscribe.apply}
+              disabled={subscribe.applyDisabled}
               data-testid="source-filter-apply"
             >
               {t("workset:apply")}
@@ -159,17 +130,15 @@ export function SourceFilterDialog({
           onToggleTask={state.toggleTask}
           onToggleWorkset={state.toggleWorkset}
         />
-        {subscribeCatalogReady ? (
+        {subscribe.subscribeCatalogReady ? (
           <SubscribeFilterGroup
             variant="compact"
             calendars={subscribeCalendars}
-            draft={draftSubscribe}
+            draft={subscribe.draftSubscribe}
             query={state.query}
-            onToggleKey={(key) =>
-              setDraftSubscribe(toggleSubscribeKey(draftSubscribe, key, catalogKeys))
-            }
-            onSelectAll={() => setDraftSubscribe(null)}
-            onClearAll={() => setDraftSubscribe([])}
+            onToggleKey={subscribe.toggleKey}
+            onSelectAll={subscribe.selectAllSubscribe}
+            onClearAll={subscribe.clearAllSubscribe}
             availability={subscribeAvailability}
           />
         ) : null}

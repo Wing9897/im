@@ -10,7 +10,7 @@ from server.api.schemas.web_search_fields import web_search_secret_field_definit
 from server.domain.json_modes import JsonModeWire
 from server.domain.llm_providers import LlmProviderWire
 from server.domain.llm_staff_classes import LlmStaffClass
-from server.domain.web_search_providers import WebSearchProviderWire
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WebSearchProviderWire
 
 #: Task-mode classes only on profile upsert (global slots are separate).
 StaffClassWire = LlmStaffClass
@@ -27,7 +27,7 @@ class _LlmProfileUpsertCore(BaseModel):
     thinkingEnabled: bool = False
     jsonMode: JsonModeWire = "disabled"
     webSearchEnabled: bool = True
-    webSearchProvider: WebSearchProviderWire = "auto"
+    webSearchProvider: WebSearchProviderWire = WEB_SEARCH_PROVIDER_DEFAULT
 
 
 if TYPE_CHECKING:

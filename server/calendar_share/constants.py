@@ -13,6 +13,8 @@ KEY_REFRESH_TOKEN: Final = "calendar_share_refresh_token"
 KEY_TIMEZONE: Final = "calendar_share_timezone"
 KEY_TIMEZONE_PENDING: Final = "calendar_share_timezone_pending"
 KEY_TIMEZONE_LAST_PUBLIC: Final = "calendar_share_timezone_last_public"
+KEY_AUTO_SYNC: Final = "calendar_share_auto_sync"
+KEY_AUTO_SYNC_INTERVAL: Final = "calendar_share_auto_sync_interval_seconds"
 
 LISTING_PRIVATE_GROUP: Final = "private_group"
 LISTING_PUBLIC: Final = "public"

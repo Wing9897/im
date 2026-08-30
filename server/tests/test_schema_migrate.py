@@ -28,8 +28,8 @@ from server.tests.schema_fixtures import (
 
 def test_production_registry_is_empty() -> None:
     assert SCHEMA_MIGRATIONS == ()
-    assert CURRENT_SCHEMA_VERSION == 5
-    assert SCHEMA_SEMVER == "1.4.0"
+    assert CURRENT_SCHEMA_VERSION == 6
+    assert SCHEMA_SEMVER == "1.5.0"
 
 
 def _backup_files(directory: Path) -> list[Path]:

@@ -38,6 +38,8 @@ const INTERNAL_CONFIG_KEYS = new Set([
   "calendar_share_timezone",
   "calendar_share_timezone_pending",
   "calendar_share_timezone_last_public",
+  "calendar_share_auto_sync",
+  "calendar_share_auto_sync_interval_seconds",
 ]);
 
 /** Retired CONFIG_DEFAULTS keys that must stay absent (mirror server _RETIRED_CONFIG_KEYS). */

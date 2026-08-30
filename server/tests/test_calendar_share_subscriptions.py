@@ -92,6 +92,22 @@ async def test_search_calendars_uses_session_when_connected(client, fake_remote)
     assert search_call["access_token"] == "acc-1"
 
 
+async def test_search_calendars_unreachable_uses_remote_error_code(client, monkeypatch):
+    from server.calendar_share.remote_errors import CalendarShareRemoteError
+
+    async def boom(**_kwargs):
+        raise CalendarShareRemoteError(
+            502,
+            "Calendar share server unreachable",
+            error_code="CALENDAR_SHARE_UNREACHABLE",
+        )
+
+    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", boom)
+    resp = await client.get("/api/v1/calendar-share/search", params={"q": "Demo"})
+    assert resp.status_code == 502
+    assert resp.json()["error_code"] == "CALENDAR_SHARE_UNREACHABLE"
+
+
 async def test_search_calendars_maps_remote_404_to_empty(client, fake_remote):
     fake_remote.search_status = 404
     fake_remote.search_payload = {"message": "Not found"}

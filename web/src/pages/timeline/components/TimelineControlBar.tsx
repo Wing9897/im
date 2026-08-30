@@ -1,6 +1,7 @@
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { CalendarShareConnectionStatusIcon } from "../../../components/calendarShare/CalendarShareConnectionStatusIcon";
 import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
@@ -145,64 +146,75 @@ export function TimelineControlBar({
         ))}
       </div>
 
-      <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-1">
-        {/* Always reserve the spinner slot so mount/unmount does not shift toolbar controls. */}
-        <span
-          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center${
-            showLoadingIndicator ? "" : " invisible"
-          }`}
-          data-testid="timeline-toolbar-loading"
-          aria-hidden={!showLoadingIndicator}
+      <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-2">
+        <div
+          className="flex shrink-0 flex-nowrap items-center gap-1"
+          data-testid="timeline-toolbar-utilities"
         >
-          {showLoadingIndicator ? (
-            <RefreshIndicator label={loadingLabel ?? t("view.refreshing")} />
+          {/* Always reserve the spinner slot so mount/unmount does not shift toolbar controls. */}
+          <span
+            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center${
+              showLoadingIndicator ? "" : " invisible"
+            }`}
+            data-testid="timeline-toolbar-loading"
+            aria-hidden={!showLoadingIndicator}
+          >
+            {showLoadingIndicator ? (
+              <RefreshIndicator label={loadingLabel ?? t("view.refreshing")} />
+            ) : null}
+          </span>
+          <CalendarShareConnectionStatusIcon availability={subscribeAvailability} />
+          {onAddEvent ? (
+            <PillButton
+              type="button"
+              onClick={() => onAddEvent()}
+              title={t("toolbar.addEvent")}
+              aria-label={t("toolbar.addEvent")}
+            >
+              <CalendarPlus size={16} strokeWidth={2.5} aria-hidden="true" />
+            </PillButton>
           ) : null}
-        </span>
-        {onAddEvent ? (
+          {children}
           <PillButton
-            type="button"
-            onClick={() => onAddEvent()}
-            title={t("toolbar.addEvent")}
-            aria-label={t("toolbar.addEvent")}
+            onClick={() => handleScaleClick(timeScale)}
+            aria-label={t("toolbar.todayAria")}
+            title={t("toolbar.todayTitle")}
           >
-            <CalendarPlus size={16} strokeWidth={2.5} aria-hidden="true" />
+            <CalendarDays size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>
-        ) : null}
-        {children}
-        <PillButton
-          onClick={() => handleScaleClick(timeScale)}
-          aria-label={t("toolbar.todayAria")}
-          title={t("toolbar.todayTitle")}
+        </div>
+        <div
+          className="flex shrink-0 flex-nowrap items-center gap-1"
+          data-testid="timeline-toolbar-navigation"
         >
-          <CalendarDays size={16} strokeWidth={2.5} aria-hidden="true" />
-        </PillButton>
-        <PillButton onClick={() => onMoveCursor(-1)} aria-label={t("toolbar.prevPeriodAria")}>
-          <ChevronLeft size={16} strokeWidth={2.5} aria-hidden="true" />
-        </PillButton>
-        <span className="min-w-[7.5rem] select-none px-1 text-center text-sm font-medium tabular-nums text-text-secondary">
-          {visibleRangeLabel}
-        </span>
-        <PillButton onClick={() => onMoveCursor(1)} aria-label={t("toolbar.nextPeriodAria")}>
-          <ChevronRight size={16} strokeWidth={2.5} aria-hidden="true" />
-        </PillButton>
-        {onToggleFullscreen ? (
-          <PillButton
-            type="button"
-            onClick={onToggleFullscreen}
-            aria-label={
-              isFullscreen ? t("toolbar.exitFullscreen") : t("toolbar.enterFullscreen")
-            }
-            title={isFullscreen ? t("toolbar.exitFullscreen") : t("toolbar.enterFullscreen")}
-            aria-pressed={isFullscreen}
-            data-testid="timeline-fullscreen-toggle"
-          >
-            {isFullscreen ? (
-              <Minimize2 size={16} strokeWidth={2.5} aria-hidden="true" />
-            ) : (
-              <Maximize2 size={16} strokeWidth={2.5} aria-hidden="true" />
-            )}
+          <PillButton onClick={() => onMoveCursor(-1)} aria-label={t("toolbar.prevPeriodAria")}>
+            <ChevronLeft size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>
-        ) : null}
+          <span className="min-w-[7.5rem] select-none px-1 text-center text-sm font-medium tabular-nums text-text-secondary">
+            {visibleRangeLabel}
+          </span>
+          <PillButton onClick={() => onMoveCursor(1)} aria-label={t("toolbar.nextPeriodAria")}>
+            <ChevronRight size={16} strokeWidth={2.5} aria-hidden="true" />
+          </PillButton>
+          {onToggleFullscreen ? (
+            <PillButton
+              type="button"
+              onClick={onToggleFullscreen}
+              aria-label={
+                isFullscreen ? t("toolbar.exitFullscreen") : t("toolbar.enterFullscreen")
+              }
+              title={isFullscreen ? t("toolbar.exitFullscreen") : t("toolbar.enterFullscreen")}
+              aria-pressed={isFullscreen}
+              data-testid="timeline-fullscreen-toggle"
+            >
+              {isFullscreen ? (
+                <Minimize2 size={16} strokeWidth={2.5} aria-hidden="true" />
+              ) : (
+                <Maximize2 size={16} strokeWidth={2.5} aria-hidden="true" />
+              )}
+            </PillButton>
+          ) : null}
+        </div>
       </div>
     </OpsControlBar>
   );

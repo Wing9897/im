@@ -13,7 +13,7 @@ vi.mock("../api/tasks", () => ({
   listTaskTemplatePresets: vi.fn().mockResolvedValue([]),
 }));
 
-import { TaskCatalogProvider, useTaskCatalog } from "./TaskCatalogContext";
+import { TaskCatalogProvider, useOptionalTaskCatalog, useTaskCatalog } from "./TaskCatalogContext";
 
 let latestState: ReturnType<typeof useTaskCatalog> | null = null;
 
@@ -211,6 +211,28 @@ describe("TaskCatalogContext", () => {
       "event-1",
     ]);
 
+    cleanupHarness(root, container);
+  });
+
+  it("useOptionalTaskCatalog is null outside the provider and populated inside", async () => {
+    mockListTasks.mockResolvedValueOnce([]);
+    let optional: ReturnType<typeof useOptionalTaskCatalog> = null;
+    function OptionalProbe() {
+      optional = useOptionalTaskCatalog();
+      return null;
+    }
+    const outside = document.createElement("div");
+    document.body.appendChild(outside);
+    const outsideRoot = createRoot(outside);
+    act(() => {
+      outsideRoot.render(<OptionalProbe />);
+    });
+    expect(optional).toBeNull();
+    cleanupHarness(outsideRoot, outside);
+
+    const { container, root } = renderHarness();
+    await flushAsyncWork();
+    expect(latestState?.worksets).toEqual([]);
     cleanupHarness(root, container);
   });
 });

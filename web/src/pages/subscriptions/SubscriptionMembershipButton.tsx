@@ -30,7 +30,7 @@ export function SubscriptionMembershipButton({
       <Button
         type="button"
         variant="secondary"
-        size="icon"
+        size="sm"
         loading={busy}
         disabled={!canMutate || actionsLocked}
         aria-label={label}
@@ -38,7 +38,8 @@ export function SubscriptionMembershipButton({
         onClick={onUnsubscribe}
         data-testid={`subscriptions-unsubscribe-${identityKey}`}
       >
-        <UserMinus size={16} strokeWidth={2.5} aria-hidden="true" />
+        {!busy ? <UserMinus size={16} strokeWidth={2.5} aria-hidden="true" /> : null}
+        <span>{label}</span>
       </Button>
     );
   }
@@ -48,7 +49,7 @@ export function SubscriptionMembershipButton({
     <Button
       type="button"
       variant="secondary"
-      size="icon"
+      size="sm"
       loading={busy}
       disabled={!canMutate || actionsLocked}
       aria-label={label}
@@ -56,7 +57,8 @@ export function SubscriptionMembershipButton({
       onClick={onSubscribe}
       data-testid={`subscriptions-add-${identityKey}`}
     >
-      <UserPlus size={16} strokeWidth={2.5} aria-hidden="true" />
+      {!busy ? <UserPlus size={16} strokeWidth={2.5} aria-hidden="true" /> : null}
+      <span>{label}</span>
     </Button>
   );
 }

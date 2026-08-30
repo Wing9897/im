@@ -55,6 +55,25 @@ async def test_invalid_analysis_time_range_returns_422(client):
     assert "analysisTimeRange" in body["message"]
 
 
+async def test_missing_task_mutations_return_not_found(client):
+    missing = "task-does-not-exist"
+    body = {
+        "name": "ghost",
+        "promptTemplate": "x",
+        "analysisMode": "intel_event",
+        "analysisTimeRange": "1d",
+        "channelIds": [],
+        "scheduleRrule": "FREQ=HOURLY",
+    }
+    update = await client.put(f"/api/v1/tasks/{missing}", json=body)
+    patch = await client.patch(f"/api/v1/tasks/{missing}", json={"emoji": "📌"})
+    delete = await client.delete(f"/api/v1/tasks/{missing}")
+    toggle = await client.patch(f"/api/v1/tasks/{missing}/active")
+    for resp in (update, patch, delete, toggle):
+        assert resp.status_code == 404
+        assert resp.json()["error_code"] == "NOT_FOUND"
+
+
 async def test_create_update_delete_task_roundtrip(client):
     create = await client.post(
         "/api/v1/tasks",
