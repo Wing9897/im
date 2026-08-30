@@ -1,8 +1,8 @@
-"""Persist pendingSync on already-published workset mappings.
+"""Persist pendingSync on already-published workset mappings when household auto-sync is on.
 
-Local calendar writes set the flag; the 60s autosync scan is the only pusher.
-Unpublished worksets (no live public replica) are ignored so we never
-auto-create a remote calendar.
+Local calendar writes set the flag only when household auto-sync is enabled; the
+background autosync loop is the pusher. Unpublished worksets (no live public replica)
+are ignored so we never auto-create a remote calendar.
 
 RRULE occurrence dismiss does not set pendingSync: the public snapshot is the
 unexpanded ``series[]`` (no exdate upload). Do not treat that as a bug.

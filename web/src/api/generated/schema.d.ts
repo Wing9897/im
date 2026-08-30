@@ -1740,6 +1740,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar-share/publish/auto-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Publish Auto Sync
+         * @description Household-wide auto-update for every published workset.
+         */
+        patch: operations["patch_publish_auto_sync_api_v1_calendar_share_publish_auto_sync_patch"];
+        trace?: never;
+    };
     "/api/v1/calendar-share/publish/{workset_id}": {
         parameters: {
             query?: never;
@@ -3236,6 +3256,13 @@ export interface components {
              */
             avatar: string;
         };
+        /** CalendarSharePublishAutoSyncBody */
+        CalendarSharePublishAutoSyncBody: {
+            /** Autosync */
+            autoSync?: boolean | null;
+            /** Autosyncintervalseconds */
+            autoSyncIntervalSeconds?: number | null;
+        };
         /** CalendarSharePublishBody */
         CalendarSharePublishBody: {
             /** Slug */
@@ -3281,6 +3308,16 @@ export interface components {
              */
             pendingSync: boolean;
             /**
+             * Autosync
+             * @default true
+             */
+            autoSync: boolean;
+            /**
+             * Autosyncintervalseconds
+             * @default 60
+             */
+            autoSyncIntervalSeconds: number;
+            /**
              * Issystemworkset
              * @default false
              */
@@ -3310,6 +3347,21 @@ export interface components {
         CalendarSharePublishListResponse: {
             /** Items */
             items?: components["schemas"]["CalendarSharePublishListItemResponse"][];
+            /**
+             * Autosync
+             * @default true
+             */
+            autoSync: boolean;
+            /**
+             * Autosyncintervalseconds
+             * @default 60
+             */
+            autoSyncIntervalSeconds: number;
+            /**
+             * Autosyncintervalfloorseconds
+             * @default 60
+             */
+            autoSyncIntervalFloorSeconds: number;
         };
         /** CalendarSharePublishStateResponse */
         CalendarSharePublishStateResponse: {
@@ -3334,6 +3386,16 @@ export interface components {
              * @default false
              */
             pendingSync: boolean;
+            /**
+             * Autosync
+             * @default true
+             */
+            autoSync: boolean;
+            /**
+             * Autosyncintervalseconds
+             * @default 60
+             */
+            autoSyncIntervalSeconds: number;
             /**
              * Issystemworkset
              * @default false
@@ -4275,7 +4337,7 @@ export interface components {
             webSearchEnabled: boolean;
             /**
              * Websearchprovider
-             * @default auto
+             * @default duckduckgo
              */
             webSearchProvider: ("auto" | "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper") | string;
             /**
@@ -4347,7 +4409,7 @@ export interface components {
             webSearchEnabled: boolean;
             /**
              * Websearchprovider
-             * @default auto
+             * @default duckduckgo
              * @enum {string}
              */
             webSearchProvider: "auto" | "duckduckgo" | "brave" | "tavily" | "perplexity" | "serper";
@@ -10188,6 +10250,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarSharePublishListResponse"];
+                };
+            };
+        };
+    };
+    patch_publish_auto_sync_api_v1_calendar_share_publish_auto_sync_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarSharePublishAutoSyncBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSharePublishListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

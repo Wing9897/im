@@ -3,15 +3,15 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { SourceFilterColumnShell, SourceFilterColumnActions, SourceFilterSectionHeading } from "./SourceFilterTree";
-import { IdentityAvatar } from "./user/IdentityAvatar";
+import { SourceFilterColumnShell, SourceFilterColumnActions, SourceFilterSectionHeading } from "../SourceFilterTree";
+import { IdentityAvatar } from "../user/IdentityAvatar";
 import {
   SUBSCRIBE_UNAVAILABLE_CLASS,
   matchesCalendarShareFilter,
   type SubscribeAvailability,
   type SubscribeCalendarIdentity,
   type SubscribedCalendarSelection,
-} from "../domain/calendarShare/subscribedCalendars";
+} from "../../domain/calendarShare/subscribedCalendars";
 
 export type SubscribeCalendarOption = SubscribeCalendarIdentity;
 

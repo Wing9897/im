@@ -2,7 +2,7 @@
 
 Prefix: ``[demo]`` on titles so they are easy to spot and delete later.
 Writes the live app SQLite (Windows: ``%APPDATA%\\Intelligence Monitor\\intelligence_monitor.db``).
-Requires current stamp 5 (``SCHEMA_SEMVER`` ``1.4.0``); stamp 1–4 files
+Requires current stamp 6 (``SCHEMA_SEMVER`` ``1.5.0``); stamp 1–5 files
 reject (backup then reset). Reset first if the file is a future or corrupt stamp.
 
 Covers:

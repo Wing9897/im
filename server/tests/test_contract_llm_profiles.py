@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES
-from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_NAMES
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WEB_SEARCH_SECRET_WIRE_NAMES
 from server.secrets import MASKED_SECRET
 from server.tests.contract_helpers import assert_keys
 from server.tests.seed import LLM_PROFILE_INSERT_SQL
@@ -58,6 +58,21 @@ async def test_list_profiles_includes_seeded_profile_and_task_staff(client):
         assert row["staffClass"] != "assistant"
     classes = {row["staffClass"] for row in staff if row["profileId"] == DEFAULT_LLM_PROFILE_ID}
     assert classes == set(LLM_STAFF_CLASSES)
+
+
+async def test_profile_create_defaults_web_search_provider_to_duckduckgo(client):
+    create = await client.post(
+        "/api/v1/llm/profiles",
+        json={
+            "name": "Defaults pack",
+            "provider": "ollama",
+            "baseUrl": "http://localhost:11434",
+            "model": "llama-test",
+            "staffClasses": ["agent"],
+        },
+    )
+    assert create.status_code == 201
+    assert create.json()["webSearchProvider"] == WEB_SEARCH_PROVIDER_DEFAULT
 
 
 async def test_create_patch_copy_profile_roundtrip(client, app):

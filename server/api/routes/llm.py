@@ -21,7 +21,7 @@ from server.api.schemas.responses.llm_profiles import (
 )
 from server.db.database import TransactionDb
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES, LLM_TASK_STAFF_CLASSES
-from server.domain.web_search_providers import WEB_SEARCH_SECRET_WIRE_FIELDS
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WEB_SEARCH_SECRET_WIRE_FIELDS
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.llm_global_slots import (
     LLM_GLOBAL_SLOTS,
@@ -247,7 +247,7 @@ async def copy_profile(
             thinking_enabled=int(existing.get("thinking_enabled") or 0),
             json_mode=str(existing.get("json_mode") or "disabled"),
             web_search_enabled=int(existing.get("web_search_enabled") or 0),
-            web_search_provider=str(existing.get("web_search_provider") or "auto"),
+            web_search_provider=str(existing.get("web_search_provider") or WEB_SEARCH_PROVIDER_DEFAULT),
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=new_profile_id, staff_classes=staff_classes, now=now)

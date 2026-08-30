@@ -1,13 +1,13 @@
 /**
  * DashboardViewer task list rendering — the /tasks flat grid and the
- * /worksets catalog (workset cards plus member tasks).
+ * /worksets catalog (workset cards only).
  */
 
 import type { CSSProperties } from "react";
 import type { TFunction } from "i18next";
 import type { NavigateFunction } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { CreateCard, sectionTitleClass } from "../../../components/ui";
+import { CreateCard } from "../../../components/ui";
 import { TaskCard } from "../../../components/TaskCard";
 import { TaskGrid } from "../../../components/TaskGrid";
 import { WorksetSummaryCard } from "../../../components/WorksetSummaryCard";
@@ -129,10 +129,7 @@ export interface DashboardWorksetGroup {
   tasks: AnalysisTask[];
 }
 
-/**
- * Workset-first layout: each ownership workset (incl. builtin「一般」) is a card;
- * analysis tasks belonging to that workset appear underneath. No system-task cards.
- */
+/** Workset catalog layout: one card per ownership workset (incl. builtin「一般」). */
 export function DashboardByWorksetList({
   groups,
   t,
@@ -141,8 +138,7 @@ export function DashboardByWorksetList({
   onRenameWorkset,
   onDeleteWorkset,
   onCreateWorkset,
-  ...actions
-}: TaskListActions & {
+}: {
   groups: DashboardWorksetGroup[];
   t: TFunction;
   itemCountByWorkset?: Map<string, number>;
@@ -177,21 +173,6 @@ export function DashboardByWorksetList({
           <CreateWorksetTile t={t} onCreateWorkset={onCreateWorkset} />
         </TaskGrid>
       </section>
-
-      {groups.map((group) =>
-        group.tasks.length > 0 ? (
-          <section key={`tasks-${group.key}`} aria-label={group.title}>
-            <h2 className={`${sectionTitleClass} mb-sm`}>
-              {t("workset:memberTasksTitle", { name: group.title })}
-            </h2>
-            <TaskGrid>
-              {group.tasks.map((task, index) => (
-                <TaskCardTile key={task.id} task={task} index={index} {...actions} />
-              ))}
-            </TaskGrid>
-          </section>
-        ) : null,
-      )}
     </div>
   );
 }

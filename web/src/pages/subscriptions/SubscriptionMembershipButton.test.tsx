@@ -10,7 +10,7 @@ describe("SubscriptionMembershipButton", () => {
     await ensureZhHantLocale();
   });
 
-  it("renders subscribe as secondary icon button with aria-label", () => {
+  it("renders subscribe as secondary icon+text button with aria-label", () => {
     const html = renderToStaticMarkup(
       wrapWithI18n(
         createElement(SubscriptionMembershipButton, {
@@ -27,10 +27,10 @@ describe("SubscriptionMembershipButton", () => {
     expect(html).toContain('data-testid="subscriptions-add-Alice/Work"');
     expect(html).toContain('aria-label="訂閱"');
     expect(html).toContain('title="訂閱"');
-    expect(html).not.toContain(">訂閱<");
+    expect(html).toContain(">訂閱<");
   });
 
-  it("renders unsubscribe as secondary icon button with aria-label", () => {
+  it("renders unsubscribe as secondary icon+text button with aria-label", () => {
     const html = renderToStaticMarkup(
       wrapWithI18n(
         createElement(SubscriptionMembershipButton, {
@@ -47,6 +47,6 @@ describe("SubscriptionMembershipButton", () => {
     expect(html).toContain('data-testid="subscriptions-unsubscribe-DemoPub/Open"');
     expect(html).toContain('aria-label="移除"');
     expect(html).toContain('title="移除"');
-    expect(html).not.toContain(">移除<");
+    expect(html).toContain(">移除<");
   });
 });

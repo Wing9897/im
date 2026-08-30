@@ -316,6 +316,27 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 
+  it("does not toast calendar-share unreachable errors", () => {
+    const { container } = renderViewSwitch({
+      initialLoading: false,
+      events: [],
+      error: "calendar share 502",
+    });
+
+    expect(mockShowToast).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
+  });
+
+  it("does not toast failed-to-fetch subscribe disconnect", () => {
+    renderViewSwitch({
+      initialLoading: false,
+      events: [],
+      error: "Failed to fetch",
+    });
+
+    expect(mockShowToast).not.toHaveBeenCalled();
+  });
+
   it("keeps month calendar grid visible when there are no events", () => {
     const { container } = renderViewSwitch({
       events: [],

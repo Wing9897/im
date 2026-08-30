@@ -1,4 +1,4 @@
-import { createContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { Workset } from "../api/worksets";
 import type { AnalysisTask } from "../types";
@@ -6,7 +6,7 @@ import { buildTaskNameById } from "../domain/timeline/userEvents";
 import { useContextWithFallback } from "./useContextWithFallback";
 import { useTaskCatalogLoader } from "./useTaskCatalogLoader";
 
-interface TaskCatalogContextValue {
+export interface TaskCatalogContextValue {
   tasks: AnalysisTask[];
   tasksLoading: boolean;
   taskLoadError: string | null;
@@ -38,6 +38,11 @@ export function useTaskCatalog(): TaskCatalogContextValue {
     "useTaskCatalog",
     "TaskCatalogProvider",
   );
+}
+
+/** Catalog worksets/tasks when a provider is mounted; `null` outside the tree. */
+export function useOptionalTaskCatalog(): TaskCatalogContextValue | null {
+  return useContext(TaskCatalogContext);
 }
 
 /**

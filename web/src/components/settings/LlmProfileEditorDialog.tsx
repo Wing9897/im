@@ -18,6 +18,7 @@ import {
   keyedWebSearchApiKeyField,
   keyedWebSearchApiKeysFromFields,
   normalizeWebSearchProviderSetting,
+  DEFAULT_WEB_SEARCH_PROVIDER,
   type KeyedWebSearchApiKeyField,
 } from "../../domain/settings/assistantWebSearchRoute";
 import {
@@ -64,7 +65,7 @@ export function emptyProfileDraft(): LlmProfileDraft {
     thinkingEnabled: false,
     jsonMode: "disabled",
     webSearchEnabled: true,
-    webSearchProvider: "auto",
+    webSearchProvider: DEFAULT_WEB_SEARCH_PROVIDER,
     ...emptyKeyedWebSearchApiKeyFields(),
     staffClasses: [],
   };

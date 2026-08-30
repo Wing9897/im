@@ -1,5 +1,8 @@
 import type { LlmProvider } from "../../types";
 
+/** Must match server ``WEB_SEARCH_PROVIDER_DEFAULT`` / OpenAPI ``webSearchProvider``. */
+export const DEFAULT_WEB_SEARCH_PROVIDER: WebSearchToolProvider = "duckduckgo";
+
 export const ALL_WEB_SEARCH_PROVIDERS = [
   "auto",
   "duckduckgo",
@@ -115,7 +118,7 @@ export function normalizeWebSearchProviderSetting(value: string | undefined): We
   if (trimmed === "auto" || isWebSearchToolProvider(trimmed)) {
     return trimmed;
   }
-  return "auto";
+  return DEFAULT_WEB_SEARCH_PROVIDER;
 }
 
 function hostnameOf(url: string): string {

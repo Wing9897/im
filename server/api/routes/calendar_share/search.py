@@ -14,10 +14,10 @@ from server.calendar_share.rate_limit import enforce_calendar_share_rate_limit
 from server.calendar_share.remote import (
     CalendarShareRemoteError,
     authorized_request_raw,
+    raise_mapped_remote_error,
     raise_remote_status,
 )
 from server.calendar_share.store import get_base_url, session_connected
-from server.errors import http_error
 from server.wire.serializers import serialize_catalog_wire_fields
 
 router = APIRouter(tags=["calendar-share"])
@@ -88,5 +88,5 @@ async def search_calendars(
             query=query,
         )
     except CalendarShareRemoteError as exc:
-        raise http_error(502, exc.message) from exc
+        raise_mapped_remote_error(exc)
     return _search_response(status, payload)

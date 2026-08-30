@@ -18,6 +18,7 @@ import {
   subscribedEventVisible,
   type SubscribedCalendarSelection,
 } from "../../domain/calendarShare/subscribedCalendars";
+import { toErrorMessage } from "../../utils/errors";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useTimelineCalendarRefresh } from "../../hooks/useTimelineCalendarRefresh";
 import type { AnalysisTask, TimelineItem, TaskActivitySpan } from "../../types";
@@ -70,6 +71,11 @@ interface UseTimelineDataReturn {
   timelineEventsError: string | null;
   retryTimelineEvents: () => void;
 }
+
+type TimelineFetchResult = {
+  events: TimelineItem[];
+  shareError: string | null;
+};
 
 type TimelineFetchKey = {
   startIso: string;
@@ -153,8 +159,10 @@ export function useTimelineData({
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
 
+  const lastSubscribedRef = useRef<TimelineItem[]>([]);
+
   const fetcher = useCallback(
-    async (key: TimelineFetchKey) => {
+    async (key: TimelineFetchKey): Promise<TimelineFetchResult> => {
       const localEmpty =
         key.selectedSources !== null &&
         key.selectedSources.taskIds.length === 0 &&
@@ -177,16 +185,25 @@ export function useTimelineData({
             worksetNameById,
           });
       let subscribed: TimelineItem[] = [];
+      let shareError: string | null = null;
       const visibleKeys = resolvedSubscribeKeys(key.selectedSubscribeKeys, key.subscribeCatalogKeys);
       if (visibleKeys.length > 0) {
-        const remote = await fetchCalendarShareSubscriptionEvents(key.startIso, key.endIso);
-        subscribed = applySubscribedDismissals(
-          projectSubscribedTimelineItems(remote).filter((event) =>
-            subscribedEventVisible(event.source, key.selectedSubscribeKeys, key.subscribeCatalogKeys),
-          ),
-        );
+        try {
+          const remote = await fetchCalendarShareSubscriptionEvents(key.startIso, key.endIso);
+          subscribed = applySubscribedDismissals(
+            projectSubscribedTimelineItems(remote).filter((event) =>
+              subscribedEventVisible(event.source, key.selectedSubscribeKeys, key.subscribeCatalogKeys),
+            ),
+          );
+          lastSubscribedRef.current = subscribed;
+        } catch (error) {
+          shareError = toErrorMessage(error);
+          subscribed = lastSubscribedRef.current;
+        }
+      } else {
+        lastSubscribedRef.current = [];
       }
-      return [...local, ...subscribed];
+      return { events: [...local, ...subscribed], shareError };
     },
     [taskNameById, generalWorksetLabel, worksetNameById],
   );
@@ -249,8 +266,8 @@ export function useTimelineData({
     refreshTasks,
   });
 
-  const events = useMemo(() => data ?? EMPTY_EVENTS, [data]);
-  const pageError = error ?? taskLoadError;
+  const events = useMemo(() => data?.events ?? EMPTY_EVENTS, [data]);
+  const pageError = data?.shareError ?? error ?? taskLoadError;
 
   const ganttData = useGanttData({ viewMode });
 

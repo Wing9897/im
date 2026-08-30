@@ -230,7 +230,9 @@ describe("SubscriptionsMinePage", () => {
     await act(async () => {
       await invalidateCalendarShareCatalog();
     });
-    expect(mount.textContent).toContain("Calendar share is unreachable");
+    const statusIcon = document.querySelector('[data-testid="calendar-share-connection-status"]');
+    expect(statusIcon?.getAttribute("data-availability")).toBe("offline");
+    expect(statusIcon?.getAttribute("title")).toMatch(/unreachable/i);
     const list = document.querySelector('[data-testid="subscriptions-mine-list"]');
     expect(list?.className).toContain("opacity-50");
     expect(

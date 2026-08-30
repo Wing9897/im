@@ -1,4 +1,4 @@
-/** Workset card description limits (stamp 5). */
+/** Workset card description limits (current baseline; see SCHEMA-BASELINE). */
 
 export const WORKSET_DESCRIPTION_MAX = 280;
 

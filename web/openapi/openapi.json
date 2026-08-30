@@ -5892,6 +5892,49 @@
         }
       }
     },
+    "/api/v1/calendar-share/publish/auto-sync": {
+      "patch": {
+        "tags": [
+          "calendar-share",
+          "calendar-share"
+        ],
+        "summary": "Patch Publish Auto Sync",
+        "description": "Household-wide auto-update for every published workset.",
+        "operationId": "patch_publish_auto_sync_api_v1_calendar_share_publish_auto_sync_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarSharePublishAutoSyncBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSharePublishListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/calendar-share/publish/{workset_id}": {
       "get": {
         "tags": [
@@ -10425,6 +10468,35 @@
         "type": "object",
         "title": "CalendarShareProfileResponse"
       },
+      "CalendarSharePublishAutoSyncBody": {
+        "properties": {
+          "autoSync": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autosync"
+          },
+          "autoSyncIntervalSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autosyncintervalseconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CalendarSharePublishAutoSyncBody"
+      },
       "CalendarSharePublishBody": {
         "properties": {
           "slug": {
@@ -10517,6 +10589,16 @@
             "title": "Pendingsync",
             "default": false
           },
+          "autoSync": {
+            "type": "boolean",
+            "title": "Autosync",
+            "default": true
+          },
+          "autoSyncIntervalSeconds": {
+            "type": "integer",
+            "title": "Autosyncintervalseconds",
+            "default": 60
+          },
           "isSystemWorkset": {
             "type": "boolean",
             "title": "Issystemworkset",
@@ -10559,6 +10641,21 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "autoSync": {
+            "type": "boolean",
+            "title": "Autosync",
+            "default": true
+          },
+          "autoSyncIntervalSeconds": {
+            "type": "integer",
+            "title": "Autosyncintervalseconds",
+            "default": 60
+          },
+          "autoSyncIntervalFloorSeconds": {
+            "type": "integer",
+            "title": "Autosyncintervalfloorseconds",
+            "default": 60
           }
         },
         "type": "object",
@@ -10617,6 +10714,16 @@
             "type": "boolean",
             "title": "Pendingsync",
             "default": false
+          },
+          "autoSync": {
+            "type": "boolean",
+            "title": "Autosync",
+            "default": true
+          },
+          "autoSyncIntervalSeconds": {
+            "type": "integer",
+            "title": "Autosyncintervalseconds",
+            "default": 60
           },
           "isSystemWorkset": {
             "type": "boolean",
@@ -13481,7 +13588,7 @@
               }
             ],
             "title": "Websearchprovider",
-            "default": "auto"
+            "default": "duckduckgo"
           },
           "braveSearchApiKey": {
             "type": "string",
@@ -13620,7 +13727,7 @@
               "serper"
             ],
             "title": "Websearchprovider",
-            "default": "auto"
+            "default": "duckduckgo"
           },
           "braveSearchApiKey": {
             "anyOf": [

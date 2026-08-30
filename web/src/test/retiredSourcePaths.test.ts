@@ -100,6 +100,10 @@ const RETIRED_SOURCE_PATHS = [
   "components/assistant/AssistantSessionLlmProfileSelect.tsx",
   "components/assistant/AssistantSessionLlmProfileSelect.test.tsx",
   "components/WorksetCardEmoji.tsx",
+  "components/SubscribeFilterGroup.tsx",
+  "components/SubscribeFilterGroup.test.tsx",
+  "components/useSourceFilterSubscribeDraft.ts",
+  "pages/subscriptions/useCatalogMembershipBusy.ts",
 ] as const;
 
 // Settings → General LAN bind toggle lived inline (no dedicated module).

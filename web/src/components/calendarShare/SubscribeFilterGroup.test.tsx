@@ -4,9 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SubscribeFilterGroup } from "./SubscribeFilterGroup";
-import { subscribeCalendarIdentity } from "../domain/calendarShare/subscribedCalendars";
-import { i18n, wrapWithI18n } from "../test/i18nHarness";
-import { setAppLocale } from "../i18n/locale";
+import { subscribeCalendarIdentity } from "../../domain/calendarShare/subscribedCalendars";
+import { i18n, wrapWithI18n } from "../../test/i18nHarness";
+import { setAppLocale } from "../../i18n/locale";
 
 const CALENDARS = [
   subscribeCalendarIdentity({ handle: "Alice", slug: "Work", ownerAvatar: "data:image/png;base64,a" }),

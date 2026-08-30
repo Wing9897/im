@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 import { ensureZhHantLocale } from "../../test/i18nHarness";
 import { DEFAULT_PROVIDER_BASE_URLS } from "../../domain/settings/llmProviderConfig";
+import { DEFAULT_WEB_SEARCH_PROVIDER } from "../../domain/settings/assistantWebSearchRoute";
 import {
   emptyProfileDraft,
   LlmProfileEditorDialog,
@@ -19,6 +20,10 @@ describe("LlmProfileEditorDialog", () => {
 
   afterEach(() => {
     harness.cleanup();
+  });
+
+  it("defaults new profile web search to DuckDuckGo", () => {
+    expect(emptyProfileDraft().webSearchProvider).toBe(DEFAULT_WEB_SEARCH_PROVIDER);
   });
 
   it("uses form-size shell with sectioned layout", async () => {

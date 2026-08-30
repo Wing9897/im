@@ -29,6 +29,8 @@ _INTERNAL_CONFIG_KEYS = frozenset(
         "calendar_share_timezone",
         "calendar_share_timezone_pending",
         "calendar_share_timezone_last_public",
+        "calendar_share_auto_sync",
+        "calendar_share_auto_sync_interval_seconds",
     }
 )
 

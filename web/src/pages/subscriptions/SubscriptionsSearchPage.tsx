@@ -9,6 +9,7 @@ import {
   type CalendarShareSearchHit,
 } from "../../api/calendarShare";
 import { Badge, Button, OpsControlBar, TextField } from "../../components/ui";
+import { CalendarShareConnectionStatusIcon } from "../../components/calendarShare/CalendarShareConnectionStatusIcon";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {
   isCalendarShareNotFound,
@@ -31,6 +32,7 @@ import {
   visibilityBadgeTone,
 } from "./SubscriptionCalendarCard";
 import { SubscriptionMembershipButton } from "./SubscriptionMembershipButton";
+import { useCatalogMembershipBusy } from "../../domain/calendarShare/useCatalogMembershipBusy";
 import { SubscriptionsCardSection, SubscriptionsPageChrome } from "./SubscriptionsPageChrome";
 
 function subscribeFailureMessage(error: unknown, noGrant: string, rejectOwn: string): string {
@@ -51,7 +53,7 @@ export function SubscriptionsSearchPage() {
   const [hits, setHits] = useState<CalendarShareSearchHit[]>([]);
   const [searched, setSearched] = useState(false);
   const [searchBusy, setSearchBusy] = useState(true);
-  const [membershipBusyKey, setMembershipBusyKey] = useState<string | null>(null);
+  const { busyKey: membershipBusyKey, runMembership } = useCatalogMembershipBusy();
   const [searchError, setSearchError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
@@ -103,31 +105,29 @@ export function SubscriptionsSearchPage() {
 
   const onAdd = async (handle: string, slug: string, clearQuery = false) => {
     const key = subscribeCalendarIdentity({ handle, slug }).key;
-    setMembershipBusyKey(key);
     setFieldError(null);
-    try {
-      const payload = await addCalendarShareSubscription({ handle, slug });
-      applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
-      if (clearQuery) setQuery("");
-    } catch (err) {
-      setFieldError(subscribeFailureMessage(err, t("search.noGrant"), t("search.rejectOwn")));
-    } finally {
-      setMembershipBusyKey(null);
-    }
+    await runMembership(key, async () => {
+      try {
+        const payload = await addCalendarShareSubscription({ handle, slug });
+        applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
+        if (clearQuery) setQuery("");
+      } catch (err) {
+        setFieldError(subscribeFailureMessage(err, t("search.noGrant"), t("search.rejectOwn")));
+      }
+    });
   };
 
   const onRemove = async (handle: string, slug: string) => {
     const key = subscribeCalendarIdentity({ handle, slug }).key;
-    setMembershipBusyKey(key);
     setFieldError(null);
-    try {
-      const payload = await removeCalendarShareSubscription(handle, slug);
-      applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
-    } catch (err) {
-      setFieldError(toErrorMessage(err));
-    } finally {
-      setMembershipBusyKey(null);
-    }
+    await runMembership(key, async () => {
+      try {
+        const payload = await removeCalendarShareSubscription(handle, slug);
+        applyCalendarShareCatalogItems(payload.items ?? [], payload.ownHandle);
+      } catch (err) {
+        setFieldError(toErrorMessage(err));
+      }
+    });
   };
 
   const status = subscribePageStatus({
@@ -250,6 +250,12 @@ export function SubscriptionsSearchPage() {
                   : t("search.submit")}
             </Button>
           </form>
+          {status !== "loading" ? (
+            <CalendarShareConnectionStatusIcon
+              availability={status}
+              loggedOutTitle={t("needLogin")}
+            />
+          ) : null}
         </OpsControlBar>
         {fieldMessage ? (
           <p className={`mb-0 ${formHelpClass} text-error`} role="alert" data-testid="subscriptions-search-hint">

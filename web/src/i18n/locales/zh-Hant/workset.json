@@ -49,7 +49,6 @@
   "searchAria": "搜尋工作集",
   "noMatchTitle": "找不到符合的工作集",
   "noMatchDescription": "沒有名稱包含「{query}」的工作集。",
-  "memberTasksTitle": "{name} · 任務",
   "systemDescription": "內建歸屬工作集；任務、助手與手動日程預設歸此。",
   "assetSummary": "{tasks} 個任務 · {items} 件物品",
   "openDetailAria": "開啟工作集 {name}",

@@ -24,6 +24,7 @@ from server.calendar_share.remote import (
     authorized_request,
     login_remote,
     logout_remote,
+    raise_mapped_remote_error,
 )
 from server.calendar_share.store import (
     clear_session,
@@ -88,7 +89,7 @@ async def login_session(request: Request, body: CalendarShareLoginBody) -> Calen
     try:
         access, refresh = await login_remote(base_url, handle, body.password)
     except CalendarShareRemoteError as exc:
-        raise http_error(502 if exc.status == 502 else 401, exc.message) from exc
+        raise_mapped_remote_error(exc)
     await save_session(db, base_url=base_url, handle=handle, access_token=access, refresh_token=refresh)
     await sync_pending_public_timezone(db)
     return _session_payload(base_url, handle, True)

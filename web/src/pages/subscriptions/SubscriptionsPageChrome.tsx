@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertBanner, CardGrid, OpsControlBar, TextField } from "../../components/ui";
+import { CalendarShareConnectionStatusIcon } from "../../components/calendarShare/CalendarShareConnectionStatusIcon";
+import { CardGrid, OpsControlBar, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {
   isCalendarShareNotFound,
@@ -12,45 +12,19 @@ import {
 type ChromeProps = {
   status: SubscribePageStatus;
   error?: string | null;
-  loginMessage?: string;
   toolbar?: ReactNode;
   children: ReactNode;
 };
 
-/** Shared login / offline / error chrome for Mine, Published, and Search. */
-export function SubscriptionsPageChrome({
-  status,
-  error,
-  loginMessage,
-  toolbar,
-  children,
-}: ChromeProps) {
-  const { t } = useTranslation("subscriptions");
+/** Shared error chrome for Mine, Published, and Search (connection status lives in toolbars). */
+export function SubscriptionsPageChrome({ status: _status, error, toolbar, children }: ChromeProps) {
   const errorMessage = error && !isCalendarShareNotFound(error) ? error : null;
-  const showStatus = status === "loggedOut" || status === "offline" || Boolean(errorMessage);
   return (
     <div className="flex flex-col gap-sm">
-      {showStatus ? (
-        <div className="flex flex-col gap-sm">
-          {status === "loggedOut" ? (
-            <AlertBanner variant="warning" role="status" className="mb-0 max-w-[56ch]" data-testid="subscriptions-need-login">
-              {loginMessage ?? t("needLogin")}{" "}
-              <Link to="/subscriptions/account" className="font-medium text-accent no-underline hover:underline">
-                {t("loginLink")}
-              </Link>
-            </AlertBanner>
-          ) : null}
-          {status === "offline" ? (
-            <AlertBanner variant="warning" role="status" className="mb-0 max-w-[56ch]">
-              {t("filter.offline")}
-            </AlertBanner>
-          ) : null}
-          {errorMessage ? (
-            <p className={`mb-0 ${formHelpClass} text-error`} role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-        </div>
+      {errorMessage ? (
+        <p className={`mb-0 ${formHelpClass} text-error`} role="alert">
+          {errorMessage}
+        </p>
       ) : null}
       {toolbar}
       {children}
@@ -63,6 +37,8 @@ type ListToolbarProps = {
   onChange: (value: string) => void;
   testId: string;
   actions?: ReactNode;
+  status?: SubscribePageStatus;
+  loggedOutTitle?: string;
 };
 
 /** Client-side filter for already-listed Mine / Published cards. Always visible, including empty lists. */
@@ -71,6 +47,8 @@ export function SubscriptionsListToolbar({
   onChange,
   testId,
   actions,
+  status,
+  loggedOutTitle,
 }: ListToolbarProps) {
   const { t } = useTranslation("subscriptions");
   return (
@@ -89,7 +67,17 @@ export function SubscriptionsListToolbar({
           data-testid={testId}
         />
       </div>
-      {actions}
+      {(actions || (status && status !== "loading")) ? (
+        <div className="flex shrink-0 flex-nowrap items-center gap-1.5">
+          {actions}
+          {status && status !== "loading" ? (
+            <CalendarShareConnectionStatusIcon
+              availability={status}
+              loggedOutTitle={loggedOutTitle ?? t("needLogin")}
+            />
+          ) : null}
+        </div>
+      ) : null}
     </OpsControlBar>
   );
 }

@@ -6,8 +6,8 @@ import {
   type ItemCategory,
   type TrackableItem,
 } from "../../api/items";
-import { listWorksets } from "../../api/worksets";
-import type { Workset } from "../../types/worksets";
+import { listWorksets, type Workset } from "../../api/worksets";
+import { useOptionalTaskCatalog } from "../../context/TaskCatalogContext";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import type { ItemsListFetchParams } from "../../domain/items/itemsListModel";
@@ -26,31 +26,44 @@ type UseItemsDataOptions = {
 export function useItemsData(options?: UseItemsDataOptions) {
   const listFetch = options?.listFetch ?? null;
   const { t } = useTranslation("items");
+  const catalog = useOptionalTaskCatalog();
+  const catalogMounted = catalog != null;
   const [items, setItems] = useState<TrackableItem[]>([]);
   const [categories, setCategories] = useState<ItemCategory[]>([]);
-  const [worksets, setWorksets] = useState<Workset[]>([]);
+  const [fallbackWorksets, setFallbackWorksets] = useState<Workset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const worksets = catalogMounted ? catalog.worksets : fallbackWorksets;
 
   const reload = useCallback(async (opts?: ItemsReloadOptions) => {
     if (!opts?.background) setLoading(true);
     setError(null);
     try {
       const itemParams = listFetch ?? undefined;
-      const [itemRows, categoryRows, worksetRows] = await Promise.all([
-        listItems(itemParams),
-        listItemCategories(),
-        listWorksets(),
-      ]);
-      setItems(itemRows);
-      setCategories(categoryRows);
-      setWorksets(worksetRows);
+      if (catalogMounted) {
+        const [itemRows, categoryRows] = await Promise.all([
+          listItems(itemParams),
+          listItemCategories(),
+        ]);
+        setItems(itemRows);
+        setCategories(categoryRows);
+      } else {
+        const [itemRows, categoryRows, worksetRows] = await Promise.all([
+          listItems(itemParams),
+          listItemCategories(),
+          listWorksets(),
+        ]);
+        setItems(itemRows);
+        setCategories(categoryRows);
+        setFallbackWorksets(worksetRows);
+      }
     } catch (err) {
       setError(formatItemsError(err, t));
     } finally {
       if (!opts?.background) setLoading(false);
     }
-  }, [t, listFetch]);
+  }, [t, listFetch, catalogMounted]);
 
   /** Parameterless refresh for `.then(refresh)` / `onChanged={refresh}`. */
   const refresh = useCallback(() => reload(), [reload]);

@@ -6,12 +6,11 @@ from server.calendar_share.remote_auth import (
     login_remote,
     logout_remote,
     parse_token_pair,
-    refresh_remote,
-    rotate_access_token,
 )
 from server.calendar_share.remote_errors import (
     CalendarShareRemoteError,
     _message_from_payload,
+    raise_mapped_remote_error,
     raise_remote_status,
 )
 from server.calendar_share.remote_http import (
@@ -29,7 +28,6 @@ __all__ = [
     "login_remote",
     "logout_remote",
     "parse_token_pair",
+    "raise_mapped_remote_error",
     "raise_remote_status",
-    "refresh_remote",
-    "rotate_access_token",
 ]

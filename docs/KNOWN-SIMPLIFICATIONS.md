@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler (schema floor 5 / current stamp 5): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (schema floor 6 / current stamp 6): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -70,7 +70,7 @@ Pointer only — stamp / semver / floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BAS
 
 ## LLM simplifications (intentional)
 
-Still in force under schema floor **5** / current stamp **5** / `SCHEMA_SEMVER` `1.4.0`. Do **not** restore without a new contract:
+Still in force under schema floor **6** / current stamp **6** / `SCHEMA_SEMVER` `1.5.0`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|

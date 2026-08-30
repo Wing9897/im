@@ -10,7 +10,7 @@ from server.api.schemas.web_search_fields import web_search_secret_field_definit
 from server.domain.json_modes import JsonModeWire
 from server.domain.llm_providers import LlmProviderWire
 from server.domain.llm_staff_classes import LlmStaffClass
-from server.domain.web_search_providers import WebSearchProviderWire
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WebSearchProviderWire
 from server.llm_global_slots import LlmGlobalSlotId
 
 StaffClassWire = LlmStaffClass
@@ -43,7 +43,7 @@ class _LlmProfileResponseCore(BaseModel):
     thinkingEnabled: bool = False
     jsonMode: JsonModeWire | str = "disabled"
     webSearchEnabled: bool = True
-    webSearchProvider: WebSearchProviderWire | str = "auto"
+    webSearchProvider: WebSearchProviderWire | str = WEB_SEARCH_PROVIDER_DEFAULT
 
 
 if TYPE_CHECKING:

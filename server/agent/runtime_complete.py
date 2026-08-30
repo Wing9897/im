@@ -8,6 +8,7 @@ from typing import Any, Protocol
 from server.agent.web_search_routing import WebSearchRoute, resolve_web_search_route
 from server.analyzer.llm_client import load_agent_llm_config
 from server.db.database import Database
+from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT
 from server.util import is_openai_json_mode_enabled
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ async def resolve_web_search_route_for_runtime(
         web_enabled = True
     else:
         web_enabled = bool(llm_cfg.get("web_search_enabled"))
-    setting = str(llm_cfg.get("web_search_provider") or "auto")
+    setting = str(llm_cfg.get("web_search_provider") or WEB_SEARCH_PROVIDER_DEFAULT)
     # Prefer live client strings when set; ignore MagicMock auto-attrs.
     live_provider = getattr(llm, "provider", None)
     live_base = getattr(llm, "base_url", None)
@@ -72,6 +73,28 @@ async def resolve_web_search_route_for_runtime(
     )
 
 
+def _agent_complete_attempts(
+    *,
+    prefer_json_mode: bool,
+    native_web_search: str | None,
+) -> list[tuple[bool, str | None]]:
+    """Ordered (json_mode, native_web_search) retries for one agent turn."""
+    plan: list[tuple[bool, str | None]] = []
+
+    def add(json_mode: bool, native: str | None) -> None:
+        key = (json_mode, native)
+        if key not in plan:
+            plan.append(key)
+
+    native = native_web_search if native_web_search in {"openai", "gemini"} else None
+    add(prefer_json_mode, native)
+    if native is not None:
+        add(prefer_json_mode, None)
+    if prefer_json_mode:
+        add(False, None)
+    return plan
+
+
 async def complete_for_agent(
     db: Database,
     llm: LlmCompleter,
@@ -81,46 +104,54 @@ async def complete_for_agent(
 ) -> dict[str, Any]:
     """Complete with optional API json_mode; fall back if the provider rejects it.
 
-    Settings 「AI 測試」uses json_mode=False. Forcing json_mode=True breaks many
-    OpenAI-compatible endpoints that do not support response_format=json_object.
+    Settings 「AI 測試」uses json_mode=False and never attaches hosted web-search
+    tools. Assistant chat may route Gemini / OpenAI official endpoints through
+    native search; when that fails (quota, unsupported model, etc.) we retry
+    without hosted search so chat can still complete like the Settings probe.
     """
     from server.web_search.execution import WebSearchExecutionService
 
     prefer = await prefer_json_mode(db, llm)
     service = WebSearchExecutionService()
-    try:
-        if native_web_search in {"openai", "gemini"}:
+    attempts = _agent_complete_attempts(
+        prefer_json_mode=prefer,
+        native_web_search=native_web_search,
+    )
+
+    async def _call(*, json_mode: bool, native: str | None) -> dict[str, Any]:
+        if native in {"openai", "gemini"}:
             return await service.native_complete(
                 llm,
                 history,
-                native_kind=native_web_search,
-                json_mode=prefer,
+                native_kind=native,
+                json_mode=json_mode,
                 temperature=0.2,
             )
         return await llm.complete(
             history,
             temperature=0.2,
-            json_mode=prefer,
+            json_mode=json_mode,
             native_web_search=None,
         )
-    except Exception as exc:  # noqa: BLE001 — retry path for provider capability gaps
-        if not prefer:
-            raise
-        logger.warning(
-            "Agent LLM json_mode failed (%s); retrying without response_format/format=json",
-            exc,
-        )
-        if native_web_search in {"openai", "gemini"}:
-            return await service.native_complete(
-                llm,
-                history,
-                native_kind=native_web_search,
-                json_mode=False,
-                temperature=0.2,
-            )
-        return await llm.complete(
-            history,
-            temperature=0.2,
-            json_mode=False,
-            native_web_search=None,
-        )
+
+    last_exc: Exception | None = None
+    for index, (json_mode, native) in enumerate(attempts):
+        try:
+            return await _call(json_mode=json_mode, native=native)
+        except Exception as exc:  # noqa: BLE001 — provider capability / quota gaps
+            last_exc = exc
+            if index + 1 >= len(attempts):
+                break
+            next_json_mode, next_native = attempts[index + 1]
+            if native in {"openai", "gemini"} and next_native is None:
+                logger.warning(
+                    "Agent native web search failed (%s); retrying without hosted search",
+                    exc,
+                )
+            elif json_mode and not next_json_mode:
+                logger.warning(
+                    "Agent LLM json_mode failed (%s); retrying without response_format/format=json",
+                    exc,
+                )
+    assert last_exc is not None
+    raise last_exc

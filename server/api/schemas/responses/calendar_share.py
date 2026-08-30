@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from server.calendar_share.auto_sync_config import AUTO_SYNC_INTERVAL_FLOOR_SECONDS
 from server.calendar_share.constants import PublicVisibility
 
 
@@ -36,6 +37,8 @@ class CalendarSharePublishStateResponse(BaseModel):
     lastSyncAt: str | None = None
     lastError: str | None = None
     pendingSync: bool = False
+    autoSync: bool = True
+    autoSyncIntervalSeconds: int = AUTO_SYNC_INTERVAL_FLOOR_SECONDS
     isSystemWorkset: bool = False
 
 
@@ -50,6 +53,9 @@ class CalendarSharePublishListItemResponse(CalendarSharePublishStateResponse):
 
 class CalendarSharePublishListResponse(BaseModel):
     items: list[CalendarSharePublishListItemResponse] = Field(default_factory=list)
+    autoSync: bool = True
+    autoSyncIntervalSeconds: int = AUTO_SYNC_INTERVAL_FLOOR_SECONDS
+    autoSyncIntervalFloorSeconds: int = AUTO_SYNC_INTERVAL_FLOOR_SECONDS
 
 
 class CalendarShareSubscriptionResponse(BaseModel):

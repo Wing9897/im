@@ -1,6 +1,6 @@
-"""Schema floor SoT: stamp 5 is floor and current; retired 27/45 hard-reject.
+"""Schema floor SoT: stamp 6 is floor and current; retired 27/45 hard-reject.
 
-Stamp 1–4 files reject (backup then reset). Injected migration-runner walks live in
+Stamp 1–5 files reject (backup then reset). Injected migration-runner walks live in
 ``test_schema_migrate.py``. Fingerprint validation, unstamped current, and
 newer-than-supported: ``test_db_schema.py``.
 """
@@ -26,18 +26,19 @@ from server.tests.schema_fixtures import (
     make_pre_schema_meta_db,
     make_stamp_2_db,
     make_stamp_3_db,
+    make_stamp_5_db,
     make_stamped_db,
 )
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-# Retired pre-cut stamps greater than CURRENT=5 still hard-reject (future-stamp path).
+# Retired pre-cut stamps greater than CURRENT=6 still hard-reject (future-stamp path).
 _HARD_REJECT_FUTURE_VERSIONS = (27, 45)
 
 
 def test_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 5
-    assert SCHEMA_FLOOR == 5
-    assert SCHEMA_SEMVER == "1.4.0"
+    assert CURRENT_SCHEMA_VERSION == 6
+    assert SCHEMA_FLOOR == 6
+    assert SCHEMA_SEMVER == "1.5.0"
     assert CURRENT_SCHEMA_VERSION not in _HARD_REJECT_FUTURE_VERSIONS
     assert all(version > CURRENT_SCHEMA_VERSION for version in _HARD_REJECT_FUTURE_VERSIONS)
 
@@ -51,7 +52,7 @@ def test_schema_meta_ddl_seeds_current_semver() -> None:
 
 @pytest.mark.asyncio
 async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
-    """Empty DB + ensure_supported_schema → stamp 5 + schema_meta + seeded __general__."""
+    """Empty DB + ensure_supported_schema → stamp 6 + schema_meta + seeded __general__."""
     path = str(tmp_path / "fresh-floor.db")
     db = Database(path)
     await db.connect()
@@ -105,6 +106,12 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert "cover_data_url" in workset_cols
         assert int(workset_cols["cover_data_url"][3]) == 1
         assert str(workset_cols["cover_data_url"][4]).replace('"', "").replace("'", "") == ""
+        async with db.conn.execute("PRAGMA table_info(calendar_share_publish)") as cursor:
+            publish_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "auto_sync" in publish_cols
+        assert int(publish_cols["auto_sync"][3]) == 1
+        assert "auto_sync_interval_seconds" in publish_cols
+        assert int(publish_cols["auto_sync_interval_seconds"][3]) == 1
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
             ue_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_pref" in ue_cols
@@ -140,10 +147,14 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         await db.close()
 
 
-@pytest.mark.parametrize("version", (1, 2, 3, 4), ids=["stamped-v1", "stamped-v2", "stamped-v3", "stamped-v4"])
+@pytest.mark.parametrize(
+    "version",
+    (1, 2, 3, 4, 5),
+    ids=["stamped-v1", "stamped-v2", "stamped-v3", "stamped-v4", "stamped-v5"],
+)
 @pytest.mark.asyncio
 async def test_below_floor_stamps_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
-    """Stamp 1–4 files reject; backup then reset. No additive walk."""
+    """Stamp 1–5 files reject; backup then reset. No additive walk."""
     path = str(tmp_path / f"stamped-v{version}.db")
     if version == 1:
         await make_pre_schema_meta_db(
@@ -164,10 +175,16 @@ async def test_below_floor_stamps_are_hard_rejected_without_changes(tmp_path, ve
     else:
         from server.tests.schema_fixtures import make_stamp_4_db
 
-        await make_stamp_4_db(
-            path,
-            log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
-        )
+        if version == 4:
+            await make_stamp_4_db(
+                path,
+                log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+            )
+        else:
+            await make_stamp_5_db(
+                path,
+                log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
+            )
 
     before_logical = await logical_snapshot(path)
     before_file = file_snapshot(path)

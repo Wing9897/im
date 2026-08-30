@@ -11,6 +11,7 @@ import {
 } from "../../../api/items";
 import { listWorksets } from "../../../api/worksets";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
+import { useOptionalTaskCatalog } from "../../../context/TaskCatalogContext";
 import { contentFadeClass } from "../../../components/ui/pageLayout";
 import { categoryLabel } from "../../../domain/items/categoryAggregates";
 import { buildDuplicateItemBody } from "../../../domain/items/itemDuplicate";
@@ -38,9 +39,12 @@ export function ItemFormPage() {
   const isEditMode = Boolean(itemId);
   const formRef = useRef<ItemFormHandle>(null);
 
+  const catalog = useOptionalTaskCatalog();
+  const catalogMounted = catalog != null;
   const [item, setItem] = useState<TrackableItem | null>(null);
   const [categories, setCategories] = useState<Awaited<ReturnType<typeof listItemCategories>>>([]);
-  const [worksets, setWorksets] = useState<Workset[]>([]);
+  const [fallbackWorksets, setFallbackWorksets] = useState<Workset[]>([]);
+  const worksets = catalogMounted ? catalog.worksets : fallbackWorksets;
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [toolbarState, setToolbarState] = useState({ canSubmit: false, busy: false });
@@ -60,11 +64,13 @@ export function ItemFormPage() {
       try {
         const [categoryRows, worksetRows] = await Promise.all([
           listItemCategories(),
-          listWorksets(),
+          catalogMounted ? Promise.resolve(null) : listWorksets(),
         ]);
         if (cancelled) return;
         setCategories(categoryRows);
-        setWorksets(worksetRows);
+        if (!catalogMounted && worksetRows) {
+          setFallbackWorksets(worksetRows);
+        }
         if (isEditMode && itemId) {
           if (skipItemFetch) return;
           const row = await getItem(itemId);
@@ -84,7 +90,7 @@ export function ItemFormPage() {
     return () => {
       cancelled = true;
     };
-  }, [isEditMode, itemId, item?.id, t]);
+  }, [catalogMounted, isEditMode, itemId, item?.id, t]);
 
   // Form always has an emoji field — warm the picker chunk while data loads.
   useEffect(() => scheduleEmojiPickerPreload(2000), []);
