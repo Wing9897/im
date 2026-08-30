@@ -29,7 +29,9 @@ describe('schema-baseline-dialog copy and html', () => {
     expect(copy.headline).toContain('無法原地升級');
     expect(copy.body).toContain('不會遷移');
     expect(copy.body).not.toMatch(/Traceback|SchemaBaselineError|reset_local_databases/);
-    expect(copy.resetAndRetry).toBe('重置資料庫並重試');
+    expect(copy.resetAndRetry).toBe('重置資料庫');
+    expect(getShellCopy().schemaRelaunch).toBe('重新啟動');
+    expect(getShellCopy().schemaResetDoneTitle).toBe('資料庫已重置');
     expect(copy.detailsToggle).toBe('詳細資料');
     expect(copy.openFolder).toBe('開啟資料夾');
   });
@@ -58,7 +60,8 @@ describe('schema-baseline-dialog copy and html', () => {
     setShellLocale('en');
     const copy = schemaBaselineDialogCopy('reset_required');
     expect(copy.title).toBe('This database cannot be used');
-    expect(copy.resetAndRetry).toBe('Reset database and retry');
+    expect(copy.resetAndRetry).toBe('Reset database');
+    expect(getShellCopy().schemaRelaunch).toBe('Restart');
     expect(getShellCopy().schemaResetConfirm).toBe('Back up and reset');
   });
 });

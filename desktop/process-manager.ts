@@ -76,7 +76,25 @@ export class ProcessManager {
     }
 
     if (this.startFlight) return this.startFlight;
-    if (this.restartFlight) return this.restartFlight;
+    if (this.restartFlight) {
+      // Do not return the auto-restart promise itself: driveRestartLoop
+      // swallows StartupCancelledError and can resolve with no process.
+      const restartFlight = this.restartFlight;
+      let flight!: Promise<void>;
+      flight = (async () => {
+        try {
+          await restartFlight;
+        } catch {
+          // Restart failed; start a fresh sidecar below if needed.
+        }
+        // stop() nulls startFlight so a queued start owns the next spawn.
+        if (this.startFlight !== flight) return;
+        if (this.running && this.process) return;
+        if (this.stopFlight || this.stopping) return;
+        await this.runStartup();
+      })();
+      return this.trackStartFlight(flight);
+    }
     if (this.running && this.process) return Promise.resolve();
 
     return this.trackStartFlight(this.runStartup());
@@ -204,22 +222,23 @@ export class ProcessManager {
         this.process = null;
         this.clearRestartResetTimer();
 
-        // Invalidate timeout/request callbacks before asking the restart driver to run.
-        this.generation++;
+        const stderr = this.recentStderr.trim().slice(-2_000);
+        const schemaKind = classifySchemaReject(stderr);
         if (this.activeStartup === attempt) {
-          const stderr = this.recentStderr.trim().slice(-2_000);
-          const schemaKind = classifySchemaReject(stderr);
-          if (schemaKind) {
-            this.failActiveStartup(
-              new SchemaBaselineStartupError(schemaKind, stderr, code),
-            );
-            return;
-          }
-          const detail = stderr
-            ? `Server process exited during startup (code ${code}).\n\n${stderr}`
-            : `Server process exited during startup (code ${code})`;
-          this.failActiveStartup(new Error(detail));
+          this.failActiveStartup(
+            schemaKind
+              ? new SchemaBaselineStartupError(schemaKind, stderr, code)
+              : new Error(
+                  stderr
+                    ? `Server process exited during startup (code ${code}).\n\n${stderr}`
+                    : `Server process exited during startup (code ${code})`,
+                ),
+          );
         }
+        // Invalidate timeout/request callbacks after failActiveStartup so a
+        // concurrent health poll rejects with the schema error, not "cancelled".
+        this.generation++;
+        if (schemaKind) return;
         if (this.stopping) return;
 
         for (const callback of this.exitCallbacks) callback(code);

@@ -14,7 +14,7 @@ import type { SchemaRejectKind } from './process-manager-schema';
 import { SCHEMA_BASELINE_DIALOG_CHANNELS } from './schema-baseline-dialog-channels';
 import { getProductName, getShellCopy } from './shell-i18n';
 
-export type SchemaBaselineRecoveryAction = 'retry' | 'quit';
+export type SchemaBaselineRecoveryAction = 'relaunch' | 'quit';
 
 export type SchemaBaselineDialogCopy = {
   title: string;
@@ -276,7 +276,17 @@ export async function presentSchemaBaselineRecovery(options: {
         });
         return { ok: false as const, cancelled: false };
       }
-      finish('retry');
+      const done = getShellCopy();
+      await dialog.showMessageBox(win, {
+        type: 'info',
+        title: done.schemaResetDoneTitle,
+        message: done.schemaResetDoneTitle,
+        detail: done.schemaResetDoneBody,
+        buttons: [done.schemaRelaunch],
+        defaultId: 0,
+        noLink: true,
+      });
+      finish('relaunch');
       return { ok: true as const };
     });
 
