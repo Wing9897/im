@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormGrid, formHelpClass } from "../../components/ui";
-import { isAssistantDirectModeSupported } from "../../domain/assistant/directModeSupport";
+import { FormGrid, formHelpClass } from "../../../components/ui";
+import { isAssistantDirectModeSupported } from "../../../domain/assistant/directModeSupport";
 import {
   getSttProviderOptions,
   hydrateVoiceSettings,
@@ -11,11 +11,11 @@ import {
   type SpacePttMode,
   type SttProviderId,
   type VoiceSettings,
-} from "../../speech";
+} from "../../../speech";
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-} from "../../components/settings/SettingsFormLayout";
+} from "../../../components/settings/SettingsFormLayout";
 import { SettingsVoicePttSection } from "./SettingsVoicePttSection";
 import { SettingsVoiceSttSection } from "./SettingsVoiceSttSection";
 import {

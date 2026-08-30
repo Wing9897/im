@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { FormGrid, FormStack, MenuSelect, SettingsRow } from "../../components/ui";
+import { FormGrid, FormStack, MenuSelect, SettingsRow } from "../../../components/ui";
 import {
   getSpeechLanguageOptions,
   type SpacePttMode,
-} from "../../speech";
+} from "../../../speech";
 import { VoicePrefCard, VoiceSelectWrap } from "./SettingsVoiceShared";
 
 type Props = {

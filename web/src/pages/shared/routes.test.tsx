@@ -147,8 +147,9 @@ describe("Route module imports", () => {
       () => import("../ai/assistant/AssistantPage"),
       () => import("../settings/SettingsShared"),
       () => import("../settings/SettingsThemePage"),
-      () => import("../ai/SettingsAiProviderPage"),
-      () => import("../ai/SettingsVoicePage"),
+      () => import("../settings/ai/SettingsAiProviderPage"),
+      () => import("../settings/ai/SettingsVoicePage"),
+      () => import("../settings/ai/SettingsAiStaffPage"),
       () => import("../settings/SettingsDataPage"),
     ];
 
@@ -249,7 +250,7 @@ describe("Route rendering — representative routes mount without errors", () =>
 
   it("renders /ai/provider (nested route) without errors", async () => {
     const { AiWorkspacePage } = await import("../ai/AiWorkspacePage");
-    const { SettingsAiProviderPage } = await import("../ai/SettingsAiProviderPage");
+    const { SettingsAiProviderPage } = await import("../settings/ai/SettingsAiProviderPage");
     await act(async () => {
       root = createRoot(container);
       root.render(
@@ -298,7 +299,7 @@ describe("Route rendering — representative routes mount without errors", () =>
 
   it("renders /ai/voice (nested route) without errors", async () => {
     const { AiWorkspacePage } = await import("../ai/AiWorkspacePage");
-    const { SettingsVoicePage } = await import("../ai/SettingsVoicePage");
+    const { SettingsVoicePage } = await import("../settings/ai/SettingsVoicePage");
     await act(async () => {
       root = createRoot(container);
       root.render(
@@ -402,7 +403,7 @@ describe("SystemSettingsProvider scope", () => {
 
   it("fetches settings once when provider wraps /ai", async () => {
     const { AiWorkspacePage } = await import("../ai/AiWorkspacePage");
-    const { SettingsAiProviderPage } = await import("../ai/SettingsAiProviderPage");
+    const { SettingsAiProviderPage } = await import("../settings/ai/SettingsAiProviderPage");
     await act(async () => {
       root = createRoot(container);
       root.render(
@@ -444,6 +445,32 @@ describe("Agent detail route contract", () => {
     expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
     expect(src).not.toContain("AgentDetailLegacyRedirect");
+  });
+});
+
+describe("Settings／AI page folders vs URLs", () => {
+  it("keeps /ai/* and /settings/* URLs; Settings* modules live under pages/settings/ai/", () => {
+    const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
+    expect(src).toContain('path="ai"');
+    expect(src).toContain("<Navigate to=\"/ai/provider\" replace />");
+    expect(src).toContain('path="provider"');
+    expect(src).toContain('path="voice"');
+    expect(src).toContain('path="staff"');
+    expect(src).toContain('path="settings"');
+    expect(src).toContain("<Navigate to=\"/settings/general\" replace />");
+    expect(src).toContain("../pages/settings/ai/SettingsAiProviderPage");
+    expect(src).toContain("../pages/settings/ai/SettingsVoicePage");
+    expect(src).toContain("../pages/settings/ai/SettingsAiStaffPage");
+    expect(src).not.toContain("../pages/ai/SettingsAiProviderPage");
+    expect(src).not.toContain("../pages/ai/SettingsVoicePage");
+    expect(src).not.toContain("../pages/ai/SettingsAiStaffPage");
+
+    const prefetch = readFileSync(resolve(__dirname, "../../routing/prefetchRoute.ts"), "utf8");
+    expect(prefetch).toContain('"/ai/provider"');
+    expect(prefetch).toContain('"/ai/voice"');
+    expect(prefetch).toContain('"/ai/staff"');
+    expect(prefetch).toContain("../pages/settings/ai/SettingsAiProviderPage");
+    expect(prefetch).not.toContain("../pages/ai/SettingsAiProviderPage");
   });
 });
 

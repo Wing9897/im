@@ -121,6 +121,13 @@ from server.api.schemas.responses.system import (
     SystemMessageResponse,
     SystemSettingsSnapshot,
 )
+from server.api.schemas.responses.agents import (
+    AgentStreamErrorEvent,
+    AgentStreamFinalEvent,
+    AgentStreamLlmStartEvent,
+    AgentStreamToolDoneEvent,
+    AgentStreamToolStartEvent,
+)
 from server.api.schemas.responses.tasks import (
     AgentChatResponse,
     AgentTickInFlightResponse,

@@ -5,9 +5,9 @@ import {
   validateMqttConfig,
   validateTelegramConfig,
 } from "../../utils/configValidation";
-import type { ActionFormState } from "./form/useActionFormDialog";
+import type { ActionTypeConfigInput } from "./actionConfiguration";
 
-export function validateActionTypeFields(form: ActionFormState): ValidationResult {
+export function validateActionTypeFields(form: ActionTypeConfigInput): ValidationResult {
   switch (form.actionType) {
     case "telegram_bot":
       return validateTelegramConfig({ bot_token: form.botToken, chat_id: form.chatId });

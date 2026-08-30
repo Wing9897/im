@@ -6,8 +6,8 @@ import type { ActionType } from "../../../types";
 import type { ActionFormState, HeaderEntry } from "../form/useActionFormDialog";
 import { formStateFromAction as parseFormStateFromAction } from "../actionConfigParsers";
 
-export { buildConfiguration } from "../actionConfiguration";
-export { validateActionTypeFields } from "../validateActionTypeFields";
+export { buildConfiguration } from "../../../domain/actions/actionConfiguration";
+export { validateActionTypeFields } from "../../../domain/actions/validateActionTypeFields";
 
 let headerIdCounter = 0;
 export function nextHeaderId(): string {

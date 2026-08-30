@@ -1,20 +1,20 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTestHarness, type TestHarness } from "../../test/render-helpers";
-import i18n from "../../i18n";
+import { createTestHarness, type TestHarness } from "../../../test/render-helpers";
+import i18n from "../../../i18n";
 
-vi.mock("../../context/ToastContext", async () =>
-  (await import("../../test/context-mocks")).toastContextModuleMock());
-vi.mock("../../context/TaskCatalogContext", async () =>
-  (await import("../../test/context-mocks")).taskCatalogModuleMock());
-vi.mock("../../speech/useBrowserTtsVoiceOptions", () => ({
+vi.mock("../../../context/ToastContext", async () =>
+  (await import("../../../test/context-mocks")).toastContextModuleMock());
+vi.mock("../../../context/TaskCatalogContext", async () =>
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
+vi.mock("../../../speech/useBrowserTtsVoiceOptions", () => ({
   useBrowserTtsVoiceOptions: vi.fn(() => []),
 }));
-vi.mock("../../domain/assistant/directModeSupport", () => ({
+vi.mock("../../../domain/assistant/directModeSupport", () => ({
   isAssistantDirectModeSupported: vi.fn(() => true),
 }));
-vi.mock("../../speech", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../speech")>();
+vi.mock("../../../speech", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../speech")>();
   return {
     ...actual,
     hydrateVoiceSettings: async () => actual.loadVoiceSettings(),
@@ -23,9 +23,9 @@ vi.mock("../../speech", async (importOriginal) => {
 });
 
 const { isAssistantDirectModeSupported } = await import(
-  "../../domain/assistant/directModeSupport"
+  "../../../domain/assistant/directModeSupport"
 );
-const { useBrowserTtsVoiceOptions } = await import("../../speech/useBrowserTtsVoiceOptions");
+const { useBrowserTtsVoiceOptions } = await import("../../../speech/useBrowserTtsVoiceOptions");
 const { SettingsVoicePage } = await import("./SettingsVoicePage");
 
 describe("SettingsVoicePage", () => {

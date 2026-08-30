@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { testAiEngine } from "../../api/system";
-import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
-import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
-import { SettingsRow, TextField } from "../../components/ui";
-import { formHelpClass, sectionTitleClass } from "../../components/ui/pageTypography";
+import { testAiEngine } from "../../../api/system";
+import { SettingsSaveBar } from "../../../components/settings/SettingsSaveBar";
+import { useSettingsPageState } from "../../../components/settings/useSettingsPageState";
+import { SettingsRow, TextField } from "../../../components/ui";
+import { formHelpClass, sectionTitleClass } from "../../../components/ui/pageTypography";
 import {
   bindLlmGlobalSlot,
   copyLlmProfile,
@@ -15,10 +15,10 @@ import {
   patchLlmProfile,
   type LlmGlobalSlotBinding,
   type LlmProfile,
-} from "../../api/llmProfiles";
-import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
-import { LoadingSpinner } from "../../components/common/LoadingSpinner";
-import { LlmGlobalSlotsPanel } from "../../components/settings/LlmGlobalSlotsPanel";
+} from "../../../api/llmProfiles";
+import { ErrorRetryBanner } from "../../../components/common/ErrorRetryBanner";
+import { LoadingSpinner } from "../../../components/common/LoadingSpinner";
+import { LlmGlobalSlotsPanel } from "../../../components/settings/LlmGlobalSlotsPanel";
 import {
   draftToUpsertBody,
   emptyProfileDraft,
@@ -26,19 +26,19 @@ import {
   profileToDraft,
   validateProfileDraft,
   type LlmProfileDraft,
-} from "../../components/settings/LlmProfileEditorDialog";
-import { LlmTaskProfilesSection } from "../../components/settings/LlmTaskProfilesSection";
+} from "../../../components/settings/LlmProfileEditorDialog";
+import { LlmTaskProfilesSection } from "../../../components/settings/LlmTaskProfilesSection";
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-} from "../../components/settings/SettingsFormLayout";
-import { useToast } from "../../context/ToastContext";
-import { useCollectorStatus } from "../../context/CollectorStatusContext";
+} from "../../../components/settings/SettingsFormLayout";
+import { useToast } from "../../../context/ToastContext";
+import { useCollectorStatus } from "../../../context/CollectorStatusContext";
 import {
   getLlmProviderConfig,
-} from "../../domain/settings/llmProviderConfig";
-import type { LlmGlobalSlotId } from "../../types/llmProfiles";
-import { toErrorMessage } from "../../utils/errors";
+} from "../../../domain/settings/llmProviderConfig";
+import type { LlmGlobalSlotId } from "../../../types/llmProfiles";
+import { toErrorMessage } from "../../../utils/errors";
 
 type EditorState =
   | { mode: "create"; draft: LlmProfileDraft }

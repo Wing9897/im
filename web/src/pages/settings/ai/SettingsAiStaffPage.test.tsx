@@ -2,20 +2,20 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
-import { defaultSettingsSnapshot } from "../../test/settingsSnapshot";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
+import { defaultSettingsSnapshot } from "../../../test/settingsSnapshot";
 
 const mockUpdateSettings = vi.fn();
 const mockHandleSave = vi.fn();
 const mockSaveSystemSettings = vi.fn();
 const mockFetchSystemSettings = vi.fn();
 
-vi.mock("../../api/config", () => ({
+vi.mock("../../../api/config", () => ({
   fetchSystemSettings: (...args: unknown[]) => mockFetchSystemSettings(...args),
   saveSystemSettings: (...args: unknown[]) => mockSaveSystemSettings(...args),
 }));
 
-vi.mock("../../components/settings/useSettingsPageState", () => {
+vi.mock("../../../components/settings/useSettingsPageState", () => {
   return {
     useSettingsPageState: () => ({
       settings: { ...defaultSettingsSnapshot },

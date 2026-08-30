@@ -29,7 +29,7 @@ vi.mock("../../context/ToastContext", async () =>
 import { SystemSettingsProvider } from "../../context/SystemSettingsContext";
 import { SimpleModeProvider } from "../../context/SimpleModeContext";
 import { AiWorkspacePage } from "./AiWorkspacePage";
-import { SettingsAiProviderPage } from "./SettingsAiProviderPage";
+import { SettingsAiProviderPage } from "../settings/ai/SettingsAiProviderPage";
 
 function setupInvokeMock(overrides?: Partial<SystemSettingsSnapshot>) {
   const snapshot = { ...defaultSettingsSnapshot, ...overrides };

@@ -2126,7 +2126,8 @@ export interface paths {
          * Agent Chat Stream
          * @description Stream agent progress as NDJSON (tool steps + final answer).
          *
-         *     Each line is one JSON object with a ``type`` field:
+         *     Each line is one JSON object with a ``type`` field
+         *     (``AgentStreamEvent`` in OpenAPI / ``server/api/schemas/responses/agents.py``):
          *     ``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.
          *     LLM providers stay non-streaming; only tool execution progress is streamed.
          *
@@ -6246,6 +6247,98 @@ export interface components {
             payload: components["schemas"]["SseMessagesUpdatedPayload"] | components["schemas"]["SseCollectorStatusChangedPayload"] | components["schemas"]["SseSourceStatusChangedPayload"] | components["schemas"]["SseAnalysisStartedPayload"] | components["schemas"]["SseAnalysisCompletedPayload"] | components["schemas"]["SseAnalysisFailedPayload"] | components["schemas"]["SseAnalysisPausedChangedPayload"] | components["schemas"]["SseResourceModifiedPayload"];
         };
         /**
+         * AgentStreamLlmStartEvent
+         * @description ``llm_start`` — a new non-streaming LLM round is about to run.
+         */
+        AgentStreamLlmStartEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "llm_start";
+            /** Round */
+            round: number;
+        };
+        /**
+         * AgentStreamToolStartEvent
+         * @description ``tool_start`` — a tool is about to execute.
+         */
+        AgentStreamToolStartEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "tool_start";
+            /** Name */
+            name: string;
+            /** Arguments */
+            arguments?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * AgentStreamToolDoneEvent
+         * @description ``tool_done`` — a tool finished (``resultSummary`` is the UI one-liner).
+         */
+        AgentStreamToolDoneEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "tool_done";
+            /** Name */
+            name: string;
+            /** Arguments */
+            arguments?: {
+                [key: string]: unknown;
+            };
+            /** Resultsummary */
+            resultSummary: string;
+        };
+        /**
+         * AgentStreamFinalEvent
+         * @description ``final`` — same fields as ``AgentChatResponse``, with ``type`` required.
+         *
+         *     ``error`` is only present when ``final_event(..., error=...)`` is used;
+         *     the success path omits it. In-band failures after the 200 is committed use
+         *     ``AgentStreamErrorEvent`` instead.
+         */
+        AgentStreamFinalEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "final";
+            /** Message */
+            message: string;
+            /** Sessionid */
+            sessionId?: string | null;
+            /** Toolcalls */
+            toolCalls?: components["schemas"]["AgentToolCallSummary"][];
+            /** Error */
+            error?: string | null;
+            taskConfig?: components["schemas"]["TaskDraftPayload"] | null;
+        };
+        /**
+         * AgentStreamErrorEvent
+         * @description In-band ``error`` line (status already committed). See ``agent_errors``.
+         */
+        AgentStreamErrorEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "error";
+            /** Message */
+            message: string;
+            /** Sessionid */
+            sessionId?: string | null;
+            /** Toolcalls */
+            toolCalls?: components["schemas"]["AgentToolCallSummary"][];
+            /** Error */
+            error: string;
+        };
+        /**
          * TelegramBotConfig
          * @description ``telegram_bot`` configuration JSON (``bot_token`` masked on read).
          */
@@ -6317,6 +6410,11 @@ export interface components {
              */
             task_id?: string | null;
         };
+        /**
+         * AgentStreamEvent
+         * @description One NDJSON line from POST /api/v1/agent/chat/stream. Discriminated by the `type` field.
+         */
+        AgentStreamEvent: components["schemas"]["AgentStreamLlmStartEvent"] | components["schemas"]["AgentStreamToolStartEvent"] | components["schemas"]["AgentStreamToolDoneEvent"] | components["schemas"]["AgentStreamFinalEvent"] | components["schemas"]["AgentStreamErrorEvent"];
     };
     responses: never;
     parameters: never;
@@ -11160,13 +11258,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Successful Response */
+            /** @description NDJSON stream of agent progress. Each line is one JSON object (`AgentStreamEvent`): `llm_start` | `tool_start` | `tool_done` | `final` | `error`. LLM providers stay non-streaming; only tool execution progress is streamed. Configuration errors are real HTTP errors; failures after the 200 is committed arrive as an in-band `error` line. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/x-ndjson": components["schemas"]["AgentStreamEvent"];
                 };
             };
             /** @description Validation Error */

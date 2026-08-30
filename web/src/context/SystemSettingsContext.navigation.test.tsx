@@ -7,7 +7,7 @@ import { SystemSettingsProvider } from "./SystemSettingsContext";
 import { SimpleModeProvider } from "./SimpleModeContext";
 import { AiWorkspacePage } from "../pages/ai/AiWorkspacePage";
 import { SettingsShellPage } from "../pages/settings/SettingsShared";
-import { SettingsAiProviderPage } from "../pages/ai/SettingsAiProviderPage";
+import { SettingsAiProviderPage } from "../pages/settings/ai/SettingsAiProviderPage";
 import { SettingsThemePage } from "../pages/settings/SettingsThemePage";
 import { SettingsDataPage } from "../pages/settings/SettingsDataPage";
 

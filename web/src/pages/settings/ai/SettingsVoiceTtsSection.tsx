@@ -1,17 +1,17 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormStack, MenuSelect, SettingsRow } from "../../components/ui";
-import { ToggleSwitch } from "../../components/ToggleSwitch";
-import { useToast } from "../../context/ToastContext";
+import { FormStack, MenuSelect, SettingsRow } from "../../../components/ui";
+import { ToggleSwitch } from "../../../components/ToggleSwitch";
+import { useToast } from "../../../context/ToastContext";
 import {
   createSpeechPorts,
   getTtsProviderOptions,
   ttsSpeakOptionsFromVoiceSettings,
   type TtsProviderId,
   type VoiceSettings,
-} from "../../speech";
-import { TTS_VOICE_PICKER_SEARCH_MIN } from "../../speech/browserTtsVoices";
-import { useBrowserTtsVoiceOptions } from "../../speech/useBrowserTtsVoiceOptions";
+} from "../../../speech";
+import { TTS_VOICE_PICKER_SEARCH_MIN } from "../../../speech/browserTtsVoices";
+import { useBrowserTtsVoiceOptions } from "../../../speech/useBrowserTtsVoiceOptions";
 import {
   VoicePrefCard,
   VoiceProviderMenuSelect,

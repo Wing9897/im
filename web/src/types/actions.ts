@@ -11,8 +11,9 @@ export type ActionType = ActionResponse["actionType"];
 
 // Embedded-JSON config shapes (OpenAPI components, snake_case = stored JSON):
 // SoT is server/api/schemas/action_configs.py; the wire carries them inside
-// the `configuration` / `triggerConditions` string fields. Normalization of
-// untrusted parses stays in `pages/notify/actionConfigParsers.ts`.
+// the `configuration` / `triggerConditions` string fields. Build/validate
+// lives in `domain/actions/`; untrusted parse stays in
+// `pages/notify/actionConfigParsers.ts`.
 
 /** Telegram Bot configuration */
 export type TelegramBotConfig = components["schemas"]["TelegramBotConfig"];

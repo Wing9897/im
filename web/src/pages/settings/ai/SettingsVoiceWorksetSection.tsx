@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { WorksetTargetSelect } from "../../components/assistant/WorksetTargetSelect";
-import { SettingsRow } from "../../components/ui";
-import { loadVoiceSettings, persistAssistantDefaultWorksetId } from "../../speech";
+import { WorksetTargetSelect } from "../../../components/assistant/WorksetTargetSelect";
+import { SettingsRow } from "../../../components/ui";
+import { loadVoiceSettings, persistAssistantDefaultWorksetId } from "../../../speech";
 import { VoiceSelectWrap } from "./SettingsVoiceShared";
 
 type Props = {

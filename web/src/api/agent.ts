@@ -3,7 +3,8 @@
  * Matches server AgentRuntime response shape (camelCase).
  *
  * ``streamAgentChat`` uses POST /chat/stream (NDJSON) to show tool steps live;
- * LLM calls remain non-streaming on the server.
+ * LLM calls remain non-streaming on the server. Line types come from OpenAPI
+ * ``AgentStream*Event`` components (``server/api/schemas/responses/agents.py``).
  */
 
 import { apiClient, resolveBaseUrl, ApiRequestError, NetworkError } from "./client";
@@ -73,42 +74,36 @@ function agentChatRequestBody(body: AgentChatRequest): Record<string, unknown> {
   };
 }
 
-export type AgentStreamEventType =
-  | "llm_start"
-  | "tool_start"
-  | "tool_done"
-  | "final"
-  | "error";
+type OpenApiAgentStreamLlmStartEvent = components["schemas"]["AgentStreamLlmStartEvent"];
+type OpenApiAgentStreamToolStartEvent = components["schemas"]["AgentStreamToolStartEvent"];
+type OpenApiAgentStreamToolDoneEvent = components["schemas"]["AgentStreamToolDoneEvent"];
+type OpenApiAgentStreamFinalEvent = components["schemas"]["AgentStreamFinalEvent"];
+type OpenApiAgentStreamErrorEvent = components["schemas"]["AgentStreamErrorEvent"];
 
-export interface AgentStreamLlmStartEvent {
-  type: "llm_start";
-  round: number;
-}
+/** Discriminator values for one NDJSON line (`AgentStreamEvent`). */
+export type AgentStreamEventType = NonNullable<
+  | OpenApiAgentStreamLlmStartEvent["type"]
+  | OpenApiAgentStreamToolStartEvent["type"]
+  | OpenApiAgentStreamToolDoneEvent["type"]
+  | OpenApiAgentStreamFinalEvent["type"]
+  | OpenApiAgentStreamErrorEvent["type"]
+>;
 
-export interface AgentStreamToolStartEvent {
-  type: "tool_start";
-  name: string;
+export type AgentStreamLlmStartEvent = OpenApiAgentStreamLlmStartEvent;
+
+/** Client-normalized tool start (`arguments` always present). */
+export type AgentStreamToolStartEvent = Omit<OpenApiAgentStreamToolStartEvent, "arguments"> & {
   arguments: Record<string, unknown>;
-}
+};
 
-export interface AgentStreamToolDoneEvent {
-  type: "tool_done";
-  name: string;
+/** Client-normalized tool done (`arguments` always present). */
+export type AgentStreamToolDoneEvent = Omit<OpenApiAgentStreamToolDoneEvent, "arguments"> & {
   arguments: Record<string, unknown>;
-  resultSummary: string;
-}
+};
 
-export interface AgentStreamFinalEvent extends AgentChatResponse {
-  type: "final";
-}
+export type AgentStreamFinalEvent = OpenApiAgentStreamFinalEvent;
 
-export interface AgentStreamErrorEvent {
-  type: "error";
-  message: string;
-  sessionId?: string;
-  toolCalls: AgentToolCallSummary[];
-  error: string;
-}
+export type AgentStreamErrorEvent = OpenApiAgentStreamErrorEvent;
 
 export type AgentStreamEvent =
   | AgentStreamLlmStartEvent
@@ -163,11 +158,20 @@ function dispatchStreamEvent(event: AgentStreamEvent, handlers: AgentStreamHandl
   }
 }
 
+function normalizeToolCalls(
+  calls: OpenApiAgentToolCallSummary[] | undefined,
+): AgentToolCallSummary[] {
+  return (calls ?? []).map((call) => ({
+    ...call,
+    arguments: call.arguments ?? {},
+  }));
+}
+
 function toAgentChatResponse(event: AgentStreamFinalEvent | AgentStreamErrorEvent): AgentChatResponse {
   return {
     message: event.message,
     sessionId: event.sessionId ?? "",
-    toolCalls: event.toolCalls ?? [],
+    toolCalls: normalizeToolCalls(event.toolCalls),
     ...(event.error ? { error: event.error } : {}),
     ...("taskConfig" in event && event.taskConfig != null
       ? { taskConfig: event.taskConfig }

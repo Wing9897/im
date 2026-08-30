@@ -1,3 +1,4 @@
+/** Conversational assistant at `/assistant`. AI settings pages live in `pages/settings/ai/` (`/ai/*`). */
 import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Eraser, MessageSquare, Volume2, VolumeX } from "lucide-react";
