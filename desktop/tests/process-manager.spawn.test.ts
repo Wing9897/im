@@ -39,7 +39,7 @@ import { app, dialog } from 'electron';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 import { setShellLocale, resetShellLocaleForTests } from '../shell-i18n';
-import { SchemaBaselineStartupError } from '../process-manager-schema';
+import { isSchemaBaselineStartupError, SchemaBaselineStartupError } from '../process-manager-schema';
 
 // --- Helpers ---
 
@@ -161,8 +161,10 @@ describe('ProcessManager', () => {
       const pm = new ProcessManager(getDefaultOptions({ healthTimeout: 30000, healthInterval: 500 }));
       const exitCb = vi.fn();
       pm.onUnexpectedExit(exitCb);
-      let caughtError: Error | null = null;
-      const startPromise = pm.start().catch((e) => { caughtError = e as Error; });
+      let caughtError: unknown;
+      const startPromise = pm.start().catch((e: unknown) => {
+        caughtError = e;
+      });
       children[0]!.emit('spawn');
       children[0]!.stderr.emit(
         'data',
@@ -174,8 +176,7 @@ describe('ProcessManager', () => {
       await vi.advanceTimersByTimeAsync(50);
       await startPromise;
 
-      expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
-      if (!(caughtError instanceof SchemaBaselineStartupError)) {
+      if (!isSchemaBaselineStartupError(caughtError)) {
         throw new Error('expected SchemaBaselineStartupError');
       }
       expect(caughtError.message).toBe('Incompatible database schema');
