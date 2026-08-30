@@ -4,7 +4,12 @@ import { startOfDay } from "../../domain/timeline/dateUtils";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { parsePersistedTimelineDay } from "./useTimelineNavigation";
 import {
+  parseTimelineMonthLayout,
+  type TimelineMonthLayout,
+} from "../../domain/timeline/monthCardSources";
+import {
   TIMELINE_FOCUSED_DAY_STORAGE_KEY,
+  TIMELINE_MONTH_LAYOUT_STORAGE_KEY,
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
   TIMELINE_SHOW_DISMISSED_STORAGE_KEY,
   TIMELINE_SHOW_ENDING_STORAGE_KEY,
@@ -32,6 +37,15 @@ export function useTimelinePagePrefs() {
   const viewMode: TimelineViewMode =
     (VALID_VIEW_MODES as readonly string[]).includes(rawViewMode) ? rawViewMode : "calendar";
   useEffect(() => { if (rawViewMode !== viewMode) setViewMode("calendar"); }, [rawViewMode, viewMode, setViewMode]);
+
+  const [rawMonthLayout, setMonthLayout] = usePersistedState<TimelineMonthLayout>(
+    TIMELINE_MONTH_LAYOUT_STORAGE_KEY,
+    "unified",
+  );
+  const monthLayout = parseTimelineMonthLayout(rawMonthLayout);
+  useEffect(() => {
+    if (rawMonthLayout !== monthLayout) setMonthLayout("unified");
+  }, [rawMonthLayout, monthLayout, setMonthLayout]);
 
   const [showDismissed, setShowDismissed] = usePersistedState(
     TIMELINE_SHOW_DISMISSED_STORAGE_KEY,
@@ -69,6 +83,8 @@ export function useTimelinePagePrefs() {
   return {
     viewMode,
     setViewMode,
+    monthLayout,
+    setMonthLayout,
     showDismissed,
     setShowDismissed,
     showOngoing,

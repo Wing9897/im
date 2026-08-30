@@ -154,14 +154,8 @@ def _agent_stream_event_schema() -> dict[str, Any]:
     """Tagged union of the five NDJSON line models (not a Pydantic RootModel)."""
     return {
         "title": "AgentStreamEvent",
-        "description": (
-            "One NDJSON line from POST /api/v1/agent/chat/stream. "
-            "Discriminated by the `type` field."
-        ),
-        "oneOf": [
-            {"$ref": _REF_TEMPLATE.format(model=model.__name__)}
-            for model in _AGENT_STREAM_LINE_MODELS
-        ],
+        "description": ("One NDJSON line from POST /api/v1/agent/chat/stream. Discriminated by the `type` field."),
+        "oneOf": [{"$ref": _REF_TEMPLATE.format(model=model.__name__)} for model in _AGENT_STREAM_LINE_MODELS],
         "discriminator": {
             "propertyName": "type",
             "mapping": {

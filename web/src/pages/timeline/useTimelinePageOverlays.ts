@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import { showMonthDatesRevealChrome } from "../../domain/timeline/monthCardSources";
 import { useMonthHolidays } from "../../hooks/useMonthHolidays";
 import { useMonthWeather } from "../../hooks/useMonthWeather";
 import { useMonthDateReveal } from "./calendar/useMonthDateReveal";
@@ -9,6 +10,7 @@ type Container = ReturnType<typeof useTimelinePageContainer>;
 
 type Args = {
   viewMode: Container["sources"]["viewMode"];
+  monthLayout: Container["sources"]["monthLayout"];
   navigation: Pick<
     Container["navigation"],
     "timeScale" | "weekDays" | "rangeStart" | "monthDays"
@@ -16,7 +18,7 @@ type Args = {
 };
 
 /** Calendar weather / holiday chips plus month date-reveal chrome. */
-export function useTimelinePageOverlays({ viewMode, navigation }: Args) {
+export function useTimelinePageOverlays({ viewMode, monthLayout, navigation }: Args) {
   const weatherEnabled = viewMode === "calendar";
   const weatherDays = useMemo(() => {
     if (!weatherEnabled) return [] as Date[];
@@ -42,7 +44,11 @@ export function useTimelinePageOverlays({ viewMode, navigation }: Args) {
   } = useMonthHolidays(weatherEnabled, weatherDays);
   const overlayLoading = weatherLoading || holidaysLoading;
   const datesReveal = useMonthDateReveal();
-  const showMonthDatesReveal = weatherEnabled && navigation.timeScale === "month";
+  const showMonthDatesReveal = showMonthDatesRevealChrome(
+    viewMode,
+    navigation.timeScale,
+    monthLayout,
+  );
 
   return {
     weatherEnabled,

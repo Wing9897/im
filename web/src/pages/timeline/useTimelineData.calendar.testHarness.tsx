@@ -56,17 +56,26 @@ export function makeCalendarWindowItem(
 
 export function TimelineDataHookHarness({
   selectedSources,
+  selectedSubscribeKeys = null,
+  subscribeCatalogKeys,
+  monthCardsMode = false,
   refOut,
   rangeStart = TIMELINE_CALENDAR_TEST_RANGE.start,
   rangeEnd = TIMELINE_CALENDAR_TEST_RANGE.end,
 }: {
   selectedSources: SourceFilterSelection;
+  selectedSubscribeKeys?: string[] | null;
+  subscribeCatalogKeys?: readonly string[];
+  monthCardsMode?: boolean;
   refOut: { current: TimelineDataHookResult | null };
   rangeStart?: Date;
   rangeEnd?: Date;
 }) {
   const result = useTimelineData({
     selectedSources,
+    selectedSubscribeKeys,
+    subscribeCatalogKeys,
+    monthCardsMode,
     viewMode: "calendar",
     rangeStart,
     rangeEnd,

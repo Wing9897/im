@@ -10,6 +10,7 @@ import {
   paddedTimelineFetchWindow,
 } from "../../domain/timeline/timelineMergedFetch";
 import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
+import { monthCardsFetchSkip } from "../../domain/timeline/monthCardSources";
 import { fetchCalendarShareSubscriptionEvents } from "../../api/calendarShare";
 import { applySubscribedDismissals } from "../../domain/calendarShare/subscribedDismissals";
 import { projectSubscribedTimelineItems } from "../../domain/calendarShare/subscribedEventProject";
@@ -40,6 +41,11 @@ interface UseTimelineDataOptions {
   rangeStart: Date;
   /** End of the visible date range. */
   rangeEnd: Date;
+  /**
+   * Calendar month-cards mode: a `null` local or subscribe filter expands
+   * only when the merged catalog stays at or under 12 cards.
+   */
+  monthCardsMode?: boolean;
 }
 
 interface UseTimelineDataReturn {
@@ -86,6 +92,8 @@ type TimelineFetchKey = {
   /** Stable fingerprint of the filter plan for cache/effect identity. */
   planKey: string;
   filterPlan: ReturnType<typeof resolveTimelineFilterPlan>;
+  monthCardsMode: boolean;
+  worksetCatalogFingerprint: string;
 };
 
 function filterPlanKey(plan: ReturnType<typeof resolveTimelineFilterPlan>): string {
@@ -119,12 +127,13 @@ export function useTimelineData({
   viewMode,
   rangeStart,
   rangeEnd,
+  monthCardsMode = false,
 }: UseTimelineDataOptions): UseTimelineDataReturn {
   const { monitorMode } = useMonitorMode();
   // Pages shell stays keep-mounted under canvas — pause expensive Timeline
   // fetches/subscriptions while the board is the visible shell.
   const pageActive = monitorMode === "pages";
-  const { tasks, taskLoadError, tasksLoading, refreshTasks } = useTaskCatalog();
+  const { tasks, worksets, taskLoadError, tasksLoading, refreshTasks } = useTaskCatalog();
 
   // `activeOnly` matches the assistant / voice pickers: paused (`isActive=false`)
   // analysis tasks must not stay assignable in the toolbar or UserEventDialog.
@@ -158,6 +167,9 @@ export function useTimelineData({
   const subscribeCatalogFingerprint = subscribeCatalogKeys.join("\n");
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
+  const worksetsRef = useRef(worksets);
+  worksetsRef.current = worksets;
+  const worksetCatalogFingerprint = worksets.map((row) => row.id).join("\n");
 
   const lastSubscribedRef = useRef<TimelineItem[]>([]);
 
@@ -167,7 +179,18 @@ export function useTimelineData({
         key.selectedSources !== null &&
         key.selectedSources.taskIds.length === 0 &&
         key.selectedSources.worksetIds.length === 0;
+      const splitSkip = monthCardsFetchSkip(
+        key.monthCardsMode,
+        key.selectedSources,
+        key.selectedSubscribeKeys,
+        {
+          worksets: worksetsRef.current,
+          tasks: tasksRef.current,
+          subscribeCatalogKeys: key.subscribeCatalogKeys,
+        },
+      );
       const skipLocal =
+        splitSkip.skipLocal ||
         localEmpty ||
         (!key.filterPlan.fetchAnalysis &&
           !key.filterPlan.fetchCalendar &&
@@ -186,7 +209,9 @@ export function useTimelineData({
           });
       let subscribed: TimelineItem[] = [];
       let shareError: string | null = null;
-      const visibleKeys = resolvedSubscribeKeys(key.selectedSubscribeKeys, key.subscribeCatalogKeys);
+      const visibleKeys = splitSkip.skipSubscribe
+        ? []
+        : resolvedSubscribeKeys(key.selectedSubscribeKeys, key.subscribeCatalogKeys);
       if (visibleKeys.length > 0) {
         try {
           const remote = await fetchCalendarShareSubscriptionEvents(key.startIso, key.endIso);
@@ -232,9 +257,11 @@ export function useTimelineData({
         subscribeCatalogKeys: catalogKeys,
         planKey: filterPlanKey(plan),
         filterPlan: plan,
+        monthCardsMode,
+        worksetCatalogFingerprint: worksetsRef.current.map((row) => row.id).join("\n"),
       });
     },
-    [fetchEvents],
+    [fetchEvents, monthCardsMode],
   );
 
   useEffect(() => {
@@ -247,6 +274,8 @@ export function useTimelineData({
       subscribeCatalogKeys,
       planKey,
       filterPlan,
+      monthCardsMode,
+      worksetCatalogFingerprint,
     });
   }, [
     pageActive,
@@ -256,8 +285,10 @@ export function useTimelineData({
     selectedSubscribeKeys,
     subscribeCatalogKeys,
     subscribeCatalogFingerprint,
+    worksetCatalogFingerprint,
     planKey,
     filterPlan,
+    monthCardsMode,
   ]);
 
   useTimelineCalendarRefresh({

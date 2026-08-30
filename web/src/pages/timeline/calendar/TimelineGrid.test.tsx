@@ -158,6 +158,17 @@ describe("TimelineGrid viewMode branch", () => {
     expect(container.textContent).toContain("Beta Event");
   });
 
+  it("reads month-cards from context instead of props", () => {
+    const container = render(makeProps({ viewMode: "calendar", timeScale: "month" }), {
+      monthLayout: "split",
+      monthCardModels: [
+        { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
+      ],
+    });
+    expect(container.querySelector('[data-testid="timeline-month-cards-grid"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-month-card"]')).not.toBeNull();
+  });
+
   it("calendar branch renders TimelineCalendarView with event data unchanged", () => {
     const onSelectEvent = vi.fn();
     const container = render(

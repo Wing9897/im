@@ -68,9 +68,17 @@ export function TimelineViewSwitch({
   const {
     onSelectEvent,
     eventStatuses,
+    selectedEvent,
     selectedGanttSpan,
     onCloseGanttPanel,
+    monthLayout = "unified",
   } = useTimelinePageContext();
+
+  const hideDayEventSidebar =
+    viewMode === "calendar" &&
+    timeScale === "month" &&
+    monthLayout === "split" &&
+    !selectedEvent;
 
   const hasEvents = events.length > 0;
   const { timedOut } = useTimelineLoadTimeout(initialLoading, hasEvents);
@@ -107,16 +115,18 @@ export function TimelineViewSwitch({
           />
         </div>
 
-        <div className={timelineSidebarColumnClass}>
-          {viewMode === "gantt" && selectedGanttSpan ? (
-            <TaskDetailPanel span={selectedGanttSpan} onClose={onCloseGanttPanel} />
-          ) : (
-            <TimelineSidebar
-              rangeEvents={sidebarEvents}
-              focusedDay={focusedDay}
-            />
-          )}
-        </div>
+        {hideDayEventSidebar ? null : (
+          <div className={timelineSidebarColumnClass} data-testid="timeline-event-sidebar">
+            {viewMode === "gantt" && selectedGanttSpan ? (
+              <TaskDetailPanel span={selectedGanttSpan} onClose={onCloseGanttPanel} />
+            ) : (
+              <TimelineSidebar
+                rangeEvents={sidebarEvents}
+                focusedDay={focusedDay}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

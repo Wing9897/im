@@ -8,6 +8,7 @@ import {
   monthDayHolidayWatermarkClass,
   monthDayNumberClass,
   monthDaySurfaceClass,
+  monthDayCellClass,
   monthDayWatermarkClass,
   monthDayWatermarkStackClass,
   monthDayWeekdayFillerClass,
@@ -90,5 +91,48 @@ describe("month cell CSS contract", () => {
       /\.im-timeline-month-grid\.is-revealed \.im-month-day-watermark-stack\.is-holiday \.im-month-day-watermark[\s\S]*color:\s*var\(--im-holiday-ink\)/s,
     );
     expect(timelineCss).toMatch(/text-overflow:\s*ellipsis/);
+  });
+
+  it("defines independent split-month classes without compact large-month hiding", () => {
+    expect(timelineCss).toContain(".im-split-month-card");
+    expect(timelineCss).toContain(".im-split-month-days");
+    expect(timelineCss).toContain(".im-split-month-day-number");
+    expect(timelineCss).toContain(".im-split-month-dot");
+    expect(timelineCss).toContain(".im-split-month-popover");
+    expect(timelineCss).toContain("background: var(--split-month-card-dot, var(--calendar-dot-event))");
+    expect(timelineCss).toContain("border-top-color: var(--split-month-card-accent, var(--accent))");
+    expect(timelineCss).toContain(".im-split-month-color-swatch");
+    expect(timelineCss).toContain(".im-split-month-color-custom");
+    expect(timelineCss).not.toMatch(/\[data-card-kind/);
+    expect(timelineCss).not.toContain(".im-split-month-card .im-month-day-watermark");
+    expect(timelineCss).not.toContain(".im-split-month-month");
+  });
+
+  it("paints split-card day chrome with the card accent; unified month stays global", () => {
+    expect(timelineCss).toMatch(
+      /\.im-split-month-day\.is-today\s*\{[^}]*var\(--split-month-card-accent,\s*var\(--accent\)\)/s,
+    );
+    expect(timelineCss).toMatch(
+      /\.im-split-month-day\.is-active,\s*\.im-split-month-day\.is-open[\s\S]*?border-color:\s*var\(--split-month-card-accent,\s*var\(--accent\)\)/s,
+    );
+    expect(timelineCss).toMatch(
+      /\.im-split-month-day:focus-visible\s*\{[^}]*var\(--split-month-card-accent,\s*var\(--accent\)\)/s,
+    );
+    expect(timelineCss).toMatch(
+      /\.im-split-month-day\.is-today \.im-split-month-day-number\s*\{[^}]*var\(--split-month-card-accent,\s*var\(--accent\)\)/s,
+    );
+    expect(timelineCss).not.toMatch(
+      /\.im-split-month-day\.is-today\s*\{[^}]*border-color:\s*color-mix\(\s*in srgb,\s*var\(--accent\)\s+40%/s,
+    );
+    expect(timelineCss).not.toMatch(
+      /\.im-split-month-day\.is-active,\s*\.im-split-month-day\.is-open\s*\{[^}]*border-color:\s*var\(--accent\);/s,
+    );
+    expect(timelineCss).toMatch(/\.im-month-day-watermark\.is-today\s*\{[^}]*color:\s*var\(--accent\)/s);
+    expect(monthDayCellClass({ isCurrentMonth: true, activeDay: true, today: false })).toContain(
+      "border-accent",
+    );
+    expect(monthDayCellClass({ isCurrentMonth: true, activeDay: false, today: true })).toContain(
+      "var(--accent)",
+    );
   });
 });

@@ -51,6 +51,64 @@ describe("TimelineCalendarView", () => {
       expect(dayCells.length).toBe(42);
     });
 
+    it("renders month cards instead of the unified grid when layout is split", () => {
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthLayout: "split",
+          monthCardModels: [
+            { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
+          ],
+        }),
+      );
+      expect(container.querySelector('[data-testid="timeline-month-cards-grid"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="timeline-month-card"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="timeline-month-grid"]')).toBeNull();
+      expect(container.querySelectorAll('[data-testid="timeline-split-month-day"]').length).toBe(42);
+      expect(container.querySelectorAll(MONTH_DAY_CELL).length).toBe(0);
+    });
+
+    it("renders the empty cards hint when split has no sources", () => {
+      const container = render(makeProps({ timeScale: "month", monthLayout: "split" }));
+      expect(container.querySelector('[data-testid="timeline-month-cards-empty"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="timeline-month-grid"]')).toBeNull();
+    });
+
+    it("does not paint a shared timeCursor or focusedDay as selected on split cards", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 7, 30, 15, 0, 0));
+      const monthCursor = new Date(2026, 7, 1);
+      try {
+        const container = render(
+          makeProps({
+            timeScale: "month",
+            monthLayout: "split",
+            monthCursor,
+            monthDays: buildCalendarDays(monthCursor),
+            timeCursor: new Date(2026, 7, 31),
+            focusedDay: new Date(2026, 7, 31),
+            monthCardModels: [
+              { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
+              { kind: "subscribe", key: "Alice/Work", title: "Alice/Work", events: [] },
+            ],
+          }),
+        );
+        const days30 = container.querySelectorAll(
+          '[data-testid="timeline-split-month-day"][data-day="2026-08-30"]',
+        );
+        const days31 = container.querySelectorAll(
+          '[data-testid="timeline-split-month-day"][data-day="2026-08-31"]',
+        );
+        expect(days30).toHaveLength(2);
+        expect(days31).toHaveLength(2);
+        expect([...days30].every((day) => day.className.includes("is-today"))).toBe(true);
+        expect([...days31].every((day) => !day.className.includes("is-today"))).toBe(true);
+        expect([...days31].every((day) => !day.className.includes("is-active"))).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("gives every month day cell an accessible name with its event count", () => {
       const events = [
         makeEvent({

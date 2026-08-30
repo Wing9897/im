@@ -37,9 +37,15 @@ import {
   calendarScrollableClass,
   monthCalendarFillClass,
 } from "../timelineCalendarClasses";
+import type {
+  MonthCardEmptyReason,
+  MonthCardModel,
+  TimelineMonthLayout,
+} from "../../../domain/timeline/monthCardSources";
 import { TimelineDayEventCard } from "./TimelineDayEventCard";
 import { TimelineHolidayChip } from "./TimelineHolidayChip";
-import { TimelineMonthGrid } from "./TimelineMonthGrid";
+import { TimelineMonthCardsGrid } from "./TimelineMonthCardsGrid";
+import { TimelineMonthGrid, type TimelineMonthChromeProps } from "./TimelineMonthGrid";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";
 import { WeekEventChip } from "./TimelineWeekEventChip";
 
@@ -52,6 +58,10 @@ type TimelineCalendarViewProps = {
   monthCursor: Date;
   monthDays: Date[];
   monthEvents: TimelineItem[];
+  monthLayout?: TimelineMonthLayout;
+  monthCardModels?: MonthCardModel[];
+  monthCardsOmitted?: number;
+  monthCardsEmptyReason?: MonthCardEmptyReason | null;
   focusedDay: Date | null;
   eventStatuses: TimelineEventStatusMap;
   /** Include soft-dismissed events in day cells (product default true). */
@@ -81,6 +91,10 @@ export function TimelineCalendarView({
   monthCursor,
   monthDays,
   monthEvents,
+  monthLayout = "unified",
+  monthCardModels = [],
+  monthCardsOmitted = 0,
+  monthCardsEmptyReason = null,
   focusedDay,
   eventStatuses,
   showDismissed = true,
@@ -219,23 +233,45 @@ export function TimelineCalendarView({
     );
   }
 
+  const monthChrome: TimelineMonthChromeProps = {
+    timeCursor,
+    monthCursor,
+    monthDays,
+    focusedDay,
+    showDismissed,
+    showOngoing,
+    showEnding,
+    datesRevealed,
+    onSelectEvent,
+    onFocusDay,
+    onCreateOnDay,
+  };
+
+  if (monthLayout === "split") {
+    return (
+      <div className={calendarScrollableClass}>
+        <TimelineMonthCardsGrid
+          cards={monthCardModels}
+          omitted={monthCardsOmitted}
+          emptyReason={monthCardsEmptyReason}
+          monthCursor={monthCursor}
+          monthDays={monthDays}
+          showDismissed={showDismissed}
+          onSelectEvent={onSelectEvent}
+          onFocusDay={onFocusDay}
+          onCreateOnDay={onCreateOnDay}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={monthCalendarFillClass}>
       <TimelineMonthGrid
-        timeCursor={timeCursor}
-        monthCursor={monthCursor}
-        monthDays={monthDays}
+        {...monthChrome}
         monthEvents={monthEvents}
-        focusedDay={focusedDay}
-        showDismissed={showDismissed}
-        showOngoing={showOngoing}
-        showEnding={showEnding}
         weatherByDate={weatherByDate}
         holidaysByDate={holidaysByDate}
-        datesRevealed={datesRevealed}
-        onSelectEvent={onSelectEvent}
-        onFocusDay={onFocusDay}
-        onCreateOnDay={onCreateOnDay}
       />
     </div>
   );

@@ -112,6 +112,15 @@
   --im-holiday-ink: #ef4444;
 }
 
+.im-timeline-month-grid--compact .im-month-day-cell {
+  --im-month-day-header-h: 14px;
+  --im-month-day-pad-y: 2px;
+}
+
+.im-timeline-month-grid--compact .im-month-day-watermark {
+  font-size: 1.15rem;
+}
+
 .im-month-day-header {
   box-sizing: border-box;
   display: flex;
@@ -260,4 +269,336 @@ html[data-theme-bg="focal"] .im-timeline-gantt {
   background: color-mix(in srgb, var(--surface-card) 86%, transparent);
   --surface-chrome: color-mix(in srgb, var(--surface-card) 88%, transparent);
   --surface-panel: color-mix(in srgb, var(--surface-card) 80%, transparent);
+}
+
+/* Split month cards: independent mini calendars (not compact large-month). */
+.im-split-month-cards {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .im-split-month-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .im-split-month-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.im-split-month-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--surface-border);
+  border-top-color: var(--split-month-card-accent, var(--accent));
+  padding: 8px;
+  overflow: visible;
+}
+
+.im-split-month-card.is-popover-open {
+  z-index: 5;
+}
+
+.im-split-month-header {
+  display: flex;
+  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 2px;
+}
+
+.im-split-month-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.im-split-month-color {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.im-split-month-color-swatch {
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 28%, transparent);
+  background: var(--split-month-card-accent, var(--accent));
+  cursor: pointer;
+}
+
+.im-split-month-color-palette {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 14px);
+  gap: 6px;
+  box-sizing: border-box;
+  width: max-content;
+  padding: 8px;
+}
+
+.im-split-month-color-option {
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 28%, transparent);
+  cursor: pointer;
+}
+
+.im-split-month-color-option.is-default {
+  background:
+    linear-gradient(
+      135deg,
+      transparent 46%,
+      var(--text-muted) 46%,
+      var(--text-muted) 54%,
+      transparent 54%
+    ),
+    var(--surface-inset);
+}
+
+.im-split-month-color-option.is-selected,
+.im-split-month-color-custom.is-selected {
+  box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 3px var(--text-primary);
+}
+
+.im-split-month-color-custom {
+  position: relative;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 28%, transparent);
+  background: conic-gradient(
+    from 180deg,
+    var(--error),
+    var(--warning),
+    var(--success),
+    var(--info),
+    var(--lavender),
+    var(--accent-pink),
+    var(--error)
+  );
+  cursor: pointer;
+}
+
+.im-split-month-color-custom input[type="color"] {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.im-split-month-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.im-split-month-weekday {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.im-split-month-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(6, minmax(1.75rem, 1fr));
+  gap: 2px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.im-split-month-day {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  min-height: 1.75rem;
+  min-width: 0;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  overflow: visible;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  padding: 3px 1px 2px;
+}
+
+.im-split-month-day.is-outside {
+  opacity: 0.45;
+}
+
+.im-split-month-day.is-today {
+  border-color: color-mix(
+    in srgb,
+    var(--split-month-card-accent, var(--accent)) 40%,
+    var(--surface-border)
+  );
+}
+
+.im-split-month-day.is-active,
+.im-split-month-day.is-open,
+.im-split-month-day:focus-visible {
+  border-color: var(--split-month-card-accent, var(--accent));
+  outline: none;
+}
+
+.im-split-month-day.is-active,
+.im-split-month-day.is-open {
+  background: color-mix(
+    in srgb,
+    var(--split-month-card-accent, var(--accent)) 12%,
+    var(--surface-inset)
+  );
+}
+
+.im-split-month-day-number {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.im-split-month-day.is-today .im-split-month-day-number {
+  color: var(--split-month-card-accent, var(--accent));
+}
+
+.im-split-month-day.is-outside .im-split-month-day-number {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.im-split-month-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 4px;
+}
+
+.im-split-month-dot {
+  width: 4px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--split-month-card-dot, var(--calendar-dot-event));
+}
+
+.im-split-month-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 10rem;
+  max-width: min(16rem, 70vw);
+  max-height: 12rem;
+  overflow: auto;
+  padding: 6px;
+}
+
+.im-split-month-popover-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.im-split-month-popover-row {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  padding: 4px 6px;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.im-split-month-popover-row:hover {
+  background: var(--surface-overlay);
+}
+
+.im-split-month-popover-time {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+.im-split-month-popover-title {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.im-split-month-popover-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.im-split-month-popover-add {
+  cursor: pointer;
+  align-self: flex-start;
+  border: none;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
 }

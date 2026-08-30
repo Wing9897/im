@@ -5,6 +5,13 @@ import { CalendarShareConnectionStatusIcon } from "../../../components/calendarS
 import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
+import {
+  applyCalendarScalePill,
+  calendarScalePills,
+  isCalendarScalePillActive,
+  type CalendarScalePill,
+  type TimelineMonthLayout,
+} from "../../../domain/timeline/monthCardSources";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import type { SubscribeAvailability, SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
@@ -35,6 +42,8 @@ type TimelineControlBarProps = {
   viewMode: "calendar" | "gantt";
   setViewMode: (mode: "calendar" | "gantt") => void;
   timeScale: TimelineScale;
+  monthLayout?: TimelineMonthLayout;
+  onMonthLayoutChange?: (layout: TimelineMonthLayout) => void;
   onJumpTo: (scale: TimelineScale) => void;
   onMoveCursor: (delta: number) => void;
   visibleRangeLabel: string;
@@ -61,6 +70,8 @@ export function TimelineControlBar({
   viewMode,
   setViewMode,
   timeScale,
+  monthLayout = "unified",
+  onMonthLayoutChange,
   onJumpTo,
   onMoveCursor,
   visibleRangeLabel,
@@ -81,16 +92,18 @@ export function TimelineControlBar({
     [timelineTasks],
   );
 
-  const handleScaleClick = (scale: TimelineScale) => {
-    onJumpTo(scale);
+  const handleScaleClick = (pill: CalendarScalePill) => {
+    const next = applyCalendarScalePill(pill, viewMode);
+    if (next.monthLayout) onMonthLayoutChange?.(next.monthLayout);
+    onJumpTo(next.timeScale);
   };
 
-  const scaleLabel = (scale: TimelineScale) => t(`scale.${scale}`);
+  const scaleLabel = (pill: CalendarScalePill) => t(`scale.${pill}`);
 
-  const scales: TimelineScale[] =
-    viewMode === "gantt"
-      ? ["day", "week", "month", "quarter", "year"]
-      : ["day", "week", "month"];
+  const isScaleActive = (pill: CalendarScalePill) =>
+    isCalendarScalePillActive(pill, { viewMode, timeScale, monthLayout });
+
+  const scales = calendarScalePills(viewMode);
 
   return (
     <OpsControlBar
@@ -133,10 +146,10 @@ export function TimelineControlBar({
         {scales.map((scale) => (
           <PillButton
             key={scale}
-            active={timeScale === scale}
+            active={isScaleActive(scale)}
             onClick={() => handleScaleClick(scale)}
             title={
-              timeScale === scale
+              isScaleActive(scale)
                 ? t("toolbar.jumpToCurrent", { scale: scaleLabel(scale) })
                 : t("toolbar.switchToScale", { scale: scaleLabel(scale) })
             }
@@ -176,7 +189,7 @@ export function TimelineControlBar({
           ) : null}
           {children}
           <PillButton
-            onClick={() => handleScaleClick(timeScale)}
+            onClick={() => onJumpTo(timeScale)}
             aria-label={t("toolbar.todayAria")}
             title={t("toolbar.todayTitle")}
           >

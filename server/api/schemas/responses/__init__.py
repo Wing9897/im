@@ -13,6 +13,13 @@ from server.api.schemas.responses.actions import (
     ActionTriggerHistoryEntryResponse,
     ActionTriggerHistoryPageResponse,
 )
+from server.api.schemas.responses.agents import (
+    AgentStreamErrorEvent,
+    AgentStreamFinalEvent,
+    AgentStreamLlmStartEvent,
+    AgentStreamToolDoneEvent,
+    AgentStreamToolStartEvent,
+)
 from server.api.schemas.responses.auth import (
     AccessKeyCreatedResponse,
     AccessKeyDeleteResponse,
@@ -120,13 +127,6 @@ from server.api.schemas.responses.system import (
     RotateSecretsScrubbedCounts,
     SystemMessageResponse,
     SystemSettingsSnapshot,
-)
-from server.api.schemas.responses.agents import (
-    AgentStreamErrorEvent,
-    AgentStreamFinalEvent,
-    AgentStreamLlmStartEvent,
-    AgentStreamToolDoneEvent,
-    AgentStreamToolStartEvent,
 )
 from server.api.schemas.responses.tasks import (
     AgentChatResponse,

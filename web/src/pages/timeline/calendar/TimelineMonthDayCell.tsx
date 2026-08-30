@@ -46,6 +46,8 @@ export type TimelineMonthDayCellProps = {
   onCreateOnDay?: (day: Date) => void;
   onOpenContextMenu: (day: Date, clientX: number, clientY: number) => void;
   onClearContextMenu: () => void;
+  hideOverlays?: boolean;
+  previewLimit?: number;
 };
 
 export function TimelineMonthDayCell({
@@ -66,6 +68,8 @@ export function TimelineMonthDayCell({
   onCreateOnDay,
   onOpenContextMenu,
   onClearContextMenu,
+  hideOverlays = false,
+  previewLimit = MONTH_EVENT_PREVIEW_LIMIT,
 }: TimelineMonthDayCellProps) {
   const { t } = useTranslation("timeline");
   const isCurrentMonth = day.getMonth() === monthCursor.getMonth();
@@ -86,11 +90,12 @@ export function TimelineMonthDayCell({
   const selectionDay = focusedDay ?? timeCursor;
   const activeDay = isSameDay(day, selectionDay);
   const today = isToday(day);
-  const previewEvents = dayEvents.slice(0, MONTH_EVENT_PREVIEW_LIMIT);
+  const previewEvents = dayEvents.slice(0, previewLimit);
   const overflowCount = dayEvents.length - previewEvents.length;
   const hasSpanIndicators = visibleOngoing > 0 || visibleEnding > 0;
   const showTodayLabel = today && isCurrentMonth && previewEvents.length === 0;
-  const holidayNames = isCurrentMonth ? holidayNamesForDay(day, holidaysByDate) : [];
+  const holidayNames =
+    !hideOverlays && isCurrentMonth ? holidayNamesForDay(day, holidaysByDate) : [];
   const hasHoliday = holidayNames.length > 0;
   const showWeekdayFiller = !showTodayLabel && !hasSpanIndicators;
 
@@ -183,12 +188,14 @@ export function TimelineMonthDayCell({
             )}
           </div>
           <div className={monthDayMetaClass}>
-            <TimelineWeatherChip
-              day={day}
-              weatherByDate={weatherByDate}
-              visible={isCurrentMonth}
-              testId="timeline-month-day-weather"
-            />
+            {hideOverlays ? null : (
+              <TimelineWeatherChip
+                day={day}
+                weatherByDate={weatherByDate}
+                visible={isCurrentMonth}
+                testId="timeline-month-day-weather"
+              />
+            )}
           </div>
         </div>
 
