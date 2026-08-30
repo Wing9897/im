@@ -175,8 +175,11 @@ describe('ProcessManager', () => {
       await startPromise;
 
       expect(caughtError).toBeInstanceOf(SchemaBaselineStartupError);
-      expect(caughtError!.message).toBe('Incompatible database schema');
-      expect((caughtError as SchemaBaselineStartupError).technicalDetail).toContain(
+      if (!(caughtError instanceof SchemaBaselineStartupError)) {
+        throw new Error('expected SchemaBaselineStartupError');
+      }
+      expect(caughtError.message).toBe('Incompatible database schema');
+      expect(caughtError.technicalDetail).toContain(
         'Unsupported database schema version 2',
       );
       expect(spawnCount).toBe(1);
