@@ -75,7 +75,8 @@ async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse
 async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingResponse:
     """Stream agent progress as NDJSON (tool steps + final answer).
 
-    Each line is one JSON object with a ``type`` field:
+    Each line is one JSON object with a ``type`` field
+    (``AgentStreamEvent`` in OpenAPI / ``server/api/schemas/responses/agents.py``):
     ``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.
     LLM providers stay non-streaming; only tool execution progress is streamed.
 

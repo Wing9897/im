@@ -22,7 +22,7 @@ SoT: [`agent/mcp.md`](./agent/mcp.md) (`/api/v1/mcp`)、[`agent/a2a.md`](./agent
 
 Dashboard maps `useTaskAnalysisStats` → `web/src/domain/dashboard/taskCardStats.ts`（待分析／排隊中／已分析）. Intelligence sort／display／page-by-page timeline／voice: [`ARCHITECTURE.md` Unified event analysis](./ARCHITECTURE.md#unified-event-analysis-pipeline); FE quirks below under [Intelligence](#intelligence--events-time-semantics).
 
-**Viewer** (`/viewer/*`) is a **secondary read-only projection** of live task／batch／status — not a second control plane. Prefer the main app for edits and ops.
+**Dashboard vs Viewer:** Dashboard is the **operable** surface (create／edit／ops). Viewer (`/viewer/*`) is **read-only diagnostics** of live task／batch／status — not a second control plane. Do **not** extract a shared read-model or delete `/viewer/*` as duplicate debt.
 
 ## Prompt and analysis
 
@@ -81,7 +81,7 @@ Still in force under schema floor **6** / current stamp **6** / `SCHEMA_SEMVER` 
 | Global slots hard-bind (assistant／liaison／taskEditor) | Unbound slot → hard-fail (assistant same as liaison); UI on `/ai/provider` + `GET/PUT /api/v1/llm/global-slots` |
 | Fresh DDL seeds **zero** profiles | Tests use ephemeral profile ids; production never invents `__default__` |
 
-**Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns).
+**Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns); Viewer `/viewer/*` as read-only diagnostics (Dashboard stays the operable surface — not duplicate debt).
 
 ### Debt purge notes
 

@@ -90,14 +90,17 @@ const NotifyWorkspacePage = lazyNamed(
 const AssistantPage = lazyNamed(() => import("../pages/ai/assistant/AssistantPage"), "AssistantPage");
 const AiWorkspacePage = lazyNamed(() => import("../pages/ai/AiWorkspacePage"), "AiWorkspacePage");
 const SettingsAiProviderPage = lazyNamed(
-  () => import("../pages/ai/SettingsAiProviderPage"),
+  () => import("../pages/settings/ai/SettingsAiProviderPage"),
   "SettingsAiProviderPage",
 );
 const SettingsAiStaffPage = lazyNamed(
-  () => import("../pages/ai/SettingsAiStaffPage"),
+  () => import("../pages/settings/ai/SettingsAiStaffPage"),
   "SettingsAiStaffPage",
 );
-const SettingsVoicePage = lazyNamed(() => import("../pages/ai/SettingsVoicePage"), "SettingsVoicePage");
+const SettingsVoicePage = lazyNamed(
+  () => import("../pages/settings/ai/SettingsVoicePage"),
+  "SettingsVoicePage",
+);
 const SettingsShellPage = lazyNamed(() => import("../pages/settings/SettingsShared"), "SettingsShellPage");
 const SettingsGeneralPage = lazyNamed(() => import("../pages/settings/SettingsGeneralPage"), "SettingsGeneralPage");
 const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThemePage"), "SettingsThemePage");

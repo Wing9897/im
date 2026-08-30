@@ -11,7 +11,8 @@ import i18n from "../../../i18n";
 import type { Action, TriggerConditions } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import type { ActionFormState } from "./useActionFormDialog";
-import { buildConfiguration, validateActionTypeFields } from "../hooks/useActionTypeHandlers";
+import { buildConfiguration } from "../../../domain/actions/actionConfiguration";
+import { validateActionTypeFields } from "../../../domain/actions/validateActionTypeFields";
 
 interface UseActionFormSubmitOptions {
   form: ActionFormState;

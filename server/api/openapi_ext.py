@@ -1,11 +1,14 @@
 """OpenAPI export extensions for contracts no route body references.
 
-Two families are injected at schema-export time (``app.openapi()``):
+Three families are injected at schema-export time (``app.openapi()``):
 
 * **SSE event payloads** (``server/api/schemas/responses/sse.py``):
   ``GET /api/v1/events`` streams ``text/event-stream``, so its 200 response is
   rewritten to reference ``SseEventEnvelope`` instead of the default empty
   ``application/json`` body.
+* **Agent NDJSON lines** (``server/api/schemas/responses/agents.py``):
+  ``POST /api/v1/agent/chat/stream`` yields ``application/x-ndjson``, so its
+  200 response is rewritten to reference the ``AgentStreamEvent`` oneOf.
 * **Action embedded-JSON configs** (``server/api/schemas/action_configs.py``):
   the wire carries them inside string fields, so their object shapes exist as
   components only.
@@ -28,6 +31,13 @@ from server.api.schemas.action_configs import (
     HttpWebhookConfig,
     MqttConfig,
     TelegramBotConfig,
+)
+from server.api.schemas.responses.agents import (
+    AgentStreamErrorEvent,
+    AgentStreamFinalEvent,
+    AgentStreamLlmStartEvent,
+    AgentStreamToolDoneEvent,
+    AgentStreamToolStartEvent,
 )
 from server.api.schemas.responses.sse import (
     SseAnalysisCompletedPayload,
@@ -54,6 +64,11 @@ EXTRA_COMPONENT_MODELS: tuple[type[BaseModel], ...] = (
     SseAnalysisPausedChangedPayload,
     SseResourceModifiedPayload,
     SseEventEnvelope,
+    AgentStreamLlmStartEvent,
+    AgentStreamToolStartEvent,
+    AgentStreamToolDoneEvent,
+    AgentStreamFinalEvent,
+    AgentStreamErrorEvent,
     TelegramBotConfig,
     DiscordWebhookConfig,
     HttpWebhookConfig,
@@ -61,7 +76,24 @@ EXTRA_COMPONENT_MODELS: tuple[type[BaseModel], ...] = (
     ActionTriggerConditions,
 )
 
+_AGENT_STREAM_LINE_MODELS: tuple[type[BaseModel], ...] = (
+    AgentStreamLlmStartEvent,
+    AgentStreamToolStartEvent,
+    AgentStreamToolDoneEvent,
+    AgentStreamFinalEvent,
+    AgentStreamErrorEvent,
+)
+
+_AGENT_STREAM_DISCRIMINATOR_MAPPING: dict[str, str] = {
+    "llm_start": "AgentStreamLlmStartEvent",
+    "tool_start": "AgentStreamToolStartEvent",
+    "tool_done": "AgentStreamToolDoneEvent",
+    "final": "AgentStreamFinalEvent",
+    "error": "AgentStreamErrorEvent",
+}
+
 _EVENTS_PATH = "/api/v1/events"
+_AGENT_STREAM_PATH = "/api/v1/agent/chat/stream"
 
 _EVENTS_RESPONSE_DESCRIPTION = (
     "Server-Sent Events stream. Each named event's `data` field is the JSON "
@@ -69,6 +101,14 @@ _EVENTS_RESPONSE_DESCRIPTION = (
     "clients unwrap `payload` per event type. Resource/status payloads are "
     "camelCase (`adapterName`, `errorSummary`); error-body fields "
     "`error_code` / `correlation_id` stay snake_case."
+)
+
+_AGENT_STREAM_RESPONSE_DESCRIPTION = (
+    "NDJSON stream of agent progress. Each line is one JSON object "
+    "(`AgentStreamEvent`): `llm_start` | `tool_start` | `tool_done` | "
+    "`final` | `error`. LLM providers stay non-streaming; only tool execution "
+    "progress is streamed. Configuration errors are real HTTP errors; failures "
+    "after the 200 is committed arrive as an in-band `error` line."
 )
 
 
@@ -110,6 +150,44 @@ def _document_events_stream(schema: dict[str, Any]) -> None:
     }
 
 
+def _agent_stream_event_schema() -> dict[str, Any]:
+    """Tagged union of the five NDJSON line models (not a Pydantic RootModel)."""
+    return {
+        "title": "AgentStreamEvent",
+        "description": (
+            "One NDJSON line from POST /api/v1/agent/chat/stream. "
+            "Discriminated by the `type` field."
+        ),
+        "oneOf": [
+            {"$ref": _REF_TEMPLATE.format(model=model.__name__)}
+            for model in _AGENT_STREAM_LINE_MODELS
+        ],
+        "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+                event_type: _REF_TEMPLATE.format(model=name)
+                for event_type, name in _AGENT_STREAM_DISCRIMINATOR_MAPPING.items()
+            },
+        },
+    }
+
+
+def _document_agent_stream(schema: dict[str, Any]) -> None:
+    components = schema.setdefault("components", {}).setdefault("schemas", {})
+    components.setdefault("AgentStreamEvent", _agent_stream_event_schema())
+    operation = schema.get("paths", {}).get(_AGENT_STREAM_PATH, {}).get("post")
+    if operation is None:  # pragma: no cover — agent router is always mounted
+        return
+    operation.setdefault("responses", {})["200"] = {
+        "description": _AGENT_STREAM_RESPONSE_DESCRIPTION,
+        "content": {
+            "application/x-ndjson": {
+                "schema": {"$ref": _REF_TEMPLATE.format(model="AgentStreamEvent")},
+            },
+        },
+    }
+
+
 def install_openapi_extensions(app: FastAPI) -> None:
     """Wrap ``app.openapi`` so exports include the extra component schemas."""
     original_openapi = app.openapi
@@ -120,6 +198,7 @@ def install_openapi_extensions(app: FastAPI) -> None:
         schema = original_openapi()
         _inject_component_schemas(schema)
         _document_events_stream(schema)
+        _document_agent_stream(schema)
         app.openapi_schema = schema
         return schema
 

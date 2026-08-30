@@ -2,30 +2,30 @@ import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } fro
 import { Link } from "react-router-dom";
 import { Pencil, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
-import { AssistantHistorySettingsDialog } from "../../components/aiStaff/AssistantHistorySettingsDialog";
-import { Badge, Button, SurfaceCard, TextField } from "../../components/ui";
+import { AiStaffAvatar } from "../../../components/aiStaff/AiStaffAvatar";
+import { AssistantHistorySettingsDialog } from "../../../components/aiStaff/AssistantHistorySettingsDialog";
+import { Badge, Button, SurfaceCard, TextField } from "../../../components/ui";
 import {
   cardBodyClass,
   cardMetaClass,
   cardTitleClass,
   captionClass,
   formHelpClass,
-} from "../../components/ui/pageTypography";
-import { AI_STAFF_ROSTER } from "../../domain/aiStaff/aiStaff";
+} from "../../../components/ui/pageTypography";
+import { AI_STAFF_ROSTER } from "../../../domain/aiStaff/aiStaff";
 import {
   compressAvatarToDataUrl,
   resolveAssistantDisplayName,
   useAssistantIdentity,
-} from "../../domain/aiStaff/assistantIdentity";
-import type { SystemSettingsSnapshot } from "../../types";
-import { SettingsContentCard } from "../../components/settings/SettingsFormLayout";
+} from "../../../domain/aiStaff/assistantIdentity";
+import type { SystemSettingsSnapshot } from "../../../types";
+import { SettingsContentCard } from "../../../components/settings/SettingsFormLayout";
 import {
   FRONTLINE_LINKS,
   LiaisonIntroCard,
   RosterStaffCard,
 } from "./AiStaffIntroCards";
-import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
+import { useSettingsPageState } from "../../../components/settings/useSettingsPageState";
 
 const titleIconBtnClass =
   "im-icon-btn !h-7 !w-7 !rounded-md text-text-secondary transition-colors";

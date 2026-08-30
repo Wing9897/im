@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { SettingsRow } from "../../components/ui";
+import { SettingsRow } from "../../../components/ui";
 import {
   getSttProviderOptions,
   type SttProviderId,
-} from "../../speech";
+} from "../../../speech";
 import { VoicePrefCard, VoiceProviderMenuSelect } from "./SettingsVoiceShared";
 
 type Props = {

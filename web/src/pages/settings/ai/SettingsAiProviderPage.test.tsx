@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTestHarness, type TestHarness } from "../../test/render-helpers";
-import { ensureZhHantLocale } from "../../test/i18nHarness";
-import { emptyKeyedWebSearchApiKeyFields } from "../../domain/settings/assistantWebSearchRoute";
+import { createTestHarness, type TestHarness } from "../../../test/render-helpers";
+import { ensureZhHantLocale } from "../../../test/i18nHarness";
+import { emptyKeyedWebSearchApiKeyFields } from "../../../domain/settings/assistantWebSearchRoute";
 import { SettingsAiProviderPage } from "./SettingsAiProviderPage";
 
 const listLlmProfiles = vi.fn();
 const listLlmGlobalSlots = vi.fn();
 const bindLlmGlobalSlot = vi.fn();
 
-vi.mock("../../api/llmProfiles", () => ({
+vi.mock("../../../api/llmProfiles", () => ({
   listLlmProfiles: (...args: unknown[]) => listLlmProfiles(...args),
   listLlmGlobalSlots: (...args: unknown[]) => listLlmGlobalSlots(...args),
   bindLlmGlobalSlot: (...args: unknown[]) => bindLlmGlobalSlot(...args),
@@ -18,19 +18,19 @@ vi.mock("../../api/llmProfiles", () => ({
   copyLlmProfile: vi.fn(),
   }));
 
-vi.mock("../../api/system", () => ({
+vi.mock("../../../api/system", () => ({
   testAiEngine: vi.fn(),
 }));
 
-vi.mock("../../context/ToastContext", () => ({
+vi.mock("../../../context/ToastContext", () => ({
   useToast: () => ({ showToast: vi.fn() }),
 }));
 
-vi.mock("../../context/CollectorStatusContext", () => ({
+vi.mock("../../../context/CollectorStatusContext", () => ({
   useCollectorStatus: () => ({ requestAiStatusRefresh: vi.fn() }),
 }));
 
-vi.mock("../../components/settings/useSettingsPageState", () => ({
+vi.mock("../../../components/settings/useSettingsPageState", () => ({
   useSettingsPageState: () => ({
     settingsObject: { llmGenerationTimeout: "120" },
     handleSettingChange: vi.fn(),

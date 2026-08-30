@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import liaisonAvatarSrc from "../../assets/ai-staff/liaison.png";
-import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
-import { Badge, SurfaceCard } from "../../components/ui";
+import liaisonAvatarSrc from "../../../assets/ai-staff/liaison.png";
+import { AiStaffAvatar } from "../../../components/aiStaff/AiStaffAvatar";
+import { Badge, SurfaceCard } from "../../../components/ui";
 import {
   cardBodyClass,
   cardMetaClass,
   cardTitleClass,
   captionClass,
-} from "../../components/ui/pageTypography";
-import type { AiStaffDefinition, AiStaffId } from "../../domain/aiStaff/aiStaff";
-import { settingsIntegrationsPath } from "../../domain/navigation/integrationsRoutes";
+} from "../../../components/ui/pageTypography";
+import type { AiStaffDefinition, AiStaffId } from "../../../domain/aiStaff/aiStaff";
+import { settingsIntegrationsPath } from "../../../domain/navigation/integrationsRoutes";
 
 export const FRONTLINE_LINKS: Partial<
   Record<AiStaffId, { to: string; labelKey: string }>

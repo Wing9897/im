@@ -7105,7 +7105,7 @@
           "agent"
         ],
         "summary": "Agent Chat Stream",
-        "description": "Stream agent progress as NDJSON (tool steps + final answer).\n\nEach line is one JSON object with a ``type`` field:\n``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.\nLLM providers stay non-streaming; only tool execution progress is streamed.\n\nResolving the profile happens before the response starts, so configuration\nerrors are real HTTP errors. Once the 200 is committed, later failures can\nonly be reported in band as an ``error`` line.",
+        "description": "Stream agent progress as NDJSON (tool steps + final answer).\n\nEach line is one JSON object with a ``type`` field\n(``AgentStreamEvent`` in OpenAPI / ``server/api/schemas/responses/agents.py``):\n``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.\nLLM providers stay non-streaming; only tool execution progress is streamed.\n\nResolving the profile happens before the response starts, so configuration\nerrors are real HTTP errors. Once the 200 is committed, later failures can\nonly be reported in band as an ``error`` line.",
         "operationId": "agent_chat_stream_api_v1_agent_chat_stream_post",
         "requestBody": {
           "content": {
@@ -7119,10 +7119,12 @@
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "NDJSON stream of agent progress. Each line is one JSON object (`AgentStreamEvent`): `llm_start` | `tool_start` | `tool_done` | `final` | `error`. LLM providers stay non-streaming; only tool execution progress is streamed. Configuration errors are real HTTP errors; failures after the 200 is committed arrive as an in-band `error` line.",
             "content": {
-              "application/json": {
-                "schema": {}
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentStreamEvent"
+                }
               }
             }
           },
@@ -19588,6 +19590,188 @@
         "title": "SseEventEnvelope",
         "type": "object"
       },
+      "AgentStreamLlmStartEvent": {
+        "additionalProperties": false,
+        "description": "``llm_start`` — a new non-streaming LLM round is about to run.",
+        "properties": {
+          "type": {
+            "const": "llm_start",
+            "title": "Type",
+            "type": "string"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "round"
+        ],
+        "title": "AgentStreamLlmStartEvent",
+        "type": "object"
+      },
+      "AgentStreamToolStartEvent": {
+        "additionalProperties": false,
+        "description": "``tool_start`` — a tool is about to execute.",
+        "properties": {
+          "type": {
+            "const": "tool_start",
+            "title": "Type",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": true,
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "name"
+        ],
+        "title": "AgentStreamToolStartEvent",
+        "type": "object"
+      },
+      "AgentStreamToolDoneEvent": {
+        "additionalProperties": false,
+        "description": "``tool_done`` — a tool finished (``resultSummary`` is the UI one-liner).",
+        "properties": {
+          "type": {
+            "const": "tool_done",
+            "title": "Type",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "arguments": {
+            "additionalProperties": true,
+            "title": "Arguments",
+            "type": "object"
+          },
+          "resultSummary": {
+            "title": "Resultsummary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "resultSummary"
+        ],
+        "title": "AgentStreamToolDoneEvent",
+        "type": "object"
+      },
+      "AgentStreamFinalEvent": {
+        "additionalProperties": false,
+        "description": "``final`` — same fields as ``AgentChatResponse``, with ``type`` required.\n\n``error`` is only present when ``final_event(..., error=...)`` is used;\nthe success path omits it. In-band failures after the 200 is committed use\n``AgentStreamErrorEvent`` instead.",
+        "properties": {
+          "type": {
+            "const": "final",
+            "title": "Type",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid"
+          },
+          "toolCalls": {
+            "items": {
+              "$ref": "#/components/schemas/AgentToolCallSummary"
+            },
+            "title": "Toolcalls",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "taskConfig": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskDraftPayload"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "message"
+        ],
+        "title": "AgentStreamFinalEvent",
+        "type": "object"
+      },
+      "AgentStreamErrorEvent": {
+        "additionalProperties": false,
+        "description": "In-band ``error`` line (status already committed). See ``agent_errors``.",
+        "properties": {
+          "type": {
+            "const": "error",
+            "title": "Type",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid"
+          },
+          "toolCalls": {
+            "items": {
+              "$ref": "#/components/schemas/AgentToolCallSummary"
+            },
+            "title": "Toolcalls",
+            "type": "array"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "message",
+          "error"
+        ],
+        "title": "AgentStreamErrorEvent",
+        "type": "object"
+      },
       "TelegramBotConfig": {
         "additionalProperties": false,
         "description": "``telegram_bot`` configuration JSON (``bot_token`` masked on read).",
@@ -19731,6 +19915,37 @@
         },
         "title": "ActionTriggerConditions",
         "type": "object"
+      },
+      "AgentStreamEvent": {
+        "title": "AgentStreamEvent",
+        "description": "One NDJSON line from POST /api/v1/agent/chat/stream. Discriminated by the `type` field.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AgentStreamLlmStartEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AgentStreamToolStartEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AgentStreamToolDoneEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AgentStreamFinalEvent"
+          },
+          {
+            "$ref": "#/components/schemas/AgentStreamErrorEvent"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "llm_start": "#/components/schemas/AgentStreamLlmStartEvent",
+            "tool_start": "#/components/schemas/AgentStreamToolStartEvent",
+            "tool_done": "#/components/schemas/AgentStreamToolDoneEvent",
+            "final": "#/components/schemas/AgentStreamFinalEvent",
+            "error": "#/components/schemas/AgentStreamErrorEvent"
+          }
+        }
       }
     }
   }

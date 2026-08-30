@@ -1,5 +1,11 @@
 """SSE contract: the 8 named event types, {type, payload} wire envelope, and
-payload-schema drift guards (OpenAPI components in ``responses/sse.py``)."""
+payload-schema drift guards (OpenAPI components in ``responses/sse.py``).
+
+Three copies stay separate on purpose (desktop cannot import web OpenAPI):
+server Pydantic, web generated ``Sse*Payload`` types, and
+``desktop/sse-payloads.ts`` field tuples. Expand coverage here and in the
+desktop drift test — do not merge the sources.
+"""
 
 from __future__ import annotations
 
@@ -368,17 +374,76 @@ _PUBLISH_SITE_PAYLOADS: tuple[tuple[str, type[BaseModel], dict[str, Any]], ...] 
             "batchId": "batch-1",
         },
     ),
-    # server/sse.py publish_resource_modified
+    # server/sse.py publish_resource_modified (user_event CRUD)
     (
         "resource_modified",
         SseResourceModifiedPayload,
         {"resourceType": "user_event", "resourceId": "event-1", "action": "created"},
+    ),
+    # collector/manager.py _publish_aggregate_collector_status (healthy)
+    ("collector_status_changed", SseCollectorStatusChangedPayload, {"status": "running"}),
+    # collector/base.py _broadcast_status_change (disconnect / error)
+    (
+        "source_status_changed",
+        SseSourceStatusChangedPayload,
+        {"sourceId": "source-1", "status": "disconnected"},
+    ),
+    (
+        "source_status_changed",
+        SseSourceStatusChangedPayload,
+        {"sourceId": "source-1", "status": "error", "lastError": "auth failed"},
+    ),
+    # routes/tasks, items, actions, worksets, llm, calendar/recurring
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "task", "resourceId": "task-1", "action": "updated"},
+    ),
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "item", "resourceId": "item-1", "action": "deleted"},
+    ),
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "action", "resourceId": "action-1", "action": "created"},
+    ),
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "workset", "resourceId": "ws-1", "action": "updated"},
+    ),
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "llm_profile", "resourceId": "llm-1", "action": "created"},
+    ),
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "recurring", "resourceId": "rr-1", "action": "deleted"},
     ),
 )
 
 
 def test_event_type_literal_matches_broadcaster_vocabulary():
     assert get_args(SseEventType) == EVENT_TYPES
+
+
+def test_publish_sites_cover_every_payload_model():
+    covered = {model for _, model, _ in _PUBLISH_SITE_PAYLOADS}
+    expected = {
+        SseMessagesUpdatedPayload,
+        SseCollectorStatusChangedPayload,
+        SseSourceStatusChangedPayload,
+        SseAnalysisStartedPayload,
+        SseAnalysisCompletedPayload,
+        SseAnalysisFailedPayload,
+        SseAnalysisPausedChangedPayload,
+        SseResourceModifiedPayload,
+    }
+    assert covered == expected
 
 
 @pytest.mark.parametrize(

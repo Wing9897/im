@@ -104,6 +104,22 @@ const RETIRED_SOURCE_PATHS = [
   "components/SubscribeFilterGroup.test.tsx",
   "components/useSourceFilterSubscribeDraft.ts",
   "pages/subscriptions/useCatalogMembershipBusy.ts",
+  // Settings／AI — Settings* pages moved to pages/settings/ai/ (URLs unchanged)
+  "pages/ai/SettingsAiProviderPage.tsx",
+  "pages/ai/SettingsAiProviderPage.test.tsx",
+  "pages/ai/SettingsAiStaffPage.tsx",
+  "pages/ai/SettingsAiStaffPage.test.tsx",
+  "pages/ai/SettingsVoicePage.tsx",
+  "pages/ai/SettingsVoicePage.test.tsx",
+  "pages/ai/SettingsVoiceShared.tsx",
+  "pages/ai/SettingsVoicePttSection.tsx",
+  "pages/ai/SettingsVoiceSttSection.tsx",
+  "pages/ai/SettingsVoiceWorksetSection.tsx",
+  "pages/ai/SettingsVoiceTtsSection.tsx",
+  "pages/ai/AiStaffIntroCards.tsx",
+  // Notify — validate/buildConfiguration moved to domain/actions/
+  "pages/notify/actionConfiguration.ts",
+  "pages/notify/validateActionTypeFields.ts",
 ] as const;
 
 // Settings → General LAN bind toggle lived inline (no dedicated module).

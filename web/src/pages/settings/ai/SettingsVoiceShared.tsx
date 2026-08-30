@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MenuSelect, SurfaceCard } from "../../components/ui";
+import { MenuSelect, SurfaceCard } from "../../../components/ui";
 
 export function VoicePrefCard({
   title,
