@@ -12,8 +12,11 @@ export const calendarScrollableClass =
 export const monthGridContainerClass =
   "im-timeline-month-grid flex h-full min-h-0 flex-1 flex-col gap-xs";
 
-export function monthGridRootClass(datesRevealed: boolean): string {
-  return datesRevealed ? `${monthGridContainerClass} is-revealed` : monthGridContainerClass;
+export function monthGridRootClass(datesRevealed: boolean, compact = false): string {
+  const root = compact
+    ? "im-timeline-month-grid im-timeline-month-grid--compact flex min-h-[12rem] flex-col gap-xs"
+    : monthGridContainerClass;
+  return datesRevealed ? `${root} is-revealed` : root;
 }
 
 export const monthWeekdayHeaderClass =

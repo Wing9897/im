@@ -108,32 +108,108 @@ export async function stopProcessTreeGracefully(child, { gracefulMs = 5_000 } = 
   }
 }
 
-/** Kill any process listening on `port` (Windows netstat/taskkill). */
-export function freePort(port) {
-  if (process.platform !== "win32") return;
+/** Image names we must not taskkill (Windows services / session 0). */
+const WIN_SYSTEM_IMAGES = new Set([
+  "svchost.exe",
+  "system",
+  "registry",
+  "smss.exe",
+  "csrss.exe",
+  "wininit.exe",
+  "services.exe",
+  "lsass.exe",
+  "winlogon.exe",
+]);
 
+const PORT_FREE_WAIT_MS = 4_000;
+
+/** PIDs with a TCP LISTENING socket whose *local* port is exactly `port`. */
+function listeningPidsOnPort(port) {
+  let out = "";
   try {
-    const out = execSync(`netstat -ano | findstr :${port}`, {
+    out = execSync("netstat -ano", {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     });
-    const pids = new Set();
-    for (const line of out.split("\n")) {
-      if (!line.includes("LISTENING")) continue;
-      const pid = line.trim().split(/\s+/).at(-1);
-      if (pid && pid !== "0") pids.add(pid);
-    }
-    for (const pid of pids) {
-      console.log(`[dev] Freeing port ${port}: stopping PID ${pid}`);
-      execSync(`taskkill /PID ${pid} /F`, { stdio: "ignore" });
-    }
   } catch {
-    // Port already free or netstat found nothing.
+    return [];
+  }
+  const pids = new Set();
+  const want = String(port);
+  for (const line of out.split(/\r?\n/)) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 5 || parts[0] !== "TCP" || parts[3] !== "LISTENING") continue;
+    const local = parts[1];
+    const colon = local.lastIndexOf(":");
+    if (colon < 0 || local.slice(colon + 1) !== want) continue;
+    const pid = parts[4];
+    if (pid && pid !== "0") pids.add(pid);
+  }
+  return [...pids];
+}
+
+function windowsImageName(pid) {
+  try {
+    const csv = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    const match = csv.match(/^"([^"]+)"/);
+    return match ? match[1] : "";
+  } catch {
+    return "";
+  }
+}
+
+function isWindowsSystemPid(pid, imageName = windowsImageName(pid)) {
+  return WIN_SYSTEM_IMAGES.has(imageName.toLowerCase());
+}
+
+function userListeningPidsOnPort(port) {
+  return listeningPidsOnPort(port).filter((pid) => !isWindowsSystemPid(pid));
+}
+
+/**
+ * Kill user processes listening on `port` (Windows netstat/taskkill).
+ *
+ * A single try/catch around taskkill used to abort after the first failure.
+ * IP Helper (svchost/iphlpsvc) often LISTENs on 127.0.0.1:port for a
+ * netsh portproxy or IPv6 helper mapping — that PID is protected and must
+ * not stop us from killing leftover node/vite on the same port.
+ */
+export async function freePort(port) {
+  if (process.platform !== "win32") return;
+
+  for (const pid of listeningPidsOnPort(port)) {
+    const name = windowsImageName(pid);
+    if (isWindowsSystemPid(pid, name)) {
+      console.log(`[dev] Port ${port}: leaving system PID ${pid} (${name || "system"})`);
+      continue;
+    }
+    console.log(`[dev] Freeing port ${port}: stopping PID ${pid}${name ? ` (${name})` : ""}`);
+    try {
+      execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" });
+    } catch {
+      console.warn(`[dev] Could not stop PID ${pid} on port ${port}`);
+    }
+  }
+
+  const deadline = Date.now() + PORT_FREE_WAIT_MS;
+  while (Date.now() < deadline) {
+    if (userListeningPidsOnPort(port).length === 0) return;
+    await delay(150);
+  }
+  const leftover = userListeningPidsOnPort(port);
+  if (leftover.length > 0) {
+    console.warn(
+      `[dev] Port ${port} still LISTENING after free (PIDs: ${leftover.join(", ")}). ` +
+        `Vite/server bind may fail.`,
+    );
   }
 }
 
 /** Free dev ports before starting a new stack (avoids stale DB locks from orphan servers). */
-export function prepareDevPorts() {
-  freePort(SERVICE_PORT);
-  freePort(VITE_PORT);
+export async function prepareDevPorts() {
+  await freePort(SERVICE_PORT);
+  await freePort(VITE_PORT);
 }

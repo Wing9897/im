@@ -12,23 +12,30 @@ import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { TimelineMonthDayCell } from "./TimelineMonthDayCell";
 import { useMonthDayContextMenu } from "./useMonthDayContextMenu";
 
-type TimelineMonthGridProps = {
+/** Shared chrome for the unified month grid and per-source month cards. */
+export type TimelineMonthChromeProps = {
   timeCursor: Date;
   focusedDay: Date | null;
   monthCursor: Date;
   monthDays: Date[];
-  monthEvents: TimelineItem[];
   showDismissed?: boolean;
   showOngoing?: boolean;
   showEnding?: boolean;
-  weatherByDate?: Record<string, DailyWeather>;
-  holidaysByDate?: Record<string, DailyHoliday[]>;
   onSelectEvent: (event: TimelineItem) => void;
   onFocusDay: (day: Date) => void;
   /** Month cell context menu → create event prefilled on that day. */
   onCreateOnDay?: (day: Date) => void;
   /** Toolbar 篩選 hover / 顯示日期: stronger bottom watermarks; hide event rows. Header (day number, 進行中/結束, weather) stays. */
   datesRevealed?: boolean;
+};
+
+type TimelineMonthGridProps = TimelineMonthChromeProps & {
+  monthEvents: TimelineItem[];
+  weatherByDate?: Record<string, DailyWeather>;
+  holidaysByDate?: Record<string, DailyHoliday[]>;
+  /** Mini month-card: no weather/holidays, fewer preview rows, no fill height. */
+  compact?: boolean;
+  previewLimit?: number;
 };
 
 export function TimelineMonthGrid({
@@ -46,6 +53,8 @@ export function TimelineMonthGrid({
   onFocusDay,
   onCreateOnDay,
   datesRevealed = false,
+  compact = false,
+  previewLimit,
 }: TimelineMonthGridProps) {
   const { t, i18n } = useTranslation("timeline");
   const { contextMenu, setContextMenu, menuRef, openDayContextMenu } =
@@ -67,9 +76,10 @@ export function TimelineMonthGrid({
 
   return (
     <div
-      className={monthGridRootClass(datesRevealed)}
+      className={monthGridRootClass(datesRevealed, compact)}
       data-testid="timeline-month-grid"
       data-dates-revealed={datesRevealed ? "true" : "false"}
+      data-compact={compact ? "true" : "false"}
     >
       <div className={monthWeekdayHeaderClass}>
         {weekdayLabels.map((label, index) => (
@@ -92,6 +102,8 @@ export function TimelineMonthGrid({
             showEnding={showEnding}
             weatherByDate={weatherByDate}
             holidaysByDate={holidaysByDate}
+            hideOverlays={compact}
+            previewLimit={previewLimit}
             weekdayLabels={weekdayLabels}
             formatDayLabel={formatDayLabel}
             onSelectEvent={onSelectEvent}

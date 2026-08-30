@@ -98,6 +98,10 @@ export function TimelineGrid({
     holidaysByDate,
     monthDatesRevealed = false,
     onCreateOnDay,
+    monthLayout = "unified",
+    monthCardModels = [],
+    monthCardsOmitted = 0,
+    monthCardsEmptyReason = null,
   } = useTimelinePageContext();
   const metaLookups = useEventListMetaLookups();
 
@@ -116,6 +120,10 @@ export function TimelineGrid({
           monthCursor={monthCursor}
           monthDays={monthDays}
           monthEvents={monthEvents}
+          monthLayout={monthLayout}
+          monthCardModels={monthCardModels}
+          monthCardsOmitted={monthCardsOmitted}
+          monthCardsEmptyReason={monthCardsEmptyReason}
           focusedDay={focusedDay}
           eventStatuses={eventStatuses}
           showDismissed={showDismissed}

@@ -6,12 +6,14 @@ import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import { findActivitySpan } from "../../domain/tasks/agentTaskSelectors";
 import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
+import { isMonthCardsMode } from "../../domain/timeline/monthCardSources";
 import {
   usePersistedSourceFilter,
   usePruneSourceFilterToCatalog,
 } from "../../hooks/usePersistedSourceFilter";
 import { useSubscribeFilterState } from "../../domain/calendarShare/useSubscribeFilterState";
 import { resolveSubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
+import { useMonthCardModels } from "./useMonthCardModels";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
@@ -84,6 +86,12 @@ export function useTimelinePageContainer() {
     catalog,
   } = useSubscribeFilterState();
 
+  const monthCardsMode = isMonthCardsMode(
+    prefs.viewMode,
+    navigation.timeScale,
+    prefs.monthLayout,
+  );
+
   const data = useTimelineData({
     selectedSources,
     selectedSubscribeKeys,
@@ -91,6 +99,7 @@ export function useTimelinePageContainer() {
     viewMode: prefs.viewMode,
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
+    monthCardsMode,
   });
   const subscribeAvailability = resolveSubscribeAvailability({
     connected: catalog.session?.connected,
@@ -151,6 +160,15 @@ export function useTimelinePageContainer() {
     [t, selectedSources, data.timelineTasks.length],
   );
 
+  const monthCards = useMonthCardModels({
+    enabled: monthCardsMode,
+    selectedSources,
+    selectedSubscribeKeys,
+    subscribeCatalogKeys,
+    tasks: data.timelineTasks,
+    events: filtering.monthEvents,
+  });
+
   return {
     sources: {
       selectedSources,
@@ -162,6 +180,8 @@ export function useTimelinePageContainer() {
       timelineTasks: data.timelineTasks,
       viewMode: prefs.viewMode,
       setViewMode: actions.handleSetViewMode,
+      monthLayout: prefs.monthLayout,
+      setMonthLayout: prefs.setMonthLayout,
       emptyState,
       eventStatuses,
       setEventStatus,
@@ -195,6 +215,9 @@ export function useTimelinePageContainer() {
       monthCursor: navigation.monthCursor,
       monthDays: navigation.monthDays,
       monthEvents: filtering.monthEvents,
+      monthCardModels: monthCards.models,
+      monthCardsOmitted: monthCards.omitted,
+      monthCardsEmptyReason: monthCards.emptyReason,
       ganttColumns: navigation.ganttColumns,
       focusedDay: prefs.focusedDay,
       moveCursor: actions.handleMoveCursor,

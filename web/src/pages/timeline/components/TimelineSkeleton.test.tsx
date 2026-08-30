@@ -34,7 +34,9 @@ function withI18n(children: React.ReactNode) {
   return wrapWithI18n(children);
 }
 
-function makeContextValue(): TimelinePageContextValue {
+function makeContextValue(
+  overrides: Partial<TimelinePageContextValue> = {},
+): TimelinePageContextValue {
   return {
     selectedEvent: null,
     onSelectEvent: () => {},
@@ -65,6 +67,8 @@ function makeContextValue(): TimelinePageContextValue {
     showOngoing: true,
     showEnding: true,
     monthDatesRevealed: false,
+    monthLayout: "unified",
+    ...overrides,
   };
 }
 
@@ -177,11 +181,14 @@ describe("TimelineSkeleton", () => {
 describe("TimelineViewSwitch skeleton loading integration", () => {
   const mounts: Mount[] = [];
 
-  function renderViewSwitch(overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {}) {
+  function renderViewSwitch(
+    overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {},
+    contextOverrides: Partial<TimelinePageContextValue> = {},
+  ) {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const props = makeViewSwitchProps(overrides);
-    const ctx = makeContextValue();
+    const ctx = makeContextValue(contextOverrides);
     let root!: Root;
     act(() => {
       root = createRoot(container);
@@ -386,5 +393,30 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     expect(container.querySelector('[data-testid="timeline-skeleton"]')).toBeNull();
     expect(container.querySelector('[data-testid="timeline-refresh-indicator"]')).toBeNull();
     expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
+  });
+
+  it("hides the day event sidebar in month-cards split layout", () => {
+    const { container } = renderViewSwitch(
+      { viewMode: "calendar", timeScale: "month" },
+      { monthLayout: "split", selectedEvent: null },
+    );
+    expect(container.querySelector('[data-testid="timeline-event-sidebar"]')).toBeNull();
+    expect(container.querySelector('[data-testid="timeline-event-list-header"]')).toBeNull();
+    expect(container.textContent).not.toContain("沒有事件");
+  });
+
+  it("keeps the day event sidebar on unified month and week", () => {
+    const month = renderViewSwitch(
+      { viewMode: "calendar", timeScale: "month" },
+      { monthLayout: "unified" },
+    );
+    expect(month.container.querySelector('[data-testid="timeline-event-sidebar"]')).not.toBeNull();
+    expect(month.container.querySelector('[data-testid="timeline-event-list-header"]')).not.toBeNull();
+
+    const week = renderViewSwitch(
+      { viewMode: "calendar", timeScale: "week" },
+      { monthLayout: "split" },
+    );
+    expect(week.container.querySelector('[data-testid="timeline-event-sidebar"]')).not.toBeNull();
   });
 });

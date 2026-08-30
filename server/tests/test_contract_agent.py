@@ -176,9 +176,7 @@ def test_stream_event_type_literal_matches_vocabulary():
 
 
 def test_stream_error_helpers_match_schema():
-    unreachable = agent_stream_error_event(
-        ConnectionError("connection refused"), session_id="s1"
-    )
+    unreachable = agent_stream_error_event(ConnectionError("connection refused"), session_id="s1")
     timeout = agent_stream_timeout_event(session_id="s2")
     AgentStreamErrorEvent.model_validate(unreachable)
     AgentStreamErrorEvent.model_validate(timeout)

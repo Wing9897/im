@@ -187,7 +187,7 @@ async function restartServer(reason) {
     await sleep(500);
   }
 
-  freePort(SERVICE_PORT);
+  await freePort(SERVICE_PORT);
   server = spawnServerProcess();
   attachServerHandlers(server);
 
@@ -236,7 +236,7 @@ function startHealthWatchdog() {
 }
 
 warnBrokenNodeNpmOnPath();
-prepareDevPorts();
+await prepareDevPorts();
 
 console.log("[dev] Starting FastAPI server...");
 server = spawnServerProcess();
@@ -251,7 +251,7 @@ if (!ready) {
 }
 console.log("\n[dev] Server ready");
 
-freePort(VITE_PORT);
+await freePort(VITE_PORT);
 
 if (webOnly) {
   console.log("[dev] Starting Vite...");

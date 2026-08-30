@@ -11,6 +11,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { TimelineControlBar } from "./TimelineControlBar";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
+import type { TimelineMonthLayout } from "../../../domain/timeline/monthCardSources";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
@@ -24,6 +25,8 @@ interface RenderOpts {
   viewMode?: "calendar" | "gantt";
   setViewMode?: (m: "calendar" | "gantt") => void;
   timeScale?: TimelineScale;
+  monthLayout?: TimelineMonthLayout;
+  onMonthLayoutChange?: (layout: TimelineMonthLayout) => void;
   onJumpTo?: (s: TimelineScale) => void;
   onMoveCursor?: (delta: number) => void;
   visibleRangeLabel?: string;
@@ -45,6 +48,8 @@ function renderControlBar(opts: RenderOpts = {}) {
     viewMode: opts.viewMode ?? ("calendar" as const),
     setViewMode: opts.setViewMode ?? (() => {}),
     timeScale: opts.timeScale ?? ("month" as TimelineScale),
+    monthLayout: opts.monthLayout,
+    onMonthLayoutChange: opts.onMonthLayoutChange,
     onJumpTo: opts.onJumpTo ?? (() => {}),
     onMoveCursor: opts.onMoveCursor ?? (() => {}),
     visibleRangeLabel: opts.visibleRangeLabel ?? "2025年1月",
@@ -165,22 +170,58 @@ describe("TimelineControlBar", () => {
     ).not.toBeNull();
   });
 
-  it("renders 3 scale buttons (日/週/月) in calendar mode", () => {
+  it("renders 4 scale buttons (日/週/月/塊) in calendar mode", () => {
     const container = renderControlBar({ viewMode: "calendar" });
     expect(findButtonByText(container, "日")).not.toBeNull();
     expect(findButtonByText(container, "週")).not.toBeNull();
     expect(findButtonByText(container, "月")).not.toBeNull();
+    expect(findButtonByText(container, "塊")).not.toBeNull();
     expect(findButtonByText(container, "季")).toBeNull();
     expect(findButtonByText(container, "年")).toBeNull();
   });
 
-  it("renders 5 scale buttons (日/週/月/季/年) in gantt mode", () => {
+  it("renders 5 scale buttons (日/週/月/季/年) in gantt mode without 塊", () => {
     const container = renderControlBar({ viewMode: "gantt" });
     expect(findButtonByText(container, "日")).not.toBeNull();
     expect(findButtonByText(container, "週")).not.toBeNull();
     expect(findButtonByText(container, "月")).not.toBeNull();
     expect(findButtonByText(container, "季")).not.toBeNull();
     expect(findButtonByText(container, "年")).not.toBeNull();
+    expect(findButtonByText(container, "塊")).toBeNull();
+  });
+
+  it("clicking 塊 jumps to month and sets split layout", () => {
+    const onJumpTo = vi.fn();
+    const onMonthLayoutChange = vi.fn();
+    const container = renderControlBar({
+      viewMode: "calendar",
+      timeScale: "week",
+      monthLayout: "unified",
+      onJumpTo,
+      onMonthLayoutChange,
+    });
+    act(() => {
+      findButtonByText(container, "塊")!.click();
+    });
+    expect(onMonthLayoutChange).toHaveBeenCalledWith("split");
+    expect(onJumpTo).toHaveBeenCalledWith("month");
+  });
+
+  it("clicking 月 jumps to month and sets unified layout", () => {
+    const onJumpTo = vi.fn();
+    const onMonthLayoutChange = vi.fn();
+    const container = renderControlBar({
+      viewMode: "calendar",
+      timeScale: "month",
+      monthLayout: "split",
+      onJumpTo,
+      onMonthLayoutChange,
+    });
+    act(() => {
+      findButtonByText(container, "月")!.click();
+    });
+    expect(onMonthLayoutChange).toHaveBeenCalledWith("unified");
+    expect(onJumpTo).toHaveBeenCalledWith("month");
   });
 
   it("renders the visible range label", () => {

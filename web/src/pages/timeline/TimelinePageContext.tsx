@@ -2,6 +2,11 @@ import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import type { GanttColumn } from "../../domain/timeline/dateUtils";
 import type {
+  MonthCardEmptyReason,
+  MonthCardModel,
+  TimelineMonthLayout,
+} from "../../domain/timeline/monthCardSources";
+import type {
   TimelineEventStatus,
   TimelineEventStatusMap,
 } from "../../domain/timeline/status";
@@ -16,6 +21,7 @@ import type { TaskActivitySpan } from "../../types/analysis";
  *
  * Groups:
  * - Event selection & editing (consumed by TimelineSidebar)
+ * - Calendar month-cards (consumed by TimelineGrid)
  * - Gantt-specific data (consumed by TimelineGrid/TimelineGanttView)
  */
 export interface TimelinePageContextValue {
@@ -55,6 +61,11 @@ export interface TimelinePageContextValue {
   holidaysByDate?: Record<string, DailyHoliday[]>;
   /** Month 顯示日期 persist/preview (visit-scoped). */
   monthDatesRevealed: boolean;
+  /** Calendar month: one grid or per-source cards. Optional so existing fixtures stay valid. */
+  monthLayout?: TimelineMonthLayout;
+  monthCardModels?: MonthCardModel[];
+  monthCardsOmitted?: number;
+  monthCardsEmptyReason?: MonthCardEmptyReason | null;
 
   // ── Gantt-specific ──────────────────────────────────────────────────────────
   taskSpans: TaskActivitySpan[];

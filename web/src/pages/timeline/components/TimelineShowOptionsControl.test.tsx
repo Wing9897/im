@@ -110,6 +110,7 @@ describe("TimelineShowOptionsControl", () => {
       document.querySelector('[data-testid^="timeline-filter-show-"]'),
     ).toBeNull();
     expect(document.querySelector('[data-testid="timeline-show-options-dates"]')).toBeNull();
+    expect(menu?.textContent).not.toContain("顯示日期");
 
     act(() => {
       dismissed.click();
@@ -189,6 +190,23 @@ describe("TimelineShowOptionsControl", () => {
     ).toBeNull();
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("omits 顯示日期 when month date-reveal chrome is not provided (Block / split)", () => {
+    renderControl();
+    const trigger = container.querySelector(
+      '[data-testid="timeline-show-options"]',
+    ) as HTMLButtonElement;
+    act(() => {
+      trigger.click();
+    });
+    const menu = document.querySelector('[data-testid="timeline-show-options-menu"]');
+    expect(menu?.textContent).toContain("顯示已移除");
+    expect(menu?.textContent).toContain("顯示進行中");
+    expect(menu?.textContent).toContain("顯示結束");
+    expect(menu?.textContent).not.toContain("顯示日期");
+    expect(document.querySelector('[data-testid="timeline-show-options-dates"]')).toBeNull();
+    expect(trigger.getAttribute("data-dates-persisted")).toBeNull();
   });
 
   it("month date-reveal hover lives on the 篩選 eye; persist is a 顯示日期 checkbox", async () => {

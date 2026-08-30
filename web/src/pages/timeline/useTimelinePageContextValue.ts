@@ -56,6 +56,10 @@ export function useTimelinePageContextValue({
       weatherByDate: overlays.weatherByDate,
       holidaysByDate: overlays.holidaysByDate,
       monthDatesRevealed: overlays.datesReveal.revealed,
+      monthLayout: sources.monthLayout,
+      monthCardModels: navigation.monthCardModels,
+      monthCardsOmitted: navigation.monthCardsOmitted,
+      monthCardsEmptyReason: navigation.monthCardsEmptyReason,
       taskSpans: data.taskSpans,
       selectedGanttTaskId: gantt.selectedGanttTaskId,
       onSelectGanttTask: gantt.handleSelectGanttTask,
@@ -87,6 +91,9 @@ export function useTimelinePageContextValue({
       overlays.weatherByDate,
       overlays.holidaysByDate,
       overlays.datesReveal.revealed,
+      navigation.monthCardModels,
+      navigation.monthCardsOmitted,
+      navigation.monthCardsEmptyReason,
     ],
   );
 }

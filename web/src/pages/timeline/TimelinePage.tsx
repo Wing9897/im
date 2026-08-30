@@ -60,6 +60,7 @@ export function TimelinePage() {
   });
   const overlays = useTimelinePageOverlays({
     viewMode: sources.viewMode,
+    monthLayout: sources.monthLayout,
     navigation,
   });
   useTimelinePageDeepLinks({ sources, data, filters, selection, dialogs });
@@ -104,6 +105,8 @@ export function TimelinePage() {
               viewMode={sources.viewMode}
               setViewMode={sources.setViewMode}
               timeScale={navigation.timeScale}
+              monthLayout={sources.monthLayout}
+              onMonthLayoutChange={sources.setMonthLayout}
               onJumpTo={navigation.jumpTo}
               onMoveCursor={navigation.moveCursor}
               visibleRangeLabel={navigation.visibleRangeLabel}
