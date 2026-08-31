@@ -139,6 +139,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
+| Timeline 全局 vs 塊 | Gantt **全局** (`im:timeline:overview-mode`) is a continuous pan／zoom window, not a `TimelineScale`. Calendar **塊** is month `split` cards. Do not treat either as the other, and do not add Overview to board gantt |
 | Board widgets display-only | Board tiles do **not** navigate via `openInPages` / click-to-page. Regression: `web/src/board/widgets/boardWidgetNav.test.tsx` (keep) |
 | `TaskEmployeeId` | Intentional display alias of `AnalysisMode` (`web/src/domain/tasks/taskEmployee.ts`) — named helpers kept even though mapping is 1:1 |
 | Global LLM slots | Assistant／A2A／task advisor singletons live in `system_config` (`llm_global_slot_*`) via `server/llm_global_slots.py` — profile-id pointers only. Trio UI is global-slots only; `llm_staff_instances` holds task-mode classes (`leaderboard`／`intel_event`／`agent`) exclusively. Unbound slots hard-fail (assistant same as liaison). No `is_default` column or make-default API |

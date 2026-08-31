@@ -146,6 +146,8 @@
 | 情報管線檢查清單（Tasks／Intelligence，非 FirstRun、非時間規劃） | **情報管線** | Intelligence pipeline | 情报管线 |
 | 情報卡校正（timeline_dismissals） | **不是情報** | Not intelligence | 不是情报 |
 | 時間規劃卡校正 | **從時間軸拿掉** | Take off timeline | 从时间轴拿掉 |
+| Timeline 甘特連續視窗 | **全局** | Overview | 全局 | 不是 `TimelineScale`；device LS `im:timeline:overview-mode`。日／週／月／季／年仍是完整離散視窗 |
+| Timeline 日曆按來源月卡 | **塊** | Block | 块 | 僅日曆；`monthLayout=split`。勿與甘特「全局」混用 |
 | Agent 任務頁收回最近完成批次寫入 | **收回最近一次調和** | Retract last reconcile | 收回最近一次调和 |
 
 ## AI 員工（staff／employees／intro）
@@ -193,10 +195,11 @@
 
 ## API 錯誤碼約定
 
-- 用戶可見錯誤優先穩定 **`error_code`**（snake_case）。
+- 用戶可見錯誤優先穩定 **`error_code`**（協議身份；不是英文 `message`）。
 - 前端 `toErrorMessage` 先查 `common:errors.*`（via `messageForErrorCode`），否則 fallback `message`。
 - 新端點請用 `server.errors.http_error(...)` 帶明確 `error_code`，避免只回中文 `detail` 字串。
-- 試點碼：`weather_timeout`、`weather_unavailable`、`weather_location_not_found`、`weather_invalid_date_range`、`holiday_invalid_year`、`holiday_invalid_location`、`agent_timeout`。
+- 天氣／節日／助手：`weather_timeout`、`weather_unavailable`、`weather_location_not_found`、`weather_invalid_date_range`、`holiday_invalid_year`、`holiday_invalid_location`、`agent_timeout`（`snake_case`）。
+- 日曆分享：`RATE_LIMITED`、`PUBLISH_CALENDAR_LIMIT`、`SUBSCRIBE_LIMIT`、`CALENDAR_EVENT_LIMIT`、`CALENDAR_SHARE_UNREACHABLE`（`SCREAMING_SNAKE`；額度數字以 IC `gateway.json` 預設 10／50／3000 為準）。
 
 ## Locale
 
