@@ -1,26 +1,21 @@
-import { useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 
-import { FloatingTooltip } from "../../../components/common/FloatingTooltip";
-import {
-  timelineEventDateRange,
-  type TimelineScale,
-} from "../../../domain/timeline/dateUtils";
-import {
-  getEventStatusColor,
-  type TimelineEventStatusMap,
-} from "../../../domain/timeline/status";
+import type { TimelineScale } from "../../../domain/timeline/dateUtils";
+import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
-import {
-  buildTooltipContent,
-  computeEventBarPosition,
-} from "./ganttEventPositioning";
+import { computeEventBarPosition } from "./ganttEventPositioning";
 import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGanttRows";
 import {
-  ganttBarClass,
   ganttDayCellClass,
   ganttEventRowClass,
 } from "./timelineGanttClasses";
 import { ganttColumnGap } from "./ganttGridLayout";
+import {
+  GanttEventBar,
+  GanttEventBarTooltip,
+  occurrenceDisplayRange,
+  useGanttBarTooltip,
+} from "./GanttEventBar";
 
 interface GanttEventRowProps {
   row: GanttEventRowModel;
@@ -37,6 +32,7 @@ interface GanttEventRowProps {
   onHoverEnd: () => void;
 }
 
+/** Discrete 日/週/月/季/年 gantt row: click bar → detail. No pan/zoom or trim. */
 export function GanttEventRow({
   row,
   timeScale,
@@ -57,10 +53,7 @@ export function GanttEventRow({
   };
 
   const representative = row.occurrences[0];
-  const [tooltip, setTooltip] = useState<{
-    event: TimelineItem;
-    el: HTMLElement;
-  } | null>(null);
+  const { tooltip, showTooltip, hideTooltip } = useGanttBarTooltip();
 
   return (
     <div
@@ -68,7 +61,7 @@ export function GanttEventRow({
       onClick={() => onSelect?.(representative)}
       onMouseEnter={onHoverStart}
       onMouseLeave={() => {
-        setTooltip(null);
+        hideTooltip();
         onHoverEnd();
       }}
       className={ganttEventRowClass(isHovered)}
@@ -86,13 +79,7 @@ export function GanttEventRow({
       ))}
 
       {row.occurrences.map((event) => {
-        const { start, end } = timelineEventDateRange(event);
-        const displayEnd =
-          event.isAllDay && event.endTime && end > start
-            ? new Date(end.getTime() - 1)
-            : event.endTime
-              ? end
-              : null;
+        const { start, displayEnd } = occurrenceDisplayRange(event);
         const position = computeEventBarPosition(
           start,
           displayEnd,
@@ -104,39 +91,25 @@ export function GanttEventRow({
 
         const isCompact =
           position.isPoint || position.startColumn === position.endColumn;
-        const status = eventStatuses[event.id] ?? "pending";
-        const statusColor = getEventStatusColor(status);
-        const dismissed = Boolean(event.dismissed);
 
         return (
-          <div
+          <GanttEventBar
             key={event.id}
-            data-testid={`event-bar-${event.id}`}
-            data-status={status}
-            className={ganttBarClass(isHovered, isCompact, dismissed)}
+            event={event}
+            isHovered={isHovered}
+            isCompact={isCompact}
             style={{
               gridColumn: `${position.startColumn} / ${position.endColumn + 1}`,
               gridRow: 1,
-              ...(dismissed ? {} : { backgroundColor: statusColor }),
             }}
-            onMouseEnter={(e) =>
-              setTooltip({ event, el: e.currentTarget })
-            }
-            onClick={(clickEvent) => {
-              clickEvent.stopPropagation();
-              onSelect?.(event);
-            }}
+            eventStatuses={eventStatuses}
+            onSelect={onSelect}
+            onShowTooltip={showTooltip}
           />
         );
       })}
 
-      <FloatingTooltip
-        open={tooltip != null}
-        anchorEl={tooltip?.el ?? null}
-        testId={`gantt-tooltip-${row.rowId}`}
-      >
-        {tooltip ? buildTooltipContent(tooltip.event) : null}
-      </FloatingTooltip>
+      <GanttEventBarTooltip rowId={row.rowId} tooltip={tooltip} />
     </div>
   );
 }

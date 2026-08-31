@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
+import type { GanttOverviewWindow } from "../../domain/gantt/ganttOverviewWindow";
 import type { GanttColumn } from "../../domain/timeline/dateUtils";
 import type {
   MonthCardEmptyReason,
@@ -83,6 +84,10 @@ export interface TimelinePageContextValue {
   timelineEventsIsRefreshing: boolean;
   timelineEventsError: string | null;
   onRetryTimelineEvents: () => void;
+  /** Continuous 全局/Overview mode (gantt only). Optional so existing fixtures stay valid. */
+  overviewMode?: boolean;
+  overviewWindow?: GanttOverviewWindow;
+  onOverviewWindowChange?: (next: GanttOverviewWindow) => void;
 }
 
 const TimelinePageContext = createContext<TimelinePageContextValue | null>(null);

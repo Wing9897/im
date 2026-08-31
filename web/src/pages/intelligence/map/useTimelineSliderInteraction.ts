@@ -20,7 +20,7 @@ import {
   genTicks,
   hitTest,
   type HitZone,
-} from "./timelineSliderLayout";
+} from "../../../domain/intelligence/timelineSliderLayout";
 import { useTimelineSliderWindowDraft } from "./useTimelineSliderWindowDraft";
 
 export { liveViewportSpanMs };

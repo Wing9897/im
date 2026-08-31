@@ -1,4 +1,6 @@
 import type { CSSProperties, Ref, RefObject } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TimelineItem } from "../../../types";
 import {
@@ -9,9 +11,11 @@ import {
 import { eventShowsInMonthDayPreview } from "../../../domain/timeline/monthDaySpanIndicators";
 import { isSameDay, isToday } from "../../../domain/timeline/dateUtils";
 import { SPLIT_MONTH_DOT_LIMIT } from "../../../domain/timeline/monthCardSources";
+import { resolveWorksetCoverSrc } from "../../../domain/worksets/worksetCover";
 import { dateKey } from "../../../utils/dateFormat";
 import { preferActiveEvents, dismissedTitleClass } from "../timelineDismissUtils";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
+import { placeSplitDayPopover } from "./splitDayPopoverPlacement";
 import { TimelineSplitMonthColorControl } from "./TimelineSplitMonthColorControl";
 
 export function eventsForSplitMonthDay(
@@ -28,6 +32,8 @@ export function eventsForSplitMonthDay(
 type TimelineSplitMonthCardProps = {
   title: string;
   kind: "workset" | "subscribe";
+  /** Catalog cover URL/data; empty uses the muted calendar placeholder. No upload. */
+  cover?: string;
   events: TimelineItem[];
   monthCursor: Date;
   monthDays: Date[];
@@ -48,6 +54,7 @@ type TimelineSplitMonthCardProps = {
 export function TimelineSplitMonthCard({
   title,
   kind,
+  cover = "",
   events,
   monthCursor,
   monthDays,
@@ -73,6 +80,7 @@ export function TimelineSplitMonthCard({
       weekday: "long",
     });
   const popoverOpen = openDay != null;
+  const openDayCellRef = useRef<HTMLDivElement | null>(null);
   const accentCss = blockCardColorCss(accentColor);
   const cardStyle = accentCss
     ? ({
@@ -99,6 +107,9 @@ export function TimelineSplitMonthCard({
           />
         ) : null}
       </header>
+      <div className="im-split-month-cover" data-testid="timeline-month-card-cover" aria-hidden="true">
+        <img src={resolveWorksetCoverSrc(cover)} alt="" draggable={false} />
+      </div>
       <div className="im-split-month-weekdays" aria-hidden="true">
         {weekdayLabels.map((label, index) => (
           <div key={`${label}-${index}`} className="im-split-month-weekday">
@@ -127,6 +138,7 @@ export function TimelineSplitMonthCard({
           return (
             <div
               key={day.toISOString()}
+              ref={isOpen ? openDayCellRef : undefined}
               role="button"
               tabIndex={0}
               aria-label={
@@ -175,6 +187,7 @@ export function TimelineSplitMonthCard({
                   dateLabel={dateLabel}
                   events={dayEvents}
                   popoverRef={popoverRef}
+                  anchorRef={openDayCellRef}
                   onSelectEvent={onSelectEvent}
                   onCreateOnDay={onCreateOnDay}
                   onClose={onClosePopover}
@@ -193,6 +206,7 @@ function SplitDayPopover({
   dateLabel,
   events,
   popoverRef,
+  anchorRef,
   onSelectEvent,
   onCreateOnDay,
   onClose,
@@ -201,20 +215,61 @@ function SplitDayPopover({
   dateLabel: string;
   events: TimelineItem[];
   popoverRef: RefObject<HTMLDivElement | null>;
+  anchorRef: RefObject<HTMLDivElement | null>;
   onSelectEvent: (event: TimelineItem) => void;
   onCreateOnDay?: (day: Date) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation("timeline");
   const allDayLabel = t("userEvent.allDay");
+  const [coords, setCoords] = useState<CSSProperties>({
+    position: "fixed",
+    top: -9999,
+    left: -9999,
+  });
+  const [placement, setPlacement] = useState<"below" | "above">("below");
 
-  return (
+  useLayoutEffect(() => {
+    const update = () => {
+      const anchor = anchorRef.current;
+      const popover = popoverRef.current;
+      if (!anchor || !popover) return;
+      const rect = anchor.getBoundingClientRect();
+      const placed = placeSplitDayPopover({
+        anchor: rect,
+        popoverWidth: popover.offsetWidth,
+        popoverHeight: popover.offsetHeight,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      });
+      setPlacement(placed.placement);
+      setCoords({
+        position: "fixed",
+        top: placed.top,
+        left: placed.left,
+        maxHeight: placed.maxHeight > 0 ? placed.maxHeight : undefined,
+      });
+    };
+    update();
+    const raf = requestAnimationFrame(update);
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [anchorRef, popoverRef, events.length]);
+
+  const node = (
     <div
       ref={popoverRef as Ref<HTMLDivElement>}
       role="dialog"
       aria-label={t("calendar.splitDayListAria", { date: dateLabel })}
       data-testid="timeline-split-month-popover"
+      data-placement={placement}
       className="im-menu-surface im-split-month-popover"
+      style={coords}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -263,4 +318,6 @@ function SplitDayPopover({
       )}
     </div>
   );
+
+  return createPortal(node, document.body);
 }

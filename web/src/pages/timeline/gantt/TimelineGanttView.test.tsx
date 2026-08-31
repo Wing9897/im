@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -84,6 +84,11 @@ function render(props: Props) {
 describe("TimelineGanttView", () => {
   beforeEach(async () => {
     await ensureZhHantLocale();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe("empty state rendering", () => {
@@ -305,6 +310,60 @@ describe("TimelineGanttView", () => {
   });
 
   describe("event bar rendering", () => {
+    it("does not show trim handles on discrete 日/週/月/季/年 gantt", () => {
+      const container = render(
+        makeProps({
+          events: [
+            makeEvent({
+              id: "ue-1",
+              source: "user",
+              startTime: "2025-01-15T09:00:00Z",
+              endTime: "2025-01-15T11:00:00Z",
+            }),
+          ],
+        }),
+      );
+      expect(container.querySelector('[data-testid="gantt-overview-handle-start-ue-1"]')).toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-timebar"]')).toBeNull();
+    });
+
+    it("shows a map-style timebar and no edit handles in 全局 mode", () => {
+      const rangeStart = new Date(2025, 0, 15);
+      const container = render(
+        makeProps({
+          events: [
+            makeEvent({
+              id: "ue-1",
+              source: "user",
+              startTime: new Date(2025, 0, 15, 9).toISOString(),
+              endTime: new Date(2025, 0, 15, 11).toISOString(),
+            }),
+            makeEvent({
+              id: "sub-1",
+              source: "subscribed:Alice/Work",
+              startTime: new Date(2025, 0, 15, 12).toISOString(),
+              endTime: new Date(2025, 0, 15, 13).toISOString(),
+            }),
+          ],
+          rangeStart,
+          overviewMode: true,
+          overviewWindow: { startMs: rangeStart.getTime(), spanMs: 24 * 60 * 60 * 1000 },
+          onOverviewWindowChange: vi.fn(),
+        }),
+      );
+      expect(container.querySelector('[data-testid="gantt-overview-panel"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-axis"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-timebar"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-timebar-canvas"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-zoom-slider"]')).toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-handle-start-ue-1"]')).toBeNull();
+      expect(container.querySelector('[data-testid="gantt-overview-handle-end-ue-1"]')).toBeNull();
+      expect(
+        container.querySelector('[data-testid="event-bar-ue-1"]')?.getAttribute("data-gantt-editable"),
+      ).toBeNull();
+    });
+
     it("renders exactly one continuous bar per visible event", () => {
       const container = render(
         makeProps({

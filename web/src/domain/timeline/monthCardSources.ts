@@ -24,8 +24,8 @@ export const SPLIT_MONTH_DOT_LIMIT = 3;
 
 export type TimelineMonthLayout = "unified" | "split";
 
-/** Calendar toolbar pills: existing scales plus month-cards (not a TimelineScale). */
-export type CalendarScalePill = TimelineScale | "cards";
+/** Calendar toolbar pills: existing scales plus month-cards (not a TimelineScale). Gantt adds 全局/Overview. */
+export type CalendarScalePill = TimelineScale | "cards" | "overview";
 
 type CalendarOrGantt = "calendar" | "gantt";
 
@@ -52,7 +52,7 @@ export function showMonthDatesRevealChrome(
 
 export function calendarScalePills(viewMode: CalendarOrGantt): readonly CalendarScalePill[] {
   return viewMode === "gantt"
-    ? (["day", "week", "month", "quarter", "year"] as const)
+    ? (["day", "week", "month", "quarter", "year", "overview"] as const)
     : (["day", "week", "month", "cards"] as const);
 }
 
@@ -62,8 +62,13 @@ export function isCalendarScalePillActive(
     viewMode: CalendarOrGantt;
     timeScale: TimelineScale;
     monthLayout: TimelineMonthLayout;
+    overviewMode?: boolean;
   },
 ): boolean {
+  if (pill === "overview") {
+    return input.viewMode === "gantt" && Boolean(input.overviewMode);
+  }
+  if (input.overviewMode && input.viewMode === "gantt") return false;
   if (pill === "cards") {
     return isMonthCardsMode(input.viewMode, input.timeScale, input.monthLayout);
   }
@@ -73,16 +78,17 @@ export function isCalendarScalePillActive(
   return input.timeScale === pill;
 }
 
-/** Scale + optional layout for a toolbar pill. Gantt month does not touch layout. */
+/** Scale + optional layout / overview flag for a toolbar pill. Gantt month does not touch layout. */
 export function applyCalendarScalePill(
   pill: CalendarScalePill,
   viewMode: CalendarOrGantt,
-): { timeScale: TimelineScale; monthLayout?: TimelineMonthLayout } {
-  if (pill === "cards") return { timeScale: "month", monthLayout: "split" };
+): { timeScale?: TimelineScale; monthLayout?: TimelineMonthLayout; overviewMode?: boolean } {
+  if (pill === "overview") return { overviewMode: true };
+  if (pill === "cards") return { timeScale: "month", monthLayout: "split", overviewMode: false };
   if (pill === "month" && viewMode === "calendar") {
-    return { timeScale: "month", monthLayout: "unified" };
+    return { timeScale: "month", monthLayout: "unified", overviewMode: false };
   }
-  return { timeScale: pill };
+  return { timeScale: pill, overviewMode: false };
 }
 
 export type MonthCardSource =
@@ -337,6 +343,8 @@ export function sliceEventsForMonthCard(
 
 export type MonthCardModel = MonthCardSource & {
   title: string;
+  /** Workset / subscribe catalog cover; empty string uses the muted placeholder. */
+  cover: string;
   events: TimelineItem[];
 };
 
@@ -346,11 +354,13 @@ export function buildMonthCardModels(input: {
   selectedSources: SourceFilterSelection;
   tasks?: readonly WorksetMemberTask[];
   worksetTitle: (worksetId: string) => string;
+  coverFor?: (card: MonthCardSource) => string;
 }): MonthCardModel[] {
   return input.cards.map((card) => ({
     ...card,
     title:
       card.kind === "workset" ? input.worksetTitle(card.worksetId) : card.key,
+    cover: (input.coverFor?.(card) ?? "").trim(),
     events: sliceEventsForMonthCard(
       input.events,
       card,

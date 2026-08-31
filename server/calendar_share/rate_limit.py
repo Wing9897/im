@@ -1,14 +1,15 @@
 """In-process per-client limits so the IM proxy cannot hammer IntelligenceCalendar.
 
-Keep these numbers in sync with IntelligenceCalendar ``app/config.py`` /
-``app/rate_limit.py``:
+Keep these numbers in sync with IntelligenceCalendar **compiled defaults**
+(``app/config.py`` ``RATE_LIMIT_*`` / ``gateway.example.json``). IC runtime
+reads ``gateway.json``; this proxy does not load that file.
 
 - search: 5 / 10s / client
 - login (IC auth login/refresh): 5 / 60s / client
 - subscribe / unsubscribe: 5 / 10s / client
 - events GET: 30 / 60s / client
 
-Calendar PUT/PATCH write spacing stays on IC (``MIN_WRITE_INTERVAL_SECONDS``),
+Calendar PUT/PATCH write spacing stays on IC (``minWriteIntervalSeconds``),
 not this sliding window. IM-only families (publish, catalog, publishList) keep
 the previous 5/10s proxy budget so the renderer cannot stampede IC writes.
 """
@@ -24,7 +25,7 @@ from fastapi import Request
 
 from server.errors import RATE_LIMITED, http_error
 
-# Synced with IntelligenceCalendar app/config.py RATE_LIMIT_* constants.
+# Synced with IntelligenceCalendar compiled RATE_LIMIT_* defaults.
 SEARCH_LIMIT = 5
 SEARCH_WINDOW_SECONDS = 10.0
 AUTH_LIMIT = 5
@@ -37,10 +38,6 @@ PUBLIC_EVENTS_WINDOW_SECONDS = 60.0
 #: IM-only proxy families (not on the IC public table).
 PROXY_LIMIT = 5
 PROXY_WINDOW_SECONDS = 10.0
-
-# Back-compat for tests that burst search / subscribe.
-LIMIT_PER_WINDOW = SEARCH_LIMIT
-WINDOW_SECONDS = SEARCH_WINDOW_SECONDS
 
 
 @dataclass(frozen=True)

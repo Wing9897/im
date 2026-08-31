@@ -50,6 +50,9 @@ export function SubscriptionsPublishedCard({
   const syncLabel = syncLoading ? t("published.syncing") : t("published.syncNow");
   const editLabel = t("published.edit");
   const unpublishLabel = unpublishLoading ? t("published.unpublishing") : t("published.unpublish");
+  const lastSyncLabel = row.lastSyncAt
+    ? t("published.form.lastSync", { time: new Date(row.lastSyncAt).toLocaleString() })
+    : t("published.form.neverSynced");
   return (
     <SubscriptionCalendarCard
       key={row.worksetId}
@@ -124,6 +127,12 @@ export function SubscriptionsPublishedCard({
         <span>{name}</span>
       )}
       {grants ? <p className={`mb-0 mt-xs ${captionClass}`}>{grants}</p> : null}
+      <p
+        className={`mb-0 mt-xs ${captionClass}`}
+        data-testid={`subscriptions-published-last-sync-${row.worksetId}`}
+      >
+        {lastSyncLabel}
+      </p>
       {row.lastError ? (
         <p
           className={`mb-0 mt-xs ${captionClass}`}

@@ -17,6 +17,7 @@ import { useMonthCardModels } from "./useMonthCardModels";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
+import { useGanttOverviewSession } from "./useGanttOverviewSession";
 import { useTimelineFiltering } from "./useTimelineFiltering";
 import { useTimelineNavigation } from "./useTimelineNavigation";
 import { useTimelinePagePrefs } from "./useTimelinePagePrefs";
@@ -74,6 +75,16 @@ export function useTimelinePageContainer() {
   } = useTimelineAnnotations();
 
   const navigation = useTimelineNavigation();
+  const overview = useGanttOverviewSession({
+    overviewMode: prefs.overviewMode,
+    timeScale: navigation.timeScale,
+    timeCursor: navigation.timeCursor,
+  });
+  const overviewActive = prefs.overviewMode && prefs.viewMode === "gantt";
+  const dataRangeStart = overviewActive ? overview.fetchRange.start : navigation.rangeStart;
+  const dataRangeEnd = overviewActive ? overview.fetchRange.end : navigation.rangeEnd;
+  const visibleRangeStart = overviewActive ? overview.visibleStart : navigation.rangeStart;
+  const visibleRangeEnd = overviewActive ? overview.visibleEnd : navigation.rangeEnd;
 
   const { selectedSources, setSelectedSources } = usePersistedSourceFilter(
     timelineSelectedSourcesFilter,
@@ -97,8 +108,8 @@ export function useTimelinePageContainer() {
     selectedSubscribeKeys,
     subscribeCatalogKeys,
     viewMode: prefs.viewMode,
-    rangeStart: navigation.rangeStart,
-    rangeEnd: navigation.rangeEnd,
+    rangeStart: dataRangeStart,
+    rangeEnd: dataRangeEnd,
     monthCardsMode,
   });
   const subscribeAvailability = resolveSubscribeAvailability({
@@ -116,8 +127,8 @@ export function useTimelinePageContainer() {
   const filtering = useTimelineFiltering({
     events: data.events,
     eventTimeOverrides,
-    rangeStart: navigation.rangeStart,
-    rangeEnd: navigation.rangeEnd,
+    rangeStart: visibleRangeStart,
+    rangeEnd: visibleRangeEnd,
     monthCursor: navigation.monthCursor,
     showDismissed: prefs.showDismissed,
     focusedDay: prefs.focusedDay,
@@ -126,8 +137,8 @@ export function useTimelinePageContainer() {
   const selection = useTimelineSelection({
     eventLookup: filtering.eventLookup,
     rawEventLookup: filtering.rawEventLookup,
-    rangeStart: navigation.rangeStart,
-    rangeEnd: navigation.rangeEnd,
+    rangeStart: visibleRangeStart,
+    rangeEnd: visibleRangeEnd,
     setEventStatuses,
     setEventTimeOverrides,
   });
@@ -165,6 +176,7 @@ export function useTimelinePageContainer() {
     selectedSources,
     selectedSubscribeKeys,
     subscribeCatalogKeys,
+    subscribeCalendars,
     tasks: data.timelineTasks,
     events: filtering.monthEvents,
   });
@@ -187,6 +199,8 @@ export function useTimelinePageContainer() {
       setEventStatus,
       focusDay: actions.focusDay,
       goToDay: actions.goToDay,
+      overviewMode: prefs.overviewMode,
+      setOverviewMode: prefs.setOverviewMode,
     },
     data: {
       events: data.events,
@@ -220,9 +234,15 @@ export function useTimelinePageContainer() {
       monthCardsEmptyReason: monthCards.emptyReason,
       ganttColumns: navigation.ganttColumns,
       focusedDay: prefs.focusedDay,
-      moveCursor: actions.handleMoveCursor,
-      jumpTo: actions.handleJumpTo,
-      visibleRangeLabel: navigation.visibleRangeLabel,
+      moveCursor: overviewActive ? overview.panByStep : actions.handleMoveCursor,
+      jumpTo: overviewActive
+        ? () => {
+            overview.recenterToday();
+          }
+        : actions.handleJumpTo,
+      visibleRangeLabel: overviewActive ? overview.visibleRangeLabel : navigation.visibleRangeLabel,
+      overviewWindow: overview.overviewWindow,
+      setOverviewWindow: overview.setOverviewWindow,
     },
     filters: {
       showDismissed: prefs.showDismissed,

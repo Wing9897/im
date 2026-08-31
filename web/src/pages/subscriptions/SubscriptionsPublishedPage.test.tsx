@@ -194,6 +194,33 @@ describe("SubscriptionsPublishedPage", () => {
     expect(document.querySelector('[data-testid="subscriptions-published-pending-ws-1"]')).toBeNull();
   });
 
+  it("shows lastSyncAt from the local publish row on the published card", async () => {
+    calendarShareApiMocks.fetchCalendarSharePublishList.mockResolvedValue({
+      items: [{ ...LIVE, lastSyncAt: "2026-08-27T00:00:00Z" }],
+    });
+    await renderPage();
+    const lastSync = document.querySelector('[data-testid="subscriptions-published-last-sync-ws-1"]');
+    expect(lastSync?.textContent).toContain("Last sync");
+    expect(lastSync?.textContent).not.toContain("Not synced yet");
+  });
+
+  it("shows never-synced copy when lastSyncAt is missing", async () => {
+    await renderPage();
+    expect(document.querySelector('[data-testid="subscriptions-published-last-sync-ws-1"]')?.textContent).toContain(
+      "Not synced yet",
+    );
+  });
+
+  it("maps CALENDAR_EVENT_LIMIT lastError on the published card", async () => {
+    calendarShareApiMocks.fetchCalendarSharePublishList.mockResolvedValue({
+      items: [{ ...LIVE, lastError: "CALENDAR_EVENT_LIMIT" }],
+    });
+    await renderPage();
+    expect(document.querySelector('[data-testid="subscriptions-published-error-ws-1"]')?.textContent).toContain(
+      "This calendar exceeds the 3000-event limit",
+    );
+  });
+
   it("keeps auto-update in the toolbar, not on each card", async () => {
     await renderPage();
     expect(document.querySelector('[data-testid="subscriptions-published-auto-sync"]')).toBeTruthy();

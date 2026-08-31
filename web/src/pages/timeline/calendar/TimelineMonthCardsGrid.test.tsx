@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { TIMELINE_BLOCK_CARD_COLORS_STORAGE_KEY } from "../../../domain/prefs";
 import { BLOCK_CARD_COLOR_CSS } from "../../../domain/timeline/blockCardColors";
 import { buildCalendarDays } from "../../../domain/timeline/dateUtils";
 import { makeEvent } from "../../../test/timelineTestHelpers";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 import { TimelineMonthCardsGrid } from "./TimelineMonthCardsGrid";
+
+let lastRoot: Root | null = null;
+let lastContainer: HTMLDivElement | null = null;
 
 function renderGrid(
   overrides: Partial<Parameters<typeof TimelineMonthCardsGrid>[0]> = {},
@@ -22,10 +25,17 @@ function renderGrid(
     ...overrides,
   };
   const container = document.createElement("div");
+  const root = createRoot(container);
+  lastRoot = root;
+  lastContainer = container;
   act(() => {
-    createRoot(container).render(wrapWithI18n(createElement(TimelineMonthCardsGrid, props)));
+    root.render(wrapWithI18n(createElement(TimelineMonthCardsGrid, props)));
   });
   return { container, props };
+}
+
+function popoverEl() {
+  return document.querySelector('[data-testid="timeline-split-month-popover"]');
 }
 
 const sampleCards: Parameters<typeof TimelineMonthCardsGrid>[0]["cards"] = [
@@ -33,12 +43,14 @@ const sampleCards: Parameters<typeof TimelineMonthCardsGrid>[0]["cards"] = [
     kind: "workset",
     worksetId: "ws-a",
     title: "Alpha",
+    cover: "",
     events: [makeEvent({ id: "e1", worksetId: "ws-a", title: "Kickoff Meeting", startTime: "2025-01-15T09:00:00" })],
   },
   {
     kind: "subscribe",
     key: "Alice/Work",
     title: "Alice/Work",
+    cover: "",
     events: [],
   },
 ];
@@ -49,6 +61,12 @@ describe("TimelineMonthCardsGrid", () => {
   });
 
   afterEach(() => {
+    if (lastRoot) {
+      act(() => lastRoot!.unmount());
+      lastRoot = null;
+    }
+    lastContainer?.remove();
+    lastContainer = null;
     window.localStorage.removeItem(TIMELINE_BLOCK_CARD_COLORS_STORAGE_KEY);
   });
 
@@ -101,27 +119,26 @@ describe("TimelineMonthCardsGrid", () => {
       act(() => {
         busyDay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
-      expect(container.querySelectorAll('[data-testid="timeline-split-month-popover"]')).toHaveLength(1);
-      expect(container.querySelector('[data-testid="timeline-split-month-popover"]')?.textContent).toContain(
-        "Kickoff Meeting",
-      );
+      expect(document.querySelectorAll('[data-testid="timeline-split-month-popover"]')).toHaveLength(1);
+      expect(popoverEl()?.textContent).toContain("Kickoff Meeting");
+      expect(popoverEl()?.parentElement).toBe(document.body);
       act(() => {
         emptyDay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
-      expect(container.querySelectorAll('[data-testid="timeline-split-month-popover"]')).toHaveLength(1);
-      expect(container.querySelector('[data-testid="timeline-split-month-popover-empty"]')).not.toBeNull();
+      expect(document.querySelectorAll('[data-testid="timeline-split-month-popover"]')).toHaveLength(1);
+      expect(document.querySelector('[data-testid="timeline-split-month-popover-empty"]')).not.toBeNull();
       act(() => {
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       });
-      expect(container.querySelector('[data-testid="timeline-split-month-popover"]')).toBeNull();
+      expect(popoverEl()).toBeNull();
       act(() => {
         busyDay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
-      expect(container.querySelector('[data-testid="timeline-split-month-popover"]')).not.toBeNull();
+      expect(popoverEl()).not.toBeNull();
       act(() => {
         document.body.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
       });
-      expect(container.querySelector('[data-testid="timeline-split-month-popover"]')).toBeNull();
+      expect(popoverEl()).toBeNull();
     } finally {
       container.remove();
     }
@@ -157,7 +174,7 @@ describe("TimelineMonthCardsGrid", () => {
       act(() => {
         window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       });
-      expect(container.querySelector('[data-testid="timeline-split-month-popover"]')).toBeNull();
+      expect(popoverEl()).toBeNull();
       expect(worksetDay()?.className).toContain("is-active");
       expect(worksetDay()?.className).not.toContain("is-open");
       expect(subscribeSameDay()?.className).not.toContain("is-active");
@@ -180,7 +197,7 @@ describe("TimelineMonthCardsGrid", () => {
     const { container } = renderGrid({
       cards: [
         ...sampleCards,
-        { kind: "subscribe", key: "Bob/Open", title: "Bob/Open", events: [] },
+        { kind: "subscribe", key: "Bob/Open", title: "Bob/Open", cover: "", events: [] },
       ],
       monthCursor,
       monthDays: buildCalendarDays(monthCursor),
@@ -222,6 +239,7 @@ describe("TimelineMonthCardsGrid", () => {
           kind: "workset",
           worksetId: "ws-a",
           title: "Alpha",
+          cover: "",
           events: [],
         },
       ],

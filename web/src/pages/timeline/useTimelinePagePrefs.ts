@@ -8,6 +8,7 @@ import {
   type TimelineMonthLayout,
 } from "../../domain/timeline/monthCardSources";
 import {
+  TIMELINE_OVERVIEW_MODE_STORAGE_KEY,
   TIMELINE_FOCUSED_DAY_STORAGE_KEY,
   TIMELINE_MONTH_LAYOUT_STORAGE_KEY,
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
@@ -80,6 +81,11 @@ export function useTimelinePagePrefs() {
     null,
   );
 
+  const [overviewMode, setOverviewMode] = usePersistedState(
+    TIMELINE_OVERVIEW_MODE_STORAGE_KEY,
+    false,
+  );
+
   return {
     viewMode,
     setViewMode,
@@ -95,5 +101,7 @@ export function useTimelinePagePrefs() {
     setFocusedDay,
     selectedGanttTaskId,
     setSelectedGanttTaskId,
+    overviewMode,
+    setOverviewMode,
   };
 }

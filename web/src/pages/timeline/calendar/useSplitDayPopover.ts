@@ -6,7 +6,7 @@ export type SplitDayPopoverTarget = {
   day: Date;
 };
 
-/** One in-card day popover at a time; Esc and pointer-outside dismiss. */
+/** One day popover at a time (portaled); Esc and pointer-outside dismiss. */
 export function useSplitDayPopover() {
   const [open, setOpen] = useState<SplitDayPopoverTarget | null>(null);
   /** Last day clicked on a specific card; not shared across cards. Survives popover close. */

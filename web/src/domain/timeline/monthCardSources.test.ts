@@ -90,7 +90,14 @@ describe("monthCardSources", () => {
 
   it("keeps month-cards on the calendar scale row only", () => {
     expect(calendarScalePills("calendar")).toEqual(["day", "week", "month", "cards"]);
-    expect(calendarScalePills("gantt")).toEqual(["day", "week", "month", "quarter", "year"]);
+    expect(calendarScalePills("gantt")).toEqual([
+      "day",
+      "week",
+      "month",
+      "quarter",
+      "year",
+      "overview",
+    ]);
     expect(
       isCalendarScalePillActive("cards", {
         viewMode: "calendar",
@@ -115,12 +122,34 @@ describe("monthCardSources", () => {
     expect(applyCalendarScalePill("cards", "calendar")).toEqual({
       timeScale: "month",
       monthLayout: "split",
+      overviewMode: false,
     });
     expect(applyCalendarScalePill("month", "calendar")).toEqual({
       timeScale: "month",
       monthLayout: "unified",
+      overviewMode: false,
     });
-    expect(applyCalendarScalePill("month", "gantt")).toEqual({ timeScale: "month" });
+    expect(applyCalendarScalePill("month", "gantt")).toEqual({
+      timeScale: "month",
+      overviewMode: false,
+    });
+    expect(applyCalendarScalePill("overview", "gantt")).toEqual({ overviewMode: true });
+    expect(
+      isCalendarScalePillActive("overview", {
+        viewMode: "gantt",
+        timeScale: "month",
+        monthLayout: "unified",
+        overviewMode: true,
+      }),
+    ).toBe(true);
+    expect(
+      isCalendarScalePillActive("year", {
+        viewMode: "gantt",
+        timeScale: "year",
+        monthLayout: "unified",
+        overviewMode: true,
+      }),
+    ).toBe(false);
   });
 
   it("expands null filters to catalog ids when merged count is at most 12", () => {
@@ -309,6 +338,7 @@ describe("monthCardSources", () => {
         kind: "workset",
         worksetId: "ws-a",
         title: "Alpha",
+        cover: "",
         events,
       },
     ]);
@@ -325,5 +355,32 @@ describe("monthCardSources", () => {
       worksetTitle: (id) => (id === SYSTEM_WORKSET_ID ? "一般" : id),
     });
     expect(models.map((card) => card.title)).toEqual(["一般", "Alice/Work"]);
+  });
+
+  it("fills cover from coverFor and defaults to empty", () => {
+    const models = buildMonthCardModels({
+      cards: [
+        { kind: "workset", worksetId: "ws-a" },
+        { kind: "subscribe", key: "DemoPub/Open" },
+        { kind: "subscribe", key: "Alice/Work" },
+      ],
+      events: [],
+      selectedSources: { taskIds: [], worksetIds: ["ws-a"] },
+      worksetTitle: (id) => id,
+      coverFor: (card) => {
+        if (card.kind === "workset" && card.worksetId === "ws-a") {
+          return "data:image/jpeg;base64,ws";
+        }
+        if (card.kind === "subscribe" && card.key === "DemoPub/Open") {
+          return "data:image/jpeg;base64,sub";
+        }
+        return "";
+      },
+    });
+    expect(models.map((card) => card.cover)).toEqual([
+      "data:image/jpeg;base64,ws",
+      "data:image/jpeg;base64,sub",
+      "",
+    ]);
   });
 });

@@ -110,6 +110,8 @@ export function TimelinePage() {
               onJumpTo={navigation.jumpTo}
               onMoveCursor={navigation.moveCursor}
               visibleRangeLabel={navigation.visibleRangeLabel}
+              overviewMode={sources.overviewMode}
+              onOverviewModeChange={sources.setOverviewMode}
               onAddEvent={() => dialogs.openCreateDialog()}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => {

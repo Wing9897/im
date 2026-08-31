@@ -162,7 +162,7 @@ describe("TimelineGrid viewMode branch", () => {
     const container = render(makeProps({ viewMode: "calendar", timeScale: "month" }), {
       monthLayout: "split",
       monthCardModels: [
-        { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
+        { kind: "workset", worksetId: "ws-a", title: "Alpha", cover: "", events: [] },
       ],
     });
     expect(container.querySelector('[data-testid="timeline-month-cards-grid"]')).not.toBeNull();

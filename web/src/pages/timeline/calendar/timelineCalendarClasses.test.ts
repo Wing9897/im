@@ -99,6 +99,9 @@ describe("month cell CSS contract", () => {
     expect(timelineCss).toContain(".im-split-month-day-number");
     expect(timelineCss).toContain(".im-split-month-dot");
     expect(timelineCss).toContain(".im-split-month-popover");
+    expect(timelineCss).toMatch(/\.im-split-month-popover\s*\{[^}]*position:\s*fixed/s);
+    expect(timelineCss).not.toMatch(/\.im-split-month-popover\s*\{[^}]*position:\s*absolute/s);
+    expect(timelineCss).not.toMatch(/\.im-split-month-popover\s*\{[^}]*top:\s*calc\(100%/s);
     expect(timelineCss).toContain("background: var(--split-month-card-dot, var(--calendar-dot-event))");
     expect(timelineCss).toContain("border-top-color: var(--split-month-card-accent, var(--accent))");
     expect(timelineCss).toContain(".im-split-month-color-swatch");
