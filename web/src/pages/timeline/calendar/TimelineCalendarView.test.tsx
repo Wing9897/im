@@ -57,7 +57,7 @@ describe("TimelineCalendarView", () => {
           timeScale: "month",
           monthLayout: "split",
           monthCardModels: [
-            { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
+            { kind: "workset", worksetId: "ws-a", title: "Alpha", cover: "", events: [] },
           ],
         }),
       );
@@ -88,8 +88,8 @@ describe("TimelineCalendarView", () => {
             timeCursor: new Date(2026, 7, 31),
             focusedDay: new Date(2026, 7, 31),
             monthCardModels: [
-              { kind: "workset", worksetId: "ws-a", title: "Alpha", events: [] },
-              { kind: "subscribe", key: "Alice/Work", title: "Alice/Work", events: [] },
+              { kind: "workset", worksetId: "ws-a", title: "Alpha", cover: "", events: [] },
+              { kind: "subscribe", key: "Alice/Work", title: "Alice/Work", cover: "", events: [] },
             ],
           }),
         );

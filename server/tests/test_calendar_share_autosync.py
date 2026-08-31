@@ -9,8 +9,8 @@ import pytest
 from server.calendar.user_events_write import create_user_event
 from server.calendar_share.auto_sync_config import (
     AUTO_SYNC_INTERVAL_FLOOR_SECONDS,
+    DEFAULT_AUTO_SYNC_INTERVAL_SECONDS,
     LOOP_TICK_SECONDS,
-    SCAN_INTERVAL_SECONDS,
     WRITE_SPACING_SECONDS,
 )
 from server.calendar_share.autosync import (
@@ -271,7 +271,7 @@ async def test_scan_serializes_worksets_with_write_spacing(client, app, fake_rem
     )
     assert set(synced) == {SYSTEM_WORKSET_ID, "ws-other"}
     assert slept == [WRITE_SPACING_SECONDS]
-    assert SCAN_INTERVAL_SECONDS == 60.0
+    assert DEFAULT_AUTO_SYNC_INTERVAL_SECONDS == 60
     assert WRITE_SPACING_SECONDS == 10.0
     assert LOOP_TICK_SECONDS == 10.0
     assert AUTO_SYNC_INTERVAL_FLOOR_SECONDS == 60

@@ -448,3 +448,79 @@ async def test_publish_still_fails_when_snapshot_write_fails(client, fake_remote
     body = resp.json()
     assert body["error_code"] == "CALENDAR_SHARE_REQUEST_FAILED"
     assert body["message"] == "CALENDAR_SHARE_REQUEST_FAILED"
+
+
+async def test_publish_rejects_over_event_cap_without_calling_ic(client, fake_remote, monkeypatch):
+    from server.calendar_share.constants import MAX_EVENTS_PER_CALENDAR
+    from server.errors import CALENDAR_EVENT_LIMIT
+
+    async def _too_many(_db, _workset_id):
+        return ([{"uid": f"e{i}"} for i in range(MAX_EVENTS_PER_CALENDAR + 1)], [])
+
+    monkeypatch.setattr("server.calendar_share.publish.collect_workset_snapshot", _too_many)
+    await login_calendar_share(client, fake_remote)
+    fake_remote.calls.clear()
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == CALENDAR_EVENT_LIMIT
+    assert not any(str(call["path"]).startswith("/me/") for call in fake_remote.calls)
+    listed = await client.get("/api/v1/calendar-share/publish")
+    row = next(item for item in listed.json()["items"] if item["worksetId"] == SYSTEM_WORKSET_ID)
+    assert row["lastError"] == CALENDAR_EVENT_LIMIT
+    assert row["lastSyncAt"] is None
+
+
+async def test_publish_ic_quota_422_keeps_last_sync_and_hash(client, app, fake_remote):
+    from server.calendar_share.store import get_workset_entry
+    from server.errors import PUBLISH_CALENDAR_LIMIT
+
+    await login_calendar_share(client, fake_remote)
+    ok = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public"},
+    )
+    assert ok.status_code == 200, ok.text
+    previous = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert previous["lastSyncAt"]
+    assert previous["lastServerEventsHash"]
+    fingerprints = previous["lastFingerprints"]
+
+    fake_remote.patch_changes_status = 422
+    fake_remote.patch_changes_payload = {
+        "error_code": PUBLISH_CALENDAR_LIMIT,
+        "message": PUBLISH_CALENDAR_LIMIT,
+    }
+    resp = await client.put(
+        f"/api/v1/calendar-share/publish/{SYSTEM_WORKSET_ID}",
+        json={"slug": "Work", "syncNow": True, "publicVisibility": "public_busy"},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == PUBLISH_CALENDAR_LIMIT
+    listed = await client.get("/api/v1/calendar-share/publish")
+    row = next(item for item in listed.json()["items"] if item["worksetId"] == SYSTEM_WORKSET_ID)
+    assert row["lastError"] == PUBLISH_CALENDAR_LIMIT
+    assert row["lastSyncAt"] == previous["lastSyncAt"]
+    stored = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
+    assert stored["lastServerEventsHash"] == previous["lastServerEventsHash"]
+    assert stored["lastFingerprints"] == fingerprints
+
+
+def test_raise_remote_status_preserves_ic_quota_codes():
+    import pytest
+    from fastapi import HTTPException
+
+    from server.calendar_share.remote_errors import raise_remote_status
+    from server.errors import CALENDAR_EVENT_LIMIT, PUBLISH_CALENDAR_LIMIT, SUBSCRIBE_LIMIT, VALIDATION_ERROR
+
+    for code in (PUBLISH_CALENDAR_LIMIT, SUBSCRIBE_LIMIT, CALENDAR_EVENT_LIMIT):
+        with pytest.raises(HTTPException) as caught:
+            raise_remote_status(422, {"error_code": code, "message": code})
+        assert caught.value.status_code == 422
+        assert caught.value.detail["error_code"] == code
+
+    with pytest.raises(HTTPException) as caught:
+        raise_remote_status(422, {"error_code": "INVALID_CALENDAR_SLUG", "message": "bad slug"})
+    assert caught.value.detail["error_code"] == VALIDATION_ERROR

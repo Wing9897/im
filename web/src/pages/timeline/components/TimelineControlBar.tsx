@@ -47,6 +47,8 @@ type TimelineControlBarProps = {
   onJumpTo: (scale: TimelineScale) => void;
   onMoveCursor: (delta: number) => void;
   visibleRangeLabel: string;
+  overviewMode?: boolean;
+  onOverviewModeChange?: (next: boolean) => void;
   onAddEvent?: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
@@ -75,6 +77,8 @@ export function TimelineControlBar({
   onJumpTo,
   onMoveCursor,
   visibleRangeLabel,
+  overviewMode = false,
+  onOverviewModeChange,
   onAddEvent,
   isFullscreen = false,
   onToggleFullscreen,
@@ -94,14 +98,19 @@ export function TimelineControlBar({
 
   const handleScaleClick = (pill: CalendarScalePill) => {
     const next = applyCalendarScalePill(pill, viewMode);
+    if (next.overviewMode) {
+      onOverviewModeChange?.(true);
+      return;
+    }
+    onOverviewModeChange?.(false);
     if (next.monthLayout) onMonthLayoutChange?.(next.monthLayout);
-    onJumpTo(next.timeScale);
+    if (next.timeScale) onJumpTo(next.timeScale);
   };
 
   const scaleLabel = (pill: CalendarScalePill) => t(`scale.${pill}`);
 
   const isScaleActive = (pill: CalendarScalePill) =>
-    isCalendarScalePillActive(pill, { viewMode, timeScale, monthLayout });
+    isCalendarScalePillActive(pill, { viewMode, timeScale, monthLayout, overviewMode });
 
   const scales = calendarScalePills(viewMode);
 
@@ -142,12 +151,13 @@ export function TimelineControlBar({
         className="shrink-0"
       />
 
-      <div className="flex shrink-0 flex-nowrap items-center gap-1">
+      <div className="flex shrink-0 flex-nowrap items-center gap-1" data-testid="timeline-scale-pills">
         {scales.map((scale) => (
           <PillButton
             key={scale}
             active={isScaleActive(scale)}
             onClick={() => handleScaleClick(scale)}
+            data-testid={scale === "overview" ? "timeline-overview-mode" : undefined}
             title={
               isScaleActive(scale)
                 ? t("toolbar.jumpToCurrent", { scale: scaleLabel(scale) })

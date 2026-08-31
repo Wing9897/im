@@ -121,10 +121,52 @@ export function ganttDayCellClass(isToday: boolean): string {
     .join(" ");
 }
 
-export const ganttRefreshRowClass =
-  "flex shrink-0 justify-end px-0.5 pb-sm";
-
 export const ganttTimeAxisGridClass =
   "sticky top-0 z-[3] mb-1.5 grid h-5 items-center bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]";
 
 export const ganttScrollInnerFullClass = "min-w-0 w-full";
+
+export const ganttOverviewPanelClass = "flex min-h-0 min-w-0 flex-1 flex-col";
+
+export const ganttOverviewTrackClass =
+  "relative min-h-0 min-w-0 flex-1 cursor-grab touch-none overflow-hidden active:cursor-grabbing";
+
+export const ganttOverviewAxisClass =
+  "relative sticky top-0 z-[3] mb-1.5 h-5 overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]";
+
+export function ganttOverviewTickClass(major: boolean): string {
+  return [
+    "absolute top-0 -translate-x-1/2 whitespace-nowrap text-caption tabular-nums",
+    major ? "font-semibold text-text-secondary" : "text-text-muted",
+  ].join(" ");
+}
+
+export const ganttOverviewNowMarkerClass =
+  "pointer-events-none absolute top-0 z-[1] h-full w-px bg-[color-mix(in_srgb,var(--info)_70%,transparent)]";
+
+export function ganttOverviewTrackRowClass(isHovered: boolean): string {
+  return [
+    "relative h-7 shrink-0 cursor-pointer",
+    "border-b border-[color-mix(in_srgb,var(--surface-border)_52%,transparent)]",
+    isHovered ? "bg-[color-mix(in_srgb,var(--accent-pink)_8%,transparent)]" : "",
+  ].join(" ");
+}
+
+export const ganttOverviewTimebarPanelClass =
+  "flex shrink-0 flex-col gap-0.5 border-t border-surface-border px-1 pb-1 pt-1.5";
+
+export const ganttOverviewTimebarWrapClass = "relative w-full";
+
+export const ganttOverviewTimebarCanvasClass = "block h-[44px] w-full";
+
+export const ganttOverviewTimebarHandleClass =
+  "pointer-events-none absolute top-0 h-[44px] w-[18px] -translate-x-1/2 bg-transparent";
+
+export const ganttOverviewTimebarTickRowClass = "relative h-4 overflow-hidden";
+
+export const ganttOverviewTimebarTickClass =
+  "absolute top-0 -translate-x-1/2 whitespace-nowrap text-card-meta text-text-muted";
+
+export const ganttOverviewTimebarLabelClass =
+  "whitespace-nowrap px-0.5 text-caption font-semibold text-accent-pink";
+

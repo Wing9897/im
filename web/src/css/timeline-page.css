@@ -53,12 +53,6 @@
   flex: 0 0 auto;
 }
 
-.im-timeline-refresh-row {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 2px;
-}
-
 .im-timeline-empty-hint {
   display: flex;
   flex-direction: row;
@@ -331,6 +325,26 @@ html[data-theme-bg="focal"] .im-timeline-gantt {
   color: var(--text-primary);
 }
 
+/* Same frame as subscription cards: 2.4/1, no height cap, object-cover. */
+.im-split-month-cover {
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2.4 / 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: color-mix(in srgb, var(--surface-border) 40%, transparent);
+}
+
+.im-split-month-cover img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
 .im-split-month-color {
   position: relative;
   flex-shrink: 0;
@@ -523,11 +537,8 @@ html[data-theme-bg="focal"] .im-timeline-gantt {
 }
 
 .im-split-month-popover {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  z-index: 200;
   box-sizing: border-box;
   width: max-content;
   min-width: 10rem;

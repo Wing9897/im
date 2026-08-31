@@ -67,6 +67,7 @@ export function TimelineMonthCardsGrid({
               key={key}
               title={card.title}
               kind={card.kind}
+              cover={card.cover}
               events={card.events}
               monthCursor={monthCursor}
               monthDays={monthDays}

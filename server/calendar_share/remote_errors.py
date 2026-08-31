@@ -6,13 +6,18 @@ from typing import Any, NoReturn
 
 from server.errors import (
     AUTH_REQUIRED,
+    CALENDAR_EVENT_LIMIT,
     CALENDAR_SHARE_REQUEST_FAILED,
     CALENDAR_SHARE_UNREACHABLE,
     NOT_FOUND,
+    PUBLISH_CALENDAR_LIMIT,
     RATE_LIMITED,
+    SUBSCRIBE_LIMIT,
     VALIDATION_ERROR,
     http_error,
 )
+
+IC_QUOTA_ERROR_CODES = frozenset({PUBLISH_CALENDAR_LIMIT, SUBSCRIBE_LIMIT, CALENDAR_EVENT_LIMIT})
 
 
 class CalendarShareRemoteError(Exception):
@@ -79,18 +84,12 @@ def raise_remote_status(
     fallback: str | None = None,
 ) -> NoReturn:
     """Raise a structured HTTP error. Protocol identity is ``error_code``, not English copy."""
-    code = _error_code_from_payload(payload) or fallback_code
+    payload_code = _error_code_from_payload(payload)
+    message = _message_from_payload(payload, fallback or payload_code or fallback_code)
     if status == 401:
-        code = AUTH_REQUIRED
-    elif status == 404:
-        code = NOT_FOUND
-    elif status == 429:
-        code = RATE_LIMITED
-    elif status == 403:
-        code = _error_code_from_payload(payload) or code
-    message = _message_from_payload(payload, fallback or code)
-    if status in (401, 403):
-        raise http_error(status, message, error_code=AUTH_REQUIRED if status == 401 else code)
+        raise http_error(401, message, error_code=AUTH_REQUIRED)
+    if status == 403:
+        raise http_error(403, message, error_code=payload_code or fallback_code)
     if status == 404:
         raise http_error(404, message, error_code=NOT_FOUND)
     if status == 409:
@@ -98,8 +97,12 @@ def raise_remote_status(
     if status == 429:
         raise http_error(429, message, error_code=RATE_LIMITED)
     if 400 <= status < 500:
-        raise http_error(422 if status == 400 else status, message, error_code=VALIDATION_ERROR)
-    raise http_error(502, message, error_code=code)
+        raise http_error(
+            422 if status == 400 else status,
+            message,
+            error_code=payload_code if payload_code in IC_QUOTA_ERROR_CODES else VALIDATION_ERROR,
+        )
+    raise http_error(502, message, error_code=payload_code or fallback_code)
 
 
 def raise_mapped_remote_error(exc: CalendarShareRemoteError) -> NoReturn:

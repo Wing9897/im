@@ -1,10 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement, act, type RefObject } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { buildCalendarDays } from "../../../domain/timeline/dateUtils";
+import { DEFAULT_WORKSET_COVER_URL } from "../../../domain/worksets/worksetCover";
 import { makeEvent } from "../../../test/timelineTestHelpers";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 import { TimelineSplitMonthCard } from "./TimelineSplitMonthCard";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const timelineCss = readFileSync(resolve(here, "../../../css/timeline-page.css"), "utf8");
+
+let lastRoot: Root | null = null;
+let lastContainer: HTMLDivElement | null = null;
+
+afterEach(() => {
+  if (lastRoot) {
+    act(() => lastRoot!.unmount());
+    lastRoot = null;
+  }
+  lastContainer?.remove();
+  lastContainer = null;
+});
 
 function renderCard(
   overrides: Partial<Parameters<typeof TimelineSplitMonthCard>[0]> = {},
@@ -27,10 +46,18 @@ function renderCard(
     ...overrides,
   };
   const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  lastRoot = root;
+  lastContainer = container;
   act(() => {
-    createRoot(container).render(wrapWithI18n(createElement(TimelineSplitMonthCard, props)));
+    root.render(wrapWithI18n(createElement(TimelineSplitMonthCard, props)));
   });
   return { container, props };
+}
+
+function popoverEl() {
+  return document.querySelector('[data-testid="timeline-split-month-popover"]');
 }
 
 function jan15(container: HTMLElement) {
@@ -98,7 +125,7 @@ describe("TimelineSplitMonthCard", () => {
     );
   });
 
-  it("lists the day's events in an in-card popover", async () => {
+  it("lists the day's events in a portaled popover", async () => {
     await ensureZhHantLocale();
     const events = [
       makeEvent({ id: "e1", title: "Kickoff Meeting", startTime: "2025-01-15T09:00:00" }),
@@ -110,10 +137,14 @@ describe("TimelineSplitMonthCard", () => {
       openDay: new Date(2025, 0, 15),
       onSelectEvent,
     });
-    const popover = container.querySelector('[data-testid="timeline-split-month-popover"]');
+    const popover = popoverEl();
+    const card = container.querySelector('[data-testid="timeline-month-card"]');
     expect(popover).not.toBeNull();
+    expect(popover?.parentElement).toBe(document.body);
+    expect(card?.contains(popover)).toBe(false);
+    expect((popover as HTMLElement).style.position).toBe("fixed");
     expect(popover?.getAttribute("aria-label")).toContain("事件");
-    const rows = container.querySelectorAll('[data-testid="timeline-split-month-popover-row"]');
+    const rows = document.querySelectorAll('[data-testid="timeline-split-month-popover-row"]');
     expect(rows).toHaveLength(2);
     expect(popover?.textContent).toContain("Kickoff Meeting");
     expect(popover?.textContent).toContain("Standup");
@@ -123,17 +154,58 @@ describe("TimelineSplitMonthCard", () => {
     expect(onSelectEvent).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }));
   });
 
+  it("flips the last-row popover above the cell so it is not clipped", async () => {
+    await ensureZhHantLocale();
+    const events = [
+      makeEvent({ id: "e1", title: "dasfasf", startTime: "2025-01-31T14:19:00" }),
+      makeEvent({ id: "e2", title: "sagvdsbx", startTime: "2025-01-31T14:20:00" }),
+    ];
+    const { container } = renderCard({
+      events,
+      openDay: new Date(2025, 0, 31),
+    });
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 600 });
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 800 });
+    const cell = container.querySelector(
+      '[data-testid="timeline-split-month-day"][data-day="2025-01-31"]',
+    ) as HTMLElement;
+    const popover = popoverEl() as HTMLElement;
+    expect(popover).not.toBeNull();
+    cell.getBoundingClientRect = () =>
+      ({
+        top: 540,
+        left: 200,
+        width: 40,
+        height: 28,
+        bottom: 568,
+        right: 240,
+        x: 200,
+        y: 540,
+        toJSON() {
+          return this;
+        },
+      }) as DOMRect;
+    Object.defineProperty(popover, "offsetHeight", { configurable: true, value: 80 });
+    Object.defineProperty(popover, "offsetWidth", { configurable: true, value: 160 });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(popover.getAttribute("data-placement")).toBe("above");
+    expect(popover.style.position).toBe("fixed");
+    expect(Number.parseFloat(popover.style.top)).toBeLessThan(540);
+  });
+
   it("shows empty copy and create on an empty day", async () => {
     await ensureZhHantLocale();
     const onCreateOnDay = vi.fn();
-    const { container } = renderCard({
+    renderCard({
       openDay: new Date(2025, 0, 16),
       onCreateOnDay,
     });
-    expect(container.querySelector('[data-testid="timeline-split-month-popover-empty"]')?.textContent).toContain(
+    expect(document.querySelector('[data-testid="timeline-split-month-popover-empty"]')?.textContent).toContain(
       "這天沒有事件",
     );
-    const add = container.querySelector('[data-testid="timeline-split-month-popover-add"]');
+    const add = document.querySelector('[data-testid="timeline-split-month-popover-add"]');
     expect(add?.textContent).toContain("新增事件");
     act(() => {
       add?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -166,6 +238,41 @@ describe("TimelineSplitMonthCard", () => {
     expect(days.length).toBeGreaterThan(0);
     expect([...days].every((day) => !day.className.includes("is-active"))).toBe(true);
     expect([...days].every((day) => day.getAttribute("aria-pressed") === "false")).toBe(true);
+  });
+
+  it("renders a cover strip between the title and weekday row", async () => {
+    await ensureZhHantLocale();
+    const { container } = renderCard({ cover: "data:image/jpeg;base64,cover-a" });
+    const cover = container.querySelector('[data-testid="timeline-month-card-cover"]');
+    const header = container.querySelector(".im-split-month-header");
+    const weekdays = container.querySelector(".im-split-month-weekdays");
+    expect(cover).not.toBeNull();
+    expect(cover?.className).toContain("im-split-month-cover");
+    expect(cover?.querySelector("img")?.getAttribute("src")).toBe("data:image/jpeg;base64,cover-a");
+    expect(container.querySelector('[data-testid="workset-card-cover-upload"]')).toBeNull();
+    expect(cover?.querySelector('input[type="file"]')).toBeNull();
+    expect(header?.nextElementSibling).toBe(cover);
+    expect(cover?.nextElementSibling).toBe(weekdays);
+  });
+
+  it("renders a muted cover placeholder when cover is empty and does not crash", async () => {
+    await ensureZhHantLocale();
+    const { container } = renderCard({ cover: "" });
+    const cover = container.querySelector('[data-testid="timeline-month-card-cover"]');
+    expect(cover).not.toBeNull();
+    expect(cover?.querySelector("img")?.getAttribute("src")).toBe(DEFAULT_WORKSET_COVER_URL);
+    expect(container.querySelector('[data-testid="timeline-month-card"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-testid="timeline-split-month-day"]').length).toBeGreaterThan(0);
+  });
+
+  it("sizes the cover like subscription cards (2.4/1, object-cover, no short-strip cap)", () => {
+    const coverRule = timelineCss.match(/\.im-split-month-cover\s*\{[^}]+\}/)?.[0] ?? "";
+    const imgRule = timelineCss.match(/\.im-split-month-cover img\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(coverRule).toContain("aspect-ratio: 2.4 / 1");
+    expect(coverRule).not.toMatch(/max-height\s*:/);
+    expect(imgRule).toContain("object-fit: cover");
+    expect(imgRule).toContain("height: 100%");
+    expect(imgRule).toContain("width: 100%");
   });
 
   it("does not mark another month's same day-of-month as selected", async () => {

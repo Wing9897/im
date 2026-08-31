@@ -6,15 +6,13 @@ from server.calendar_share.constants import KEY_AUTO_SYNC, KEY_AUTO_SYNC_INTERVA
 from server.config import get_config, set_configs
 from server.db.database import Database
 
-#: IntelligenceCalendar ``CALENDAR_MIN_WRITE_INTERVAL_SECONDS`` (default 10). Do not lower.
+#: IntelligenceCalendar compiled default ``minWriteIntervalSeconds`` (10). Do not lower.
 IC_MIN_WRITE_INTERVAL_SECONDS = 10.0
 #: Space IC writes across worksets. Keep >= IC min write interval.
 WRITE_SPACING_SECONDS = IC_MIN_WRITE_INTERVAL_SECONDS
 #: Minimum user-chosen auto-sync interval (also legacy global scan default).
 AUTO_SYNC_INTERVAL_FLOOR_SECONDS = max(60, int(IC_MIN_WRITE_INTERVAL_SECONDS))
 DEFAULT_AUTO_SYNC_INTERVAL_SECONDS = AUTO_SYNC_INTERVAL_FLOOR_SECONDS
-#: Legacy constant kept for tests/docs referring to the old global 60s scan.
-SCAN_INTERVAL_SECONDS = float(DEFAULT_AUTO_SYNC_INTERVAL_SECONDS)
 #: Loop tick while waiting for per-row intervals to elapse.
 LOOP_TICK_SECONDS = WRITE_SPACING_SECONDS
 

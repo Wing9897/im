@@ -21,7 +21,8 @@
     "month": "Month",
     "cards": "Block",
     "quarter": "Quarter",
-    "year": "Year"
+    "year": "Year",
+    "overview": "Overview"
   },
   "status": {
     "pending": "Pending",
@@ -175,7 +176,9 @@
     "eventColumn": "Events",
     "untitled": "(Untitled)",
     "location": "Location: {value}",
-    "participants": "Participants: {value}"
+    "participants": "Participants: {value}",
+    "overviewRangeStartAria": "Visible range start",
+    "overviewRangeEndAria": "Visible range end"
   },
   "messages": {
     "saveFailed": "Save failed",

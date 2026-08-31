@@ -36,6 +36,8 @@ VISIBILITY_SEARCH_HIT: Final[tuple[str, ...]] = ("public", "public_busy", "busy"
 
 SLUG_MAX_LEN: Final = 64
 HANDLE_MAX_LEN: Final = 64
+#: Matches Intelligence Calendar ``maxEventsPerCalendar`` default. Do not load gateway.json here.
+MAX_EVENTS_PER_CALENDAR: Final = 3000
 #: Builtin workset id ``__general__`` is not a valid write slug (leading ``_``).
 DEFAULT_GENERAL_SLUG: Final = "general"
 INVALID_SLUG_MESSAGE: Final = (

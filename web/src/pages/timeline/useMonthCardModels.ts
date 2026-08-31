@@ -13,11 +13,15 @@ import { useTaskCatalog, useWorksetNameById } from "../../context/TaskCatalogCon
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { TimelineItem } from "../../types";
 
+const EMPTY_SUBSCRIBE_CALENDARS: readonly { key: string; cover?: string | null }[] = [];
+
 type Args = {
   enabled: boolean;
   selectedSources: SourceFilterSelection;
   selectedSubscribeKeys: SubscribedCalendarSelection;
   subscribeCatalogKeys: readonly string[];
+  /** Catalog rows with `cover` (DemoPub/Open etc.); omitted → empty cover. */
+  subscribeCalendars?: readonly { key: string; cover?: string | null }[];
   tasks: readonly { id: string; worksetId?: string | null }[];
   events: readonly TimelineItem[];
 };
@@ -31,6 +35,7 @@ export function useMonthCardModels({
   selectedSources,
   selectedSubscribeKeys,
   subscribeCatalogKeys,
+  subscribeCalendars = EMPTY_SUBSCRIBE_CALENDARS,
   tasks,
   events,
 }: Args): { models: MonthCardModel[]; omitted: number; emptyReason: MonthCardEmptyReason | null } {
@@ -52,6 +57,12 @@ export function useMonthCardModels({
 
   const models = useMemo(() => {
     if (!enabled) return [];
+    const worksetCoverById = new Map(
+      worksets.map((row) => [row.id, (row.cover ?? "").trim()]),
+    );
+    const subscribeCoverByKey = new Map(
+      subscribeCalendars.map((row) => [row.key, (row.cover ?? "").trim()]),
+    );
     return buildMonthCardModels({
       cards: list.cards,
       events,
@@ -61,6 +72,10 @@ export function useMonthCardModels({
         worksetId === SYSTEM_WORKSET_ID
           ? generalWorksetLabel
           : worksetNameById.get(worksetId) ?? worksetId,
+      coverFor: (card) =>
+        card.kind === "workset"
+          ? (worksetCoverById.get(card.worksetId) ?? "")
+          : (subscribeCoverByKey.get(card.key) ?? ""),
     });
   }, [
     enabled,
@@ -70,6 +85,8 @@ export function useMonthCardModels({
     taskRows,
     generalWorksetLabel,
     worksetNameById,
+    worksets,
+    subscribeCalendars,
   ]);
 
   return { models, omitted: list.omitted, emptyReason: list.emptyReason };

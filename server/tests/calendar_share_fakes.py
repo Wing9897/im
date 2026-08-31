@@ -35,6 +35,7 @@ class FakeRemote:
         self.put_calendar_status = 200
         self.delete_calendar_status = 200
         self.patch_changes_status = 200
+        self.patch_changes_payload: Any = {"contentHash": "srv-hash-2", "ok": True}
         self.put_grants_status = 200
         self.put_grants_payload: Any = {"ok": True}
         self.put_calendar_queue: list[Any] = []
@@ -160,7 +161,7 @@ class FakeRemote:
             if self.fail_first_authorized and self._authorized_hits == 0 and access_token == "acc-1":
                 self._authorized_hits += 1
                 return 401, {"message": "expired"}
-            return self.patch_changes_status, {"contentHash": "srv-hash-2", "ok": True}
+            return self.patch_changes_status, self.patch_changes_payload
         if path.startswith("/me/calendars/"):
             if method == "DELETE":
                 return self.delete_calendar_status, {"deleted": self.delete_calendar_status < 400}

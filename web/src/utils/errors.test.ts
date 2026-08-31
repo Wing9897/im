@@ -81,6 +81,44 @@ describe("toErrorMessage", () => {
     ).toBe("日曆分享請求失敗，請稍後再試。");
   });
 
+  it("maps IC 422 quota codes to Traditional Chinese copy", async () => {
+    const { ensureZhHantLocale } = await import("../test/i18nHarness");
+    await ensureZhHantLocale();
+    expect(toErrorMessage("PUBLISH_CALENDAR_LIMIT")).toBe(
+      "已達發佈日曆上限（每人 10 本）。請先取消上載一本再試。",
+    );
+    expect(toErrorMessage("SUBSCRIBE_LIMIT")).toBe(
+      "已達訂閱上限（每人 50 本）。請先移除訂閱再試。",
+    );
+    expect(toErrorMessage("CALENDAR_EVENT_LIMIT")).toBe(
+      "這本日曆事件超過 3000 筆上限。請減少事件後再發佈。",
+    );
+    expect(
+      toErrorMessage(
+        new ApiRequestError(422, {
+          error: "PUBLISH_CALENDAR_LIMIT",
+          message: "PUBLISH_CALENDAR_LIMIT",
+        }),
+      ),
+    ).toBe("已達發佈日曆上限（每人 10 本）。請先取消上載一本再試。");
+    expect(
+      toErrorMessage(
+        new ApiRequestError(422, {
+          error: "SUBSCRIBE_LIMIT",
+          message: "SUBSCRIBE_LIMIT",
+        }),
+      ),
+    ).toBe("已達訂閱上限（每人 50 本）。請先移除訂閱再試。");
+    expect(
+      toErrorMessage(
+        new ApiRequestError(422, {
+          error: "CALENDAR_EVENT_LIMIT",
+          message: "CALENDAR_EVENT_LIMIT",
+        }),
+      ),
+    ).toBe("這本日曆事件超過 3000 筆上限。請減少事件後再發佈。");
+  });
+
   it("maps INVALID_CALENDAR_SLUG and Invalid slug: IC detail to localized copy", () => {
     const err = new ApiRequestError(422, {
       error: "INVALID_CALENDAR_SLUG",

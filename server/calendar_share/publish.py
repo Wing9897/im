@@ -6,7 +6,11 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from server.calendar_share.constants import LISTING_PRIVATE_GROUP, canonicalize_listing_visibility
+from server.calendar_share.constants import (
+    LISTING_PRIVATE_GROUP,
+    MAX_EVENTS_PER_CALENDAR,
+    canonicalize_listing_visibility,
+)
 from server.calendar_share.publish_remote import (
     delete_remote_calendar,
     exception_error_code,
@@ -21,7 +25,7 @@ from server.calendar_share.remote import authorized_request
 from server.calendar_share.snapshot import fingerprint_maps, grants_content_hash, snapshot_unchanged
 from server.calendar_share.store import delete_workset_entry, get_workset_entry, upsert_workset_entry
 from server.db.database import Database
-from server.errors import AUTH_REQUIRED, VALIDATION_ERROR, http_error
+from server.errors import CALENDAR_EVENT_LIMIT, VALIDATION_ERROR, http_error
 from server.queries.worksets_queries import fetch_workset_row
 from server.util import utc_now_iso
 
@@ -30,7 +34,6 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "WorksetPushResult",
     "collect_workset_snapshot",
-    "mark_sync_error",
     "push_workset_calendar",
     "push_workset_calendar_result",
     "snapshot_remote_events",
@@ -132,6 +135,8 @@ async def push_workset_calendar_result(
     snapshot_written = False
     grants_written = skip_grants
     try:
+        if len(events) > MAX_EVENTS_PER_CALENDAR:
+            raise http_error(422, CALENDAR_EVENT_LIMIT, error_code=CALENDAR_EVENT_LIMIT)
         if not skip_events or needs_catalog_push:
             remote_payload = await patch_or_put_snapshot(
                 db,
@@ -186,14 +191,3 @@ async def push_workset_calendar_result(
         next_entry["lastPublicVisibility"] = visibility
     saved = await upsert_workset_entry(db, workset_id, next_entry)
     return WorksetPushResult(entry=saved, wrote_remote=snapshot_written or not skip_grants)
-
-
-async def mark_sync_error(db: Database, workset_id: str, message: str) -> dict[str, Any]:
-    entry = await get_workset_entry(db, workset_id)
-    if not str(entry.get("slug") or "").strip():
-        return entry
-    return await upsert_workset_entry(db, workset_id, {**entry, "lastError": message})
-
-
-async def mark_sync_error_code(db: Database, workset_id: str, code: str = AUTH_REQUIRED) -> dict[str, Any]:
-    return await mark_sync_error(db, workset_id, code)

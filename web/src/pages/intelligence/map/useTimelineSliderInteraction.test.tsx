@@ -10,7 +10,7 @@ import {
   liveViewportSpanMs,
   useTimelineSliderInteraction,
 } from "./useTimelineSliderInteraction";
-import { ONE_HOUR } from "./timelineSliderLayout";
+import { ONE_HOUR } from "../../../domain/intelligence/timelineSliderLayout";
 
 function Harness({
   dataRange,

@@ -91,6 +91,9 @@ export function TimelineGrid({
     timelineEventsIsRefreshing,
     timelineEventsError,
     onRetryTimelineEvents,
+    overviewMode = false,
+    overviewWindow,
+    onOverviewWindowChange,
     showDismissed,
     showOngoing,
     showEnding,
@@ -152,6 +155,9 @@ export function TimelineGrid({
                 eventStatuses={eventStatuses}
                 onRetry={onRetryTimelineEvents}
                 onSelectEvent={onSelectEvent}
+                overviewMode={overviewMode}
+                overviewWindow={overviewWindow}
+                onOverviewWindowChange={onOverviewWindowChange}
               />
             </div>
           </Suspense>

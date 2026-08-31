@@ -21,7 +21,8 @@
     "month": "月",
     "cards": "塊",
     "quarter": "季",
-    "year": "年"
+    "year": "年",
+    "overview": "全局"
   },
   "status": {
     "pending": "待確認",
@@ -173,7 +174,9 @@
     "eventColumn": "事件",
     "untitled": "(無標題)",
     "location": "地點：{value}",
-    "participants": "參與者：{value}"
+    "participants": "參與者：{value}",
+    "overviewRangeStartAria": "可見範圍開始",
+    "overviewRangeEndAria": "可見範圍結束"
   },
   "messages": {
     "saveFailed": "儲存失敗",

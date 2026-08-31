@@ -349,3 +349,17 @@ async def test_delete_subscription_requires_login(client, fake_remote):
     )
     assert resp.status_code == 401
     assert not any(call["path"] == "/me/subscriptions" for call in fake_remote.calls)
+
+
+async def test_subscribe_maps_ic_subscribe_limit(client, fake_remote):
+    from server.errors import SUBSCRIBE_LIMIT
+
+    await login_calendar_share(client, fake_remote)
+    fake_remote.post_sub_status = 422
+    fake_remote.post_sub_payload = {"error_code": SUBSCRIBE_LIMIT, "message": SUBSCRIBE_LIMIT}
+    resp = await client.post(
+        "/api/v1/calendar-share/subscriptions",
+        json={"handle": "Alice", "slug": "Work"},
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == SUBSCRIBE_LIMIT
