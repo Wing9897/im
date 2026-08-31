@@ -80,6 +80,8 @@ export class ProcessManager {
       // Do not return the auto-restart promise itself: driveRestartLoop
       // swallows StartupCancelledError and can resolve with no process.
       const restartFlight = this.restartFlight;
+      // Holder avoids const TDZ (TS2454) vs prefer-const on an uninitialized let.
+      const flightRef: { current: Promise<void> | null } = { current: null };
       const flight = (async () => {
         try {
           await restartFlight;
@@ -87,11 +89,12 @@ export class ProcessManager {
           // Restart failed; start a fresh sidecar below if needed.
         }
         // stop() nulls startFlight so a queued start owns the next spawn.
-        if (this.startFlight !== flight) return;
+        if (this.startFlight !== flightRef.current) return;
         if (this.running && this.process) return;
         if (this.stopFlight || this.stopping) return;
         await this.runStartup();
       })();
+      flightRef.current = flight;
       return this.trackStartFlight(flight);
     }
     if (this.running && this.process) return Promise.resolve();
