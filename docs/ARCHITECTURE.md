@@ -62,9 +62,10 @@ flowchart LR
 |---------|-----------|-----------------|
 | Calendar recurrence | Standalone `/api/v1/calendar/recurring` series (RRULE) | Timeline UI `viewMode: "calendar"` (calendar vs gantt layout) |
 | Board calendar widget | widget type `"calendar"` | Any task analysis mode |
+| Timeline Gantt **全局** | Device LS `im:timeline:overview-mode` + `ganttOverviewWindow` | Discrete `TimelineScale` 日／週／月／季／年; calendar **塊** (`cards`) |
 | UI agent detail | `/tasks/:taskId/agent` (`analysisMode=agent` + `outputCalendar`) | Retired wire `analysisMode=project`; legacy URL `/tasks/:taskId/project` is retired (no redirect) |
 
-Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not analysis modes.
+Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not analysis modes. Gantt **全局** is a continuous display mode, not a `TimelineScale` and not calendar 塊.
 
 **In → Task → Out**
 
@@ -92,7 +93,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`window`／`holidays`／`imports`／`dismissals`／`user-events`／`recurring`／`importance`), worksets, items, llm, mcp, theme, ui-prefs, setup, access-keys, a2a, events SSE) |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`window`／`holidays`／`imports`／`dismissals`／`user-events`／`recurring`／`importance`), **calendar-share** (optional sidecar proxy), worksets, items, llm, mcp, theme, ui-prefs, setup, access-keys, a2a, events SSE) |
 | `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
 | `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
 | `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; worksets in `serializer_domains/worksets.py`; shared by HTTP and non-HTTP callers) |
@@ -157,9 +158,9 @@ The collector manager delegates in `collector/manager_sources.py` and `collector
 
 ### API error codes (i18n prep)
 
-User-visible API failures should prefer a stable snake_case `error_code` in the structured body (`error_code` / `message` / `details` / `correlation_id`). Prefer `server.errors.http_error(...)` over bare Chinese `HTTPException(detail=...)`.
+User-visible API failures should prefer a stable `error_code` in the structured body (`error_code` / `message` / `details` / `correlation_id`). Prefer `server.errors.http_error(...)` over bare Chinese `HTTPException(detail=...)`. Weather / holiday / agent codes are `snake_case` (`weather_timeout`, `agent_timeout`); calendar-share quota and transport codes are `SCREAMING_SNAKE` (`RATE_LIMITED`, `PUBLISH_CALENDAR_LIMIT`, `SUBSCRIBE_LIMIT`, `CALENDAR_EVENT_LIMIT`). Protocol identity is the code, not English `message` copy.
 
-The web client (`web/src/utils/errors.ts` → `toErrorMessage`) looks up `messageForErrorCode` (`web/src/i18n/errorCodes.ts`) first, then falls back to `message`. See [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md) for the glossary and pilot codes (`weather_*`, `agent_timeout`).
+The web client (`web/src/utils/errors.ts` → `toErrorMessage`) looks up `messageForErrorCode` (`web/src/i18n/errorCodes.ts`) first, then falls back to `message`. See [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md).
 
 The server integrates collector, analyzer, and action modules as direct in-process function calls — no inter-process communication layer.
 
@@ -172,7 +173,7 @@ A **React** SPA (Vite + TypeScript). Talks to the server **only** via HTTP REST 
 - **Communication**: HTTP REST for commands/queries, SSE for server-pushed events.
 - **Scrolling**: `body` / `#root` `overflow: hidden`; page scroll on `.app-shell-main`. Infinite-scroll / monitor virtualizer must use `getVerticalScrollParent` / `useScrollContainerState` (`web/src/utils/scrollParent.ts`) — not `window.scrollY`.
 - **SPA vs HTTP names:** notifications UI is `/notify` (`pages/notify/`, label **通知**). Outbound automation HTTP stays `/api/v1/actions*` — do **not** rename `Action*` identifiers. Channel picker ≠ ActionType tiles: [`I18N-GLOSSARY.md` Channel／ActionType](I18N-GLOSSARY.md#channelactiontype-命名). Local notify scanner: `web/src/domain/notify/` (terms: glossary **通知**／語音／畫面).
-- **Assistant / AI**: `/assistant` + `/ai/*` (`web/src/pages/ai/`). Sessions `GET/PUT /api/v1/ui-prefs/assistant/sessions`. Contracts: [`assistant.md`](agent/assistant.md)、[`a2a.md`](agent/a2a.md)、[`mcp.md`](agent/mcp.md)、[`agent.md`](agent/agent.md) (tick UI `/tasks/:taskId/agent`; legacy `/project` retired, no redirect).
+- **Assistant / AI**: `/assistant` + `/ai/*` (`web/src/pages/ai/` 助理) + `web/src/pages/settings/ai/`（設定）. Sessions `GET/PUT /api/v1/ui-prefs/assistant/sessions`. Contracts: [`assistant.md`](agent/assistant.md)、[`a2a.md`](agent/a2a.md)、[`mcp.md`](agent/mcp.md)、[`agent.md`](agent/agent.md) (tick UI `/tasks/:taskId/agent`; legacy `/project` retired, no redirect).
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect).
 - **UI prefs:** voice IO / local-notify / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Per-feature LS migrate bridges are gone; one-shot `clearLegacyPrefsIfNeeded` / `im:prefs-schema-version` remains. User profile: server settings SoT + active LS cache.
 - **Ops board** — see [Ops board](#ops-board) below.
@@ -220,6 +221,8 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Slice | Path | Consumers |
 |-------|------|-----------|
 | Timeline date helpers | `domain/timeline/dateUtils` | Calendar board embed／widget；timeline pages may re-export |
+| Gantt 全局 window | `domain/gantt/ganttOverviewWindow` | Timeline Gantt Overview pan／zoom math (`useGanttOverviewSession`) |
+| Map／Overview timebar layout | `domain/intelligence/timelineSliderLayout` | Intelligence map slider + Gantt Overview timebar |
 | Map filters／tiles／coord group | `domain/intelligence/mapFilters`、`mapTiles`、`groupByCoordinate` | Board map embed + intelligence map |
 | Wall layout／model | `domain/monitor/wall/` | Wall board embed + Monitor wall |
 | Command palette catalog | `domain/commandPalette/commandPaletteCommands` | Command palette UI／hooks |
@@ -424,6 +427,17 @@ Stamp 6 adds household auto-sync cache columns on `calendar_share_publish` (SoT 
 - Time-window SoT: `GET /api/v1/calendar/window` for Timeline, Board calendar/gantt, and notify scan (server-merged analysis, RRULE occurrences, `user_events`, and `item_remind`). `/results/events` (`hasTime`, `hasCoords`, `startDate`／`endDate`, sort, offset pagination — HTTP camelCase only) is intel/map only. User-events／recurring CRUD stay for 我的日程 editors; Agent／MCP expand via Python `query_window`／`expand_active_calendar_occurrences` (retired `GET /api/v1/calendar/occurrences` is 404).
 - UI keeps **/intelligence** and **/timeline** as separate pages. **/items** is a peer page (visible in simple mode) for trackable inventory. Toolbar source filter: **全部** (`null`) = all sources; selecting a workset includes that workset’s user_events **and** items (no isolated items bucket); selecting a concrete **intel_event / agent** analysis task = that task’s analysis rows **plus** `user_events` with matching provenance `task_id`; selecting a **recurring series** = that series’ RRULE rows **plus** matching provenance. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId=null`) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__general__` as「一般」.
 
+#### Timeline calendar / gantt scales
+
+`viewMode` is `calendar` | `gantt` (`im:timeline:view-mode`). Discrete `TimelineScale` is `day` | `week` | `month` | `quarter` | `year` (`im:timeline:time-scale`) — each pill is a complete aligned window.
+
+| Toolbar | Pills |
+|---------|-------|
+| Calendar | 日／週／月／**塊** (`cards` → month `split` per-source cards; not a `TimelineScale`; catalog expand ≤12) |
+| Gantt | 日／週／月／季／年, plus peer **全局** |
+
+**全局 / Overview** is gantt-only (`im:timeline:overview-mode`). It is **not** a `TimelineScale` and **not** calendar 塊. Entering seeds a continuous window from the current discrete scale (`overviewWindowFromScale`); then pan／zoom independently (`domain/gantt/ganttOverviewWindow.ts`, session `pages/timeline/useGanttOverviewSession.ts`). Span clamp ≈ 2 hours … 10 years. The bottom bar is a map-style timebar (`GanttOverviewTimebar`; layout math shared with the Intelligence map via `domain/intelligence/timelineSliderLayout.ts`). Clicking 日／週／月／季／年 turns overview off and jumps that complete discrete view. Fetch stays `GET /api/v1/calendar/window`; overview pads the range (`overviewFetchWindow`) so small pans do not refetch. Board gantt keeps discrete `ganttViewModes` only — no Overview.
+
 ### Schema support matrix
 
 Moved to [`docs/SCHEMA-BASELINE.md` Schema support matrix](SCHEMA-BASELINE.md#schema-support-matrix).
@@ -450,9 +464,9 @@ Desktop host sidecar sets `INTELLIGENCE_MONITOR_DATA_DIR` to Electron `userData`
 
 Telegram sources do not use Telethon's default SQLite session files (`.session`), which could report `database is locked` when a stale process held the file open. Auth is stored as a `StringSession` token under the data-root `sessions/` directory (see above). The one-time legacy `.session` SQLite migration shim was removed; full／database reset (and `scripts/reset_local_databases.py --apply`) deletes both `*.session.txt` and leftover `*.session`. A source without a token simply re-authenticates.
 
-## Calendar share (IntelligenceCalendar)
+## Calendar share (optional sidecar)
 
-Household **local calendar** (timeline `user_events` / analysis / RRULE series) lives in IM SQLite. **Shared calendars** live in the sibling IntelligenceCalendar process (`subscriptions` table: `UNIQUE (subscriber_id, calendar_id)` is the catalog). Household IANA timezone is stored and edited on IM; the public replica timezone lives on IntelligenceCalendar. IM `/api/v1/calendar-share/*` is a proxy: the renderer never talks to IC. `GET`/`POST`/`DELETE /subscriptions` map to IC `/me/subscriptions`; a 502 from IC fails closed (no local `calendar_share_subscriptions` cache). Closed or grant-revoked calendars drop from 我的訂閱 when IC `GET /me/subscriptions` (or the events feed) prunes that subscriber’s own rows. RRULE expansion for subscribed series runs on the **IM server**, not React and not IC. Timeline dismiss of a single RRULE occurrence does **not** set `pendingSync` (public snapshot is the unexpanded `series[]`; no exdate upload).
+Household **local calendar** (timeline `user_events` / analysis / RRULE series) lives in IM SQLite. **Shared calendars** are optional: they live in a sibling IntelligenceCalendar sidecar process, **not** in this repo. IM talks to it only through `/api/v1/calendar-share/*`; the renderer never talks to the sidecar. `GET`/`POST`/`DELETE /subscriptions` map to sidecar `/me/subscriptions`; a 502 fails closed (no local `calendar_share_subscriptions` cache). Closed or grant-revoked calendars drop from 我的訂閱 when sidecar `GET /me/subscriptions` (or the events feed) prunes that subscriber’s own rows. RRULE expansion for subscribed series runs on the **IM server**, not React and not the sidecar. Timeline dismiss of a single RRULE occurrence does **not** set `pendingSync` (public snapshot is the unexpanded `series[]`; no exdate upload). Publish refuses more than **3000** events (`MAX_EVENTS_PER_CALENDAR` / `CALENDAR_EVENT_LIMIT`). Publish rows expose `lastSyncAt`. Household IANA timezone is stored and edited on IM; the public replica timezone lives on the sidecar.
 
 ### Publish module map
 
