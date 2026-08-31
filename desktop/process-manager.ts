@@ -80,8 +80,7 @@ export class ProcessManager {
       // Do not return the auto-restart promise itself: driveRestartLoop
       // swallows StartupCancelledError and can resolve with no process.
       const restartFlight = this.restartFlight;
-      let flight!: Promise<void>;
-      flight = (async () => {
+      const flight = (async () => {
         try {
           await restartFlight;
         } catch {
