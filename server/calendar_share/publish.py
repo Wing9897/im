@@ -23,7 +23,7 @@ from server.calendar_share.publish_snapshot import (
 )
 from server.calendar_share.remote import authorized_request
 from server.calendar_share.snapshot import fingerprint_maps, grants_content_hash, snapshot_unchanged
-from server.calendar_share.store import delete_workset_entry, get_workset_entry, upsert_workset_entry
+from server.calendar_share.store import delete_workset_entry, upsert_workset_entry
 from server.db.database import Database
 from server.errors import CALENDAR_EVENT_LIMIT, VALIDATION_ERROR, http_error
 from server.queries.worksets_queries import fetch_workset_row
