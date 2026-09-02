@@ -50,9 +50,7 @@ _TIME_RANGE_OFFSETS: dict[str, str] = {
 }
 
 
-def time_range_lower_bound(
-    time_range: Any, *, now: datetime | None = None
-) -> datetime | None:
+def time_range_lower_bound(time_range: Any, *, now: datetime | None = None) -> datetime | None:
     """UTC lower bound for a bounded time-range token.
 
     Mirrors ``time_range_condition`` (SQLite ``now`` / ``start of day``) in
@@ -62,10 +60,7 @@ def time_range_lower_bound(
     if not isinstance(time_range, str):
         return None
     moment = now or datetime.now(UTC)
-    if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=UTC)
-    else:
-        moment = moment.astimezone(UTC)
+    moment = moment.replace(tzinfo=UTC) if moment.tzinfo is None else moment.astimezone(UTC)
     if time_range == "today":
         return moment.replace(hour=0, minute=0, second=0, microsecond=0)
     offset = _TIME_RANGE_OFFSETS.get(time_range)
