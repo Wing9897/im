@@ -1,7 +1,9 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState, type CSSProperties, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getGeminiBaseUrlPresets } from "../../domain/settings/llmProviderConfig";
+import { anchoredMenuPortalStyle, useAnchoredMenu, type AnchoredMenuPosition } from "../../hooks/useAnchoredMenu";
 import { captionClass, formLabelClass } from "../ui/pageTypography";
 
 interface GeminiBaseUrlFieldProps {
@@ -11,6 +13,12 @@ interface GeminiBaseUrlFieldProps {
   onChange: (value: string) => void;
 }
 
+const listBoxStyle = (menuPos: AnchoredMenuPosition | null): CSSProperties => ({
+  ...anchoredMenuPortalStyle(menuPos),
+  background: "var(--surface-raised, var(--surface-card))",
+  color: "var(--text-primary)",
+});
+
 export function GeminiBaseUrlField({
   id,
   value,
@@ -18,28 +26,52 @@ export function GeminiBaseUrlField({
   onChange,
 }: GeminiBaseUrlFieldProps) {
   const { t } = useTranslation("settings");
-  const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
   const presets = getGeminiBaseUrlPresets(t).filter((preset) => preset.id !== "custom");
-
-  useEffect(() => {
-    if (!open) return;
-    const onDocumentMouseDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDocumentMouseDown);
-    return () => document.removeEventListener("mousedown", onDocumentMouseDown);
-  }, [open]);
+  const { open, setOpen, toggle, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
+    align: "start",
+    gap: 4,
+    edge: 8,
+    contentKey: presets.length,
+    dismissPointerEvent: "mousedown",
+  });
 
   const shellFocused = focused || open;
 
+  const listbox = open ? (
+    <ul
+      ref={menuRef as RefObject<HTMLUListElement>}
+      id={listId}
+      role="listbox"
+      className="im-menu-surface m-0 list-none rounded-md border border-surface-border p-xs shadow-md"
+      style={listBoxStyle(menuPos)}
+      data-testid="gemini-base-url-presets"
+    >
+      {presets.map((preset) => (
+        <li key={preset.id} role="presentation">
+          <button
+            type="button"
+            role="option"
+            aria-selected={value === preset.url}
+            className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:!transform-none hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))] active:!transform-none"
+            onClick={() => {
+              onChange(preset.url);
+              setOpen(false);
+            }}
+          >
+            <span className={`block ${formLabelClass}`}>{preset.label}</span>
+            <span className={`mt-xs block ${captionClass}`}>{preset.url}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  ) : null;
+
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef as RefObject<HTMLDivElement>} className="relative">
       <div
+        ref={anchorRef as RefObject<HTMLDivElement>}
         className={[
           "im-surface-inset flex h-8 min-h-8 w-full items-stretch rounded-md border transition-[border-color,box-shadow] duration-200",
           shellFocused
@@ -68,7 +100,7 @@ export function GeminiBaseUrlField({
           aria-expanded={open}
           aria-controls={listId}
           className="flex w-8 shrink-0 items-center justify-center rounded-sm border-none bg-transparent p-0 text-text-secondary transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
-          onClick={() => setOpen((current) => !current)}
+          onClick={toggle}
         >
           <ChevronDown
             size={14}
@@ -78,31 +110,9 @@ export function GeminiBaseUrlField({
           />
         </button>
       </div>
-      {open ? (
-        <ul
-          id={listId}
-          role="listbox"
-          className="im-menu-surface absolute left-0 right-0 top-[calc(100%+4px)] z-20 m-0 list-none rounded-md p-xs"
-        >
-          {presets.map((preset) => (
-            <li key={preset.id} role="presentation">
-              <button
-                type="button"
-                role="option"
-                aria-selected={value === preset.url}
-                className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:!transform-none hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))] active:!transform-none"
-                onClick={() => {
-                  onChange(preset.url);
-                  setOpen(false);
-                }}
-              >
-                <span className={`block ${formLabelClass}`}>{preset.label}</span>
-                <span className={`mt-xs block ${captionClass}`}>{preset.url}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {open && listbox && typeof document !== "undefined"
+        ? createPortal(listbox, document.body)
+        : null}
     </div>
   );
 }

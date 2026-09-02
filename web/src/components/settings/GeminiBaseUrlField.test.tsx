@@ -52,10 +52,17 @@ describe("GeminiBaseUrlField", () => {
       toggle!.click();
     });
 
-    expect(container.textContent).toContain("Beta（預覽版，官方預設）");
-    expect(container.textContent).toContain("正式（穩定版）");
+    const list = document.body.querySelector(
+      '[data-testid="gemini-base-url-presets"]',
+    ) as HTMLElement | null;
+    expect(list).toBeTruthy();
+    expect(container.querySelector('[data-testid="gemini-base-url-presets"]')).toBeNull();
+    expect(list?.parentElement).toBe(document.body);
+    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.textContent).toContain("Beta（預覽版，官方預設）");
+    expect(list?.textContent).toContain("正式（穩定版）");
 
-    const formalOption = Array.from(container.querySelectorAll("button[role='option']")).find((button) =>
+    const formalOption = Array.from(list!.querySelectorAll("button[role='option']")).find((button) =>
       button.textContent?.includes("正式（穩定版）"),
     );
     expect(formalOption).toBeTruthy();

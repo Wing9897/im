@@ -1849,7 +1849,7 @@ export interface paths {
          * @description Persist board layout and/or widget state.
          *
          *     Accepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;
-         *     explicit ``null`` clears that ``system_config`` key.
+         *     explicit ``null`` clears that ``ui_prefs`` key.
          */
         put: operations["save_board_prefs_api_v1_ui_prefs_board_put"];
         post?: never;

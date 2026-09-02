@@ -12,6 +12,10 @@ vi.mock("../../context/TaskCatalogContext", async () =>
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 
+vi.mock("../../context/SimpleModeContext", () => ({
+  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
+}));
+
 vi.mock("../../api/worksets", () => ({
   renameWorkset: vi.fn().mockResolvedValue({}),
   deleteWorkset: vi.fn().mockResolvedValue({ ok: true }),
@@ -86,11 +90,21 @@ describe("WorksetWorkspacePage", () => {
     expect(harness.container.querySelector('[data-testid="workset-flow-panel"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-workspace-tabs"]')).toBeNull();
     expect(harness.container.querySelector('[data-testid="workset-contents-panel"]')).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="workset-contents-grid"]')).toBeTruthy();
+    const shell = harness.container.querySelector('[data-testid="workset-contents-panel"]')
+      ?.closest("[class*='min-h-full'], [class*='min-h-0']");
+    expect(shell?.className ?? "").toContain("!min-h-0");
     expect(harness.container.querySelector('[data-testid="workset-catalog-tabs"]')).toBeTruthy();
-    expect(harness.container.querySelector('[data-testid="workset-workspace-cover"]')).toBeTruthy();
+    const coverWrap = harness.container.querySelector('[data-testid="workset-workspace-cover"]');
+    expect(coverWrap).toBeTruthy();
+    expect(coverWrap?.className ?? "").toContain("w-full");
+    expect(coverWrap?.className ?? "").not.toContain("max-w-xl");
     expect(
       harness.container.querySelector('[data-testid="workset-card-cover-upload-label"]'),
     ).toBeTruthy();
+    const coverStrip = harness.container.querySelector('[data-testid="workset-card-cover"]');
+    expect(coverStrip?.className ?? "").toContain("h-28");
+    expect(coverStrip?.className ?? "").toContain("w-full");
     expect(harness.container.textContent).toContain("目錄");
     expect(harness.container.textContent).toContain("流程圖");
     expect(harness.container.textContent).toContain("Ops");

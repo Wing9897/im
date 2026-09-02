@@ -126,6 +126,7 @@ export function LlmProfileConnectionPanel({
             <MenuSelect
               id="openai-json-mode"
               variant="field"
+              menuPortal
               value={openaiJsonMode || "disabled"}
               options={[
                 { value: "disabled", label: t("llm.jsonModeDisabledOption") },

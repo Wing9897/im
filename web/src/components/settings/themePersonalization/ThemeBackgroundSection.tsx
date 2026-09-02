@@ -231,6 +231,7 @@ export function ThemeBackgroundSection({
               id="theme-bg-mode"
               data-testid="theme-bg-mode"
               variant="field"
+              menuPortal
               value={bgMode}
               options={bgModeOptions}
               aria-label={t("theme.bgModeLabel")}
@@ -289,6 +290,7 @@ export function ThemeBackgroundSection({
               id="theme-focal-refresh-hours"
               data-testid="theme-focal-refresh-hours"
               variant="field"
+              menuPortal
               value={String(focalRefreshHours)}
               options={focalIntervalOptions}
               aria-label={t("theme.focalRefreshIntervalLabel")}

@@ -44,6 +44,11 @@
       "title": "此页面发生错误",
       "body": "页面渲染时遇到问题，请尝试重新载入此区块。"
     },
+    "notFound": {
+      "title": "找不到此页面",
+      "body": "网址可能已变更或输入有误。",
+      "home": "回到首页"
+    },
     "lazyLoadError": "元件载入失败",
     "errorBoundary": {
       "title": "发生未预期的错误",

@@ -26,15 +26,21 @@ describe("RssProviderPicker", () => {
       );
     });
 
-    const select = container.querySelector<HTMLSelectElement>("#rss-provider-select");
-    expect(select).not.toBeNull();
-    expect(container.querySelectorAll("optgroup").length).toBeGreaterThanOrEqual(3);
+    const trigger = container.querySelector<HTMLButtonElement>("#rss-provider-select");
+    expect(trigger).not.toBeNull();
     expect(container.querySelectorAll(".rss-provider-picker__chip").length).toBe(0);
     expect(container.textContent).toContain(i18n.t("sources:rss.providers.linuxdo.pickerHint"));
 
     act(() => {
-      select!.value = "v2ex";
-      select!.dispatchEvent(new Event("change", { bubbles: true }));
+      trigger!.click();
+    });
+    expect(document.body.textContent).toContain("社群");
+    const v2ex = document.body.querySelector<HTMLButtonElement>(
+      '[data-testid="rss-provider-select-option-v2ex"]',
+    );
+    expect(v2ex).toBeTruthy();
+    act(() => {
+      v2ex!.click();
     });
 
     expect(onChange).toHaveBeenCalledWith("v2ex");

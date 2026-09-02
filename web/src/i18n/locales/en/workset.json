@@ -76,6 +76,7 @@
   "generalName": "General",
   "tabCatalog": "Catalog",
   "tabGraph": "Graph",
+  "tabTasks": "Tasks",
   "catalogTabsAria": "Workset views",
   "backToCatalog": "Back to worksets",
   "backToCatalogAria": "Back to workset catalog",

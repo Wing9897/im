@@ -101,6 +101,7 @@ export function AnalysisSchedulingFields({
         <MenuSelect
           id={evidenceId}
           variant="field"
+          menuPortal
           className="max-w-[320px]"
           value={evidenceStyle}
           options={[

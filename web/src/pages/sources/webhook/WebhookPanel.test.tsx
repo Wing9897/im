@@ -53,6 +53,10 @@ describe("WebhookPanel", () => {
 
     const link = container.querySelector('[data-testid="webhook-integrations-link"]');
     expect(link?.getAttribute("href")).toBe("/settings/integrations?tab=webhook");
+    const dataLink = Array.from(container.querySelectorAll("a")).find(
+      (anchor) => anchor.getAttribute("href") === "/settings/data",
+    );
+    expect(dataLink).toBeTruthy();
     expect(container.querySelector("pre")).toBeNull();
   });
 

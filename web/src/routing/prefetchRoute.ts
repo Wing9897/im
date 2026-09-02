@@ -1,7 +1,6 @@
 /** Map primary nav paths → lazy page modules (matches AppRoutes). */
 const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/monitor": () => import("../pages/monitor/MonitorPage"),
-  "/tasks": () => import("../pages/dashboard/DashboardViewer"),
   "/worksets": () => import("../pages/dashboard/DashboardViewer"),
   "/worksets/:id": () => import("../pages/worksets/WorksetWorkspacePage"),
   "/schedule": () => import("../pages/schedule/SchedulePage"),
@@ -18,11 +17,10 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/sources": () => import("../pages/sources/SourceManagementPage"),
   "/assistant": () => import("../pages/ai/assistant/AssistantPage"),
   "/account": () => import("../pages/account/AccountShell"),
-  "/ai": () => import("../pages/ai/AiWorkspacePage"),
-  "/ai/provider": () => import("../pages/settings/ai/SettingsAiProviderPage"),
-  "/ai/voice": () => import("../pages/settings/ai/SettingsVoicePage"),
-  "/ai/analysis-strategy": () => import("../pages/dashboard/DashboardViewer"),
-  "/ai/staff": () => import("../pages/settings/ai/SettingsAiStaffPage"),
+  "/settings/ai": () => import("../pages/settings/SettingsShared"),
+  "/settings/ai/provider": () => import("../pages/settings/ai/SettingsAiProviderPage"),
+  "/settings/ai/voice": () => import("../pages/settings/ai/SettingsVoicePage"),
+  "/settings/ai/staff": () => import("../pages/settings/ai/SettingsAiStaffPage"),
   "/settings": () => import("../pages/settings/SettingsShared"),
   "/settings/integrations": () => import("../pages/settings/SettingsIntegrationsPage"),
   "/settings/logs": () => import("../pages/logs/LogPage"),
@@ -42,9 +40,6 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   }
   if (path === "/worksets") {
     return ROUTE_PREFETCHERS["/worksets"];
-  }
-  if (path.startsWith("/tasks")) {
-    return ROUTE_PREFETCHERS["/tasks"];
   }
   return undefined;
 }
@@ -83,13 +78,15 @@ export function prefetchRoute(to: string): void {
     resolveSchedulePrefetch(path) ??
     resolveTasksPrefetch(path) ??
     resolveItemsPrefetch(path) ??
-    (path.startsWith("/ai")
-      ? ROUTE_PREFETCHERS["/ai"]
-      : path.startsWith("/settings")
-        ? ROUTE_PREFETCHERS["/settings"]
-        : path.startsWith("/subscriptions")
-          ? ROUTE_PREFETCHERS["/subscriptions"]
-          : undefined);
+    (path.startsWith("/settings/ai")
+      ? ROUTE_PREFETCHERS["/settings/ai"]
+      : path.startsWith("/ai")
+        ? ROUTE_PREFETCHERS["/settings/ai"]
+        : path.startsWith("/settings")
+          ? ROUTE_PREFETCHERS["/settings"]
+          : path.startsWith("/subscriptions")
+            ? ROUTE_PREFETCHERS["/subscriptions"]
+            : undefined);
   if (!loader || prefetched.has(path)) return;
   prefetched.add(path);
   void loader().catch(() => {

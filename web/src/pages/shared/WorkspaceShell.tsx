@@ -9,7 +9,7 @@ import {
   type SegmentedTabItem,
 } from "../../components/ui";
 import { pageShellRootClass } from "../../components/ui/pageLayout";
-import { settingsWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
+import { SETTINGS_AI_BASE, settingsWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
 import type { WorkspaceNavItem } from "../../types";
 import type { SystemSettingsPageState } from "../../hooks/useSystemSettingsPage";
 import { useErrorToast } from "../../hooks/useErrorToast";
@@ -49,9 +49,9 @@ export function SettingsTopTabs() {
 
 function useWorkspaceBreadcrumbRoot(pathname: string): { label: string; to: string } {
   const { t } = useTranslation(["settings", "nav"]);
-  if (pathname.startsWith("/ai")) {
+  if (pathname.startsWith(SETTINGS_AI_BASE)) {
     // Canonical label: nav.aiSettings (same as sidebar).
-    return { label: t("nav:aiSettings"), to: "/ai" };
+    return { label: t("nav:aiSettings"), to: SETTINGS_AI_BASE };
   }
   // Canonical label: nav.systemSettings (same as sidebar).
   return { label: t("nav:systemSettings"), to: "/settings" };

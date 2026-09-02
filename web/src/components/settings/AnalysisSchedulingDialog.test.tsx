@@ -166,6 +166,12 @@ describe("AnalysisSchedulingDialog", () => {
       evidenceTrigger!.click();
     });
     expect(document.body.querySelectorAll('[role="option"]').length).toBe(3);
+    const evidenceList = document.body.querySelector(
+      "#analysis-evidence-style-list",
+    ) as HTMLElement | null;
+    expect(evidenceList).toBeTruthy();
+    expect(evidenceList?.parentElement).toBe(document.body);
+    expect(evidenceList?.style.zIndex).toBe("3000");
   });
 
   it("renders advanced collapsible section headers collapsed by default without timeout", () => {

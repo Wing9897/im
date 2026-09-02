@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from server.errors import INVALID_CALENDAR_SLUG
 from server.tests.calendar_share_fakes import login_calendar_share
 from server.worksets_const import SYSTEM_WORKSET_ID
@@ -519,8 +521,10 @@ def test_raise_remote_status_preserves_ic_quota_codes():
         with pytest.raises(HTTPException) as caught:
             raise_remote_status(422, {"error_code": code, "message": code})
         assert caught.value.status_code == 422
-        assert caught.value.detail["error_code"] == code
+        detail = cast(dict[str, Any], caught.value.detail)
+        assert detail["error_code"] == code
 
     with pytest.raises(HTTPException) as caught:
         raise_remote_status(422, {"error_code": "INVALID_CALENDAR_SLUG", "message": "bad slug"})
-    assert caught.value.detail["error_code"] == VALIDATION_ERROR
+    detail = cast(dict[str, Any], caught.value.detail)
+    assert detail["error_code"] == VALIDATION_ERROR

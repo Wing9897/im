@@ -106,13 +106,19 @@ describe("CalendarSharePublishForm", () => {
     ).toBe(false);
     expect(document.querySelector('[data-testid="calendar-share-slug"]')).toBeTruthy();
     expect(container.textContent).toContain("誰能訂這本私人群組日曆");
-    const listing = container.querySelector('[data-testid="calendar-share-public"]') as HTMLSelectElement;
-    expect([...listing.options].map((option) => option.textContent)).toEqual([
-      "私人",
-      "公開",
-      "公開閒忙",
-    ]);
-    expect(listing.value).toBe("private_group");
+    const listing = container.querySelector('[data-testid="calendar-share-public-value"]') as HTMLButtonElement;
+    expect(listing).toBeTruthy();
+    expect(listing.textContent).toContain("私人");
+    await act(async () => {
+      listing.click();
+    });
+    const publicList = document.body.querySelector('[data-testid="calendar-share-public-list"]');
+    expect(publicList?.textContent).toContain("私人");
+    expect(publicList?.textContent).toContain("公開");
+    expect(publicList?.textContent).toContain("公開閒忙");
+    await act(async () => {
+      listing.click();
+    });
     const addGrant = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "新增授權",
     );
@@ -120,12 +126,18 @@ describe("CalendarSharePublishForm", () => {
     await act(async () => {
       addGrant!.click();
     });
-    const grantSelect = container
-      .querySelector('[data-testid="calendar-share-grants"]')
-      ?.querySelector("select") as HTMLSelectElement;
-    expect([...grantSelect.options].map((option) => option.textContent)).toEqual(["私人閒忙", "詳情"]);
-    expect(grantSelect.textContent).not.toContain("公開閒忙");
-    expect(grantSelect.textContent).not.toContain("公開");
+    const grantTrigger = container.querySelector(
+      '[data-testid="calendar-share-grant-visibility-0-value"]',
+    ) as HTMLButtonElement;
+    expect(grantTrigger).toBeTruthy();
+    await act(async () => {
+      grantTrigger.click();
+    });
+    const grantList = document.body.querySelector('[data-testid="calendar-share-grant-visibility-0-list"]');
+    expect(grantList?.textContent).toContain("私人閒忙");
+    expect(grantList?.textContent).toContain("詳情");
+    expect(grantList?.textContent).not.toContain("公開閒忙");
+    expect(grantList?.textContent).not.toMatch(/(?:^|[^閒忙])公開(?!閒忙)/);
   });
 
   it("explains confirm-to-upload and does not offer an enable toggle or auto-sync", async () => {

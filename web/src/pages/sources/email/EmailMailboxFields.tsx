@@ -40,6 +40,7 @@ export function EmailMailboxFields({
         <MenuSelect
           id="email-preset"
           variant="field"
+          menuPortal
           value={form.preset}
           options={presetOptions}
           onChange={(next) => setPreset(next as EmailProviderPreset)}

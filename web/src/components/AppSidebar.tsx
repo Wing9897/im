@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ import {
   Package,
   Database,
   History,
-  ListChecks,
   Layers,
   MapPin,
   Menu,
@@ -42,14 +41,12 @@ import { railModeButtonClass } from "./sidebar/sidebarNavStyles";
 import {
   SidebarNavLink,
   SidebarSectionLabel,
-  TasksNavLink,
 } from "./sidebar/SidebarNavItems";
 
 export { MAIN_SIDEBAR_PREFETCH_PATHS };
 
 const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   monitor: Radio,
-  tasks: ListChecks,
   worksets: Layers,
   schedule: CalendarClock,
   items: Package,
@@ -77,7 +74,6 @@ export function AppSidebar() {
   const location = useLocation();
   const { t } = useTranslation("nav");
   const { t: tCommon } = useTranslation("common");
-  const [lastTasksPath, setLastTasksPath] = useState("/tasks");
   const { collapsed, setCollapsed, toggleCollapsed } = useSidebarCollapsed();
   const { mode, setMode } = useSidebarRailMode();
   const { simpleMode } = useSimpleMode();
@@ -85,12 +81,6 @@ export function AppSidebar() {
   const overlayOpen = !collapsed;
 
   const visibleGroups = visibleSidebarGroups(simpleMode);
-
-  useEffect(() => {
-    if (location.pathname.startsWith("/tasks")) {
-      setLastTasksPath(location.pathname);
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     if (monitorMode === "canvas") {
@@ -225,16 +215,6 @@ export function AppSidebar() {
                             const Icon = SIDEBAR_ICONS[item.icon];
                             const isActive = isSidebarItemActive(item, location.pathname);
                             const label = t(item.labelKey);
-                            if (item.to === "/tasks") {
-                              return (
-                                <TasksNavLink
-                                  key={item.to}
-                                  to={lastTasksPath}
-                                  collapsed={false}
-                                  isActive={isActive}
-                                />
-                              );
-                            }
                             return (
                               <SidebarNavLink
                                 key={item.to}

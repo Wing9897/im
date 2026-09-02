@@ -182,7 +182,7 @@ export function PipelineGuideChecklist({
                 variant="secondary"
                 size="sm"
                 data-testid="pipeline-guide-ai-provider"
-                onClick={() => navigate("/ai/provider")}
+                onClick={() => navigate("/settings/ai/provider")}
               >
                 {t("pipelineGuide.openAiProvider")}
               </Button>

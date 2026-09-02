@@ -104,7 +104,7 @@ export function TopBarStatusActions({ variant = "default" }: TopBarStatusActions
           abortingAnalysis={abortingAnalysis}
           aiUnavailable={aiUnavailable}
           onOpenAiSettings={() => {
-            navigate("/ai/provider");
+            navigate("/settings/ai/provider");
           }}
           onTogglePause={() => {
             void handleAnalysisPausedChange(!analysisPaused);

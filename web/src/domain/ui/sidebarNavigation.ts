@@ -2,7 +2,6 @@ import { isSimpleModeHiddenPath } from "./simpleMode";
 
 export type SidebarIconKey =
   | "monitor"
-  | "tasks"
   | "worksets"
   | "schedule"
   | "items"
@@ -35,9 +34,8 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
     labelKey: "groupManage",
     items: [
       { to: "/worksets", labelKey: "worksets", icon: "worksets", activePrefix: "/worksets" },
-      { to: "/tasks", labelKey: "tasks", icon: "tasks", activePrefix: "/tasks" },
       { to: "/schedule", labelKey: "schedule", icon: "schedule", activePrefix: "/schedule" },
-      { to: "/items", labelKey: "items", icon: "items" },
+      { to: "/items", labelKey: "items", icon: "items", activePrefix: "/items" },
       { to: "/sources", labelKey: "sources", icon: "sources", activePrefix: "/sources" },
     ],
   },
@@ -70,14 +68,14 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
 ];
 
 export const SIDEBAR_BOTTOM_ITEMS: readonly SidebarNavItemModel[] = [
-  { to: "/ai/provider", labelKey: "aiSettings", icon: "ai", activePrefix: "/ai" },
+  { to: "/settings/ai/provider", labelKey: "aiSettings", icon: "ai", activePrefix: "/settings/ai" },
   {
     to: "/settings",
     labelKey: "systemSettings",
     icon: "settings",
     activePrefix: "/settings",
   },
-  { to: "/account/identity", labelKey: "account", icon: "account" },
+  { to: "/account/identity", labelKey: "account", icon: "account", activePrefix: "/account" },
 ];
 
 export const MAIN_SIDEBAR_PREFETCH_PATHS: readonly string[] = SIDEBAR_MAIN_GROUPS.flatMap(
@@ -94,8 +92,11 @@ export function visibleSidebarGroups(simpleMode: boolean): SidebarNavGroupModel[
 }
 
 export function isSidebarItemActive(item: SidebarNavItemModel, pathname: string): boolean {
-  if (item.to === "/tasks") {
-    return pathname === "/tasks" || pathname.startsWith("/tasks/");
+  if (item.activePrefix === "/settings") {
+    return pathname.startsWith("/settings") && !pathname.startsWith("/settings/ai");
+  }
+  if (item.activePrefix === "/worksets") {
+    return pathname === "/worksets" || pathname.startsWith("/worksets/");
   }
   return item.activePrefix
     ? pathname.startsWith(item.activePrefix)

@@ -1,6 +1,6 @@
 /**
  * Local-notify scanner façade (due / speak / dedupe).
- * Package lives under ``domain/notify/scanner`` — not Agent STT/TTS on ``/ai/voice``.
+ * Package lives under ``domain/notify/scanner`` — not Agent STT/TTS on ``/settings/ai/voice``.
  * Pure due/speak/dedupe logic: `scannerLogic`; fired-key persistence: `scannerFiredStore`.
  */
 

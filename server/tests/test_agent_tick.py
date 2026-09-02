@@ -452,10 +452,21 @@ async def test_execute_agent_tick_wave_hard_timeout_defers_remaining(app) -> Non
     assert batch["error_message"] is None
     assert "hard timeout" in (batch["agent_message"] or "")
 
+
+class _Broadcaster:
+    def __init__(self) -> None:
+        self.events: list[tuple[str, dict]] = []
+
+    def publish(self, event_type: str, payload: dict) -> None:
+        self.events.append((event_type, payload))
+
+
+@pytest.mark.asyncio
+async def test_execute_agent_tick_failure_publishes_sse_and_app_log(app) -> None:
     db: Database = app.state.db
     await _insert_agent_task(db, "proj-fail")
     await _bind_source_with_messages(db, task_id="proj-fail", count=1)
-    broadcaster = SseBroadcaster()
+    broadcaster = _Broadcaster()
 
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
     mock_llm.complete = AsyncMock(side_effect=RuntimeError("llm down"))
@@ -478,6 +489,198 @@ async def test_execute_agent_tick_wave_hard_timeout_defers_remaining(app) -> Non
     assert "llm down" in (batch["error_message"] or "")
     assert batch["agent_message"] is None
     assert batch["tool_calls_json"] is None
+
+    failed = [p for name, p in broadcaster.events if name == "analysis_failed"]
+    assert failed
+    assert "llm down" in failed[0]["error"]
+    assert failed[0]["analysisMode"] == AGENT_MODE
+    assert failed[0]["retrying"] is True
+    assert failed[0]["taskDeactivated"] is False
+
+    log_count = await db.fetch_value(
+        "SELECT COUNT(*) FROM app_logs WHERE category = 'analysis'",
+    )
+    assert int(log_count or 0) >= 1
+
+
+@pytest.mark.asyncio
+async def test_execute_agent_tick_success_publishes_started_and_completed(app) -> None:
+    db: Database = app.state.db
+    await _insert_agent_task(db, "proj-sse-ok")
+    await _bind_source_with_messages(db, task_id="proj-sse-ok", count=1)
+    broadcaster = _Broadcaster()
+
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(return_value={"text": '{"message":"ok"}'})
+    mock_llm.close = AsyncMock()
+    mock_llm.provider = "ollama"
+
+    with patch.object(
+        ConfigurableLlmClient,
+        "from_profile",
+        AsyncMock(return_value=mock_llm),
+    ):
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-sse-ok")
+
+    started = [p for name, p in broadcaster.events if name == "analysis_started"]
+    assert started
+    assert started[0]["taskId"] == "proj-sse-ok"
+    assert started[0]["analysisMode"] == AGENT_MODE
+    assert started[0]["messageCount"] == 1
+    completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
+    assert completed
+    assert completed[0]["taskId"] == "proj-sse-ok"
+    assert completed[0]["findingsCount"] == 0
+    assert completed[0]["messageCount"] == 1
+    assert completed[0].get("skipped") is None
+
+
+@pytest.mark.asyncio
+async def test_execute_agent_tick_skip_publishes_completed(app) -> None:
+    db: Database = app.state.db
+    await _insert_agent_task(db, "proj-sse-skip")
+    await _bind_source_with_messages(db, task_id="proj-sse-skip", count=0)
+    broadcaster = _Broadcaster()
+
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-sse-skip")
+
+    assert not any(name == "analysis_started" for name, _ in broadcaster.events)
+    completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
+    assert completed
+    assert completed[0]["skipped"] is True
+    assert "no new messages" in str(completed[0].get("skipReason") or "")
+
+
+@pytest.mark.asyncio
+async def test_cursor_consecutive_failures_deactivate_task(app) -> None:
+    db: Database = app.state.db
+    await _insert_agent_task(db, "proj-fuse")
+    await _bind_source_with_messages(db, task_id="proj-fuse", count=1)
+    await set_configs(db, {"max_batch_retries": "2"})
+
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(side_effect=RuntimeError("always fail"))
+    mock_llm.close = AsyncMock()
+    mock_llm.provider = "ollama"
+
+    class _Sched:
+        def __init__(self) -> None:
+            self.unregistered: list[str] = []
+
+        async def unregister_task(self, tid: str) -> None:
+            self.unregistered.append(tid)
+
+    sched = _Sched()
+    broadcaster = _Broadcaster()
+
+    with patch.object(
+        ConfigurableLlmClient,
+        "from_profile",
+        AsyncMock(return_value=mock_llm),
+    ):
+        await execute_agent_tick(
+            db=db,
+            broadcaster=broadcaster,
+            task_id="proj-fuse",
+            scheduler=sched,  # type: ignore[arg-type]
+        )
+        active = await db.fetch_value("SELECT is_active FROM analysis_tasks WHERE id = ?", ("proj-fuse",))
+        assert int(active or 0) == 1
+        assert sched.unregistered == []
+
+        await execute_agent_tick(
+            db=db,
+            broadcaster=broadcaster,
+            task_id="proj-fuse",
+            scheduler=sched,  # type: ignore[arg-type]
+        )
+
+    active = await db.fetch_value("SELECT is_active FROM analysis_tasks WHERE id = ?", ("proj-fuse",))
+    assert int(active or 0) == 0
+    assert sched.unregistered == ["proj-fuse"]
+    failed = [p for name, p in broadcaster.events if name == "analysis_failed"]
+    assert failed[-1]["retriesExhausted"] is True
+    assert failed[-1]["retrying"] is False
+    assert failed[-1]["taskDeactivated"] is True
+
+
+@pytest.mark.asyncio
+async def test_restart_interrupted_batch_does_not_count_toward_fuse(app) -> None:
+    db: Database = app.state.db
+    await _insert_agent_task(db, "proj-interrupt-fuse")
+    await _bind_source_with_messages(db, task_id="proj-interrupt-fuse", count=1)
+    await set_configs(db, {"max_batch_retries": "2"})
+
+    now = utc_now_iso()
+    await db.execute(
+        "INSERT INTO analysis_batches "
+        "(id, task_id, version, status, message_count, created_at, updated_at) "
+        "VALUES (?, ?, 1, 'processing', 3, ?, ?)",
+        (new_id(), "proj-interrupt-fuse", now, now),
+    )
+
+    manager = SchedulerManager(db, analysis_engine=None, broadcaster=SseBroadcaster())
+    await manager.recover_orphan_batches()
+
+    row = await db.fetch_one(
+        "SELECT status, error_message FROM analysis_batches WHERE task_id = ? AND error_message IS NOT NULL",
+        ("proj-interrupt-fuse",),
+    )
+    assert row is not None
+    assert row["status"] == "completed"
+    assert "interrupted" in str(row["error_message"] or "")
+    active = await db.fetch_value(
+        "SELECT is_active FROM analysis_tasks WHERE id = ?",
+        ("proj-interrupt-fuse",),
+    )
+    assert int(active or 0) == 1
+
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(side_effect=RuntimeError("live miss"))
+    mock_llm.close = AsyncMock()
+    mock_llm.provider = "ollama"
+
+    class _Sched:
+        def __init__(self) -> None:
+            self.unregistered: list[str] = []
+
+        async def unregister_task(self, tid: str) -> None:
+            self.unregistered.append(tid)
+
+    sched = _Sched()
+    broadcaster = _Broadcaster()
+    with patch.object(
+        ConfigurableLlmClient,
+        "from_profile",
+        AsyncMock(return_value=mock_llm),
+    ):
+        await execute_agent_tick(
+            db=db,
+            broadcaster=broadcaster,
+            task_id="proj-interrupt-fuse",
+            scheduler=sched,  # type: ignore[arg-type]
+        )
+        # Restart interrupt must not consume a fuse slot (max=2).
+        active = await db.fetch_value(
+            "SELECT is_active FROM analysis_tasks WHERE id = ?",
+            ("proj-interrupt-fuse",),
+        )
+        assert int(active or 0) == 1
+        assert sched.unregistered == []
+
+        await execute_agent_tick(
+            db=db,
+            broadcaster=broadcaster,
+            task_id="proj-interrupt-fuse",
+            scheduler=sched,  # type: ignore[arg-type]
+        )
+
+    active = await db.fetch_value(
+        "SELECT is_active FROM analysis_tasks WHERE id = ?",
+        ("proj-interrupt-fuse",),
+    )
+    assert int(active or 0) == 0
+    assert sched.unregistered == ["proj-interrupt-fuse"]
 
 
 def test_serialize_tick_tool_calls_truncates() -> None:

@@ -239,4 +239,26 @@ describe("AssistantWebSearchPanel", () => {
       expect(onProviderChange).toHaveBeenCalledWith(vendor);
     },
   );
+
+  it("portals mode and provider lists to document.body", async () => {
+    await harness.render(AssistantWebSearchPanel, panelProps({ provider: "duckduckgo" }));
+
+    await openMenu(harness, "web-search-mode");
+    const modeList = document.body.querySelector(
+      '[data-testid="web-search-mode-list"]',
+    ) as HTMLElement | null;
+    expect(modeList).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="web-search-mode-list"]')).toBeNull();
+    expect(modeList?.parentElement).toBe(document.body);
+    expect(modeList?.style.zIndex).toBe("3000");
+
+    await openMenu(harness, "web-search-provider");
+    const providerList = document.body.querySelector(
+      '[data-testid="web-search-provider-list"]',
+    ) as HTMLElement | null;
+    expect(providerList).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="web-search-provider-list"]')).toBeNull();
+    expect(providerList?.parentElement).toBe(document.body);
+    expect(providerList?.style.zIndex).toBe("3000");
+  });
 });

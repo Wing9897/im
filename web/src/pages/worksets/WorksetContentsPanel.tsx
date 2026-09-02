@@ -67,7 +67,10 @@ export function WorksetContentsPanel({ workset }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-md" data-testid="workset-contents-panel">
+    <div
+      className="flex w-full min-w-0 shrink-0 flex-col justify-start gap-md"
+      data-testid="workset-contents-panel"
+    >
       <p className={`m-0 ${captionClass}`}>{t("workset:detailSubtitle")}</p>
 
       {itemsError ? (
@@ -76,30 +79,35 @@ export function WorksetContentsPanel({ workset }: Props) {
         </AlertBanner>
       ) : null}
 
-      <WorksetExpiringSummarySection
-        loading={loadingItems}
-        items={expiringSummary}
-        itemEmoji={itemEmoji}
-        onOpenItem={openItem}
-      />
+      <div
+        className="grid w-full min-w-0 grid-cols-1 items-stretch gap-md lg:grid-cols-2"
+        data-testid="workset-contents-grid"
+      >
+        <WorksetExpiringSummarySection
+          loading={loadingItems}
+          items={expiringSummary}
+          itemEmoji={itemEmoji}
+          onOpenItem={openItem}
+        />
 
-      <WorksetEventsSummarySection
-        loading={loadingEvents}
-        error={eventsError}
-        events={eventsSummary}
-        onOpenEvent={openEvent}
-      />
+        <WorksetEventsSummarySection
+          loading={loadingEvents}
+          error={eventsError}
+          events={eventsSummary}
+          onOpenEvent={openEvent}
+        />
 
-      <WorksetTasksSection tasks={workset.tasks} onOpenTask={openTask} />
+        <WorksetTasksSection tasks={workset.tasks} onOpenTask={openTask} />
 
-      <WorksetItemsSection
-        loading={loadingItems}
-        items={activeItems}
-        itemEmoji={itemEmoji}
-        onOpenItem={openItem}
-      />
+        <WorksetItemsSection
+          loading={loadingItems}
+          items={activeItems}
+          itemEmoji={itemEmoji}
+          onOpenItem={openItem}
+        />
+      </div>
 
-      <FormActions inline>
+      <FormActions inline className="shrink-0">
         <Button
           variant="secondary"
           size="sm"

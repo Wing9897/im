@@ -293,7 +293,9 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     const readmePath = path.resolve(ROOT_DIR, "README.md");
     const content = fs.readFileSync(readmePath, "utf-8");
 
-    expect(content).toMatch(new RegExp(String.raw`\*\*schema v${current}\*\*`, "i"));
+    expect(content).toMatch(
+      new RegExp(String.raw`\*\*schema(?: stamp)? v?${current}\*\*`, "i"),
+    );
     expect(content).toMatch(/SCHEMA_FLOOR/);
     expect(content).toMatch(/SCHEMA_MIGRATIONS/);
     expect(content).toMatch(new RegExp(String.raw`\b${floor}\b`));

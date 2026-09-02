@@ -5,6 +5,11 @@ import type { Workset } from "../../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { worksetDetailPath } from "../worksets/worksetRoutes";
 import { openViewerWindow } from "../../utils/openViewerWindow";
+import {
+  isSimpleModeHiddenAiTab,
+  isSimpleModeHiddenPath,
+  isSimpleModeHiddenWorksetTasksTab,
+} from "../ui/simpleMode";
 import { COMMAND_PALETTE_ACTIONS_DEFS } from "./commandPaletteActionsCommands";
 import { COMMAND_PALETTE_NAVIGATION_DEFS } from "./commandPaletteNavigationCommands";
 import { COMMAND_PALETTE_SETTINGS_DEFS } from "./commandPaletteSettingsCommands";
@@ -93,13 +98,26 @@ export function buildWorksetCommandPaletteItems(
   }));
 }
 
+function isSimpleModeHiddenCommandTo(to: string | undefined): boolean {
+  if (!to) return false;
+  const url = new URL(to, "http://im.local");
+  return (
+    isSimpleModeHiddenPath(url.pathname) ||
+    isSimpleModeHiddenWorksetTasksTab(url.pathname, url.search) ||
+    isSimpleModeHiddenAiTab(url.pathname)
+  );
+}
+
 export function filterCommandPaletteItems(
   query: string,
   extraItems: readonly CommandPaletteItem[] = [],
   t: CommandPaletteTranslate = i18n.t.bind(i18n),
+  simpleMode = false,
 ): CommandPaletteItem[] {
   const q = normalize(query);
-  const pool = [...buildCommandPaletteItems(t), ...extraItems];
+  const pool = [...buildCommandPaletteItems(t), ...extraItems].filter(
+    (item) => !simpleMode || !isSimpleModeHiddenCommandTo(item.to),
+  );
   if (!q) return pool;
   return pool.filter((item) => itemMatches(item, q));
 }

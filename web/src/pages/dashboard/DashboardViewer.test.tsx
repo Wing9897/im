@@ -7,8 +7,8 @@ import "../../components/items/emoji/emojiPickerReactMock";
 
 const mockNavigate = vi.fn();
 const mockSetSearchParams = vi.fn();
-let mockPathname = "/tasks";
-let mockSearch = "";
+let mockPathname = "/worksets";
+let mockSearch = "?tab=tasks";
 
 const mockPipeline = vi.hoisted(() => ({
   current: {
@@ -33,6 +33,10 @@ vi.mock("react-router-dom", () => ({
 
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
+
+vi.mock("../../context/SimpleModeContext", () => ({
+  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
+}));
 
 vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
@@ -160,8 +164,8 @@ describe("DashboardViewer", () => {
     document.body.appendChild(container);
     mockNavigate.mockReset();
     mockSetSearchParams.mockReset();
-    mockPathname = "/tasks";
-    mockSearch = "";
+    mockPathname = "/worksets";
+    mockSearch = "?tab=tasks";
     mockPipeline.current = {
       state: "complete",
       showChecklist: false,
@@ -264,8 +268,9 @@ describe("DashboardViewer", () => {
     expect(container.textContent).toContain("Task Beta");
   });
 
-  it("keeps a visible search TextField in the tasks toolbar on /tasks", () => {
-    mockPathname = "/tasks";
+  it("keeps a visible search TextField in the tasks toolbar on the tasks tab", () => {
+    mockPathname = "/worksets";
+    mockSearch = "?tab=tasks";
     taskCatalogState.tasks = [
       createMockTask({ id: "t1", name: "Task Alpha" }),
       createMockTask({ id: "t2", name: "Task Beta" }),
@@ -291,7 +296,8 @@ describe("DashboardViewer", () => {
   });
 
   it("opens the global scheduling dialog from the tasks toolbar icon", () => {
-    mockPathname = "/tasks";
+    mockPathname = "/worksets";
+    mockSearch = "?tab=tasks";
     taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
 
     act(() => {
@@ -311,8 +317,8 @@ describe("DashboardViewer", () => {
   });
 
   it("opens the scheduling dialog from ?scheduling=open then clears the query", () => {
-    mockPathname = "/tasks";
-    mockSearch = "?scheduling=open";
+    mockPathname = "/worksets";
+    mockSearch = "?tab=tasks&scheduling=open";
     taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
 
     act(() => {
@@ -500,6 +506,7 @@ describe("DashboardViewer", () => {
 
   it("opens an in-app dialog to create a workset (no window.prompt)", async () => {
     mockPathname = "/worksets";
+    mockSearch = "";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
       { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -543,6 +550,7 @@ describe("DashboardViewer", () => {
 
   it("shows workset groups including builtin General, without a system-workset toggle", () => {
     mockPathname = "/worksets";
+    mockSearch = "";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
       { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -572,6 +580,7 @@ describe("DashboardViewer", () => {
 
   it("does not hang member task cards under the workset catalog", () => {
     mockPathname = "/worksets";
+    mockSearch = "";
     taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Nested Alpha", worksetId: "ws-1" })];
     taskCatalogState.worksets = [
       { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -590,6 +599,7 @@ describe("DashboardViewer", () => {
 
   it("filters worksets by name from the toolbar search", () => {
     mockPathname = "/worksets";
+    mockSearch = "";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
       { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -647,6 +657,7 @@ describe("DashboardViewer", () => {
   describe("workset catalog page", () => {
     beforeEach(() => {
       mockPathname = "/worksets";
+      mockSearch = "";
       taskCatalogState.worksets = [
         { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
         { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -688,6 +699,7 @@ describe("DashboardViewer", () => {
       expect(tabs).toBeTruthy();
       expect(tabs?.textContent).toContain("目錄");
       expect(tabs?.textContent).toContain("流程圖");
+      expect(tabs?.textContent).toContain("任務");
       expect(toolbar?.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
       expect(container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-by-workset"]')).toBeTruthy();

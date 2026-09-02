@@ -196,6 +196,10 @@ describe("WorksetContentsPanel", () => {
     expect(container.querySelector('[data-testid="workset-summary-event-e1"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="workset-detail-dialog"]')).toBeNull();
 
+    const panel = container.querySelector('[data-testid="workset-contents-panel"]');
+    expect(panel?.className).toContain("shrink-0");
+    expect(container.querySelector('[data-testid="workset-contents-grid"]')).toBeTruthy();
+
     const taskBtn = container.querySelector('[data-testid="workset-detail-task-t1"]');
     expect(taskBtn).toBeTruthy();
     act(() => {
@@ -301,5 +305,14 @@ describe("WorksetContentsPanel", () => {
     await flushLoads();
     expect(container.textContent).toContain("no expiring");
     expect(container.textContent).toContain("no events");
+    const grid = container.querySelector('[data-testid="workset-contents-grid"]');
+    expect(grid).toBeTruthy();
+    expect(grid!.className).toContain("grid-cols-1");
+    expect(grid!.className).toContain("lg:grid-cols-2");
+    expect(grid!.className).toContain("items-stretch");
+    const expiring = container.querySelector('[data-testid="workset-summary-expiring"] section');
+    expect(expiring?.className).toContain("min-h-fit");
+    expect(expiring?.className).toContain("h-full");
+    expect(expiring?.innerHTML ?? "").toContain("min-h-[7.5rem]");
   });
 });

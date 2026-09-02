@@ -138,6 +138,23 @@ describe("AddTelegramSourceForm — boundary conditions", () => {
     expect(getSubmitButton(container).disabled).toBe(false);
   });
 
+  it("calls onSubmit when required fields are filled", async () => {
+    const onSubmit = vi.fn(async () => {});
+    renderForm(
+      container,
+      {
+        apiId: "12345678",
+        apiHash: "abc123def",
+        phone: "+886912345678",
+      },
+      onSubmit,
+    );
+    await act(async () => {
+      getSubmitButton(container).click();
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
   it("enables QR submit when apiId and apiHash are filled without phone", () => {
     renderForm(container, {
       loginMethod: "qr",

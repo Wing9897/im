@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { prefetchRoute } from "./prefetchRoute";
@@ -12,10 +14,16 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/worksets/abc")).not.toThrow();
   });
 
-  it("accepts assistant, voice, and analysis-strategy paths", () => {
+  it("accepts assistant and voice paths", () => {
     expect(() => prefetchRoute("/assistant")).not.toThrow();
+    expect(() => prefetchRoute("/settings/ai/voice")).not.toThrow();
     expect(() => prefetchRoute("/ai/voice")).not.toThrow();
-    expect(() => prefetchRoute("/ai/analysis-strategy")).not.toThrow();
+  });
+
+  it("does not map /tasks or the retired analysis-strategy URL to DashboardViewer", () => {
+    const src = readFileSync(resolve(__dirname, "./prefetchRoute.ts"), "utf8");
+    expect(src).not.toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
+    expect(src).not.toContain('"/ai/analysis-strategy"');
   });
 
   it("prefetches agent detail via /agent (not retired /project)", () => {

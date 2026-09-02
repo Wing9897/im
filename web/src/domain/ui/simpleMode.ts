@@ -1,6 +1,7 @@
 /** UI basic-calendar product mode — hide collect/analyze surfaces and the Tasks page. */
 
 import { SIMPLE_MODE_STORAGE_KEY } from "../prefs";
+import { parseWorksetCatalogTab, WORKSETS_PATH } from "../worksets/worksetRoutes";
 
 export { SIMPLE_MODE_STORAGE_KEY };
 
@@ -10,13 +11,16 @@ export const SIMPLE_MODE_HOME = "/timeline";
 /** Full-product default home (monitor wall). */
 export const FULL_MODE_HOME = "/monitor";
 
-/** Sidebar / deep-link prefixes that disappear in simple mode (Tasks stays in full mode). */
+/**
+ * Sidebar / deep-link prefixes that disappear in simple mode.
+ * `/worksets` stays visible; the tasks catalog tab is gated separately.
+ * Task editors (`/tasks/new`, `/tasks/:id/edit|agent`) stay hidden.
+ */
 export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/monitor",
   "/leaderboard",
   "/intelligence",
   "/sources",
-  "/tasks",
 ] as const;
 
 /** Legacy analysis-strategy URL (now a redirect to Tasks scheduling). */
@@ -47,9 +51,19 @@ export function homePathForMode(simpleMode: boolean): string {
 }
 
 export function isSimpleModeHiddenPath(pathname: string): boolean {
+  if (pathname === "/tasks/new" || /^\/tasks\/[^/]+\/(edit|agent)$/.test(pathname)) {
+    return true;
+  }
   return SIMPLE_MODE_HIDDEN_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+/** Exact `/worksets?tab=tasks` — hide the analysis-task grid, not the workset catalog. */
+export function isSimpleModeHiddenWorksetTasksTab(pathname: string, search: string): boolean {
+  if (pathname !== WORKSETS_PATH) return false;
+  const raw = search.startsWith("?") ? search.slice(1) : search;
+  return parseWorksetCatalogTab(new URLSearchParams(raw).get("tab")) === "tasks";
 }
 
 export function isSimpleModeHiddenAiTab(pathname: string): boolean {

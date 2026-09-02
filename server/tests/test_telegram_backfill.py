@@ -181,6 +181,65 @@ async def test_finish_startup_runs_backfill_once_after_handlers(tmp_path, monkey
 
 
 @pytest.mark.asyncio
+async def test_finish_startup_failure_sets_source_error_and_sse(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = Database(str(tmp_path / "tg-startup-fail.db"))
+    await db.connect()
+    await db.ensure_schema()
+    await insert_source_with_channels(
+        db,
+        "acc-startup-fail",
+        "telegram",
+        ["-4002"],
+        name="+123",
+        credentials="{}",
+    )
+
+    events: list[tuple[str, dict]] = []
+
+    class _Rec:
+        def publish(self, event_type: str, payload: dict) -> None:
+            events.append((event_type, payload))
+
+    adapter = TelegramAdapter(
+        "acc-startup-fail",
+        db,
+        cast(SseBroadcaster, _Rec()),
+        api_id=1,
+        api_hash="hash",
+        session_dir="unused",
+    )
+    client = MagicMock()
+    client.is_user_authorized = AsyncMock(return_value=True)
+    adapter._client = client
+    adapter._mark_connected()
+
+    async def _boom() -> int:
+        raise RuntimeError("dialog sync boom")
+
+    monkeypatch.setattr(adapter, "sync_dialog_channels", _boom)
+    monkeypatch.setattr("server.collector.telegram.asyncio.sleep", AsyncMock())
+
+    await adapter._finish_startup()
+
+    assert adapter.state.status == "error"
+    assert "dialog sync boom" in str(adapter.state.last_error or "")
+    status = await db.fetch_value("SELECT status FROM sources WHERE id = ?", ("acc-startup-fail",))
+    last_error = await db.fetch_value("SELECT last_error FROM sources WHERE id = ?", ("acc-startup-fail",))
+    assert status == "error"
+    assert "dialog sync boom" in str(last_error or "")
+
+    changed = [p for name, p in events if name == "source_status_changed"]
+    assert changed
+    assert changed[0]["sourceId"] == "acc-startup-fail"
+    assert changed[0]["status"] == "error"
+    assert "dialog sync boom" in str(changed[0].get("lastError") or "")
+    await db.close()
+
+
+@pytest.mark.asyncio
 async def test_ingest_telethon_message_dedups(tmp_path) -> None:
     db = Database(str(tmp_path / "tg-ingest.db"))
     await db.connect()

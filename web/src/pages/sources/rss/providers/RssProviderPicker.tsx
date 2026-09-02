@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "../../../../components/common/PlatformIcon";
-import { SelectField } from "../../../../components/ui";
+import { MenuSelect } from "../../../../components/ui";
 import { formLabelClass, formHelpClass } from "../../../../components/ui/pageTypography";
 import { groupRssProvidersForPicker } from "./registry";
 import type { RssProviderDefinition, RssProviderId } from "./types";
@@ -12,7 +13,7 @@ interface RssProviderPickerProps {
   disabled?: boolean;
 }
 
-/** Scalable provider switcher — grouped select instead of stacked chips. */
+/** Scalable provider switcher — grouped MenuSelect instead of stacked chips. */
 export function RssProviderPicker({
   providers,
   activeId,
@@ -23,6 +24,17 @@ export function RssProviderPicker({
   const activeProvider =
     providers.find((provider) => provider.id === activeId) ?? providers[0];
   const groups = groupRssProvidersForPicker(providers);
+  const options = useMemo(
+    () =>
+      groups.flatMap((group) =>
+        group.providers.map((provider) => ({
+          value: provider.id,
+          label: t(provider.labelKey),
+          group: t(`rss.pickerGroups.${group.group}`),
+        })),
+      ),
+    [groups, t],
+  );
 
   return (
     <div className="flex flex-col gap-sm">
@@ -36,24 +48,18 @@ export function RssProviderPicker({
         >
           <PlatformIcon platform={activeProvider.iconPlatform} size={16} />
         </span>
-        {/* Native select: MenuSelect has no optgroup support for provider grouping. */}
-        <SelectField
+        <MenuSelect
           id="rss-provider-select"
+          variant="field"
+          menuPortal
           className="min-w-0 flex-1"
           value={activeId}
           disabled={disabled}
-          onChange={(event) => onChange(event.target.value as RssProviderId)}
-        >
-          {groups.map((group) => (
-            <optgroup key={group.group} label={t(`rss.pickerGroups.${group.group}`)}>
-              {group.providers.map((provider) => (
-                <option key={provider.id} value={provider.id}>
-                  {t(provider.labelKey)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </SelectField>
+          options={options}
+          onChange={(value) => onChange(value as RssProviderId)}
+          aria-label={t("rss.pickerLabel")}
+          data-testid="rss-provider-select"
+        />
       </div>
       <p className={formHelpClass}>{t(activeProvider.pickerHintKey)}</p>
     </div>

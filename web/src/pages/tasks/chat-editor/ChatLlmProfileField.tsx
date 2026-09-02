@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Badge, MenuSelect, SettingsRow } from "../../../components/ui";
 import { buttonBaseClass, buttonSizeClass } from "../../../components/ui/controlStyles";
@@ -56,13 +57,13 @@ export function ChatLlmProfileField({
             data-testid="task-llm-profile-empty"
           >
             <p className={`m-0 ${formHelpClass}`}>{t("tasks:editor.llmProfileEmpty")}</p>
-            <a
-              href="/ai/provider"
+            <Link
+              to="/settings/ai/provider"
               data-testid="task-llm-profile-create-cta"
               className={createCtaClass}
             >
               {t("tasks:editor.llmProfileCreateCta")}
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col gap-sm">
@@ -95,9 +96,9 @@ export function ChatLlmProfileField({
                 <p className={`m-0 ${formHelpClass}`}>
                   {t("tasks:editor.llmProfileAllIncomplete")}
                 </p>
-                <a href="/ai/provider" className={createCtaClass}>
+                <Link to="/settings/ai/provider" className={createCtaClass}>
                   {t("tasks:editor.llmProfileCreateCta")}
-                </a>
+                </Link>
               </div>
             ) : null}
           </div>

@@ -92,6 +92,7 @@ export function MqttFields({
         <MenuSelect
           id="action-mqtt-qos"
           variant="field"
+          menuPortal
           value={String(form.mqttQos)}
           options={[
             { value: "0", label: "0 - At most once" },

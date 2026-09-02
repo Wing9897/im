@@ -79,6 +79,7 @@ async def execute_agent_tick(
             task=task,
             task_id=task_id,
             spec=spec,
+            scheduler=scheduler,
         )
         return
 

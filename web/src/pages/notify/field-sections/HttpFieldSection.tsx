@@ -61,6 +61,7 @@ export function HttpFields({
           <MenuSelect
             id="action-http-method"
             variant="field"
+            menuPortal
             value={form.httpMethod}
             options={[
               { value: "POST", label: "POST" },

@@ -3,6 +3,7 @@ import { Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
+import { aiWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
 import { settingsTabItems } from "../shared/WorkspaceShell";
 import { createWorkspacePage } from "../shared/createWorkspacePage";
 
@@ -78,4 +79,10 @@ export function SettingsDocsExample({
 export const SettingsShellPage = createWorkspacePage(
   settingsTabItems,
   "shell.systemSettingsSection",
+);
+
+/** AI tabs under `/settings/ai/*` — same SystemSettingsLayout as system settings. */
+export const SettingsAiShellPage = createWorkspacePage(
+  aiWorkspaceNavItems,
+  "shell.aiSettingsSection",
 );

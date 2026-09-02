@@ -1,4 +1,4 @@
-/** Conversational assistant at `/assistant`. AI settings pages live in `pages/settings/ai/` (`/ai/*`). */
+/** Conversational assistant at `/assistant`. AI settings pages live in `pages/settings/ai/` (`/settings/ai/*`). */
 import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Eraser, MessageSquare, Volume2, VolumeX } from "lucide-react";
@@ -207,7 +207,7 @@ export function AssistantPage() {
             <span>
               {t("noProfile.message")}{" "}
               <Link
-                to="/ai/provider"
+                to="/settings/ai/provider"
                 className="underline underline-offset-2"
                 data-testid="assistant-no-profile-link"
               >
@@ -226,7 +226,7 @@ export function AssistantPage() {
             <span>
               {t("common:topBar.aiUnavailableTitle")}{" "}
               <Link
-                to="/ai/provider"
+                to="/settings/ai/provider"
                 className="underline underline-offset-2"
                 data-testid="assistant-ai-settings-link"
               >
@@ -245,7 +245,7 @@ export function AssistantPage() {
             <span>
               {t("slotUnbound.message")}{" "}
               <Link
-                to="/ai/provider"
+                to="/settings/ai/provider"
                 className="underline underline-offset-2"
                 data-testid="assistant-slot-settings-link"
               >

@@ -49,6 +49,19 @@ describe("PanelSection", () => {
     expect(container.querySelector("section")!.getAttribute("aria-label")).toBe("RSS 來源");
   });
 
+  it("uses a column flex shell that cannot shrink below content", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(PanelSection, { title: "任務" }, createElement("p", null, "Body")),
+      );
+    });
+    const cls = container.querySelector("section")!.className;
+    expect(cls).toContain("flex-col");
+    expect(cls).toContain("min-h-fit");
+    expect(cls).toContain("overflow-visible");
+  });
+
   it("surface=none omits im-surface-panel for nested board columns", () => {
     const container = document.createElement("div");
     act(() => {

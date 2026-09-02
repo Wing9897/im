@@ -196,7 +196,7 @@ describe("AssistantPage", () => {
       "[data-testid='assistant-ai-settings-link']",
     ) as HTMLAnchorElement | null;
     expect(link).toBeTruthy();
-    expect(link?.getAttribute("href")).toBe("/ai/provider");
+    expect(link?.getAttribute("href")).toBe("/settings/ai/provider");
   });
 
   it("tells first-run users to create an AI profile instead of dumping JSON", async () => {
@@ -217,7 +217,7 @@ describe("AssistantPage", () => {
     const link = container.querySelector(
       "[data-testid='assistant-no-profile-link']",
     ) as HTMLAnchorElement | null;
-    expect(link?.getAttribute("href")).toBe("/ai/provider");
+    expect(link?.getAttribute("href")).toBe("/settings/ai/provider");
     expect(container.textContent).toContain("請到 AI 供應商頁面建立設定檔");
     expect(container.querySelector("[data-testid='assistant-ai-unavailable']")).toBeNull();
     expect(container.querySelector("[data-testid='assistant-slot-unbound']")).toBeNull();
@@ -255,7 +255,7 @@ describe("AssistantPage", () => {
     const link = container.querySelector(
       "[data-testid='assistant-slot-settings-link']",
     ) as HTMLAnchorElement | null;
-    expect(link?.getAttribute("href")).toBe("/ai/provider");
+    expect(link?.getAttribute("href")).toBe("/settings/ai/provider");
     expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
 
     const draft = container.querySelector<HTMLTextAreaElement>("[data-testid='assistant-draft']");

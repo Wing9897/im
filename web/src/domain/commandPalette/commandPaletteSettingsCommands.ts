@@ -15,11 +15,11 @@ import { settingsIntegrationsPath } from "../navigation/integrationsRoutes";
 import type { CommandPaletteItemDef } from "./commandPaletteTypes";
 
 export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
-  { id: "ai", labelKey: "aiSettings", labelNs: "nav", to: "/ai/provider", icon: Bot, groupId: "settings" },
+  { id: "ai", labelKey: "aiSettings", labelNs: "nav", to: "/settings/ai/provider", icon: Bot, groupId: "settings" },
   {
     id: "ai-voice",
     labelKey: "commandPalette.aiVoice",
-    to: "/ai/voice",
+    to: "/settings/ai/voice",
     icon: Bot,
     groupId: "settings",
     keywords: ["stt", "tts", "麥克風", "朗讀"],
@@ -27,7 +27,7 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
   {
     id: "ai-strategy",
     labelKey: "commandPalette.aiStrategy",
-    to: "/tasks?scheduling=open",
+    to: "/worksets?tab=tasks&scheduling=open",
     icon: Gauge,
     groupId: "settings",
     keywords: ["batch", "concurrent", "調度", "全局調度"],
@@ -35,7 +35,7 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
   {
     id: "ai-staff",
     labelKey: "commandPalette.aiStaff",
-    to: "/ai/staff",
+    to: "/settings/ai/staff",
     icon: Users,
     groupId: "settings",
     keywords: ["員工", "介紹", "assistant", "agent", "staff"],

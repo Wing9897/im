@@ -44,6 +44,11 @@
       "title": "This page hit an error",
       "body": "Something went wrong while rendering. Try reloading this section."
     },
+    "notFound": {
+      "title": "Page not found",
+      "body": "This address may have changed, or it was typed incorrectly.",
+      "home": "Back to home"
+    },
     "lazyLoadError": "Failed to load component",
     "errorBoundary": {
       "title": "Unexpected error",

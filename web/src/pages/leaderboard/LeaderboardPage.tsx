@@ -85,7 +85,7 @@ export function LeaderboardPage() {
           hint={t(`leaderboard:empty.${emptyVariant}.hint`)}
           actions={
             leaderboardTasks.length === 0 ? (
-              <EmptyStateLink to="/tasks">{t("leaderboard:goToTasks")}</EmptyStateLink>
+              <EmptyStateLink to="/worksets?tab=tasks">{t("leaderboard:goToTasks")}</EmptyStateLink>
             ) : selectedTaskId ? (
               <Button
                 variant="secondary"

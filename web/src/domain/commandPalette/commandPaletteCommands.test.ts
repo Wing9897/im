@@ -97,6 +97,22 @@ describe("commandPaletteCommands", () => {
   it("includes the worksets catalog in navigation", () => {
     const items = filterCommandPaletteItems("工作集");
     expect(items.some((item) => item.to === "/worksets")).toBe(true);
+    const tasks = filterCommandPaletteItems("任務");
+    expect(tasks.some((item) => item.to === "/worksets?tab=tasks")).toBe(true);
+  });
+
+  it("hides simple-mode collect/analyze routes and the workset tasks tab", () => {
+    const hidden = filterCommandPaletteItems("", [], i18n.t.bind(i18n), true);
+    expect(hidden.some((item) => item.to === "/worksets?tab=tasks")).toBe(false);
+    expect(hidden.some((item) => item.to === "/worksets?tab=tasks&scheduling=open")).toBe(false);
+    expect(hidden.some((item) => item.to === "/monitor")).toBe(false);
+    expect(hidden.some((item) => item.to === "/sources")).toBe(false);
+    expect(hidden.some((item) => item.to === "/worksets")).toBe(true);
+    expect(hidden.some((item) => item.to === "/timeline")).toBe(true);
+
+    const extras = buildTaskCommandPaletteItems([makeTask()]);
+    const withTasks = filterCommandPaletteItems("", extras, i18n.t.bind(i18n), true);
+    expect(withTasks.some((item) => item.to?.startsWith("/tasks/"))).toBe(false);
   });
 
   it("opens a workset contents page", () => {
@@ -134,11 +150,11 @@ describe("commandPaletteCommands", () => {
     const items = filterCommandPaletteItems("資料");
     expect(items.some((item) => item.to === "/settings/data")).toBe(true);
     const strategy = filterCommandPaletteItems("調度");
-    expect(strategy.some((item) => item.to === "/tasks?scheduling=open")).toBe(true);
+    expect(strategy.some((item) => item.to === "/worksets?tab=tasks&scheduling=open")).toBe(true);
     const assistant = filterCommandPaletteItems("助手");
     expect(assistant.some((item) => item.to === "/assistant")).toBe(true);
     const voice = filterCommandPaletteItems("語音");
-    expect(voice.some((item) => item.to === "/ai/voice")).toBe(true);
+    expect(voice.some((item) => item.to === "/settings/ai/voice")).toBe(true);
     const api = filterCommandPaletteItems("API");
     expect(api.some((item) => item.to === "/settings/integrations?tab=webhook")).toBe(true);
     const deeplink = filterCommandPaletteItems("deep link");

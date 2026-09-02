@@ -141,7 +141,7 @@ export function buildPipelinePointLayer(input: PipelineGraphInput): PipelinePoin
       href: taskHref(task),
       gates: taskGates(task),
     })),
-    "/tasks",
+    "/worksets?tab=tasks",
     labels.more,
   );
 

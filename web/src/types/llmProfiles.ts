@@ -23,7 +23,7 @@ export const LLM_STAFF_CLASSES: readonly LlmStaffClass[] = [
  */
 export const LLM_TASK_STAFF_CLASSES: readonly LlmStaffClass[] = LLM_STAFF_CLASSES;
 
-/** Singleton global slots on `/ai/provider` (OpenAPI `LlmGlobalSlotBindingResponse.slot`). */
+/** Singleton global slots on `/settings/ai/provider` (OpenAPI `LlmGlobalSlotBindingResponse.slot`). */
 export type LlmGlobalSlotId = components["schemas"]["LlmGlobalSlotBindingResponse"]["slot"];
 
 export const LLM_GLOBAL_SLOTS: readonly LlmGlobalSlotId[] = [

@@ -1,11 +1,12 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useSearchParams } from "react-router-dom";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
+import { WORKSETS_PATH } from "../domain/worksets/worksetRoutes";
 import { LazyPage, lazyNamed } from "./LazyPage";
 import { SimpleModeGate } from "./SimpleModeGate";
 
-/** Shared settings state for /ai + /settings (unsaved drafts survive tab switches). */
+/** Shared settings state for /settings and /settings/ai (unsaved drafts survive tab switches). */
 function SystemSettingsLayout() {
   return (
     <SystemSettingsProvider>
@@ -31,6 +32,18 @@ function DefaultHomeRedirect() {
     return <Navigate to={startupViewerRoute} replace />;
   }
   return <Navigate to={homePathForMode(simpleMode)} replace />;
+}
+
+/** Exact `/tasks` list → workset catalog tasks tab (simple mode drops the tab). */
+function TasksListRedirect() {
+  const { simpleMode } = useSimpleMode();
+  const [searchParams] = useSearchParams();
+  if (simpleMode) {
+    return <Navigate to={WORKSETS_PATH} replace />;
+  }
+  const next = new URLSearchParams(searchParams);
+  next.set("tab", "tasks");
+  return <Navigate to={`${WORKSETS_PATH}?${next.toString()}`} replace />;
 }
 
 // Module-level lazy registration — stable exotic types for the route tree lifetime.
@@ -88,7 +101,6 @@ const NotifyWorkspacePage = lazyNamed(
   "NotifyWorkspacePage",
 );
 const AssistantPage = lazyNamed(() => import("../pages/ai/assistant/AssistantPage"), "AssistantPage");
-const AiWorkspacePage = lazyNamed(() => import("../pages/ai/AiWorkspacePage"), "AiWorkspacePage");
 const SettingsAiProviderPage = lazyNamed(
   () => import("../pages/settings/ai/SettingsAiProviderPage"),
   "SettingsAiProviderPage",
@@ -102,6 +114,10 @@ const SettingsVoicePage = lazyNamed(
   "SettingsVoicePage",
 );
 const SettingsShellPage = lazyNamed(() => import("../pages/settings/SettingsShared"), "SettingsShellPage");
+const SettingsAiShellPage = lazyNamed(
+  () => import("../pages/settings/SettingsShared"),
+  "SettingsAiShellPage",
+);
 const SettingsGeneralPage = lazyNamed(() => import("../pages/settings/SettingsGeneralPage"), "SettingsGeneralPage");
 const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThemePage"), "SettingsThemePage");
 const SettingsDataPage = lazyNamed(() => import("../pages/settings/SettingsDataPage"), "SettingsDataPage");
@@ -124,6 +140,7 @@ const ViewerLayout = lazyNamed(() => import("../pages/viewer/ViewerLayout"), "Vi
 const ViewerTasksPage = lazyNamed(() => import("../pages/viewer/ViewerTasksPage"), "ViewerTasksPage");
 const ViewerResultsPage = lazyNamed(() => import("../pages/viewer/ViewerResultsPage"), "ViewerResultsPage");
 const ViewerStatusPage = lazyNamed(() => import("../pages/viewer/ViewerStatusPage"), "ViewerStatusPage");
+const NotFoundPage = lazyNamed(() => import("../pages/NotFoundPage"), "NotFoundPage");
 
 /** App route tree — always follows the live router location (no controlled location). */
 export function AppRoutes() {
@@ -134,7 +151,7 @@ export function AppRoutes() {
         <Route path="/monitor" element={<LazyPage Page={MonitorPage} />} />
         <Route path="/worksets" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/worksets/:worksetId" element={<LazyPage Page={WorksetWorkspacePage} />} />
-        <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
+        <Route path="/tasks" element={<TasksListRedirect />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/agent" element={<LazyPage Page={AgentDetailPage} />} />
@@ -167,13 +184,18 @@ export function AppRoutes() {
           <Route path="devices" element={<LazyPage Page={AccountDevicesPage} />} />
           <Route path="keys" element={<LazyPage Page={AccountKeysPage} />} />
         </Route>
+        <Route path="/ai/analysis-strategy" element={<Navigate to="/worksets?tab=tasks&scheduling=open" replace />} />
+        <Route path="/ai/provider" element={<Navigate to="/settings/ai/provider" replace />} />
+        <Route path="/ai/voice" element={<Navigate to="/settings/ai/voice" replace />} />
+        <Route path="/ai/staff" element={<Navigate to="/settings/ai/staff" replace />} />
+        <Route path="/ai" element={<Navigate to="/settings/ai/provider" replace />} />
         <Route element={<SystemSettingsLayout />}>
-          <Route path="ai" element={<LazyPage Page={AiWorkspacePage} />}>
-            <Route index element={<Navigate to="/ai/provider" replace />} />
+          <Route path="settings/ai" element={<LazyPage Page={SettingsAiShellPage} />}>
+            <Route index element={<Navigate to="/settings/ai/provider" replace />} />
             <Route path="provider" element={<LazyPage Page={SettingsAiProviderPage} />} />
             <Route path="voice" element={<LazyPage Page={SettingsVoicePage} />} />
-            <Route path="analysis-strategy" element={<Navigate to="/tasks?scheduling=open" replace />} />
             <Route path="staff" element={<LazyPage Page={SettingsAiStaffPage} />} />
+            <Route path="*" element={<LazyPage Page={NotFoundPage} />} />
           </Route>
           <Route path="settings" element={<LazyPage Page={SettingsShellPage} />}>
             <Route index element={<Navigate to="/settings/general" replace />} />
@@ -190,7 +212,7 @@ export function AppRoutes() {
           <Route path="results" element={<LazyPage Page={ViewerResultsPage} />} />
           <Route path="status" element={<LazyPage Page={ViewerStatusPage} />} />
         </Route>
-        <Route path="*" element={<DefaultHomeRedirect />} />
+        <Route path="*" element={<LazyPage Page={NotFoundPage} />} />
       </Routes>
     </SimpleModeGate>
   );

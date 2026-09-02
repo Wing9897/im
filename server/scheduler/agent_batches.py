@@ -62,7 +62,12 @@ async def count_consecutive_failures(db: Database, *, task_id: str, version: int
     for row in rows:
         if str(row.get("agent_message") or "").startswith("skipped:"):
             break
-        if row.get("error_message"):
+        error = str(row.get("error_message") or "")
+        # Restart-interrupted batches are marked failed for the UI but are not
+        # a live LLM miss — skip them so they neither increment nor reset the fuse.
+        if error.startswith("interrupted:"):
+            continue
+        if error:
             count += 1
         else:
             break
@@ -80,6 +85,7 @@ async def complete_agent_failure(
     error_message: str,
     scheduler: SchedulerManager | None,
     failure_details: dict[str, Any] | None = None,
+    count_toward_fuse: bool = True,
 ) -> None:
     err_now = utc_now_iso()
     await db.execute(
@@ -88,29 +94,33 @@ async def complete_agent_failure(
         (error_message[:2000], err_now, err_now, batch_id),
     )
     max_retries = await get_config_int(db, "max_batch_retries")
-    consecutive = await count_consecutive_failures(db, task_id=task_id, version=version)
-    retries_exhausted = consecutive >= max_retries
-    await record_batch_failure(
-        db,
-        task_id=task_id,
-        task_name=task_name,
-        batch_id=batch_id,
-        error_message=error_message,
-        retries_exhausted=retries_exhausted,
-        current_retry=consecutive,
-        max_retries=max_retries,
-        failure_details=failure_details,
-    )
-    if retries_exhausted:
-        await set_task_active(db, task_id, 0, err_now)
-        if scheduler is not None:
-            await scheduler.unregister_task(task_id)
-        logger.warning(
-            "agent task %s deactivated after %d consecutive failure(s) (max_batch_retries=%d)",
-            task_id,
-            consecutive,
-            max_retries,
+    if count_toward_fuse:
+        consecutive = await count_consecutive_failures(db, task_id=task_id, version=version)
+        retries_exhausted = consecutive >= max_retries
+        await record_batch_failure(
+            db,
+            task_id=task_id,
+            task_name=task_name,
+            batch_id=batch_id,
+            error_message=error_message,
+            retries_exhausted=retries_exhausted,
+            current_retry=consecutive,
+            max_retries=max_retries,
+            failure_details=failure_details,
         )
+        if retries_exhausted:
+            await set_task_active(db, task_id, 0, err_now)
+            if scheduler is not None:
+                await scheduler.unregister_task(task_id)
+            logger.warning(
+                "agent task %s deactivated after %d consecutive failure(s) (max_batch_retries=%d)",
+                task_id,
+                consecutive,
+                max_retries,
+            )
+    else:
+        consecutive = 0
+        retries_exhausted = False
     broadcaster.publish(
         "analysis_failed",
         {

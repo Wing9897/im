@@ -2,7 +2,7 @@ import type { CSSProperties, KeyboardEvent, ReactElement, RefObject } from "reac
 import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
-import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
+import { anchoredMenuPortalStyle, useAnchoredMenu } from "../../hooks/useAnchoredMenu";
 import { controlBaseClass, controlSizeClass } from "./controlStyles";
 
 export type MenuSelectOption = {
@@ -255,13 +255,7 @@ export function MenuSelect({
 
   const listBoxStyle: CSSProperties | undefined = menuPortal
     ? {
-        position: "fixed",
-        top: menuPos?.top ?? -9999,
-        left: menuPos?.left ?? -9999,
-        width: menuPos?.width ?? undefined,
-        minWidth: menuPos?.width ?? undefined,
-        zIndex: 3000,
-        visibility: menuPos ? "visible" : "hidden",
+        ...anchoredMenuPortalStyle(menuPos),
         ...listBoxChromeStyle,
       }
     : usesFormChrome
@@ -278,8 +272,7 @@ export function MenuSelect({
         }
       : listStyle;
 
-  // Non-portal menus still need outside/Escape dismiss; portal placement is skipped when menuPortal is false.
-  // useAnchoredMenu still owns open + dismiss; we only skip fixed positioning when not portaled.
+  // useAnchoredMenu owns open/dismiss even when not portaled; we only skip fixed placement.
   const listbox = open ? (
     <ul
       ref={menuPortal ? (menuRef as RefObject<HTMLUListElement>) : undefined}

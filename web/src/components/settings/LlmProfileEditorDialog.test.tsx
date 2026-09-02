@@ -60,6 +60,44 @@ describe("LlmProfileEditorDialog", () => {
     expect(save?.disabled).toBe(true);
   });
 
+  it("portals JSON 輸出模式 list to document.body above 任務員工綁定", async () => {
+    const initial: LlmProfileDraft = {
+      ...emptyProfileDraft(),
+      provider: "openai_compatible",
+      jsonMode: "json_schema",
+    };
+
+    await harness.render(LlmProfileEditorDialog, {
+      open: true,
+      mode: "edit",
+      initial,
+      saving: false,
+      onClose: vi.fn(),
+      onSave: vi.fn(),
+    });
+
+    const trigger = document.body.querySelector<HTMLButtonElement>(
+      '[data-testid="openai-json-mode-value"]',
+    );
+    expect(trigger).toBeTruthy();
+    await act(async () => {
+      trigger!.click();
+    });
+
+    const list = document.body.querySelector(
+      '[data-testid="openai-json-mode-list"]',
+    ) as HTMLElement | null;
+    expect(list).toBeTruthy();
+    expect(list?.parentElement).toBe(document.body);
+    expect(list?.style.zIndex).toBe("3000");
+
+    const staff = document.body.querySelector('[aria-label="任務員工綁定"]');
+    expect(staff).toBeTruthy();
+    expect(staff?.contains(list)).toBe(false);
+    const connection = document.body.querySelector('[aria-label="供應商與模型"]');
+    expect(connection?.contains(list)).toBe(false);
+  });
+
   function providerTile(label: string): HTMLButtonElement | undefined {
     return Array.from(
       document.body.querySelectorAll<HTMLButtonElement>("button[aria-pressed]"),

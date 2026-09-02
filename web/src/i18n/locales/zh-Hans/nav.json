@@ -24,8 +24,5 @@
   "history": "纪录",
   "mainNav": "主导航",
   "railMode": "侧栏模式",
-  "tasksPendingAria": "任务（待分析 {count}）",
-  "tasksPendingTitle": "任务设定 · 待分析 {count}",
-  "pendingAnalysisBadge": "待分析 {count}",
   "appVersionTitle": "应用版本（前后端共用 semver）"
 }

@@ -8,12 +8,22 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 /* ================================================================== */
 /*  Shared mock setup                                                  */
 /* ================================================================== */
 
-const { mockListSources, mockQueryMessagesPage, mockFetchTrendingTopics, mockListChannelsWithSources, mockFetchEvents, mockFetchTaskAnalysisStats, runtimeState } = vi.hoisted(() => ({
+const {
+  mockListSources,
+  mockQueryMessagesPage,
+  mockFetchTrendingTopics,
+  mockListChannelsWithSources,
+  mockFetchEvents,
+  mockFetchTaskAnalysisStats,
+  runtimeState,
+  routerState,
+} = vi.hoisted(() => ({
   mockListSources: vi.fn(),
   mockQueryMessagesPage: vi.fn(),
   mockFetchTrendingTopics: vi.fn(),
@@ -30,6 +40,13 @@ const { mockListSources, mockQueryMessagesPage, mockFetchTrendingTopics, mockLis
     },
     requestAiStatusRefresh: vi.fn(),
     requestQueueStatusRefresh: vi.fn(),
+  },
+  routerState: {
+    pathname: "/monitor",
+    search: "",
+    key: "empty-states",
+    params: new URLSearchParams(),
+    setParams: vi.fn(),
   },
 }));
 
@@ -78,18 +95,27 @@ vi.mock("../../context/TaskCatalogContext", async () =>
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 
-vi.mock("react-router-dom", () => ({
-  Link: ({
-    children,
-    to,
-    ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) =>
-    createElement("a", { href: to, ...props }, children),
-  useNavigate: () => vi.fn(),
-  useLocation: () => ({ pathname: "/monitor", search: "", state: null }),
-  MemoryRouter: ({ children }: { children: React.ReactNode }) => children,
-  useSearchParams: () => [new URLSearchParams(), vi.fn()],
-}));
+vi.mock("react-router-dom", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-router-dom")>();
+  return {
+    ...actual,
+    Link: ({
+      children,
+      to,
+      ...props
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) =>
+      createElement("a", { href: to, ...props }, children),
+    useNavigate: () => vi.fn(),
+    useLocation: () => ({
+      pathname: routerState.pathname,
+      search: routerState.search,
+      state: null,
+      key: routerState.key,
+    }),
+    MemoryRouter: ({ children }: { children: React.ReactNode }) => children,
+    useSearchParams: () => [routerState.params, routerState.setParams],
+  };
+});
 
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
   useRefreshOnAnalysisEvent: vi.fn(),
@@ -171,7 +197,8 @@ describe("Empty state rendering for list components", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();
@@ -183,6 +210,11 @@ describe("Empty state rendering for list components", () => {
     mockFetchTaskAnalysisStats.mockReset();
     runtimeState.lastMessagesUpdate = null;
     runtimeState.lastAnalysisEvent = null;
+    routerState.pathname = "/monitor";
+    routerState.search = "";
+    routerState.key = "empty-states";
+    routerState.params = new URLSearchParams();
+    routerState.setParams.mockReset();
     resetTaskCatalogState();
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   });
@@ -198,6 +230,13 @@ describe("Empty state rendering for list components", () => {
     vi.unstubAllGlobals();
   });
 
+  function mountPage(node: React.ReactElement) {
+    act(() => {
+      root = createRoot(container);
+      root.render(wrapWithI18n(node));
+    });
+  }
+
   describe("MonitorPage — empty messages", () => {
     it("renders empty state without errors when messages array is empty", async () => {
       mockListSources.mockResolvedValue([]);
@@ -210,19 +249,11 @@ describe("Empty state rendering for list components", () => {
       });
 
       const { MonitorPage } = await import("../monitor/MonitorPage");
+      mountPage(createElement(MonitorPage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(MonitorPage));
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show empty state message (no sources scenario)
-      expect(container.textContent).toContain("尚未開始接收實時訊息");
-      // Should not throw — page renders successfully
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("尚未開始接收實時訊息");
+      }, { timeout: 8000 });
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
 
@@ -251,44 +282,32 @@ describe("Empty state rendering for list components", () => {
       });
 
       const { MonitorPage } = await import("../monitor/MonitorPage");
+      mountPage(createElement(MonitorPage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(MonitorPage));
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show the filtered empty state
-      expect(container.textContent).toContain("目前沒有符合條件的訊息");
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("目前沒有符合條件的訊息");
+      }, { timeout: 8000 });
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
   });
 
   describe("LeaderboardPage — empty topics", () => {
     it("renders empty state without errors when topics array is empty", async () => {
+      routerState.pathname = "/leaderboard";
       mockFetchTrendingTopics.mockResolvedValue([]);
       mockListChannelsWithSources.mockResolvedValue([]);
 
       const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
+      mountPage(createElement(LeaderboardPage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(LeaderboardPage));
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show empty state for no leaderboard tasks
-      expect(container.textContent).toContain("尚未建立排行榜任務");
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("尚未建立排行榜任務");
+      }, { timeout: 8000 });
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
 
     it("renders empty state when leaderboard tasks exist but no results yet", async () => {
+      routerState.pathname = "/leaderboard";
       taskCatalogState.tasks = [
         makeAnalysisTask({
           name: "Leaderboard Task",
@@ -301,25 +320,18 @@ describe("Empty state rendering for list components", () => {
       mockListChannelsWithSources.mockResolvedValue([]);
 
       const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
+      mountPage(createElement(LeaderboardPage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(LeaderboardPage));
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show empty state for no results
-      expect(container.textContent).toContain("目前還沒有排行榜結果");
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("目前還沒有排行榜結果");
+      }, { timeout: 8000 });
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
   });
 
   describe("IntelligencePage — empty items", () => {
     it("renders empty state without errors when items array is empty", async () => {
-      // Set view mode to "card" so the empty state renders (map mode shows MapView instead)
+      routerState.pathname = "/intelligence";
       window.localStorage.setItem(
         "im:view-mode:intelligence",
         JSON.stringify("card"),
@@ -329,24 +341,16 @@ describe("Empty state rendering for list components", () => {
       mockListSources.mockResolvedValue([]);
 
       const { IntelligencePage } = await import("../intelligence/IntelligencePage");
+      mountPage(createElement(IntelligencePage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(IntelligencePage));
-        // Allow multiple microtask ticks for useAsyncResource to resolve
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show empty state for no intelligence tasks
-      expect(container.textContent).toContain("尚未建立情報任務");
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("尚未建立情報任務");
+      }, { timeout: 8000 });
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
 
     it("renders empty state when tasks exist but no items yet", async () => {
-      // Set view mode to "card" so the empty state renders (map mode shows MapView instead)
+      routerState.pathname = "/intelligence";
       window.localStorage.setItem(
         "im:view-mode:intelligence",
         JSON.stringify("card"),
@@ -360,21 +364,14 @@ describe("Empty state rendering for list components", () => {
       mockListSources.mockResolvedValue([]);
 
       const { IntelligencePage } = await import("../intelligence/IntelligencePage");
+      mountPage(createElement(IntelligencePage));
 
-      await act(async () => {
-        root = createRoot(container);
-        root.render(createElement(IntelligencePage));
-        // Allow multiple microtask ticks for useAsyncResource to resolve
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      // Should show empty state for no results
-      expect(container.textContent).toContain("目前還沒有情報");
+      await vi.waitFor(() => {
+        expect(container.textContent).toContain("目前還沒有情報");
+      }, { timeout: 8000 });
       expect(container.textContent).not.toContain("開始情報管線");
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
   });
 });
+

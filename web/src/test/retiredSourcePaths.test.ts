@@ -104,7 +104,8 @@ const RETIRED_SOURCE_PATHS = [
   "components/SubscribeFilterGroup.test.tsx",
   "components/useSourceFilterSubscribeDraft.ts",
   "pages/subscriptions/useCatalogMembershipBusy.ts",
-  // Settings／AI — Settings* pages moved to pages/settings/ai/ (URLs unchanged)
+  "pages/ai/AiWorkspacePage.tsx",
+  "pages/ai/AiWorkspacePage.test.tsx",
   "pages/ai/SettingsAiProviderPage.tsx",
   "pages/ai/SettingsAiProviderPage.test.tsx",
   "pages/ai/SettingsAiStaffPage.tsx",

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { getTasksPageLabel } from "../domain/tasks/taskPageCopy";
 import { SIMPLE_MODE_STORAGE_KEY } from "../domain/ui/simpleMode";
 import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { MONITOR_MODE_KEY, MonitorModeProvider } from "../context/MonitorModeContext";
@@ -17,7 +16,8 @@ vi.mock("react-router-dom", () => ({
   NavLink: (props: {
     to: string;
     children: React.ReactNode;
-    className?: string;
+    className?: string | ((state: { isActive: boolean }) => string);
+    "aria-current"?: string | boolean;
     "aria-label"?: string;
     title?: string;
     "data-testid"?: string;
@@ -26,7 +26,11 @@ vi.mock("react-router-dom", () => ({
       "a",
       {
         href: props.to,
-        className: props.className,
+        className:
+          typeof props.className === "function"
+            ? props.className({ isActive: false })
+            : props.className,
+        "aria-current": props["aria-current"],
         "aria-label": props["aria-label"],
         title: props.title,
         "data-testid": props["data-testid"] ?? "sidebar-link",
@@ -226,7 +230,6 @@ describe("AppSidebar", () => {
     expect(hrefs).toEqual([
       "/monitor",
       "/worksets",
-      "/tasks",
       "/schedule",
       "/items",
       "/sources",
@@ -236,7 +239,7 @@ describe("AppSidebar", () => {
       "/subscriptions",
       "/notify",
       "/assistant",
-      "/ai/provider",
+      "/settings/ai/provider",
       "/settings",
       "/account/identity",
     ]);
@@ -268,7 +271,6 @@ describe("AppSidebar", () => {
     const expectedLabels = [
       "實時監控",
       "工作集",
-      getTasksPageLabel(),
       "物品",
       "來源",
       "排行榜",
@@ -292,7 +294,6 @@ describe("AppSidebar", () => {
     renderSidebar();
     expect(document.body.textContent).toContain("Intel events");
     expect(document.body.textContent).toContain("Live Monitor");
-    expect(document.body.textContent).toContain("Tasks");
     expect(document.body.textContent).toContain("Worksets");
     expect(document.body.textContent).toContain("Notify & actions");
   });
@@ -305,20 +306,21 @@ describe("AppSidebar", () => {
     expect(active[0].getAttribute("href")).toBe("/monitor");
   });
 
-  it("marks 任務設定 active on task sub-routes", () => {
+  it("does not mark 工作集 active on task editor paths", () => {
     mockPathname = "/tasks/42/edit";
     renderSidebar();
     const active = getLinks().filter(isActiveSidebarLink);
-    expect(active.length).toBe(1);
-    expect(active[0].getAttribute("aria-label")).toBe(getTasksPageLabel());
+    expect(active).toHaveLength(0);
   });
 
   it("marks bottom entries active by route prefix without highlighting /assistant", () => {
     for (const [pathname, label] of [
-      ["/ai/provider", "AI 設定"],
+      ["/settings/ai/provider", "AI 設定"],
       ["/settings/theme", "系統設定"],
       ["/settings/logs", "系統設定"],
+      ["/items/finance", "物品"],
       ["/account/identity", "帳戶"],
+      ["/account/devices", "帳戶"],
     ] as const) {
       mockPathname = pathname;
       renderSidebar();
@@ -334,15 +336,15 @@ describe("AppSidebar", () => {
     expect(active[0].getAttribute("aria-label")).toBe("助手");
   });
 
-  it("restores the last visited tasks sub-route on the 任務設定 link", () => {
-    mockPathname = "/tasks/7/edit";
+  it("does not highlight 系統設定 on /settings/ai", () => {
+    mockPathname = "/settings/ai/voice";
     renderSidebar();
-
-    mockPathname = "/monitor";
-    renderSidebar();
-
-    const tasksLink = getLinks().find((a) => a.getAttribute("aria-label") === getTasksPageLabel());
-    expect(tasksLink?.getAttribute("href")).toBe("/tasks/7/edit");
+    const active = getLinks().filter(isActiveSidebarLink);
+    expect(active).toHaveLength(1);
+    expect(active[0].getAttribute("aria-label")).toBe("AI 設定");
+    expect(active[0].getAttribute("aria-current")).toBe("page");
+    const settings = getLinks().find((link) => link.getAttribute("aria-label") === "系統設定");
+    expect(settings?.getAttribute("aria-current")).toBe("false");
   });
 
   it("switches to history rail and persists rail mode", () => {
@@ -372,7 +374,7 @@ describe("AppSidebar", () => {
       "/subscriptions",
       "/notify",
       "/assistant",
-      "/ai/provider",
+      "/settings/ai/provider",
       "/settings",
       "/account/identity",
     ]);

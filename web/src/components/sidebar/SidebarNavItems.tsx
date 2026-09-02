@@ -1,10 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
 import { prefetchRoute } from "../../routing/prefetchRoute";
-import { CountBadge } from "../ui/CountBadge";
 import { sidebarNavLinkClass } from "./sidebarNavStyles";
 
 export function SidebarSectionLabel({
@@ -33,71 +29,6 @@ export function SidebarSectionLabel({
   );
 }
 
-/** Isolated so SSE queue updates re-render only this nav item, not the whole rail. */
-export function TasksNavLink({
-  to,
-  collapsed,
-  isActive,
-}: {
-  to: string;
-  collapsed: boolean;
-  isActive: boolean;
-}) {
-  const { t } = useTranslation("nav");
-  const { queueStatus } = useAnalysisStatus();
-  const pendingCount = queueStatus?.pendingCount ?? 0;
-  const showPendingBadge = pendingCount > 0;
-  const badgeLabel = pendingCount > 99 ? "99+" : String(pendingCount);
-  const Icon = ListChecks;
-  const tasksLabel = t("tasks");
-
-  return (
-    <NavLink
-      to={to}
-      className={sidebarNavLinkClass(isActive, collapsed)}
-      onMouseEnter={() => prefetchRoute(to)}
-      onFocus={() => prefetchRoute(to)}
-      aria-label={
-        showPendingBadge ? t("tasksPendingAria", { count: pendingCount }) : tasksLabel
-      }
-      title={
-        showPendingBadge
-          ? t("tasksPendingTitle", { count: pendingCount })
-          : tasksLabel
-      }
-      data-testid="sidebar-link"
-    >
-      {isActive ? (
-        <span
-          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
-          aria-hidden="true"
-        />
-      ) : null}
-      <span className="relative inline-flex shrink-0">
-        <Icon size={16} strokeWidth={2} aria-hidden="true" />
-        {showPendingBadge && collapsed ? (
-          <span
-            className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-accent"
-            aria-hidden="true"
-          />
-        ) : null}
-      </span>
-      {!collapsed ? (
-        <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-          <span className="truncate">{tasksLabel}</span>
-          {showPendingBadge ? (
-            <CountBadge
-              count={pendingCount > 99 ? 99 : pendingCount}
-              aria-label={t("pendingAnalysisBadge", { count: badgeLabel })}
-              className="min-w-[18px] px-1 text-[9px]"
-            />
-          ) : null}
-        </span>
-      ) : null}
-    </NavLink>
-  );
-}
-
 export function SidebarNavLink({
   to,
   label,
@@ -117,7 +48,8 @@ export function SidebarNavLink({
   return (
     <NavLink
       to={to}
-      className={sidebarNavLinkClass(isActive, collapsed)}
+      className={() => sidebarNavLinkClass(isActive, collapsed)}
+      aria-current={isActive ? "page" : false}
       onMouseEnter={() => prefetchRoute(to)}
       onFocus={() => prefetchRoute(to)}
       aria-label={label}

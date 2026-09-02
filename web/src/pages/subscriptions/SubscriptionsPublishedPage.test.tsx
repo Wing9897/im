@@ -495,10 +495,18 @@ describe("SubscriptionsPublishedPage", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    const select = document.querySelector('[data-testid="subscriptions-published-workset"]') as HTMLSelectElement;
+    const trigger = document.querySelector(
+      '[data-testid="subscriptions-published-workset-value"]',
+    ) as HTMLButtonElement;
     await act(async () => {
-      select.value = "ws-1";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
+      trigger.click();
+      await Promise.resolve();
+    });
+    const option = document.querySelector(
+      '[data-testid="subscriptions-published-workset-option-ws-1"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      option.click();
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();

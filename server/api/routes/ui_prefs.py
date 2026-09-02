@@ -80,7 +80,7 @@ async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> BoardPr
     """Persist board layout and/or widget state.
 
     Accepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;
-    explicit ``null`` clears that ``system_config`` key.
+    explicit ``null`` clears that ``ui_prefs`` key.
     """
     if "layout" not in body.model_fields_set and "widgetState" not in body.model_fields_set:
         raise http_error(

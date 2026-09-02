@@ -76,6 +76,7 @@
   "generalName": "一般",
   "tabCatalog": "目录",
   "tabGraph": "流程图",
+  "tabTasks": "任务",
   "catalogTabsAria": "工作集视图",
   "backToCatalog": "返回工作集",
   "backToCatalogAria": "返回工作集目录",
