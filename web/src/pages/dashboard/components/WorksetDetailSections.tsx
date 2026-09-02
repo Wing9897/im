@@ -23,6 +23,18 @@ import type { AnalysisTask } from "../../../types/tasks";
 import { formatOsDateTime } from "../../../utils/time";
 import { ItemsEntryCard } from "../../../components/items/ItemsEntryCard";
 
+/** Fill the workset dashboard cell; never shrink into a hairline glass bar. */
+const WORKSET_PANEL_CLASS = "h-full min-h-fit !shadow-none";
+const WORKSET_PANEL_BODY_CLASS = "flex min-h-[7.5rem] flex-1 flex-col";
+
+function WorksetSectionEmpty({ children }: { children: string }) {
+  return (
+    <div className="flex min-h-[7.5rem] flex-1 items-center">
+      <p className={`m-0 ${captionClass}`}>{children}</p>
+    </div>
+  );
+}
+
 export function WorksetExpiringSummarySection({
   loading,
   items,
@@ -36,19 +48,20 @@ export function WorksetExpiringSummarySection({
 }) {
   const { t } = useTranslation();
   return (
-    <div data-testid="workset-summary-expiring">
+    <div className="h-full min-h-0" data-testid="workset-summary-expiring">
       <PanelSection
         title={t("workset:detailSummaryExpiringHeading")}
         icon={<SectionHeaderIcon icon={Clock} />}
         showCount={!loading}
         itemCount={items.length}
         aria-label={t("workset:detailSummaryExpiringHeading")}
-        className="!shadow-none"
+        className={WORKSET_PANEL_CLASS}
+        bodyClassName={WORKSET_PANEL_BODY_CLASS}
       >
         {loading ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
+          <WorksetSectionEmpty>{t("workset:detailSummaryLoading")}</WorksetSectionEmpty>
         ) : items.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryExpiringEmpty")}</p>
+          <WorksetSectionEmpty>{t("workset:detailSummaryExpiringEmpty")}</WorksetSectionEmpty>
         ) : (
           <CardGrid density="compact">
             {items.map((item) => (
@@ -80,23 +93,24 @@ export function WorksetEventsSummarySection({
 }) {
   const { t } = useTranslation();
   return (
-    <div data-testid="workset-summary-events">
+    <div className="h-full min-h-0" data-testid="workset-summary-events">
       <PanelSection
         title={t("workset:detailSummaryEventsHeading")}
         icon={<SectionHeaderIcon icon={CalendarDays} />}
         showCount={!loading}
         itemCount={events.length}
         aria-label={t("workset:detailSummaryEventsHeading")}
-        className="!shadow-none"
+        className={WORKSET_PANEL_CLASS}
+        bodyClassName={WORKSET_PANEL_BODY_CLASS}
       >
         {loading ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
+          <WorksetSectionEmpty>{t("workset:detailSummaryLoading")}</WorksetSectionEmpty>
         ) : error ? (
           <p className={`m-0 ${captionClass}`} role="status">
             {error}
           </p>
         ) : events.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryEventsEmpty")}</p>
+          <WorksetSectionEmpty>{t("workset:detailSummaryEventsEmpty")}</WorksetSectionEmpty>
         ) : (
           <CardGrid density="compact">
             {events.map((row) => (
@@ -158,10 +172,11 @@ export function WorksetTasksSection({
       showCount
       itemCount={tasks.length}
       aria-label={t("workset:detailTasksHeading")}
-      className="!shadow-none"
+      className={WORKSET_PANEL_CLASS}
+      bodyClassName={WORKSET_PANEL_BODY_CLASS}
     >
       {tasks.length === 0 ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset:detailTasksEmpty")}</p>
+        <WorksetSectionEmpty>{t("workset:detailTasksEmpty")}</WorksetSectionEmpty>
       ) : (
         <CardGrid density="compact">
           {tasks.map((task) => (
@@ -221,12 +236,13 @@ export function WorksetItemsSection({
       showCount={!loading}
       itemCount={items.length}
       aria-label={t("workset:detailItemsHeading")}
-      className="!shadow-none"
+      className={WORKSET_PANEL_CLASS}
+      bodyClassName={WORKSET_PANEL_BODY_CLASS}
     >
       {loading ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
+        <WorksetSectionEmpty>{t("workset:detailSummaryLoading")}</WorksetSectionEmpty>
       ) : items.length === 0 ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset:detailItemsEmpty")}</p>
+        <WorksetSectionEmpty>{t("workset:detailItemsEmpty")}</WorksetSectionEmpty>
       ) : (
         <CardGrid density="compact">
           {items.map((item) => (

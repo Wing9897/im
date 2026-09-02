@@ -127,7 +127,7 @@ function IntelligenceListPaneComponent({
         hint={copy.hint}
         actions={
           copy.showGoToTasks ? (
-            <EmptyStateLink to="/tasks">{t("cta.goToTasks")}</EmptyStateLink>
+            <EmptyStateLink to="/worksets?tab=tasks">{t("cta.goToTasks")}</EmptyStateLink>
           ) : copy.showClearFilters ? (
             <Button
               variant="secondary"

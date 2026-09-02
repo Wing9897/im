@@ -57,7 +57,7 @@ describe("PipelineGuideChecklist", () => {
     expect(buttons).not.toContain("新增 RSS");
   });
 
-  it("offers an optional AI provider step that links to /ai/provider without requiring a slot bind", async () => {
+  it("offers an optional AI provider step that links to /settings/ai/provider without requiring a slot bind", async () => {
     await ensureZhHantLocale();
     const container = document.createElement("div");
     renderChecklist(container, { state: "no_events", assistantSlotReady: false });
@@ -76,7 +76,7 @@ describe("PipelineGuideChecklist", () => {
       aiButton!.click();
     });
     expect(container.querySelector('[data-testid="pathname"]')?.textContent).toBe(
-      "/ai/provider",
+      "/settings/ai/provider",
     );
   });
 

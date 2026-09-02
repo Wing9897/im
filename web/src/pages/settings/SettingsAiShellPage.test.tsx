@@ -28,8 +28,8 @@ vi.mock("../../context/ToastContext", async () =>
 
 import { SystemSettingsProvider } from "../../context/SystemSettingsContext";
 import { SimpleModeProvider } from "../../context/SimpleModeContext";
-import { AiWorkspacePage } from "./AiWorkspacePage";
-import { SettingsAiProviderPage } from "../settings/ai/SettingsAiProviderPage";
+import { SettingsAiShellPage } from "./SettingsShared";
+import { SettingsAiProviderPage } from "./ai/SettingsAiProviderPage";
 
 function setupInvokeMock(overrides?: Partial<SystemSettingsSnapshot>) {
   const snapshot = { ...defaultSettingsSnapshot, ...overrides };
@@ -48,13 +48,13 @@ function renderSettingsRoute() {
       null,
       createElement(
         MemoryRouter,
-        { initialEntries: ["/ai/provider"] },
+        { initialEntries: ["/settings/ai/provider"] },
         createElement(
           Routes,
           null,
           createElement(
             Route,
-            { path: "/ai", element: createElement(AiWorkspacePage) },
+            { path: "/settings/ai", element: createElement(SettingsAiShellPage) },
             createElement(Route, {
               path: "provider",
               element: createElement(SettingsAiProviderPage),
@@ -75,13 +75,13 @@ function renderAiWorkspaceRoute() {
       null,
       createElement(
         MemoryRouter,
-        { initialEntries: ["/ai"] },
+        { initialEntries: ["/settings/ai"] },
         createElement(
           Routes,
           null,
           createElement(Route, {
-            path: "/ai",
-            element: createElement(AiWorkspacePage),
+            path: "/settings/ai",
+            element: createElement(SettingsAiShellPage),
           }),
         ),
       ),
@@ -89,11 +89,10 @@ function renderAiWorkspaceRoute() {
   );
 }
 
-// NOTE: the /ai/provider page now edits LLM profiles via a dialog with direct
-// API saves (see SettingsAiProviderPage.test.tsx) and no longer feeds the
-// shared system-settings draft, so the old unsaved-changes-indicator tests
-// against provider inputs were retired.
-describe("AiWorkspacePage provider route", () => {
+// Provider page edits LLM profiles via a dialog with direct API saves
+// (see SettingsAiProviderPage.test.tsx) and no longer feeds the shared
+// system-settings draft.
+describe("SettingsAiShellPage provider route", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
@@ -129,7 +128,7 @@ describe("AiWorkspacePage provider route", () => {
   });
 });
 
-describe("AiWorkspacePage layout", () => {
+describe("SettingsAiShellPage layout", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
@@ -177,7 +176,6 @@ describe("AiWorkspacePage layout", () => {
     const nav = container.querySelector('nav[aria-label="設定分頁"]');
     expect(nav).toBeTruthy();
     expect(container.textContent).not.toContain("助手");
-    // Provider tab was renamed to "AI 設定檔" with the profile-based editor.
     expect(container.textContent).toContain("AI 設定檔");
     expect(container.textContent).not.toContain("分析調度");
     expect(container.querySelector('[data-testid="segmented-indicator"]')).toBeTruthy();

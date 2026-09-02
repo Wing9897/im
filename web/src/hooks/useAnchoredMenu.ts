@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type RefObject,
   useCallback,
   useEffect,
@@ -81,6 +82,21 @@ function resolveMenuLeft({
     return Math.min(Math.max(edge, rect.right - menuWidth), maxLeft);
   }
   return Math.min(Math.max(edge, rect.left), maxLeft);
+}
+
+/** Fixed portal placement shared by MenuSelect and GeminiBaseUrlField. */
+export function anchoredMenuPortalStyle(
+  menuPos: AnchoredMenuPosition | null,
+): CSSProperties {
+  return {
+    position: "fixed",
+    top: menuPos?.top ?? -9999,
+    left: menuPos?.left ?? -9999,
+    width: menuPos?.width ?? undefined,
+    minWidth: menuPos?.width ?? undefined,
+    zIndex: 3000,
+    visibility: menuPos ? "visible" : "hidden",
+  };
 }
 
 /**

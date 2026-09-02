@@ -172,6 +172,8 @@ class ActionExecutor:
 
         Empty batches (``findings_count`` <= 0) never outbound — no value to push.
         Supported condition keys: ``task_id``, ``score_threshold``.
+        Omitted/null ``score_threshold`` does not filter; an unparseable value skips.
+
         """
         if findings_count <= 0:
             return
@@ -206,7 +208,7 @@ class ActionExecutor:
                     if max_score is None or float(max_score) < float(threshold):
                         continue
                 except (TypeError, ValueError):
-                    pass
+                    continue
             await self.execute(
                 action,
                 message,

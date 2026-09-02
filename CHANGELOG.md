@@ -4,6 +4,12 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- SPA unknown URLs render a NotFound page (home button) instead of silently redirecting to `/`. `/` and `viewerRoute` still use `DefaultHomeRedirect`.
+- AI settings live under `/settings/ai/provider|voice|staff` (sidebar AI vs system settings). Old `/ai/provider|voice|staff` and `/ai` permanently redirect; `/ai/analysis-strategy` still opens the scheduling dialog. `/assistant` is unchanged.
+- Workset catalog adds a full-mode `?tab=tasks` grid. Exact `/tasks` redirects there (simple mode → `/worksets`). Sidebar keeps 「工作集」only; `/tasks/new` and `/tasks/:id/edit|agent` stay. Simple mode hides analysis tasks, not worksets.
+- Chrome/plain option lists use `MenuSelect` (RSS picker, calendar-share publish, subscriptions publish). Dense native schedule rows keep `SelectField`.
+- Pipeline first-run checklist adds an optional step: create an AI profile and bind the assistant global slot (link to `/settings/ai/provider`; no `__default__` seed).
+
 - Desktop schema-floor recovery: after backup-and-reset, show 「資料庫已重置」and **Restart** (`app.relaunch`) instead of in-process sidecar retry (avoids Windows `Server startup cancelled` when the dialog was the only window).
 - Timeline **Block** view: same-source month mini-calendars (null expand ≤12), no right rail, standalone compact grid + day popover; per-card colors (14 presets + custom hex) with chrome following the card; selection stays inside one card.
 - P2 contracts: Agent stream and notify validation lock to generated OpenAPI schemas; Settings AI pages move under `/settings`; desktop SSE payload coverage; Viewer copy.
@@ -17,12 +23,11 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 - Desktop tray right-click adds an interface-language radio submenu (自動 / 繁體中文 / 简体中文 / English) that hot-swaps the shell and Web UI, plus global AI analysis pause/resume and a confirmed emergency abort.
 - Ops board (canvas) no longer shows the left-edge sidebar `>` chevron; pages mode still uses the overlay toggle. Switch back via 頁面 / 畫布 or the command palette.
 - Caption overlay sits 20px from the window bottom (not 12% up) and uses `--text-primary` with `color-mix(--surface-card 86%, transparent)` (~80–90% opacity, denser than photo-BG `--surface-panel`) for glass contrast; persist history labels `editor.you` as 你 / You.
-- Pipeline first-run checklist adds an optional step: create an AI profile and bind the assistant global slot (link to `/ai/provider`; no `__default__` seed).
 - Release container job no longer uses Docker `type=gha` cache (avoids GitHub Actions cache quota failures). Staged `web-dist.tar.gz` is deleted only after all three package jobs succeed, so Re-run failed jobs can still download it. Desktop installer upload uses `gh release upload` with retries (avoids `action-gh-release`'s 10s `api.github.com` timeout).
 - Desktop shows a formal schema-baseline dialog when the local stamp is below the floor (backup + `local-db-reset`), instead of leaving reset as CLI-only.
 - System-bar composer toggle is 閃現 / 持續 (flash then `AGENT_HIDE_MS`, vs pinned transcript) instead of 顯示對話 hiding the whole overlay chat; `/assistant` history is unchanged.
-- AI engine status/test no longer stringify HTTPException; empty-DB and unbound-assistant diagnostics return stable `errorCode` (`NO_LLM_PROFILE` / `ASSISTANT_SLOT_UNBOUND` / `LLM_PROFILE_INCOMPLETE`) mapped by frontend i18n, with assistant empty-state copy pointing at `/ai/provider`.
-- Assistant composer `sendDisabled` also covers an unbound/incomplete assistant slot; Enter and PTT honor the same gate, with a send-button hint pointing at the existing `/ai/provider` banners.
+- AI engine status/test no longer stringify HTTPException; empty-DB and unbound-assistant diagnostics return stable `errorCode` (`NO_LLM_PROFILE` / `ASSISTANT_SLOT_UNBOUND` / `LLM_PROFILE_INCOMPLETE`) mapped by frontend i18n, with assistant empty-state copy pointing at `/settings/ai/provider`.
+- Assistant composer `sendDisabled` also covers an unbound/incomplete assistant slot; Enter and PTT honor the same gate, with a send-button hint pointing at the existing `/settings/ai/provider` banners.
 - Retired public `GET /api/v1/calendar/occurrences` (404). Time-window reads stay on `GET /api/v1/calendar/window`; Agent／MCP expand via Python `query_window`／`expand_active_calendar_occurrences`.
 - Schema stamp **5** (`SCHEMA_SEMVER` `1.4.0`, retired as floor) added workset cover and dropped workset emoji. Superseded by stamp 6; stamp 1–5 DBs are not upgraded in place. Listing aliases `off`/`details`/`busy` are remapped once at startup if leftover rows exist; grant/projection `busy`|`details` stay.
 - Schema stamp **3** (`SCHEMA_SEMVER` `1.2.0`, retired) added `worksets.description`. Superseded by stamp 6 (floor/current above); stamp 1–5 DBs are not upgraded in place.

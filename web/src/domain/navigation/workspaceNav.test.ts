@@ -31,9 +31,9 @@ describe("settingsWorkspaceNavItems", () => {
 describe("aiWorkspaceNavItems", () => {
   it("keeps provider / voice / staff", () => {
     expect(aiWorkspaceNavItems.map((item) => item.to)).toEqual([
-      "/ai/provider",
-      "/ai/voice",
-      "/ai/staff",
+      "/settings/ai/provider",
+      "/settings/ai/voice",
+      "/settings/ai/staff",
     ]);
   });
 });

@@ -66,6 +66,14 @@ describe("WorksetCardCover", () => {
     expect(label).not.toBeNull();
     expect(label?.textContent ?? "").toContain("Upload cover");
     expect(label?.className ?? "").not.toContain("opacity-0");
+    expect(label?.className ?? "").toContain("whitespace-nowrap");
+    expect(uploadButton()?.className ?? "").toContain("h-full");
+    expect(uploadButton()?.className ?? "").toContain("w-full");
+    expect(uploadButton()?.className ?? "").not.toContain("aspect-[16/9]");
+    const coverClass = container.querySelector('[data-testid="workset-card-cover"]')?.className ?? "";
+    expect(coverClass).toContain("h-28");
+    expect(coverClass).toContain("w-full");
+    expect(coverClass).not.toContain("min-h-[7rem]");
   });
 
   it("uses the default placeholder when no custom cover is set", async () => {

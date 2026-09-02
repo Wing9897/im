@@ -12,7 +12,7 @@ import { QuietHoursSection } from "./localNotify/QuietHoursSection";
 /**
  * Local notifications for timed 情報事件、週期任務與手動／助手事件.
  * Full-page tab under `/notify?tab=notify`.
- * Agent STT/TTS lives on `/ai/voice` — not this page.
+ * Agent STT/TTS lives on `/settings/ai/voice` — not this page.
  */
 export function LocalNotifyPanel() {
   const { t } = useTranslation("actions");
@@ -45,7 +45,7 @@ export function LocalNotifyPanel() {
             </button>
           </label>
           <Link
-            to="/ai/voice"
+            to="/settings/ai/voice"
             className="ml-auto shrink-0 text-caption text-accent underline-offset-2 hover:underline"
           >
             {t("voice.aiVoiceLink")}

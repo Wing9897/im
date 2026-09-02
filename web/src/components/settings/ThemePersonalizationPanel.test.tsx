@@ -131,8 +131,13 @@ describe("ThemePersonalizationPanel", () => {
       trigger!.click();
     });
 
-    const list = container.querySelector('[data-testid="theme-focal-refresh-hours-list"]');
+    const list = document.body.querySelector(
+      '[data-testid="theme-focal-refresh-hours-list"]',
+    ) as HTMLElement | null;
     expect(list).not.toBeNull();
+    expect(container.querySelector('[data-testid="theme-focal-refresh-hours-list"]')).toBeNull();
+    expect(list?.parentElement).toBe(document.body);
+    expect(list?.style.zIndex).toBe("3000");
     const labels = Array.from(list!.querySelectorAll('[role="option"]')).map(
       (el) => el.textContent ?? "",
     );

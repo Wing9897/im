@@ -17,6 +17,7 @@ import {
   type CommandPaletteItem,
 } from "../domain/commandPalette/commandPaletteCommands";
 import { useMonitorMode } from "../context/MonitorModeContext";
+import { useSimpleMode } from "../context/SimpleModeContext";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
 import { useAssistantQuick } from "./useAssistantQuick";
 
@@ -38,6 +39,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { monitorMode, setMonitorMode, openInPages } = useMonitorMode();
+  const { simpleMode } = useSimpleMode();
   const { tasks, worksets } = useTaskCatalog();
   const { openCaption } = useAssistantQuick();
   const [open, setOpen] = useState(false);
@@ -66,8 +68,8 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   );
 
   const filtered = useMemo(
-    () => filterCommandPaletteItems(query, extraItems, i18n.t.bind(i18n)),
-    [query, extraItems, i18n],
+    () => filterCommandPaletteItems(query, extraItems, i18n.t.bind(i18n), simpleMode),
+    [query, extraItems, i18n, simpleMode],
   );
 
   const runItem = useCallback(

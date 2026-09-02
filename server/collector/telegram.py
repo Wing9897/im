@@ -24,6 +24,7 @@ from server.collector.telegram_session import (
     load_string_session,
 )
 from server.db.database import Database
+from server.source_status import set_source_error
 from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
@@ -169,6 +170,16 @@ class TelegramAdapter(BasePlatformAdapter):
                 self._source_id,
                 exc,
             )
+            self._state.status = "error"
+            self._state.last_error = str(exc)
+            try:
+                await set_source_error(self._db, self._source_id, str(exc))
+            except Exception:  # noqa: BLE001 — persist must not hide the SSE
+                logger.exception(
+                    "Failed to persist Telegram startup error for source %s",
+                    self._source_id,
+                )
+            self._broadcast_status_change("error", last_error=str(exc))
 
     def _persist_string_session(self) -> None:
         """Persist Telethon StringSession; raise if the token file cannot be written."""

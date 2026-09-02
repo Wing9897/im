@@ -1,7 +1,7 @@
 /** App-shell paths for the workset catalog (not nested under /tasks). */
 export const WORKSETS_PATH = "/worksets";
 
-export const WORKSET_CATALOG_TABS = ["catalog", "graph"] as const;
+export const WORKSET_CATALOG_TABS = ["catalog", "graph", "tasks"] as const;
 
 export type WorksetCatalogTab = (typeof WORKSET_CATALOG_TABS)[number];
 
@@ -19,6 +19,7 @@ export function isWorksetCatalogTab(value: string | null): value is WorksetCatal
 export function parseWorksetCatalogTab(tab: string | null): WorksetCatalogTab {
   if (tab === "flow" || tab === "graph") return "graph";
   if (tab === "catalog") return "catalog";
+  if (tab === "tasks") return "tasks";
   return DEFAULT_WORKSET_CATALOG_TAB;
 }
 
@@ -58,6 +59,9 @@ export function worksetsCatalogPath(
   }
   return `${WORKSETS_PATH}?${params.toString()}`;
 }
+
+/** Flat analysis-task grid inside the workset catalog (`?tab=tasks`). */
+export const WORKSETS_TASKS_PATH = worksetsCatalogPath("tasks");
 
 /** Workset contents page (lists + toolbar). No in-page flow tab. */
 export function worksetDetailPath(worksetId: string): string {

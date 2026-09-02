@@ -66,6 +66,7 @@ export function ThemeTextureSection({
         id="theme-texture-pref"
         data-testid="theme-texture-pref"
         variant="field"
+        menuPortal
         value={texturePref}
         options={textureOptions}
         aria-label={t("theme.textureLabel")}

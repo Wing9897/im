@@ -124,7 +124,7 @@ export function WorksetWorkspacePage() {
   }
 
   return (
-    <AppPageShell width="fluid">
+    <AppPageShell width="fluid" className="!min-h-0 justify-start">
       <OpsControlBar
         sticky
         ariaLabel={t("workset:toolbarAria")}
@@ -174,7 +174,11 @@ export function WorksetWorkspacePage() {
         </div>
       </OpsControlBar>
 
-      <div className="mb-md max-w-xl" data-testid="workset-workspace-cover">
+      {/* Full-width strip. Never max-w-xl: @theme --spacing-xl is 20px. */}
+      <div
+        className="mb-md w-full min-w-0 shrink-0 self-stretch"
+        data-testid="workset-workspace-cover"
+      >
         <WorksetCoverField
           worksetId={workset.id}
           cover={workset.cover ?? ""}

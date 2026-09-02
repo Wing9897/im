@@ -14,7 +14,7 @@
 - **日曆分享** — 可選 sidecar（不在本倉庫）；IM 只經 `/api/v1/calendar-share/*` 代理，前端不直連
 - **本地優先** — SQLite **schema stamp 6**（`SCHEMA_FLOOR`＝current；生產 `SCHEMA_MIGRATIONS` 為空）
 
-任務是通用接口（`analysis_tasks`）；循環日程走獨立 `recurring_schedules`，查詢時展開、不跑 AI。見 [Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
+任務是通用接口（`analysis_tasks`）；**週期任務**走獨立 `recurring_schedules`，**RRULE 僅於查詢時展開**、**不會觸發 AI 分析**。AI 排程支援 10 秒、每小時、每日、每週、自訂秒數。見 [Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
 
 ## 需求
 

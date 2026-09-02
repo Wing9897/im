@@ -6348,7 +6348,7 @@
           "ui-prefs"
         ],
         "summary": "Save Board Prefs",
-        "description": "Persist board layout and/or widget state.\n\nAccepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;\nexplicit ``null`` clears that ``system_config`` key.",
+        "description": "Persist board layout and/or widget state.\n\nAccepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;\nexplicit ``null`` clears that ``ui_prefs`` key.",
         "operationId": "save_board_prefs_api_v1_ui_prefs_board_put",
         "requestBody": {
           "content": {

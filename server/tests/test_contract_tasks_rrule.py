@@ -2,8 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from server.tests import seed
 from server.tests.contract_tasks_helpers import assert_validation_error
+
+
+def _calendar_window_covering_anchor(anchor: str, *, span_days: int = 14) -> dict[str, str]:
+    """UTC window covering create-time DTSTART (DATE or datetime)."""
+    text = str(anchor).strip()
+    local = datetime.fromisoformat(text.replace("Z", "")[:19] if "T" in text else text[:10])
+    start = datetime(local.year, local.month, local.day, tzinfo=UTC) - timedelta(hours=14)
+    end = start + timedelta(days=span_days)
+    return {
+        "startTime": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "endTime": end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
 
 
 async def test_non_calendar_create_rejects_legacy_rrule_fields(client, app):
@@ -190,12 +204,13 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
     assert unbound.status_code == 200
     assert all(row.get("itemId") in (None, "") for row in unbound.json()["items"])
 
-    # Series anchors at create-time wall clock; query a window after dtstart.
+    listed_anchor = listed_body[0].get("eventStartLocal") or listed_body[0].get("eventStartTime")
+    assert listed_anchor
+    # Series anchors at create-time wall clock; query a window covering dtstart.
     cal = await client.get(
         "/api/v1/calendar/window",
         params={
-            "startTime": "2026-08-01T00:00:00Z",
-            "endTime": "2026-09-30T23:59:59Z",
+            **_calendar_window_covering_anchor(str(listed_anchor)),
             "seriesId": series_id,
             "includeAnalysis": "false",
             "includeUser": "false",
@@ -233,7 +248,8 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_occurrences(cl
         },
     )
     assert created.status_code == 201, created.text
-    series_id = created.json()["id"]
+    created_body = created.json()
+    series_id = created_body["id"]
     row = await app.state.db.fetch_one(
         "SELECT workset_id FROM recurring_schedules WHERE id = ?",
         (series_id,),
@@ -241,11 +257,12 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_occurrences(cl
     assert row is not None
     assert row["workset_id"] == "__general__"
 
+    anchor = created_body.get("eventStartLocal") or created_body.get("eventStartTime")
+    assert anchor
     occurrences = await client.get(
         "/api/v1/calendar/window",
         params={
-            "startTime": "2026-07-31T16:00:00Z",
-            "endTime": "2026-08-31T15:59:59Z",
+            **_calendar_window_covering_anchor(str(anchor)),
             "seriesId": series_id,
             "includeAnalysis": "false",
             "includeUser": "false",
@@ -254,8 +271,8 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_occurrences(cl
     )
     assert occurrences.status_code == 200
     body = occurrences.json()["items"]
-    # Series DTSTART is "today" (manual_anchor); August window length therefore
-    # depends on the wall clock — require a non-empty expand, not a fixed day count.
+    # Series DTSTART is create-time local date (manual_anchor); require a
+    # non-empty expand in a window covering that anchor, not a fixed month.
     assert len(body) >= 1
     assert all(occ["seriesId"] == series_id and occ["title"] == "1234" for occ in body)
     assert all(occ["isAllDay"] is True and occ["source"] == "recurring" for occ in body)

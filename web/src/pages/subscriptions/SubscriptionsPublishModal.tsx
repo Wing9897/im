@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, SelectField, SettingsRow } from "../../components/ui";
+import { Button, MenuSelect, SettingsRow } from "../../components/ui";
 import { ModalDialog } from "../../components/ModalDialog";
 import type { Workset } from "../../api/worksets";
 import type { CalendarSharePublishResult } from "../../domain/calendarShare/publishWorkset";
@@ -73,20 +73,21 @@ export function SubscriptionsPublishModal({
     >
       <div className="flex flex-col gap-lg">
         <SettingsRow label={t("published.worksetLabel")} htmlFor="subscriptions-published-workset">
-          <SelectField
+          <MenuSelect
             id="subscriptions-published-workset"
+            variant="field"
+            menuPortal
             data-testid="subscriptions-published-workset"
             className="max-w-[280px]"
             value={selectedId}
-            onChange={(event) => onSelectedId(event.target.value)}
-          >
-            <option value="">{t("published.worksetPlaceholder")}</option>
-            {worksets.map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.name}
-              </option>
-            ))}
-          </SelectField>
+            placeholder={t("published.worksetPlaceholder")}
+            options={[
+              { value: "", label: t("published.worksetPlaceholder") },
+              ...worksets.map((row) => ({ value: row.id, label: row.name })),
+            ]}
+            onChange={onSelectedId}
+            aria-label={t("published.worksetLabel")}
+          />
         </SettingsRow>
         {selected ? (
           <CalendarSharePublishForm

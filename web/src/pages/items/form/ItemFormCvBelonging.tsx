@@ -108,6 +108,7 @@ export function ItemFormCvBelonging({
         <MenuSelect
           id="item-category"
           variant="field"
+          menuPortal
           value={categoryId ?? ""}
           options={categorySelectOptions}
           onChange={onCategoryChange}
@@ -122,6 +123,7 @@ export function ItemFormCvBelonging({
         <MenuSelect
           id="item-workset"
           variant="field"
+          menuPortal
           value={resolvedWorksetId}
           options={worksetSelectOptions}
           onChange={onWorksetChange}

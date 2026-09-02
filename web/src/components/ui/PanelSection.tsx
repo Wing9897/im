@@ -65,6 +65,8 @@ export function PanelSection({
   const bodyVisible = !collapsible || open;
 
   const rootCls = [
+    /* Header above body; min-h-fit stops flex/grid shrink from collapsing glass bars. */
+    "flex min-h-fit min-w-0 flex-col overflow-visible",
     surface === "panel"
       ? "im-surface-panel rounded-xl border border-surface-border shadow-sm"
       : "rounded-none border-0 bg-transparent shadow-none",
@@ -73,7 +75,9 @@ export function PanelSection({
     .filter(Boolean)
     .join(" ");
 
-  const bodyCls = ["min-w-0 p-card-inner", bodyClassName ?? ""].filter(Boolean).join(" ");
+  const bodyCls = ["min-w-0 flex-1 p-card-inner", bodyClassName ?? ""]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section className={rootCls} aria-label={ariaLabel ?? title}>

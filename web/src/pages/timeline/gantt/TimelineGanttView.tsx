@@ -68,8 +68,12 @@ export function TimelineGanttView({
     return computeRangeEnd(timeScale, rangeStart, ganttColumns.length);
   }, [overviewMode, overviewWindow, timeScale, rangeStart, ganttColumns.length]);
 
-  const visibleStart =
-    overviewMode && overviewWindow ? new Date(overviewWindow.startMs) : rangeStart;
+  const overviewStartMs =
+    overviewMode && overviewWindow ? overviewWindow.startMs : undefined;
+  const visibleStart = useMemo(
+    () => (overviewStartMs != null ? new Date(overviewStartMs) : rangeStart),
+    [overviewStartMs, rangeStart],
+  );
 
   const ganttRows = useMemo(
     () =>

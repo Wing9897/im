@@ -38,9 +38,9 @@ function WebhookExamplesPointer() {
       </div>
       <div className="mb-2.5 text-xs leading-normal text-text-muted">
         {t("webhook.aiGlobalPrefix")}{" "}
-        <a href="/settings/data" className="text-info no-underline">
+        <Link to="/settings/data" className="text-info no-underline">
           {t("webhook.aiGlobalLink")}
-        </a>{" "}
+        </Link>{" "}
         {t("webhook.aiGlobalSuffix")}
       </div>
       <Link

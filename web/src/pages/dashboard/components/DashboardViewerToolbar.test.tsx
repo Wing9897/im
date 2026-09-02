@@ -11,6 +11,10 @@ import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock());
 
+vi.mock("../../../context/SimpleModeContext", () => ({
+  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
+}));
+
 function renderToolbar(
   overrides: Partial<Parameters<typeof DashboardViewerToolbar>[0]> = {},
   entry = "/worksets",
@@ -145,6 +149,7 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
     expect(toolbar.textContent).toContain("目錄");
     expect(toolbar.textContent).toContain("流程圖");
+    expect(toolbar.textContent).toContain("任務");
   });
 
   it("hides workset search and create when hideSearch and hideCreateWorkset are set", () => {
@@ -185,7 +190,7 @@ describe("DashboardViewerToolbar", () => {
   });
 
   it("shows the global scheduling icon only on the tasks toolbar", () => {
-    const tasks = track({ isWorksetView: false, taskCount: 2 }, "/tasks");
+    const tasks = track({ isWorksetView: false, taskCount: 2 }, "/worksets?tab=tasks");
     const scheduling = tasks.querySelector(
       '[data-testid="open-global-scheduling"]',
     ) as HTMLButtonElement;

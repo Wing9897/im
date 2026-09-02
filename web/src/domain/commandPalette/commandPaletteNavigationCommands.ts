@@ -29,7 +29,7 @@ export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
     keywords: ["ops", "board", "canvas", "畫布", "画布", "ops board"],
   },
   { id: "monitor-wall", labelKey: "commandPalette.monitorWall", to: "/monitor?view=wall", icon: Radio, groupId: "navigation", keywords: ["wall", "看板"] },
-  { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
+  { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/worksets?tab=tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
   {
     id: "worksets",
     labelKey: "worksets",

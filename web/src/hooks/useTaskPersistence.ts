@@ -9,6 +9,7 @@ import {
 import { useToast } from "../context/ToastContext";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
 import i18n from "../i18n";
+import { worksetsCatalogPath } from "../domain/worksets/worksetRoutes";
 import { handleCommandError } from "../utils/errors";
 import { safeArray } from "../utils/nullGuards";
 import type { TaskFormState } from "./useTaskEditorState";
@@ -122,7 +123,7 @@ export function useTaskPersistence({
       // Refresh the task catalog so the list page shows the new/updated task immediately
       await refreshTasks().catch(() => {});
       if (!isMountedRef.current) return;
-      navigate("/tasks");
+      navigate(worksetsCatalogPath("tasks"));
     } catch (err) {
       if (!isMountedRef.current) return;
       const message = handleCommandError(err, showToast);

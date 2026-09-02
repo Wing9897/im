@@ -89,6 +89,7 @@ export function HttpSourceFields({
         <MenuSelect
           id={`${idPrefix}-method`}
           variant="field"
+          menuPortal
           value={form.method}
           options={[
             { value: "GET", label: "GET" },
@@ -110,6 +111,7 @@ export function HttpSourceFields({
         <MenuSelect
           id={`${idPrefix}-auth`}
           variant="field"
+          menuPortal
           value={form.authType}
           options={[
             { value: "none", label: t("httpFields.authNone") },
@@ -205,6 +207,7 @@ export function HttpSourceFields({
             <MenuSelect
               id={`${idPrefix}-body-type`}
               variant="field"
+              menuPortal
               value={form.bodyType}
               options={[
                 { value: "none", label: t("httpFields.bodyNone") },

@@ -144,7 +144,7 @@ export function SettingsIntegrationsA2aPanel() {
         <p className={`mt-xs mb-0 ${captionClass}`}>{t("apiDocs.liaison.body")}</p>
         <div className="mt-sm flex flex-wrap gap-x-md gap-y-xs">
           <IntegrationsAccountKeysLink testId="integrations-a2a-link-keys" />
-          <Link to="/ai/staff" className={settingsDocsLinkClass} data-testid="integrations-a2a-link-staff">
+          <Link to="/settings/ai/staff" className={settingsDocsLinkClass} data-testid="integrations-a2a-link-staff">
             {t("apiDocs.liaison.linkStaff")}
           </Link>
         </div>

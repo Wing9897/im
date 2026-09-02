@@ -4,7 +4,7 @@
 
 ## 怎么用
 
-侧栏 **助手**／命令面板：文字或浏览器 PTT；可选 TTS。纪录：`ui-prefs/assistant/sessions`。语音 `/ai/voice`；联网走 AI 供應商；默认工作集 `__general__`。花名册 `/ai/staff`；A2A／專案調和（Agent tick）见 [`a2a.md`](a2a.md)、[`agent.md`](agent.md)。需已配置 AI Provider；**Electron 不跑浏览器 STT**（用浏览器分頁；会话经 ui-prefs 共用）。
+侧栏 **助手**／命令面板：文字或浏览器 PTT；可选 TTS。纪录：`ui-prefs/assistant/sessions`。语音 `/settings/ai/voice`；联网走 AI 供應商；默认工作集 `__general__`。花名册 `/settings/ai/staff`；A2A／專案調和（Agent tick）见 [`a2a.md`](a2a.md)、[`agent.md`](agent.md)。需已配置 AI Provider；**Electron 不跑浏览器 STT**（用浏览器分頁；会话经 ui-prefs 共用）。
 
 ## 架构原则
 
@@ -37,7 +37,7 @@
 - 写入 `user_events` 的 `startTime`/`endTime` 会规范为 UTC `...Z`。
 - `worksetId`：可选；作为本轮 `calendar.create_event`／`calendar.create_recurring_series` 未显式传 `worksetId` 时的默认归属工作集。`__general__`／空／省略 → builtin 系统工作集「一般」；真实 id 须为已存在的 workset。可选 `taskId` 仅作溯源，不得传 `__general__`。
 - `sessionId`：可选；省略时服务端生成新 id，后续多轮可回传以延续会话标识（历史仍由客户端在 `messages` 中带上；本机纪录另存 SQLite `ui-prefs`／`GET/PUT /api/v1/ui-prefs/assistant/sessions`）。
-- `llmProfileId`：可选；完整的 `llm_profiles.id`。**有值**时本轮助手／runtime 用该档（须完整）；**省略／空**时硬绑全局助手槽位（`llm_global_slot_assistant`；未绑定 → 400）。A2A 使用独立的 `liaison` 槽位，不借用助手。会话 JSON／`ui-prefs` 仍可持久化同名字段作 per-session 覆盖，但**助手页 UI 不再提供设定档选择器**（已退役 `AssistantSessionLlmProfileSelect`；绑定请到 `/ai/provider` 全局槽位）。任务顾问走 `taskEditor` 全局槽位（见 `/ai/provider`）。
+- `llmProfileId`：可选；完整的 `llm_profiles.id`。**有值**时本轮助手／runtime 用该档（须完整）；**省略／空**时硬绑全局助手槽位（`llm_global_slot_assistant`；未绑定 → 400）。A2A 使用独立的 `liaison` 槽位，不借用助手。会话 JSON／`ui-prefs` 仍可持久化同名字段作 per-session 覆盖，但**助手页 UI 不再提供设定档选择器**（已退役 `AssistantSessionLlmProfileSelect`；绑定请到 `/settings/ai/provider` 全局槽位）。任务顾问走 `taskEditor` 全局槽位（见 `/settings/ai/provider`）。
 - `surface`／`currentTask`：仅任务创建／编辑页的全局助手请求可带 `surface: "task_editor"` 与当前表单草稿 `currentTask`（见下节）。其他路由与 A2A **不**传。
 - **送入模型的上下文压缩（仅助手聊天 Agent）**：服务端在调用 LLM 前按 `agent_history_max_messages`（默认 40）与 `agent_history_max_chars`（默认 48000）省略较旧对话轮次，并插入一行省略提示。UI／SQLite 会话纪录**不裁剪**。可在 **AI 员工介绍 → 助手 LLM** 调整。与「分析调度」无关，也不作用于任务顾问／排行榜分析员／情报任务分析员／后勤 Agent（`analysis_mode=agent` ticks）等其他员工路径。
 

@@ -8,10 +8,12 @@ export const settingsWorkspaceNavItems = [
   { to: "/settings/logs", labelKey: "tabs.logs" },
 ] as const satisfies readonly WorkspaceNavItem[];
 
+export const SETTINGS_AI_BASE = "/settings/ai";
+
 export const aiWorkspaceNavItems = [
-  { to: "/ai/provider", labelKey: "tabs.aiProvider" },
-  { to: "/ai/voice", labelKey: "tabs.voice" },
-  { to: "/ai/staff", labelKey: "tabs.aiStaff" },
+  { to: "/settings/ai/provider", labelKey: "tabs.aiProvider" },
+  { to: "/settings/ai/voice", labelKey: "tabs.voice" },
+  { to: "/settings/ai/staff", labelKey: "tabs.aiStaff" },
 ] as const satisfies readonly WorkspaceNavItem[];
 
 export const subscriptionsWorkspaceNavItems = [

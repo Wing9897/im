@@ -338,6 +338,7 @@ async def test_trigger_filters_by_task_id_condition(db, monkeypatch):
 async def test_trigger_filters_by_score_threshold(db, monkeypatch):
     await _seed_action(db, "act-high", trigger_conditions='{"score_threshold": 8}')
     await _seed_action(db, "act-low", trigger_conditions='{"score_threshold": 3}')
+    await _seed_action(db, "act-bad", trigger_conditions='{"score_threshold": "not-a-number"}')
     executor = ActionExecutor(db)
     calls = await _capture_executions(executor, monkeypatch)
 

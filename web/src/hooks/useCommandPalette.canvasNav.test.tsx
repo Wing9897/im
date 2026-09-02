@@ -8,6 +8,7 @@ import {
   MonitorModeProvider,
   useMonitorMode,
 } from "../context/MonitorModeContext";
+import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { CommandPaletteProvider, useCommandPalette } from "./useCommandPalette";
 import { AssistantQuickProvider } from "./useAssistantQuick";
 import type { CommandPaletteItem } from "../domain/commandPalette/commandPaletteCommands";
@@ -84,20 +85,24 @@ describe("command palette canvas navigation", () => {
           MemoryRouter,
           { initialEntries: ["/monitor"] },
           createElement(
-            MonitorModeProvider,
+            SimpleModeProvider,
             null,
             createElement(
-              AssistantQuickProvider,
+              MonitorModeProvider,
               null,
               createElement(
-                CommandPaletteProvider,
+                AssistantQuickProvider,
                 null,
-                createElement(LocationProbe, {
-                  onPath: (path) => {
-                    lastPath = path;
-                  },
-                }),
-                createElement(PaletteHarness),
+                createElement(
+                  CommandPaletteProvider,
+                  null,
+                  createElement(LocationProbe, {
+                    onPath: (path) => {
+                      lastPath = path;
+                    },
+                  }),
+                  createElement(PaletteHarness),
+                ),
               ),
             ),
           ),

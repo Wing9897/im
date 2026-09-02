@@ -5,8 +5,7 @@ import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { defaultSettingsSnapshot } from "../test/settingsSnapshot";
 import { SystemSettingsProvider } from "./SystemSettingsContext";
 import { SimpleModeProvider } from "./SimpleModeContext";
-import { AiWorkspacePage } from "../pages/ai/AiWorkspacePage";
-import { SettingsShellPage } from "../pages/settings/SettingsShared";
+import { SettingsAiShellPage, SettingsShellPage } from "../pages/settings/SettingsShared";
 import { SettingsAiProviderPage } from "../pages/settings/ai/SettingsAiProviderPage";
 import { SettingsThemePage } from "../pages/settings/SettingsThemePage";
 import { SettingsDataPage } from "../pages/settings/SettingsDataPage";
@@ -49,7 +48,7 @@ function SharedSettingsHarness() {
     ),
     createElement(
       "button",
-      { type: "button", onClick: () => navigate("/ai/provider") },
+      { type: "button", onClick: () => navigate("/settings/ai/provider") },
       "switch-ai",
     ),
     createElement(
@@ -57,7 +56,7 @@ function SharedSettingsHarness() {
       null,
       createElement(
         Route,
-        { path: "/ai", element: createElement(AiWorkspacePage) },
+        { path: "/settings/ai", element: createElement(SettingsAiShellPage) },
         createElement(Route, { path: "provider", element: createElement(SettingsAiProviderPage) }),
       ),
       createElement(
@@ -79,7 +78,7 @@ function renderSharedSettingsApp() {
       null,
       createElement(
         MemoryRouter,
-        { initialEntries: ["/ai/provider"] },
+        { initialEntries: ["/settings/ai/provider"] },
         createElement(SharedSettingsHarness),
       ),
     ),
@@ -107,7 +106,7 @@ describe("SystemSettingsProvider shared navigation", () => {
     container.remove();
   });
 
-  it("fetches settings only once when navigating between /ai and /settings", async () => {
+  it("fetches settings only once when navigating between /settings/ai and /settings", async () => {
     await act(async () => {
       root = createRoot(container);
       root.render(renderSharedSettingsApp());
@@ -129,11 +128,10 @@ describe("SystemSettingsProvider shared navigation", () => {
     expect(mockFetchSystemSettings).toHaveBeenCalledTimes(1);
   });
 
-  // NOTE: the /ai/provider page now edits LLM profiles via a dialog with direct
-  // API saves and no longer feeds the shared system-settings draft, so the
-  // reverse-direction (/ai → /settings) draft test was retired. Draft
-  // preservation across the boundary is covered below (/settings/data → /ai).
-  it("preserves unsaved retention draft when navigating from /settings/data to /ai", async () => {
+  // Provider page edits LLM profiles via a dialog with direct API saves and no
+  // longer feeds the shared system-settings draft. Draft preservation across
+  // the AI/system-settings boundary is covered below (/settings/data → /settings/ai).
+  it("preserves unsaved retention draft when navigating from /settings/data to /settings/ai", async () => {
     await act(async () => {
       root = createRoot(container);
       root.render(

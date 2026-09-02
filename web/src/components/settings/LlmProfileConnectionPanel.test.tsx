@@ -85,6 +85,25 @@ describe("LlmProfileConnectionPanel", () => {
       expect(container.querySelector('[data-testid="openai-json-mode"]')).not.toBeNull();
     });
 
+    it("portals JSON 輸出模式 list to document.body so later sections cannot clip it", () => {
+      renderPanel({ llmProvider: "openai_compatible" });
+      const trigger = container.querySelector<HTMLButtonElement>(
+        '[data-testid="openai-json-mode-value"]',
+      );
+      expect(trigger).toBeTruthy();
+      act(() => {
+        trigger!.click();
+      });
+
+      const list = document.body.querySelector(
+        '[data-testid="openai-json-mode-list"]',
+      ) as HTMLElement | null;
+      expect(list).toBeTruthy();
+      expect(container.querySelector('[data-testid="openai-json-mode-list"]')).toBeNull();
+      expect(list?.parentElement).toBe(document.body);
+      expect(list?.style.zIndex).toBe("3000");
+    });
+
     it("does not render JSON 輸出模式 when provider is not openai_compatible", () => {
       renderPanel({ llmProvider: "ollama" });
       expect(container.textContent).not.toContain("JSON 輸出模式");

@@ -21,7 +21,7 @@ type LlmGlobalSlotsPanelProps = {
 
 const UNBOUND = "";
 
-/** Global slots share avatar ids with `/ai/staff` (liaison is avatar-only). */
+/** Global slots share avatar ids with `/settings/ai/staff` (liaison is avatar-only). */
 const SLOT_AVATAR_ID: Record<LlmGlobalSlotId, AiStaffAvatarId> = {
   assistant: "assistant",
   liaison: "liaison",

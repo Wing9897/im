@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type MutableRefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertBanner, Button, SelectField, SettingsRow, TextField } from "../../components/ui";
+import { AlertBanner, Button, MenuSelect, SettingsRow, TextField } from "../../components/ui";
 import { formHelpClass, sectionTitleClass, cardBodyClass } from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
 import {
@@ -220,18 +220,22 @@ export function CalendarSharePublishForm({
           htmlFor="calendar-share-public"
           help={t("published.form.publicHelp")}
         >
-          <SelectField
+          <MenuSelect
             id="calendar-share-public"
+            variant="field"
+            menuPortal
             data-testid="calendar-share-public"
             className="max-w-[220px]"
             value={publicVisibility}
             disabled={locked || busy}
-            onChange={(event) => setPublicVisibility(event.target.value as CalendarShareVisibility)}
-          >
-            <option value="private_group">{t("visibility.private_group")}</option>
-            <option value="public">{t("visibility.public")}</option>
-            <option value="public_busy">{t("visibility.public_busy")}</option>
-          </SelectField>
+            options={[
+              { value: "private_group", label: t("visibility.private_group") },
+              { value: "public", label: t("visibility.public") },
+              { value: "public_busy", label: t("visibility.public_busy") },
+            ]}
+            onChange={(value) => setPublicVisibility(value as CalendarShareVisibility)}
+            aria-label={t("published.form.publicLabel")}
+          />
         </SettingsRow>
 
         <div
@@ -265,20 +269,24 @@ export function CalendarSharePublishForm({
                 }}
                 data-testid={`calendar-share-grant-handle-${index}`}
               />
-              <SelectField
+              <MenuSelect
+                variant="field"
+                menuPortal
                 className="max-w-[160px]"
                 value={row.visibility}
                 disabled={locked || busy}
-                onChange={(event) => {
-                  const visibility = event.target.value as CalendarShareGrantVisibility;
+                options={[
+                  { value: "busy", label: t("published.form.grantVisibilityBusy") },
+                  { value: "details", label: t("published.form.grantVisibilityDetails") },
+                ]}
+                onChange={(value) => {
+                  const visibility = value as CalendarShareGrantVisibility;
                   setGrants((prev) =>
                     prev.map((item) => (item.key === row.key ? { ...item, visibility } : item)),
                   );
                 }}
-              >
-                <option value="busy">{t("published.form.grantVisibilityBusy")}</option>
-                <option value="details">{t("published.form.grantVisibilityDetails")}</option>
-              </SelectField>
+                data-testid={`calendar-share-grant-visibility-${index}`}
+              />
               <Button
                 type="button"
                 variant="ghost"

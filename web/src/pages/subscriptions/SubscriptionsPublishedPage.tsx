@@ -187,6 +187,7 @@ export function SubscriptionsPublishedPage() {
             <>
               <MenuSelect
                 variant="toolbar"
+                menuPortal
                 value={String(autoSyncPresetFromRow(autoSync, autoSyncIntervalSeconds, autoSyncIntervalFloorSeconds))}
                 options={AUTO_SYNC_PRESET_SECONDS.map((value) => ({
                   value: String(value),

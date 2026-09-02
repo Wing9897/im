@@ -51,6 +51,7 @@ export function ActionTriggerSection({
           <MenuSelect
             id="action-task-id"
             variant="field"
+            menuPortal
             value={form.taskId}
             options={taskOptions}
             onChange={(next) => onChange("taskId", next)}

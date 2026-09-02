@@ -3,7 +3,6 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AppSidebar } from "../components/AppSidebar";
-import { getTasksPageLabel } from "../domain/tasks/taskPageCopy";
 import { SIDEBAR_COLLAPSED_KEY } from "../hooks/useSidebarCollapsed";
 import {
   AnalysisStatusProvider,
@@ -89,6 +88,10 @@ describe("App shell navigation", () => {
                         element: createElement(StubPage, { label: "monitor" }),
                       }),
                       createElement(Route, {
+                        path: "/worksets",
+                        element: createElement(StubPage, { label: "worksets" }),
+                      }),
+                      createElement(Route, {
                         path: "/tasks/*",
                         element: createElement(StubPage, { label: "tasks" }),
                       }),
@@ -101,7 +104,15 @@ describe("App shell navigation", () => {
                         element: createElement(StubPage, { label: "sources" }),
                       }),
                       createElement(Route, {
-                        path: "/ai/*",
+                        path: "/settings/ai",
+                        element: createElement(StubPage, { label: "ai" }),
+                      }),
+                      createElement(Route, {
+                        path: "/settings/ai/provider",
+                        element: createElement(StubPage, { label: "ai" }),
+                      }),
+                      createElement(Route, {
+                        path: "/settings/ai/*",
                         element: createElement(StubPage, { label: "ai" }),
                       }),
                     ),
@@ -132,9 +143,9 @@ describe("App shell navigation", () => {
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/monitor");
     expect(container.querySelector("[data-testid='stub-page-monitor']")).toBeTruthy();
 
-    clickSidebarLink(getTasksPageLabel());
-    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/tasks");
-    expect(container.querySelector("[data-testid='stub-page-tasks']")).toBeTruthy();
+    clickSidebarLink("工作集");
+    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/worksets");
+    expect(container.querySelector("[data-testid='stub-page-worksets']")).toBeTruthy();
 
     clickSidebarLink("情報事件");
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe(
@@ -147,7 +158,9 @@ describe("App shell navigation", () => {
     expect(container.querySelector("[data-testid='stub-page-sources']")).toBeTruthy();
 
     clickSidebarLink("AI 設定");
-    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/ai/provider");
+    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe(
+      "/settings/ai/provider",
+    );
     expect(container.querySelector("[data-testid='stub-page-ai']")).toBeTruthy();
   });
 

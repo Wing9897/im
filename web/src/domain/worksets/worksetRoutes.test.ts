@@ -28,6 +28,7 @@ describe("worksetRoutes", () => {
     expect(worksetsCatalogPath()).toBe("/worksets");
     expect(worksetsCatalogPath("catalog")).toBe("/worksets");
     expect(worksetsCatalogPath("graph")).toBe("/worksets?tab=graph");
+    expect(worksetsCatalogPath("tasks")).toBe("/worksets?tab=tasks");
     expect(worksetsCatalogPath("graph", "ws-1")).toBe("/worksets?tab=graph&worksetId=ws-1");
     expect(WORKSET_GRAPH_FILTER_PARAM).toBe("worksetId");
     expect(parseWorksetGraphFilter(null)).toBeNull();
@@ -54,10 +55,12 @@ describe("worksetRoutes", () => {
     expect(DEFAULT_WORKSET_CATALOG_TAB).toBe("catalog");
     expect(isWorksetCatalogTab("catalog")).toBe(true);
     expect(isWorksetCatalogTab("graph")).toBe(true);
+    expect(isWorksetCatalogTab("tasks")).toBe(true);
     expect(isWorksetCatalogTab("flow")).toBe(false);
     expect(parseWorksetCatalogTab(null)).toBe("catalog");
     expect(parseWorksetCatalogTab("catalog")).toBe("catalog");
     expect(parseWorksetCatalogTab("graph")).toBe("graph");
+    expect(parseWorksetCatalogTab("tasks")).toBe("tasks");
     expect(parseWorksetCatalogTab("flow")).toBe("graph");
     expect(parseWorksetCatalogTab("contents")).toBe("catalog");
   });

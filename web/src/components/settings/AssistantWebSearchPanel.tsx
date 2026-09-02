@@ -106,6 +106,7 @@ export function AssistantWebSearchPanel({
         <MenuSelect
           id="web-search-mode"
           variant="field"
+          menuPortal
           value={uiMode}
           options={[
             { value: "off", label: t("webSearch.modeOff") },
@@ -132,6 +133,7 @@ export function AssistantWebSearchPanel({
           <MenuSelect
             id="web-search-provider"
             variant="field"
+            menuPortal
             value={toolProvider}
             options={WEB_SEARCH_TOOL_PROVIDERS.map((value) => ({
               value,

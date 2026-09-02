@@ -91,7 +91,7 @@ export function WorksetCardCover({ cover, name, onPickFile, onClear, disabled = 
 
   return (
     <div
-      className="relative w-full shrink-0 overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)]"
+      className="relative h-28 w-full min-w-0 shrink-0 overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)]"
       data-testid="workset-card-cover"
       data-processing={processing ? "true" : undefined}
       onClick={(event) => event.stopPropagation()}
@@ -102,8 +102,7 @@ export function WorksetCardCover({ cover, name, onPickFile, onClear, disabled = 
         type="button"
         disabled={interactionDisabled}
         className={[
-          "group relative block w-full border-0 bg-transparent p-0",
-          "aspect-[16/9] max-h-28",
+          "group relative block h-full w-full min-w-0 border-0 bg-transparent p-0",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           "disabled:cursor-not-allowed disabled:opacity-60",
         ].join(" ")}
@@ -121,7 +120,7 @@ export function WorksetCardCover({ cover, name, onPickFile, onClear, disabled = 
         <span
           className={[
             "pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center gap-xs",
-            "bg-black/50 py-1.5 text-[11px] font-medium text-white",
+            "whitespace-nowrap bg-black/50 py-1.5 text-[11px] font-medium text-white",
             "transition-colors group-hover:bg-black/60 group-focus-visible:bg-black/60",
           ].join(" ")}
           data-testid="workset-card-cover-upload-label"

@@ -78,7 +78,7 @@ Still in force under schema floor **6** / current stamp **6** / `SCHEMA_SEMVER` 
 | Calendar `kind`／`direction` CHECK from domain SoT | Same pattern as origin／timeline `source` |
 | No `llm_profiles.is_default` column; no make-default API | Resolve via **hard-bound global slots** only |
 | No `assistant` in `llm_staff_instances` | Staff table = task modes (`leaderboard`／`intel_event`／`agent`) only |
-| Global slots hard-bind (assistant／liaison／taskEditor) | Unbound slot → hard-fail (assistant same as liaison); UI on `/ai/provider` + `GET/PUT /api/v1/llm/global-slots` |
+| Global slots hard-bind (assistant／liaison／taskEditor) | Unbound slot → hard-fail (assistant same as liaison); UI on `/settings/ai/provider` + `GET/PUT /api/v1/llm/global-slots` |
 | Fresh DDL seeds **zero** profiles | Tests use ephemeral profile ids; production never invents `__default__` |
 
 **Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns); Viewer `/viewer/*` as read-only diagnostics (Dashboard stays the operable surface — not duplicate debt).
@@ -225,7 +225,7 @@ Theme glass shims retired with the photo-BG surface pass: do not reintroduce `--
 
 Desktop `connection.json` `allowLanAccess` and Settings → General 「允許區域網路存取」toggle were removed — bind is always `0.0.0.0` (`DEFAULT_BIND_HOST` / Desktop sidecar env). Legacy key is ignored on read and not rewritten. Auth still required; TLS only for public internet exposure. Do not reintroduce a user-facing LAN bind toggle (`general.lanAccess*` i18n／`allow-lan-access-toggle`／`setDesktopAllowLanAccess` stay banned).
 
-Assistant page per-session 「LLM 設定檔」block (`AssistantSessionLlmProfileSelect` + `assistant.llmProfile.*` keys) was removed — binding is global assistant slot on `/ai/provider` only. Wire／`ui-prefs` may still carry optional `llmProfileId`; do not restore the picker UI.
+Assistant page per-session 「LLM 設定檔」block (`AssistantSessionLlmProfileSelect` + `assistant.llmProfile.*` keys) was removed — binding is global assistant slot on `/settings/ai/provider` only. Wire／`ui-prefs` may still carry optional `llmProfileId`; do not restore the picker UI.
 
 Items category hub and finance chrome omit redundant top-bar titles 「物品」／「物品財務」(`items:pageTitle`／`items:finance.pageTitle` forbidden). Nav already labels the page; keep titles only on entry／form chrome when needed.
 

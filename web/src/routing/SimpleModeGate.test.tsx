@@ -69,6 +69,10 @@ describe("SimpleModeGate", () => {
                 element: createElement(NavigationTypeProbe),
               }),
               createElement(Route, {
+                path: "/worksets",
+                element: createElement("div", { "data-testid": "worksets" }, "worksets"),
+              }),
+              createElement(Route, {
                 path: "*",
                 element: createElement("div", { "data-testid": "gated" }, "gated"),
               }),
@@ -110,18 +114,25 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
-    it("redirects the Tasks page", async () => {
-      await renderAt("/tasks");
-
-      expect(home()).toBeTruthy();
-      expect(gated()).toBeNull();
-    });
-
     it("redirects task-only subroutes", async () => {
       await renderAt("/tasks/abc/edit");
 
       expect(home()).toBeTruthy();
       expect(gated()).toBeNull();
+    });
+
+    it("does not bounce exact /tasks — AppRoutes redirects to worksets", async () => {
+      await renderAt("/tasks");
+
+      expect(gated()).toBeTruthy();
+      expect(home()).toBeNull();
+    });
+
+    it("strips the workset tasks tab onto /worksets", async () => {
+      await renderAt("/worksets?tab=tasks");
+
+      expect(container.querySelector('[data-testid="worksets"]')).toBeTruthy();
+      expect(home()).toBeNull();
     });
 
     it("keeps schedule reachable", async () => {
@@ -154,9 +165,7 @@ describe("SimpleModeGate", () => {
     });
 
     it("keeps sibling AI tabs reachable", async () => {
-      // The AI-tab rule must not degrade into a bare "/ai" prefix match, or
-      // simple mode would lose the whole AI workspace.
-      await renderAt("/ai/provider");
+      await renderAt("/settings/ai/provider");
 
       expect(gated()).toBeTruthy();
       expect(home()).toBeNull();

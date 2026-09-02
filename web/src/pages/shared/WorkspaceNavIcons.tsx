@@ -16,7 +16,7 @@ export const workspaceTabIcons: Record<string, LucideIcon> = {
   "/settings/integrations": Code2,
   "/settings/logs": ScrollText,
   "/assistant": MessageSquare,
-  "/ai/provider": Bot,
-  "/ai/voice": Mic,
-  "/ai/staff": Users,
+  "/settings/ai/provider": Bot,
+  "/settings/ai/voice": Mic,
+  "/settings/ai/staff": Users,
 };
