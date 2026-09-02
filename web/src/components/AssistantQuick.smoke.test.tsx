@@ -281,6 +281,30 @@ describe("AssistantQuick smoke", () => {
     expect(document.querySelector('[data-testid="assistant-caption-history"]')).toBeNull();
   });
 
+  it("keeps flash long markdown on the overlay bubble, not persist history", () => {
+    const longReply = Array.from({ length: 16 }, (_, i) => `## 段 ${i + 1}\n\n長回覆內容 ${i + 1}\n`).join(
+      "\n",
+    );
+    renderQuick();
+    openComposerViaChrome();
+    chatMock.sending = true;
+    renderQuick();
+    chatMock.sending = false;
+    chatMock.messages = [
+      { id: "u1", role: "user", content: "ask long" },
+      { id: "a1", role: "assistant", content: longReply },
+    ];
+    renderQuick();
+
+    const stack = document.querySelector(".im-assistant-direct__stack");
+    const bubble = document.querySelector('[data-testid="assistant-direct-msg"]');
+    expect(document.querySelector('[data-testid="assistant-caption-history"]')).toBeNull();
+    expect(stack?.classList.contains("pointer-events-none")).toBe(true);
+    expect(bubble?.classList.contains("im-assistant-direct__bubble")).toBe(true);
+    expect(bubble?.classList.contains("im-auto-scrollbar")).toBe(true);
+    expect(bubble?.querySelectorAll("h2").length).toBe(16);
+  });
+
   it("does not arm Space PTT or ready hint when STT is unavailable", () => {
     chatMock.sttAvailable = false;
     renderQuick();
