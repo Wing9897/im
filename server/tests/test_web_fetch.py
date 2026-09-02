@@ -180,9 +180,7 @@ async def test_fetch_public_page_maps_oversized_header_error() -> None:
             return None
 
         def get(self, url, headers=None, allow_redirects=None):
-            raise aiohttp.ClientPayloadError(
-                "Got more than 8190 bytes (8789) when reading Header value is too long."
-            )
+            raise aiohttp.ClientPayloadError("Got more than 8190 bytes (8789) when reading Header value is too long.")
 
     with (
         patch("server.web_search.page_fetch.aiohttp.ClientSession", _Session),
