@@ -13,6 +13,7 @@ Semantics:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from server.db.database import Database
@@ -47,6 +48,36 @@ _TIME_RANGE_OFFSETS: dict[str, str] = {
     "7d": "-7 days",
     "30d": "-30 days",
 }
+
+
+def time_range_lower_bound(
+    time_range: Any, *, now: datetime | None = None
+) -> datetime | None:
+    """UTC lower bound for a bounded time-range token.
+
+    Mirrors ``time_range_condition`` (SQLite ``now`` / ``start of day``) in
+    Python so callers that filter with ISO ``startDate`` need not re-encode
+    the offset map. ``all`` / unknown → ``None``.
+    """
+    if not isinstance(time_range, str):
+        return None
+    moment = now or datetime.now(UTC)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    else:
+        moment = moment.astimezone(UTC)
+    if time_range == "today":
+        return moment.replace(hour=0, minute=0, second=0, microsecond=0)
+    offset = _TIME_RANGE_OFFSETS.get(time_range)
+    if offset is None:
+        return None
+    amount_str, unit = offset.split()
+    amount = int(amount_str)
+    if unit == "hours":
+        return moment + timedelta(hours=amount)
+    if unit == "days":
+        return moment + timedelta(days=amount)
+    return None
 
 
 def time_range_condition(time_range: Any, column: str = "m.timestamp") -> tuple[str, list[Any]]:

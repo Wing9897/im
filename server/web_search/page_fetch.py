@@ -24,6 +24,9 @@ MAX_CHARS = 12_000
 MAX_DOWNLOAD_BYTES = 512 * 1024
 REQUEST_TIMEOUT_S = 12
 MAX_REDIRECTS = 3
+# Yahoo Finance (and similar) send Set-Cookie / CSP headers longer than aiohttp's 8190 default.
+MAX_HEADER_LINE_SIZE = 32768
+MAX_HEADER_FIELD_SIZE = 32768
 OMITTED_MARKER = "\n\n[omitted: remaining page text truncated]"
 
 _HTML_TYPES = frozenset({"text/html", "application/xhtml+xml"})
@@ -210,6 +213,13 @@ def _error(message: str, *, url: str = "") -> dict[str, Any]:
     return payload
 
 
+def _page_fetch_failure_message(exc: BaseException) -> str:
+    text = str(exc).lower()
+    if "header value is too long" in text or "header is too long" in text:
+        return "page fetch failed: response headers too large"
+    return f"page fetch failed: {exc}"
+
+
 async def fetch_public_page(url: str) -> dict[str, Any]:
     """GET a public HTTP(S) HTML page and return readable text (capped).
 
@@ -222,7 +232,11 @@ async def fetch_public_page(url: str) -> dict[str, Any]:
     timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_S)
     current = target
     try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(
+            timeout=timeout,
+            max_line_size=MAX_HEADER_LINE_SIZE,
+            max_field_size=MAX_HEADER_FIELD_SIZE,
+        ) as session:
             for _hop in range(MAX_REDIRECTS + 1):
                 await validate_outbound_url(current)
                 async with session.get(
@@ -279,7 +293,7 @@ async def fetch_public_page(url: str) -> dict[str, Any]:
         return _error("page fetch timed out", url=target)
     except (aiohttp.ClientError, OSError, ValueError) as exc:
         logger.warning("Page fetch failed: %s", exc)
-        return _error(f"page fetch failed: {exc}", url=target)
+        return _error(_page_fetch_failure_message(exc), url=target)
 
 
 async def tool_fetch_page(

@@ -37,7 +37,7 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 
 本機搜尋時間窗（messages／intelligence）：
 - 用戶說「今天／今日」→ messages.search 必須傳 timeRange=today；
-  intelligence.search_events 必須傳當日 startDate／endDate（依下方「當前時間」推算）。
+  intelligence.search_events 必須傳 timeRange=today（或當日 startDate／endDate）。
 - 用戶未指定時間 → 可省略時間參數（服務端預設往前 7 天含今天）；禁止把 7 天窗或全庫結果說成「今日」。
 - 用戶要更久／全部歷史 → messages 傳 timeRange=all；
   intelligence 傳 allTime=true（或 timeRange=all），並在回答標明範圍。
@@ -94,7 +94,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 - web.fetch 僅在搜尋摘要不夠時讀取 1–2 個具體頁面正文；不要整批抓取搜尋結果。
 
 本機搜尋時間窗（messages／intelligence）：
-- 「今天／今日」→ messages.search 傳 timeRange=today；intelligence 傳當日 startDate／endDate。
+- 「今天／今日」→ messages.search 傳 timeRange=today；intelligence 傳 timeRange=today（或當日 startDate／endDate）。
 - 未指定時間 → 可省略（預設往前 7 天含今天）；禁止把預設窗說成「今日」。
 - 要更久／全部 → messages 傳 timeRange=all；intelligence 傳 allTime=true。
 

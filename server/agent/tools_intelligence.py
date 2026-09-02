@@ -11,9 +11,11 @@ from server.agent.tool_limits import (
     INTELLIGENCE_DEFAULT_RESULT_LIMIT,
     INTELLIGENCE_RESULT_HARD_CAP,
 )
+from server.analyzer.incremental import time_range_lower_bound
 from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.calendar.timeline_importance import attach_important_flag
 from server.db.database import Database
+from server.domain.message_time_ranges import BOUNDED_MESSAGE_TIME_RANGES
 from server.domain.workset_scope import allowed_workset_ids_from_args
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
@@ -36,7 +38,35 @@ def _wants_all_time(args: dict[str, Any]) -> bool:
 
 
 def _default_start_date() -> str:
-    return to_iso_z(datetime.now(UTC) - timedelta(days=DEFAULT_LOOKBACK_DAYS))
+    bound = time_range_lower_bound("7d")
+    if bound is None:
+        return to_iso_z(datetime.now(UTC) - timedelta(days=DEFAULT_LOOKBACK_DAYS))
+    return to_iso_z(bound)
+
+
+def _resolve_time_range(raw: Any) -> tuple[str | None, str | None]:
+    """Return (reported token, query token or None for no filter).
+
+    Omitted → ``(None, None)`` so the caller can apply the last-7-days default
+    unless ``allTime`` is set. Explicit ``all`` → no time filter. Bounded
+    tokens (``today``, ``7d``, ``12h``, …) pass through for ISO coercion.
+    """
+    if raw is None or raw == "":
+        return None, None
+    token = str(raw).strip()
+    if not token:
+        return None, None
+    canonical = token.lower()
+    if canonical == "all":
+        return "all", None
+    if canonical not in BOUNDED_MESSAGE_TIME_RANGES:
+        raise ValueError("timeRange must be 'all', 'today', or a supported offset")
+    return canonical, canonical
+
+
+def _coerce_start_date(token: str) -> str | None:
+    bound = time_range_lower_bound(token)
+    return to_iso_z(bound) if bound is not None else None
 
 
 def _compact_event(item: dict[str, Any]) -> dict[str, Any]:
@@ -68,13 +98,10 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
             "items": [],
             "count": 0,
         }
-    time_range = as_optional_str(arg(args, "timeRange", "time_range"))
-    if time_range and time_range.lower() != "all":
-        return {
-            "error": "timeRange only accepts 'all'; use startDate/endDate for bounded windows",
-            "items": [],
-            "count": 0,
-        }
+    try:
+        reported_range, query_range = _resolve_time_range(arg(args, "timeRange", "time_range"))
+    except ValueError as exc:
+        return {"error": str(exc), "items": [], "count": 0}
 
     limit = min(
         max(as_int(args.get("limit"), INTELLIGENCE_DEFAULT_RESULT_LIMIT), 1),
@@ -84,9 +111,16 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
     task_id = as_optional_str(arg(args, "taskId", "task_id"))
     start_date = as_optional_str(arg(args, "startDate", "start_date"))
     end_date = as_optional_str(arg(args, "endDate", "end_date"))
-    all_time = _wants_all_time(args)
-    if start_date is None and end_date is None and not all_time:
-        start_date = _default_start_date()
+    all_time = _wants_all_time(args) or reported_range == "all"
+    has_explicit_dates = start_date is not None or end_date is not None
+    if not has_explicit_dates:
+        if all_time:
+            start_date = None
+            end_date = None
+        elif query_range:
+            start_date = _coerce_start_date(query_range)
+        else:
+            start_date = _default_start_date()
     has_time = as_optional_bool(arg(args, "hasTime", "has_time"))
     search_location = bool(as_optional_bool(arg(args, "searchLocation", "search_location")) or False)
     sort_raw = (as_optional_str(args.get("sort")) or "analyzed_at").strip().lower()
@@ -142,8 +176,11 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "timeline but still listed here. Omit query to list recent events. "
             "When startDate/endDate are both omitted, applies a last-7-days lower bound "
             "(by sort field; default analyzed_at). Pass allTime=true or timeRange=all "
-            "to skip that default window. When the user asks about today, pass that "
-            "day's startDate/endDate. Do not invent events. Limit always applies "
+            "to skip that default window. Bounded timeRange tokens (today, 7d, 12h, "
+            "30d, …) coerce to startDate when dates are omitted; explicit "
+            "startDate/endDate win. When the user asks about today, pass "
+            "timeRange=today (or that day's startDate/endDate). Do not invent events. "
+            "Limit always applies "
             f"(default {INTELLIGENCE_DEFAULT_RESULT_LIMIT}, "
             f"max {INTELLIGENCE_RESULT_HARD_CAP})."
         ),
@@ -178,8 +215,12 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "timeRange": {
                     "type": "string",
-                    "enum": ["all"],
-                    "description": "Same effect as allTime=true when set to all",
+                    "description": (
+                        "Time window token: today, 1d, 7d, 30d, 12h, …. "
+                        "Coerced to startDate when startDate/endDate are omitted. "
+                        "Use all (or allTime=true) for no time filter. "
+                        "Explicit startDate/endDate win over this token."
+                    ),
                 },
                 "hasTime": {
                     "type": "boolean",

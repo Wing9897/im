@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
+
 from server.agent.tools_registry import build_tool_schemas, execute_tool
 from server.outbound import OutboundUrlError
 from server.web_search.page_fetch import (
     MAX_CHARS,
     MAX_FETCHES_PER_TURN,
+    MAX_HEADER_FIELD_SIZE,
+    MAX_HEADER_LINE_SIZE,
     OMITTED_MARKER,
     apply_text_cap,
     extract_readable_text,
@@ -118,6 +122,77 @@ async def test_fetch_public_page_extracts_mocked_html() -> None:
     assert result["title"] == "News"
     assert "42 tonnes" in result["text"]
     assert result["truncated"] is False
+
+
+async def test_fetch_public_page_raises_header_size_limits() -> None:
+    captured: dict = {}
+
+    class _Resp:
+        status = 200
+        url = "https://finance.yahoo.com/quote/AAPL"
+        headers = {"Content-Type": "text/html"}
+        content = type(
+            "C",
+            (),
+            {"read": staticmethod(AsyncMock(return_value=b"<html><body><p>Yahoo quote snapshot.</p></body></html>"))},
+        )()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            captured.update(kwargs)
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def get(self, url, headers=None, allow_redirects=None):
+            return _Resp()
+
+    with (
+        patch("server.web_search.page_fetch.aiohttp.ClientSession", _Session),
+        patch("server.web_search.page_fetch.validate_outbound_url", AsyncMock()),
+    ):
+        result = await fetch_public_page("https://finance.yahoo.com/quote/AAPL")
+
+    assert "error" not in result
+    assert captured["timeout"] is not None
+    assert captured["max_line_size"] == MAX_HEADER_LINE_SIZE == 32768
+    assert captured["max_field_size"] == MAX_HEADER_FIELD_SIZE == 32768
+
+
+async def test_fetch_public_page_maps_oversized_header_error() -> None:
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def get(self, url, headers=None, allow_redirects=None):
+            raise aiohttp.ClientPayloadError(
+                "Got more than 8190 bytes (8789) when reading Header value is too long."
+            )
+
+    with (
+        patch("server.web_search.page_fetch.aiohttp.ClientSession", _Session),
+        patch("server.web_search.page_fetch.validate_outbound_url", AsyncMock()),
+    ):
+        result = await fetch_public_page("https://finance.yahoo.com/quote/AAPL")
+
+    assert result["error"] == "page fetch failed: response headers too large"
+    assert "8789" not in result["error"]
+    assert result["text"] == ""
 
 
 async def test_fetch_public_page_rejects_non_html() -> None:

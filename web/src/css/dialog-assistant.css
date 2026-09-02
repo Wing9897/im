@@ -74,8 +74,10 @@
   backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
   -webkit-backdrop-filter: blur(var(--surface-blur-panel)) saturate(1.15);
   max-height: min(22vh, 180px);
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  pointer-events: auto;
   transition: opacity 0.4s ease;
   text-align: left;
 }
@@ -193,7 +195,8 @@
 }
 
 .im-assistant-direct:has(.im-assistant-direct__composer) .im-assistant-direct__bubble {
-  max-height: min(14vh, 120px);
+  max-height: min(38vh, calc(100dvh - 280px));
+  min-height: 0;
 }
 
 .im-assistant-direct__composer {

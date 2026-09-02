@@ -440,11 +440,15 @@ describe("AssistantDirectBubbles", () => {
     expect(rootEl?.classList.contains("im-assistant-direct")).toBe(true);
   });
 
-  it("pins overlay near the window bottom with panel contrast tokens", () => {
-    const css = readFileSync(
+  function overlayCss(): string {
+    return readFileSync(
       resolve(dirname(fileURLToPath(import.meta.url)), "../../css/dialog-assistant.css"),
       "utf8",
     );
+  }
+
+  it("pins overlay near the window bottom with panel contrast tokens", () => {
+    const css = overlayCss();
     expect(css).toMatch(
       /\.im-assistant-direct\s*\{[^}]*bottom:\s*calc\(20px \+ env\(safe-area-inset-bottom/s,
     );
@@ -464,6 +468,51 @@ describe("AssistantDirectBubbles", () => {
     expect(css).toMatch(
       /\.im-assistant-direct__composer-history-role\s*\{[^}]*color:\s*var\(--text-primary\)/s,
     );
+  });
+
+  it("caps flash bubbles taller when the composer is open and leaves persist history unchanged", () => {
+    const css = overlayCss();
+    expect(css).toMatch(
+      /\.im-assistant-direct__bubble\s*\{[^}]*max-height:\s*min\(22vh,\s*180px\)[^}]*pointer-events:\s*auto/s,
+    );
+    expect(css).toMatch(
+      /\.im-assistant-direct:has\(\.im-assistant-direct__composer\)\s+\.im-assistant-direct__bubble\s*\{[^}]*max-height:\s*min\(38vh,\s*calc\(100dvh - 280px\)\)[^}]*min-height:\s*0/s,
+    );
+    expect(css).not.toMatch(/max-height:\s*min\(14vh,\s*120px\)/);
+    expect(css).toMatch(
+      /\.im-assistant-direct__composer-history\s*\{[^}]*max-height:\s*min\(20vh,\s*160px\)/s,
+    );
+  });
+
+  it("lets composer+flash long markdown overflow and receive pointer events", () => {
+    const style = document.createElement("style");
+    style.textContent = overlayCss();
+    document.head.appendChild(style);
+
+    const longReply = Array.from({ length: 24 }, (_, i) =>
+      `## 段落 ${i + 1}\n\n這是一段足夠長的回覆，用來確認閃現氣泡可以完整捲動閱讀。\n`,
+    ).join("\n");
+    const composer = createElement("div", {
+      className: "im-assistant-direct__composer",
+      "data-testid": "assistant-caption-composer",
+    });
+    armThenShowMessages(
+      [{ id: "a1", role: "assistant", content: longReply }],
+      { composer, active: true },
+    );
+
+    const stack = document.querySelector(".im-assistant-direct__stack");
+    const bubble = document.querySelector("[data-testid='assistant-direct-msg']") as HTMLElement | null;
+    expect(stack?.classList.contains("pointer-events-none")).toBe(true);
+    expect(bubble).not.toBeNull();
+    expect(bubble?.querySelectorAll("h2").length).toBe(24);
+    expect(getComputedStyle(bubble!).pointerEvents).toBe("auto");
+    expect(getComputedStyle(bubble!).overflowY).toBe("auto");
+    expect(getComputedStyle(bubble!).maxHeight).not.toBe("120px");
+
+    Object.defineProperty(bubble, "clientHeight", { configurable: true, get: () => 180 });
+    Object.defineProperty(bubble, "scrollHeight", { configurable: true, get: () => 960 });
+    expect(bubble!.scrollHeight).toBeGreaterThan(bubble!.clientHeight);
   });
 
   it("renders per-message rows with user and assistant avatars", () => {

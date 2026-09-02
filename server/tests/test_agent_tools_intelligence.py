@@ -6,8 +6,18 @@ from datetime import UTC, datetime, timedelta
 
 from server.agent.tools_intelligence import HARD_CAP, execute_intelligence_tool
 from server.agent.tools_registry import build_tool_schemas, execute_tool
+from server.analyzer.incremental import time_range_lower_bound
 from server.tests import seed
-from server.time_iso import to_iso_z
+from server.time_iso import parse_iso, to_iso_z
+
+
+def test_time_range_lower_bound_mirrors_offset_map() -> None:
+    frozen = datetime(2026, 9, 2, 15, 30, 0, tzinfo=UTC)
+    assert time_range_lower_bound("today", now=frozen) == datetime(2026, 9, 2, 0, 0, 0, tzinfo=UTC)
+    assert time_range_lower_bound("7d", now=frozen) == datetime(2026, 8, 26, 15, 30, 0, tzinfo=UTC)
+    assert time_range_lower_bound("12h", now=frozen) == datetime(2026, 9, 2, 3, 30, 0, tzinfo=UTC)
+    assert time_range_lower_bound("all", now=frozen) is None
+    assert time_range_lower_bound("alltime", now=frozen) is None
 
 
 async def test_intelligence_search_defaults_to_7d_window(app) -> None:
@@ -43,8 +53,84 @@ async def test_intelligence_search_time_range_all_alias(app) -> None:
         "intelligence.search_events",
         {"timeRange": "all"},
     )
+    assert "error" not in result
     assert result["allTime"] is True
+    assert result["startDate"] is None
+    assert result["endDate"] is None
     assert any(item["id"] == "ben-1" for item in result["items"])
+
+
+async def test_intelligence_search_time_range_7d_coerces_to_start_date(app) -> None:
+    result = await execute_intelligence_tool(
+        app.state.db,
+        "intelligence.search_events",
+        {"timeRange": "7d"},
+    )
+    assert "error" not in result
+    assert result["allTime"] is False
+    assert result["startDate"] is not None
+    assert result["endDate"] is None
+    start = parse_iso(result["startDate"])
+    assert start is not None
+    delta = datetime.now(UTC) - start
+    assert timedelta(days=6, hours=23) <= delta <= timedelta(days=7, minutes=1)
+    ids = {item["id"] for item in result["items"]}
+    assert "ben-1" not in ids
+    assert "ev-1" not in ids
+
+
+async def test_intelligence_search_time_range_today_coerces_to_start_of_day(app) -> None:
+    now = datetime.now(UTC)
+    today_iso = to_iso_z(now)
+    await app.state.db.execute(
+        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
+        "content_hash, semantic_hash, location, source_message_id, created_at, updated_at) "
+        "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            "ev-today-agent",
+            seed.TASK_EVENT,
+            seed.BATCH_EVENT,
+            "今日情報",
+            "agent-today-window-hit",
+            "hash-today-agent",
+            "sem-today-agent",
+            "N/A",
+            seed.MESSAGE_1,
+            today_iso,
+            today_iso,
+        ),
+    )
+    result = await execute_intelligence_tool(
+        app.state.db,
+        "intelligence.search_events",
+        {"time_range": "today"},
+    )
+    assert "error" not in result
+    assert result["allTime"] is False
+    start = parse_iso(result["startDate"])
+    assert start is not None
+    assert start == now.replace(hour=0, minute=0, second=0, microsecond=0)
+    ids = {item["id"] for item in result["items"]}
+    assert "ev-today-agent" in ids
+    assert "ben-1" not in ids
+    assert "ev-1" not in ids
+
+
+async def test_intelligence_search_explicit_dates_win_over_time_range(app) -> None:
+    result = await execute_intelligence_tool(
+        app.state.db,
+        "intelligence.search_events",
+        {
+            "timeRange": "today",
+            "startDate": "2026-07-01T00:00:00Z",
+            "endDate": "2026-07-02T23:59:59Z",
+        },
+    )
+    assert "error" not in result
+    assert result["startDate"] == "2026-07-01T00:00:00Z"
+    assert result["endDate"] == "2026-07-02T23:59:59Z"
+    ids = {item["id"] for item in result["items"]}
+    assert "ben-1" in ids or "ev-1" in ids
 
 
 async def test_intelligence_search_rejects_removed_full_history_alias(app) -> None:
@@ -184,3 +270,7 @@ def test_build_tool_schemas_includes_intelligence_search() -> None:
         s for s in build_tool_schemas(web_search_enabled=False) if s["name"] == "intelligence.search_events"
     )
     assert "allTime" in intel_schema["parameters"]["properties"]
+    time_range_schema = intel_schema["parameters"]["properties"]["timeRange"]
+    assert "enum" not in time_range_schema
+    assert "today" in time_range_schema["description"]
+    assert "7d" in time_range_schema["description"]
