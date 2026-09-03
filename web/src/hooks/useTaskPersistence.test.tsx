@@ -120,7 +120,7 @@ describe("useTaskPersistence", () => {
     latestResult = null;
   });
 
-  it("success path: creates a task, shows toast, refreshes, and navigates to the workset tasks tab", async () => {
+  it("success path: creates a task, shows toast, refreshes, and navigates to /tasks", async () => {
     mockCreateTask.mockResolvedValue({ id: "new-id" });
 
     const { container, root } = renderHarness();
@@ -137,7 +137,7 @@ describe("useTaskPersistence", () => {
     );
     expect(mockShowToast).toHaveBeenCalledWith("任務已建立", "success");
     expect(mockRefreshTasks).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("/worksets?tab=tasks");
+    expect(mockNavigate).toHaveBeenCalledWith("/tasks");
     expect(latestResult!.isSaving).toBe(false);
 
     cleanup(root, container);

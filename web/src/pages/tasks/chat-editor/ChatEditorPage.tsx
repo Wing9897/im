@@ -134,7 +134,7 @@ export function ChatEditorPage() {
     scheduleError ?? (!llmProfileGate.ready ? llmProfileGate.reason : null) ?? saveBlockReason;
 
   const handleBack = () => {
-    navigate("/worksets?tab=tasks");
+    navigate("/tasks");
   };
 
   const handlePresetApply = () => {

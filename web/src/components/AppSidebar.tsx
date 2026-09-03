@@ -14,6 +14,7 @@ import {
   Database,
   History,
   Layers,
+  ListChecks,
   MapPin,
   Menu,
   MessageSquare,
@@ -41,12 +42,14 @@ import { railModeButtonClass } from "./sidebar/sidebarNavStyles";
 import {
   SidebarNavLink,
   SidebarSectionLabel,
+  TasksNavLink,
 } from "./sidebar/SidebarNavItems";
 
 export { MAIN_SIDEBAR_PREFETCH_PATHS };
 
 const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   monitor: Radio,
+  tasks: ListChecks,
   worksets: Layers,
   schedule: CalendarClock,
   items: Package,
@@ -215,6 +218,15 @@ export function AppSidebar() {
                             const Icon = SIDEBAR_ICONS[item.icon];
                             const isActive = isSidebarItemActive(item, location.pathname);
                             const label = t(item.labelKey);
+                            if (item.to === "/tasks") {
+                              return (
+                                <TasksNavLink
+                                  key={item.to}
+                                  collapsed={false}
+                                  isActive={isActive}
+                                />
+                              );
+                            }
                             return (
                               <SidebarNavLink
                                 key={item.to}

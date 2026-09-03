@@ -6,11 +6,11 @@ function hrefs(simpleMode: boolean): string[] {
 }
 
 describe("visibleSidebarGroups", () => {
-  it("keeps the full nav without a standalone Tasks item", () => {
+  it("keeps the full nav including Tasks when simple mode is off", () => {
     const full = hrefs(false);
     expect(full).toEqual(SIDEBAR_MAIN_GROUPS.flatMap((group) => group.items.map((item) => item.to)));
+    expect(full).toContain("/tasks");
     expect(full).toContain("/worksets");
-    expect(full).not.toContain("/tasks");
     expect(full).toContain("/monitor");
   });
 
@@ -34,6 +34,7 @@ describe("visibleSidebarGroups", () => {
 
 describe("isSidebarItemActive", () => {
   const worksets = { to: "/worksets", labelKey: "worksets", icon: "worksets" as const, activePrefix: "/worksets" };
+  const tasks = { to: "/tasks", labelKey: "tasks", icon: "tasks" as const, activePrefix: "/tasks" };
   const settings = { to: "/settings", labelKey: "systemSettings", icon: "settings" as const, activePrefix: "/settings" };
   const ai = { to: "/settings/ai/provider", labelKey: "aiSettings", icon: "ai" as const, activePrefix: "/settings/ai" };
   const items = { to: "/items", labelKey: "items", icon: "items" as const, activePrefix: "/items" };
@@ -44,6 +45,13 @@ describe("isSidebarItemActive", () => {
     expect(isSidebarItemActive(worksets, "/worksets/ws-1")).toBe(true);
     expect(isSidebarItemActive(worksets, "/tasks/abc/edit")).toBe(false);
     expect(isSidebarItemActive(worksets, "/tasks/new")).toBe(false);
+  });
+
+  it("lights 任務設定 on the list and editors", () => {
+    expect(isSidebarItemActive(tasks, "/tasks")).toBe(true);
+    expect(isSidebarItemActive(tasks, "/tasks/new")).toBe(true);
+    expect(isSidebarItemActive(tasks, "/tasks/abc/edit")).toBe(true);
+    expect(isSidebarItemActive(tasks, "/worksets")).toBe(false);
   });
 
   it("does not light 系統設定 on /settings/ai", () => {

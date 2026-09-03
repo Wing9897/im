@@ -1,7 +1,7 @@
 /** App-shell paths for the workset catalog (not nested under /tasks). */
 export const WORKSETS_PATH = "/worksets";
 
-export const WORKSET_CATALOG_TABS = ["catalog", "graph", "tasks"] as const;
+export const WORKSET_CATALOG_TABS = ["catalog", "graph"] as const;
 
 export type WorksetCatalogTab = (typeof WORKSET_CATALOG_TABS)[number];
 
@@ -19,8 +19,22 @@ export function isWorksetCatalogTab(value: string | null): value is WorksetCatal
 export function parseWorksetCatalogTab(tab: string | null): WorksetCatalogTab {
   if (tab === "flow" || tab === "graph") return "graph";
   if (tab === "catalog") return "catalog";
-  if (tab === "tasks") return "tasks";
   return DEFAULT_WORKSET_CATALOG_TAB;
+}
+
+/** Retired catalog tab — bookmarks redirect to `/tasks`. */
+export function isWorksetTasksTabQuery(tab: string | null): boolean {
+  return tab === "tasks";
+}
+
+/**
+ * Full-mode bookmark: `/worksets?tab=tasks` → `/tasks`.
+ * Keep `scheduling=open`; drop other leftover query keys.
+ * Simple mode strips these onto `/worksets` in SimpleModeGate before this runs.
+ */
+export function worksetTasksBookmarkPath(search: URLSearchParams): string | null {
+  if (!isWorksetTasksTabQuery(search.get("tab"))) return null;
+  return search.get("scheduling") === "open" ? "/tasks?scheduling=open" : "/tasks";
 }
 
 /** Query key for the graph-tab workset checklist (`?tab=graph&worksetId=`). */
@@ -59,9 +73,6 @@ export function worksetsCatalogPath(
   }
   return `${WORKSETS_PATH}?${params.toString()}`;
 }
-
-/** Flat analysis-task grid inside the workset catalog (`?tab=tasks`). */
-export const WORKSETS_TASKS_PATH = worksetsCatalogPath("tasks");
 
 /** Workset contents page (lists + toolbar). No in-page flow tab. */
 export function worksetDetailPath(worksetId: string): string {

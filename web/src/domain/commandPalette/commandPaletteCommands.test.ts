@@ -98,13 +98,13 @@ describe("commandPaletteCommands", () => {
     const items = filterCommandPaletteItems("工作集");
     expect(items.some((item) => item.to === "/worksets")).toBe(true);
     const tasks = filterCommandPaletteItems("任務");
-    expect(tasks.some((item) => item.to === "/worksets?tab=tasks")).toBe(true);
+    expect(tasks.some((item) => item.to === "/tasks")).toBe(true);
   });
 
-  it("hides simple-mode collect/analyze routes and the workset tasks tab", () => {
+  it("hides simple-mode collect/analyze routes and the Tasks page", () => {
     const hidden = filterCommandPaletteItems("", [], i18n.t.bind(i18n), true);
-    expect(hidden.some((item) => item.to === "/worksets?tab=tasks")).toBe(false);
-    expect(hidden.some((item) => item.to === "/worksets?tab=tasks&scheduling=open")).toBe(false);
+    expect(hidden.some((item) => item.to === "/tasks")).toBe(false);
+    expect(hidden.some((item) => item.to === "/tasks?scheduling=open")).toBe(false);
     expect(hidden.some((item) => item.to === "/monitor")).toBe(false);
     expect(hidden.some((item) => item.to === "/sources")).toBe(false);
     expect(hidden.some((item) => item.to === "/worksets")).toBe(true);
@@ -150,7 +150,7 @@ describe("commandPaletteCommands", () => {
     const items = filterCommandPaletteItems("資料");
     expect(items.some((item) => item.to === "/settings/data")).toBe(true);
     const strategy = filterCommandPaletteItems("調度");
-    expect(strategy.some((item) => item.to === "/worksets?tab=tasks&scheduling=open")).toBe(true);
+    expect(strategy.some((item) => item.to === "/tasks?scheduling=open")).toBe(true);
     const assistant = filterCommandPaletteItems("助手");
     expect(assistant.some((item) => item.to === "/assistant")).toBe(true);
     const voice = filterCommandPaletteItems("語音");

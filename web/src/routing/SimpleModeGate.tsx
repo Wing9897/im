@@ -10,8 +10,8 @@ import { WORKSETS_PATH } from "../domain/worksets/worksetRoutes";
 
 /**
  * When simple mode is on, bounce users off collect/analyze routes,
- * task editors, the workset tasks tab, and the legacy analysis-strategy URL.
- * Exact `/tasks` is handled by TasksListRedirect (→ `/worksets`).
+ * `/tasks` (list + editors), leftover `/worksets?tab=tasks` bookmarks (stay on `/worksets`,
+ * do not bounce via `/tasks`), and the legacy analysis-strategy URL.
  */
 export function SimpleModeGate({ children }: { children: React.ReactNode }) {
   const { simpleMode } = useSimpleMode();

@@ -71,7 +71,7 @@ export function AgentDetailPage() {
   }, [children.length]);
 
   if (notFound) {
-    return <Navigate to="/worksets?tab=tasks" replace />;
+    return <Navigate to="/tasks" replace />;
   }
 
   if (loading || !project) {

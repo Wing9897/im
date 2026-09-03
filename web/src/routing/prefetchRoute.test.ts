@@ -20,9 +20,9 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/ai/voice")).not.toThrow();
   });
 
-  it("does not map /tasks or the retired analysis-strategy URL to DashboardViewer", () => {
+  it("maps /tasks to DashboardViewer", () => {
     const src = readFileSync(resolve(__dirname, "./prefetchRoute.ts"), "utf8");
-    expect(src).not.toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
+    expect(src).toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
     expect(src).not.toContain('"/ai/analysis-strategy"');
   });
 

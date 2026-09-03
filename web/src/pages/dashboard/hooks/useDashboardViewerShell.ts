@@ -15,11 +15,7 @@ import {
   SHOW_SYSTEM_TASKS_STORAGE_KEY,
   WORKSETS_SEARCH_STORAGE_KEY,
 } from "../../../domain/tasks/systemTaskCatalog";
-import {
-  isWorksetsPath,
-  parseWorksetCatalogTab,
-  worksetDetailPath,
-} from "../../../domain/worksets/worksetRoutes";
+import { isWorksetsPath, worksetDetailPath } from "../../../domain/worksets/worksetRoutes";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import type { AnalysisTask } from "../../../types/tasks";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
@@ -38,11 +34,10 @@ type Args = {
 
 export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
   const { t } = useTranslation();
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const { worksets, refreshWorksets } = useTaskCatalog();
   const { showToast } = useToast();
-  const catalogTab = parseWorksetCatalogTab(new URLSearchParams(search).get("tab"));
-  const isWorksetView = isWorksetsPath(pathname) && catalogTab !== "tasks";
+  const isWorksetView = isWorksetsPath(pathname);
 
   const [showSystemTasks, setShowSystemTasks] = usePersistedState(
     SHOW_SYSTEM_TASKS_STORAGE_KEY,

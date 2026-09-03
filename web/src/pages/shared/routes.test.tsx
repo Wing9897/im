@@ -208,17 +208,17 @@ describe("Route rendering — representative routes mount without errors", () =>
     expect(container.innerHTML.length).toBeGreaterThan(0);
   });
 
-  it("renders /worksets (top-level route) without errors", async () => {
+  it("renders /tasks (top-level route) without errors", async () => {
     const { DashboardViewer } = await import("../dashboard/DashboardViewer");
     await act(async () => {
       root = createRoot(container);
       root.render(
         createElement(MemoryRouter, {
-          initialEntries: ["/worksets?tab=tasks"],
+          initialEntries: ["/tasks"],
           children: createElement(
             Routes,
             null,
-            createElement(Route, { path: "/worksets", element: createElement(DashboardViewer) }),
+            createElement(Route, { path: "/tasks", element: createElement(DashboardViewer) }),
           ),
         }),
       );
@@ -439,8 +439,9 @@ describe("Agent detail route contract", () => {
   it("registers /agent only — legacy /project redirect is retired", () => {
     const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
     expect(src).toContain('path="/tasks/:taskId/agent"');
-    expect(src).toContain('path="/worksets"');
-    expect(src).toContain('path="/worksets/:worksetId"');
+    expect(src).toContain('path="/tasks"');
+    expect(src).toContain('element={<LazyPage Page={DashboardViewer} />}');
+    expect(src).toContain("WorksetCatalogRoute");
     expect(src).toContain("WorksetWorkspacePage");
     expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
@@ -467,7 +468,11 @@ describe("Settings／AI page folders vs URLs", () => {
     expect(src).toContain("../pages/settings/ai/SettingsAiStaffPage");
     expect(src).toContain("NotFoundPage");
     expect(src).toContain('path="*"');
-    expect(src).toContain("TasksListRedirect");
+    expect(src).toContain('path="/tasks"');
+    expect(src).toContain("WorksetCatalogRoute");
+    expect(src).toContain("worksetTasksBookmarkPath");
+    expect(src).toContain("<Navigate to=\"/tasks?scheduling=open\" replace />");
+    expect(src).not.toContain("TasksListRedirect");
     expect(src).not.toContain("../pages/ai/AiWorkspacePage");
     expect(src).not.toContain("../pages/ai/SettingsAiProviderPage");
     expect(src).not.toContain("../pages/ai/SettingsVoicePage");
@@ -480,7 +485,7 @@ describe("Settings／AI page folders vs URLs", () => {
     expect(prefetch).toContain("../pages/settings/ai/SettingsAiProviderPage");
     expect(prefetch).not.toContain("../pages/ai/SettingsAiProviderPage");
     expect(prefetch).not.toContain('"/ai/analysis-strategy"');
-    expect(prefetch).not.toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
+    expect(prefetch).toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
   });
 });
 
