@@ -121,14 +121,14 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
-    it("does not bounce exact /tasks — AppRoutes redirects to worksets", async () => {
+    it("redirects exact /tasks to the simple-mode home", async () => {
       await renderAt("/tasks");
 
-      expect(gated()).toBeTruthy();
-      expect(home()).toBeNull();
+      expect(home()).toBeTruthy();
+      expect(gated()).toBeNull();
     });
 
-    it("strips the workset tasks tab onto /worksets", async () => {
+    it("strips leftover /worksets?tab=tasks onto /worksets in simple mode", async () => {
       await renderAt("/worksets?tab=tasks");
 
       expect(container.querySelector('[data-testid="worksets"]')).toBeTruthy();

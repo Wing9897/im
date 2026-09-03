@@ -5,11 +5,13 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_WORKSET_CATALOG_TAB,
   isWorksetCatalogTab,
+  isWorksetTasksTabQuery,
   isWorksetsPath,
   parseWorksetCatalogTab,
   parseWorksetGraphFilter,
   serializeWorksetGraphFilter,
   worksetDetailPath,
+  worksetTasksBookmarkPath,
   worksetsCatalogPath,
   WORKSET_GRAPH_FILTER_PARAM,
   WORKSETS_PATH,
@@ -28,7 +30,6 @@ describe("worksetRoutes", () => {
     expect(worksetsCatalogPath()).toBe("/worksets");
     expect(worksetsCatalogPath("catalog")).toBe("/worksets");
     expect(worksetsCatalogPath("graph")).toBe("/worksets?tab=graph");
-    expect(worksetsCatalogPath("tasks")).toBe("/worksets?tab=tasks");
     expect(worksetsCatalogPath("graph", "ws-1")).toBe("/worksets?tab=graph&worksetId=ws-1");
     expect(WORKSET_GRAPH_FILTER_PARAM).toBe("worksetId");
     expect(parseWorksetGraphFilter(null)).toBeNull();
@@ -55,13 +56,29 @@ describe("worksetRoutes", () => {
     expect(DEFAULT_WORKSET_CATALOG_TAB).toBe("catalog");
     expect(isWorksetCatalogTab("catalog")).toBe(true);
     expect(isWorksetCatalogTab("graph")).toBe(true);
-    expect(isWorksetCatalogTab("tasks")).toBe(true);
+    expect(isWorksetCatalogTab("tasks")).toBe(false);
     expect(isWorksetCatalogTab("flow")).toBe(false);
     expect(parseWorksetCatalogTab(null)).toBe("catalog");
     expect(parseWorksetCatalogTab("catalog")).toBe("catalog");
     expect(parseWorksetCatalogTab("graph")).toBe("graph");
-    expect(parseWorksetCatalogTab("tasks")).toBe("tasks");
+    expect(parseWorksetCatalogTab("tasks")).toBe("catalog");
     expect(parseWorksetCatalogTab("flow")).toBe("graph");
     expect(parseWorksetCatalogTab("contents")).toBe("catalog");
+    expect(isWorksetTasksTabQuery("tasks")).toBe(true);
+    expect(isWorksetTasksTabQuery("catalog")).toBe(false);
+    expect(isWorksetTasksTabQuery(null)).toBe(false);
+  });
+
+  it("redirects /worksets?tab=tasks bookmarks to /tasks and keeps scheduling=open", () => {
+    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks"))).toBe("/tasks");
+    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&scheduling=open"))).toBe(
+      "/tasks?scheduling=open",
+    );
+    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&scheduling=closed"))).toBe(
+      "/tasks",
+    );
+    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&foo=1"))).toBe("/tasks");
+    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=graph"))).toBeNull();
+    expect(worksetTasksBookmarkPath(new URLSearchParams())).toBeNull();
   });
 });

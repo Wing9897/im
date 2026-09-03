@@ -230,7 +230,7 @@ export function MonitorPage() {
             ) : sources.length === 0 ? (
               <>
                 <EmptyStateLink to="/sources">{t("cta.goToSources")}</EmptyStateLink>
-                <EmptyStateLink to="/worksets?tab=tasks">{t("cta.viewTasks")}</EmptyStateLink>
+                <EmptyStateLink to="/tasks">{t("cta.viewTasks")}</EmptyStateLink>
               </>
             ) : (
               <EmptyStateLink to="/sources">{t("cta.viewSourceStatus")}</EmptyStateLink>

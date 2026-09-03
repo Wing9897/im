@@ -37,7 +37,8 @@ vi.mock("react-i18next", () => ({
       if (key === "workset:detailSummaryEventsEmpty") return "no events";
       if (key === "workset:detailSummaryLoading") return "loading";
       if (key === "workset:detailSummaryEventsError") return "events error";
-      if (key === "workset:detailTasksHeading") return "Tasks";
+      if (key === "workset:detailTasksHeading") return "Tasks in this workset";
+      if (key === "workset:detailTasksHint") return "scoped hint";
       if (key === "workset:detailItemsHeading") return "Items";
       if (key === "workset:detailTasksEmpty") return "no tasks";
       if (key === "workset:detailItemsEmpty") return "no items";

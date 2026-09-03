@@ -126,7 +126,7 @@
     "outputAnalysisEventsHelp": "關閉後任務仍會跑完，但不寫入情報事件頁。排行榜任務固定寫入排行榜頁，不受此開關影響。",
     "outputIntelOffTimelineHint": "關閉情報後，新的分析事件也不會出現在時間規劃（同一批儲存）。歷史事件仍遵循「時間規劃」。",
     "rruleHint": "RRULE 僅用於週期任務重複事件，不會觸發 AI 分析。",
-    "scheduleOverridesHint": "門檻／批上限／證據風格可覆寫；留空跟隨任務頁 → 全局調度設定。批次重疊與 Agent 波次間隔僅本任務有效。",
+    "scheduleOverridesHint": "門檻／批上限／證據風格可覆寫；留空跟隨任務設定 → 全局調度設定。批次重疊與 Agent 波次間隔僅本任務有效。",
     "followGlobal": "跟隨全域",
     "followGlobalPlaceholder": "空＝跟隨全域",
     "batchOverlapLabel": "批次重疊",

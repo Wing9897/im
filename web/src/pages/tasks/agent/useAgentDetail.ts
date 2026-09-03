@@ -140,7 +140,7 @@ export function useAgentDetail() {
     !tasksLoading && Boolean(taskId) && (!project || !isAgentCalendarTask(project));
 
   const goBack = useCallback(() => {
-    navigate("/worksets?tab=tasks");
+    navigate("/tasks");
   }, [navigate]);
 
   const goEdit = useCallback(() => {

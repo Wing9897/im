@@ -9,10 +9,6 @@ import { WorksetCatalogChrome } from "./WorksetCatalogChrome";
 vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
 
-vi.mock("../../context/SimpleModeContext", () => ({
-  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
-}));
-
 function GraphSearchProbe() {
   const [searchParams] = useSearchParams();
   return createElement("span", { "data-testid": "workset-graph-search" }, searchParams.toString());
@@ -64,7 +60,7 @@ describe("WorksetCatalogChrome", () => {
     const tabs = [
       ...harness.container.querySelectorAll('[data-testid="workset-catalog-tabs"] [role="tab"]'),
     ];
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["目錄", "流程圖", "任務"]);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["目錄", "流程圖"]);
     expect(tabs[0]?.getAttribute("aria-selected")).toBe("true");
     expect(harness.container.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
   });
@@ -93,15 +89,15 @@ describe("WorksetCatalogChrome", () => {
     expect(tabs[1]?.getAttribute("aria-selected")).toBe("true");
   });
 
-  it("opens the tasks tab from ?tab=tasks", async () => {
+  it("falls back leftover ?tab=tasks onto the catalog pill (SPA redirect owns bookmarks)", async () => {
     harness = createTestHarness();
     await harness.render(ChromeAt, { entry: "/worksets?tab=tasks" });
 
     const tabs = [
       ...harness.container.querySelectorAll('[data-testid="workset-catalog-tabs"] [role="tab"]'),
     ];
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["目錄", "流程圖", "任務"]);
-    expect(tabs[2]?.getAttribute("aria-selected")).toBe("true");
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["目錄", "流程圖"]);
+    expect(tabs[0]?.getAttribute("aria-selected")).toBe("true");
   });
 
   it("puts a workset checkbox menu in the function bar on the graph tab", async () => {

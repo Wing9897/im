@@ -1,6 +1,7 @@
 /** Map primary nav paths → lazy page modules (matches AppRoutes). */
 const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/monitor": () => import("../pages/monitor/MonitorPage"),
+  "/tasks": () => import("../pages/dashboard/DashboardViewer"),
   "/worksets": () => import("../pages/dashboard/DashboardViewer"),
   "/worksets/:id": () => import("../pages/worksets/WorksetWorkspacePage"),
   "/schedule": () => import("../pages/schedule/SchedulePage"),

@@ -230,6 +230,7 @@ describe("AppSidebar", () => {
     expect(hrefs).toEqual([
       "/monitor",
       "/worksets",
+      "/tasks",
       "/schedule",
       "/items",
       "/sources",
@@ -271,6 +272,7 @@ describe("AppSidebar", () => {
     const expectedLabels = [
       "實時監控",
       "工作集",
+      "任務設定",
       "物品",
       "來源",
       "排行榜",
@@ -295,6 +297,7 @@ describe("AppSidebar", () => {
     expect(document.body.textContent).toContain("Intel events");
     expect(document.body.textContent).toContain("Live Monitor");
     expect(document.body.textContent).toContain("Worksets");
+    expect(document.body.textContent).toContain("Tasks");
     expect(document.body.textContent).toContain("Notify & actions");
   });
 
@@ -306,11 +309,24 @@ describe("AppSidebar", () => {
     expect(active[0].getAttribute("href")).toBe("/monitor");
   });
 
-  it("does not mark 工作集 active on task editor paths", () => {
+  it("marks 任務設定 active on task editor paths, not 工作集", () => {
     mockPathname = "/tasks/42/edit";
     renderSidebar();
     const active = getLinks().filter(isActiveSidebarLink);
-    expect(active).toHaveLength(0);
+    expect(active).toHaveLength(1);
+    expect(active[0].getAttribute("aria-label")).toBe("任務設定");
+    expect(active[0].getAttribute("href")).toBe("/tasks");
+    const worksets = getLinks().find((link) => link.getAttribute("aria-label") === "工作集");
+    expect(worksets?.getAttribute("aria-current")).toBe("false");
+  });
+
+  it("sends 任務設定 to the list even while an editor or agent page is open", () => {
+    for (const pathname of ["/tasks/42/edit", "/tasks/new", "/tasks/9/agent"] as const) {
+      mockPathname = pathname;
+      renderSidebar();
+      const tasks = getLinks().find((link) => link.getAttribute("aria-label") === "任務設定");
+      expect(tasks?.getAttribute("href"), pathname).toBe("/tasks");
+    }
   });
 
   it("marks bottom entries active by route prefix without highlighting /assistant", () => {

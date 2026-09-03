@@ -1,10 +1,9 @@
-import { GitBranch, LayoutGrid, ListChecks } from "lucide-react";
+import { GitBranch, LayoutGrid } from "lucide-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { SegmentedControl } from "../../components/ui";
-import { useSimpleMode } from "../../context/SimpleModeContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import {
   parseWorksetCatalogTab,
@@ -18,10 +17,9 @@ function isWorksetDetailPath(pathname: string): boolean {
   return /^\/worksets\/.+/u.test(pathname);
 }
 
-/** 目錄 | 流程圖 | 任務 pills for the workset OpsControlBar (catalog and contents). */
+/** 目錄 | 流程圖 pills for the workset OpsControlBar (catalog and contents). */
 export function WorksetCatalogChrome() {
   const { t } = useTranslation("workset");
-  const { simpleMode } = useSimpleMode();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,15 +63,6 @@ export function WorksetCatalogChrome() {
       label: t("tabGraph"),
       icon: <GitBranch size={14} strokeWidth={2.25} aria-hidden="true" />,
     },
-    ...(simpleMode
-      ? []
-      : [
-          {
-            id: "tasks",
-            label: t("tabTasks"),
-            icon: <ListChecks size={14} strokeWidth={2.25} aria-hidden="true" />,
-          },
-        ]),
   ];
 
   return (
@@ -82,7 +71,7 @@ export function WorksetCatalogChrome() {
         <SegmentedControl
           layout="inline"
           ariaLabel={t("catalogTabsAria")}
-          value={simpleMode && activeTab === "tasks" ? "catalog" : activeTab}
+          value={activeTab}
           onChange={(id) => setActiveTab(id as WorksetCatalogTab)}
           items={items}
         />

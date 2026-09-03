@@ -40,7 +40,7 @@ describe("simpleMode", () => {
     expect(isSimpleModeHiddenPath("/schedule")).toBe(false);
     expect(isSimpleModeHiddenPath("/items")).toBe(false);
     expect(isSimpleModeHiddenPath("/worksets")).toBe(false);
-    expect(isSimpleModeHiddenPath("/tasks")).toBe(false);
+    expect(isSimpleModeHiddenPath("/tasks")).toBe(true);
     expect(isSimpleModeHiddenPath("/tasks/new")).toBe(true);
     expect(isSimpleModeHiddenPath("/tasks/abc/edit")).toBe(true);
     expect(isSimpleModeHiddenPath("/tasks/abc/agent")).toBe(true);
@@ -48,7 +48,7 @@ describe("simpleMode", () => {
     expect(isSimpleModeHiddenPath("/settings/general")).toBe(false);
   });
 
-  it("hides the workset tasks tab without hiding /worksets", () => {
+  it("hides leftover /worksets?tab=tasks without hiding /worksets", () => {
     expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "?tab=tasks")).toBe(true);
     expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "tab=tasks")).toBe(true);
     expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "?tab=graph")).toBe(false);

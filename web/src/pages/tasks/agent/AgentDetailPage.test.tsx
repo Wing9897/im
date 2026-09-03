@@ -201,7 +201,7 @@ describe("AgentDetailPage", () => {
         <MemoryRouter initialEntries={["/tasks/event-1/agent"]}>
           <Routes>
             <Route path="/tasks/:taskId/agent" element={<AgentDetailPage />} />
-            <Route path="/worksets" element={<div data-testid="tasks-home">tasks</div>} />
+            <Route path="/tasks" element={<div data-testid="tasks-home">tasks</div>} />
           </Routes>
         </MemoryRouter>,
       );

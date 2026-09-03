@@ -149,7 +149,7 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
     expect(toolbar.textContent).toContain("目錄");
     expect(toolbar.textContent).toContain("流程圖");
-    expect(toolbar.textContent).toContain("任務");
+    expect(toolbar.textContent).not.toContain("任務");
   });
 
   it("hides workset search and create when hideSearch and hideCreateWorkset are set", () => {
@@ -190,7 +190,7 @@ describe("DashboardViewerToolbar", () => {
   });
 
   it("shows the global scheduling icon only on the tasks toolbar", () => {
-    const tasks = track({ isWorksetView: false, taskCount: 2 }, "/worksets?tab=tasks");
+    const tasks = track({ isWorksetView: false, taskCount: 2 }, "/tasks");
     const scheduling = tasks.querySelector(
       '[data-testid="open-global-scheduling"]',
     ) as HTMLButtonElement;

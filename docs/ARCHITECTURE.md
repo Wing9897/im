@@ -173,8 +173,8 @@ A **React** SPA (Vite + TypeScript). Talks to the server **only** via HTTP REST 
 - **Communication**: HTTP REST for commands/queries, SSE for server-pushed events.
 - **Scrolling**: `body` / `#root` `overflow: hidden`; page scroll on `.app-shell-main`. Infinite-scroll / monitor virtualizer must use `getVerticalScrollParent` / `useScrollContainerState` (`web/src/utils/scrollParent.ts`) — not `window.scrollY`.
 - **SPA vs HTTP names:** notifications UI is `/notify` (`pages/notify/`, label **通知**). Outbound automation HTTP stays `/api/v1/actions*` — do **not** rename `Action*` identifiers. Channel picker ≠ ActionType tiles: [`I18N-GLOSSARY.md` Channel／ActionType](I18N-GLOSSARY.md#channelactiontype-命名). Local notify scanner: `web/src/domain/notify/` (terms: glossary **通知**／語音／畫面).
-- **Assistant / AI**: `/assistant` stays conversational. AI settings live at `/settings/ai/*` (`provider` / `voice` / `staff`; `web/src/pages/settings/ai/`). Old `/ai/provider|voice|staff` and `/ai` permanently redirect. `/ai/analysis-strategy` opens `/worksets?tab=tasks&scheduling=open`. Sessions `GET/PUT /api/v1/ui-prefs/assistant/sessions`. Contracts: [`assistant.md`](agent/assistant.md)、[`a2a.md`](agent/a2a.md)、[`mcp.md`](agent/mcp.md)、[`agent.md`](agent/agent.md) (tick UI `/tasks/:taskId/agent`; legacy `/project` retired, no redirect).
-- **Worksets / tasks**: `/worksets` is the catalog (`catalog` / `graph` / full-mode `tasks`). Exact `/tasks` redirects to `/worksets?tab=tasks` (simple mode → `/worksets`). Editors stay `/tasks/new` and `/tasks/:taskId/edit|agent`. HTTP `/api/v1/tasks*` is unchanged.
+- **Assistant / AI**: `/assistant` stays conversational. AI settings live at `/settings/ai/*` (`provider` / `voice` / `staff`; `web/src/pages/settings/ai/`). Old `/ai/provider|voice|staff` and `/ai` permanently redirect. `/ai/analysis-strategy` opens `/tasks?scheduling=open`. Sessions `GET/PUT /api/v1/ui-prefs/assistant/sessions`. Contracts: [`assistant.md`](agent/assistant.md)、[`a2a.md`](agent/a2a.md)、[`mcp.md`](agent/mcp.md)、[`agent.md`](agent/agent.md) (tick UI `/tasks/:taskId/agent`; legacy `/project` retired, no redirect).
+- **Worksets / tasks**: `/worksets` is the catalog (`catalog` / `graph` only). Exact `/tasks` is the independent analysis-task list (`DashboardViewer`). `/worksets?tab=tasks` permanently redirects to `/tasks` (preserve `scheduling=open`). Editors stay `/tasks/new` and `/tasks/:taskId/edit|agent`. Workset detail `/worksets/:id` keeps a scoped member-task list. HTTP `/api/v1/tasks*` is unchanged. Simple mode hides `/tasks` (list + editors); leftover `?tab=tasks` bookmarks stay on `/worksets`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect).
 - **UI prefs:** voice IO / local-notify / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Per-feature LS migrate bridges are gone; one-shot `clearLegacyPrefsIfNeeded` / `im:prefs-schema-version` remains. User profile: server settings SoT + active LS cache.
 - **Ops board** — see [Ops board](#ops-board) below.
@@ -227,7 +227,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Map filters／tiles／coord group | `domain/intelligence/mapFilters`、`mapTiles`、`groupByCoordinate` | Board map embed + intelligence map |
 | Wall layout／model | `domain/monitor/wall/` | Wall board embed + Monitor wall |
 | Command palette catalog | `domain/commandPalette/commandPaletteCommands` | Command palette UI／hooks |
-| System task catalog | `domain/tasks/systemTaskCatalog` | Workset catalog `?tab=tasks` system cards (`/tasks` list redirects here) |
+| System task catalog | `domain/tasks/systemTaskCatalog` | `/tasks` system cards |
 | Month weather hook | `hooks/useMonthWeather` | Weather board widget + Timeline month grid |
 | Month holidays hook | `hooks/useMonthHolidays` | Timeline calendar overlay (same weather location) |
 | Map markers UI | `components/map/` | Map board embed + MapView |

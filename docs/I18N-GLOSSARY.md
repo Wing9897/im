@@ -127,7 +127,7 @@
 | Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__general__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
-| 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 |
+| 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 | 任務設定是獨立 `/tasks`（側欄「任務設定」），不是工作集第三段；舊 `?tab=tasks` 轉到 `/tasks` |
 | 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出當層名；塊標題（來源／物品／任務／助手／工作集）；L4 為共用輸出圖例（時間規劃／情報頁／通知／外部接口），從工作集**層／區塊**連出而非每張卡片；通知／外部接口閘門仍是卡片 icon；勿加 MCP／A2A 頁節點；**我的日程**不是流程圖塊（日曆疊加全部工作） |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |

@@ -5,8 +5,8 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 ## [Unreleased]
 
 - SPA unknown URLs render a NotFound page (home button) instead of silently redirecting to `/`. `/` and `viewerRoute` still use `DefaultHomeRedirect`.
-- AI settings live under `/settings/ai/provider|voice|staff` (sidebar AI vs system settings). Old `/ai/provider|voice|staff` and `/ai` permanently redirect; `/ai/analysis-strategy` still opens the scheduling dialog. `/assistant` is unchanged.
-- Workset catalog adds a full-mode `?tab=tasks` grid. Exact `/tasks` redirects there (simple mode → `/worksets`). Sidebar keeps 「工作集」only; `/tasks/new` and `/tasks/:id/edit|agent` stay. Simple mode hides analysis tasks, not worksets.
+- AI settings live under `/settings/ai/provider|voice|staff` (sidebar AI vs system settings). Old `/ai/provider|voice|staff` and `/ai` permanently redirect; `/ai/analysis-strategy` opens `/tasks?scheduling=open`. `/assistant` is unchanged.
+- `/tasks` is an independent 任務設定 page again (sidebar + command palette `nav:tasks`). Sidebar 任務設定 always opens the list `/tasks`, not the last editor. Workset catalog pills are **目錄 | 流程圖** only; `/worksets?tab=tasks` bookmarks redirect to `/tasks` (keep `scheduling=open`). Workset detail keeps a scoped member-task list. Simple mode still hides `/tasks` and editors.
 - Chrome/plain option lists use `MenuSelect` (RSS picker, calendar-share publish, subscriptions publish). Dense native schedule rows keep `SelectField`.
 - Pipeline first-run checklist adds an optional step: create an AI profile and bind the assistant global slot (link to `/settings/ai/provider`; no `__default__` seed).
 

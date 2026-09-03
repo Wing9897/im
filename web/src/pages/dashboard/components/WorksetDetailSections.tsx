@@ -175,6 +175,7 @@ export function WorksetTasksSection({
       className={WORKSET_PANEL_CLASS}
       bodyClassName={WORKSET_PANEL_BODY_CLASS}
     >
+      <p className={`m-0 ${captionClass}`}>{t("workset:detailTasksHint")}</p>
       {tasks.length === 0 ? (
         <WorksetSectionEmpty>{t("workset:detailTasksEmpty")}</WorksetSectionEmpty>
       ) : (

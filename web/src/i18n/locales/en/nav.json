@@ -24,5 +24,8 @@
   "history": "History",
   "mainNav": "Main navigation",
   "railMode": "Sidebar mode",
+  "tasksPendingAria": "Tasks ({count} pending analysis)",
+  "tasksPendingTitle": "Tasks · {count} pending analysis",
+  "pendingAnalysisBadge": "{count} pending analysis",
   "appVersionTitle": "App version (shared frontend/backend semver)"
 }

@@ -27,7 +27,7 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
   {
     id: "ai-strategy",
     labelKey: "commandPalette.aiStrategy",
-    to: "/worksets?tab=tasks&scheduling=open",
+    to: "/tasks?scheduling=open",
     icon: Gauge,
     groupId: "settings",
     keywords: ["batch", "concurrent", "調度", "全局調度"],

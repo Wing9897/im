@@ -7,8 +7,8 @@ import "../../components/items/emoji/emojiPickerReactMock";
 
 const mockNavigate = vi.fn();
 const mockSetSearchParams = vi.fn();
-let mockPathname = "/worksets";
-let mockSearch = "?tab=tasks";
+let mockPathname = "/tasks";
+let mockSearch = "";
 
 const mockPipeline = vi.hoisted(() => ({
   current: {
@@ -164,8 +164,8 @@ describe("DashboardViewer", () => {
     document.body.appendChild(container);
     mockNavigate.mockReset();
     mockSetSearchParams.mockReset();
-    mockPathname = "/worksets";
-    mockSearch = "?tab=tasks";
+    mockPathname = "/tasks";
+    mockSearch = "";
     mockPipeline.current = {
       state: "complete",
       showChecklist: false,
@@ -268,9 +268,9 @@ describe("DashboardViewer", () => {
     expect(container.textContent).toContain("Task Beta");
   });
 
-  it("keeps a visible search TextField in the tasks toolbar on the tasks tab", () => {
-    mockPathname = "/worksets";
-    mockSearch = "?tab=tasks";
+  it("keeps a visible search TextField in the tasks toolbar on /tasks", () => {
+    mockPathname = "/tasks";
+    mockSearch = "";
     taskCatalogState.tasks = [
       createMockTask({ id: "t1", name: "Task Alpha" }),
       createMockTask({ id: "t2", name: "Task Beta" }),
@@ -296,8 +296,8 @@ describe("DashboardViewer", () => {
   });
 
   it("opens the global scheduling dialog from the tasks toolbar icon", () => {
-    mockPathname = "/worksets";
-    mockSearch = "?tab=tasks";
+    mockPathname = "/tasks";
+    mockSearch = "";
     taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
 
     act(() => {
@@ -317,8 +317,8 @@ describe("DashboardViewer", () => {
   });
 
   it("opens the scheduling dialog from ?scheduling=open then clears the query", () => {
-    mockPathname = "/worksets";
-    mockSearch = "?tab=tasks&scheduling=open";
+    mockPathname = "/tasks";
+    mockSearch = "?scheduling=open";
     taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
 
     act(() => {
@@ -699,7 +699,7 @@ describe("DashboardViewer", () => {
       expect(tabs).toBeTruthy();
       expect(tabs?.textContent).toContain("目錄");
       expect(tabs?.textContent).toContain("流程圖");
-      expect(tabs?.textContent).toContain("任務");
+      expect(tabs?.textContent).not.toContain("任務");
       expect(toolbar?.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
       expect(container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-by-workset"]')).toBeTruthy();
