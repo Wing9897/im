@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 
-from server.calendar_share.constants import KEY_ACCESS_TOKEN, KEY_REFRESH_TOKEN
+from server.calendar_share.constants import DEFAULT_BASE_URL, KEY_ACCESS_TOKEN, KEY_REFRESH_TOKEN
 from server.calendar_share.remote import _message_from_payload, authorized_request, parse_token_pair
+from server.calendar_share.store.normalize import normalize_base_url
 from server.secrets import unprotect_text
 from server.tests.calendar_share_fakes import DEFAULT_URL, login_calendar_share
 
@@ -30,6 +31,21 @@ def test_message_from_payload_reads_fastapi_validation_list():
         _message_from_payload({"detail": "Event end must be after start"}, "fallback")
         == "Event end must be after start"
     )
+
+
+def test_normalize_base_url_empty_uses_public_origin():
+    assert normalize_base_url("") == "https://subscribe.devents.tech"
+    assert normalize_base_url("") == DEFAULT_BASE_URL
+    assert not DEFAULT_BASE_URL.endswith("/")
+
+
+async def test_session_defaults_to_public_subscribe_origin(client):
+    session = (await client.get("/api/v1/calendar-share/session")).json()
+    assert session["connected"] is False
+    assert session["baseUrl"] == "https://subscribe.devents.tech"
+    assert session["baseUrl"] == DEFAULT_BASE_URL
+    assert not session["baseUrl"].endswith("/")
+    assert session["handle"] == ""
 
 
 async def test_session_login_encrypts_tokens(client, app, fake_remote):

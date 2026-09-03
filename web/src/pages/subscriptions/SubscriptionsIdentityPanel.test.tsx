@@ -22,9 +22,11 @@ import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
 import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
 
+const PUBLIC_URL = "https://subscribe.devents.tech";
+
 const DISCONNECTED = {
   connected: false,
-  baseUrl: "http://127.0.0.1:8787",
+  baseUrl: PUBLIC_URL,
   handle: "",
   status: "disconnected" as const,
 };
@@ -82,9 +84,28 @@ describe("SubscriptionsIdentityPanel", () => {
       "false",
     );
     expect(container.querySelector('[data-testid="calendar-share-login"]')).toBeTruthy();
+    const urlInput = container.querySelector('[data-testid="calendar-share-url"]') as HTMLInputElement;
+    expect(urlInput?.value).toBe(PUBLIC_URL);
+    expect(urlInput?.placeholder).toBe(PUBLIC_URL);
     expect(container.querySelector('[data-testid="subscriptions-identity-avatar-initials"]')?.textContent).toBe("WI");
     expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
     expect(calendarShareApiMocks.fetchCalendarShareTimezone).toHaveBeenCalled();
+  });
+
+  it("fills the public origin when the session has no stored URL", async () => {
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
+      ...DISCONNECTED,
+      baseUrl: "",
+    });
+    calendarShareApiMocks.fetchCalendarShareTimezone.mockResolvedValue({
+      timezone: "Asia/Taipei",
+      suggestedTimezone: "Asia/Taipei",
+      pendingPublicTimezone: false,
+      lastPublicTimezone: "Asia/Taipei",
+    });
+    await renderPanel();
+    const urlInput = container.querySelector('[data-testid="calendar-share-url"]') as HTMLInputElement;
+    expect(urlInput?.value).toBe(PUBLIC_URL);
   });
 
   it("shows a reminder when the last public timezone update did not finish", async () => {

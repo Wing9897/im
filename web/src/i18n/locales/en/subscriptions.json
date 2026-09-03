@@ -18,7 +18,7 @@
     "help": "Sign in to the public calendar-share server. Use the other tabs to publish and subscribe; Timeline only displays and filters.",
     "localDevice": "This device: {name}",
     "urlLabel": "Server URL",
-    "urlHelp": "Default is the local public service. Tokens are encrypted on this machine; the UI never talks to that origin directly.",
+    "urlHelp": "Default is https://subscribe.devents.tech. Tokens are encrypted on this machine; the UI never talks to that origin directly.",
     "handleLabel": "Handle",
     "passwordLabel": "Password",
     "login": "Sign in",

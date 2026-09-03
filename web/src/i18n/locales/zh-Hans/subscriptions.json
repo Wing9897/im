@@ -18,7 +18,7 @@
     "help": "登录公开日历分享服务器。在其他分页发布与订阅；时间规划仅显示与筛选。",
     "localDevice": "本机：{name}",
     "urlLabel": "服务网址",
-    "urlHelp": "默认本机公开服务。令牌由本机服务器加密保存，画面不会直连该站。",
+    "urlHelp": "默认 https://subscribe.devents.tech。令牌由本机服务器加密保存，画面不会直连该站。",
     "handleLabel": "账号 handle",
     "passwordLabel": "密码",
     "login": "登录",

@@ -67,7 +67,8 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "a2a_enabled": "true",
     **MCP_CAPABILITY_CONFIG_DEFAULTS,
     # Calendar-share proxy (tokens Fernet-encrypted via SECRET_CONFIG_KEYS).
-    "calendar_share_base_url": "http://127.0.0.1:8787",
+    # Public origin (no trailing slash). Self-host sidecar is still 127.0.0.1:8787.
+    "calendar_share_base_url": "https://subscribe.devents.tech",
     "calendar_share_handle": "",
     "calendar_share_access_token": "",
     "calendar_share_refresh_token": "",
