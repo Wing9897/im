@@ -27,7 +27,7 @@ import { resolveUserDisplayName, useUserProfile } from "../../domain/user/userPr
 import { resolveIdentityAvatar } from "../../domain/user/identityAvatar";
 import { toErrorMessage } from "../../utils/errors";
 
-const DEFAULT_URL = "http://127.0.0.1:8787";
+const DEFAULT_URL = "https://subscribe.devents.tech";
 
 function prefillTimezone(state: CalendarShareTimezone | null): string {
   return (state?.timezone || state?.suggestedTimezone || systemIanaTimezone()).trim();
@@ -346,6 +346,7 @@ export function SubscriptionsIdentityPanel() {
             id="calendar-share-url"
             data-testid="calendar-share-url"
             value={baseUrl}
+            placeholder={DEFAULT_URL}
             disabled={busy}
             onChange={(event) => setBaseUrl(event.target.value)}
             autoComplete="url"

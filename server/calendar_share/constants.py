@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-DEFAULT_BASE_URL: Final = "http://127.0.0.1:8787"
+#: Public calendar-share origin (no trailing slash). Self-host sidecar is still 8787.
+DEFAULT_BASE_URL: Final = "https://subscribe.devents.tech"
 
 KEY_BASE_URL: Final = "calendar_share_base_url"
 KEY_HANDLE: Final = "calendar_share_handle"

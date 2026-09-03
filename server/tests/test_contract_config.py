@@ -147,6 +147,10 @@ def test_retention_defaults_keep_analysis_and_calendar():
     assert CONFIG_DEFAULTS["retention_user_events_days"] == "0"
 
 
+def test_calendar_share_base_url_defaults_to_public_origin():
+    assert CONFIG_DEFAULTS["calendar_share_base_url"] == "https://subscribe.devents.tech"
+
+
 async def test_settings_snapshot_and_roundtrip(client):
     resp = await client.get("/api/v1/config/settings")
     snapshot = resp.json()

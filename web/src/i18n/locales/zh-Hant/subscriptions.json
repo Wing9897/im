@@ -18,7 +18,7 @@
     "help": "登入公開日曆分享伺服器。在其他分頁發佈與訂閱；時間規劃僅顯示與篩選。",
     "localDevice": "本機：{name}",
     "urlLabel": "服務網址",
-    "urlHelp": "預設本機公開服務。權杖由本機伺服器加密保存，畫面不會直連該站。",
+    "urlHelp": "預設 https://subscribe.devents.tech。權杖由本機伺服器加密保存，畫面不會直連該站。",
     "handleLabel": "帳號 handle",
     "passwordLabel": "密碼",
     "login": "登入",
