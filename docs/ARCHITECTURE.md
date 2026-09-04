@@ -296,6 +296,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
 | `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-2 start |
 | `live_eval_pipeline.py` | — | **Dev-only:** live Telegram + Gemini + Serper pipeline eval against a running local server. Implementation lives in `scripts/live_eval/` (`pipeline.py` orchestrator; `setup.py` / `poll.py` / `teardown.py`). Not a product path — not used by CI, packaging, or runtime. Writes `scripts/.live_eval_state.json`. |
+| `seed_calendar_share_local_demo.py` | — | **Dev-only:** login IM calendar-share to a **local** IntelligenceCalendar (`IC_BASE`, default `http://127.0.0.1:8787`) and seed demo subscriptions／publish. Does not change the public origin. Not used by CI or product runtime |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
