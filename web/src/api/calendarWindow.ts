@@ -21,6 +21,12 @@ export type FetchCalendarWindowParams = {
   limit?: number;
 };
 
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  if (signal.reason instanceof Error) throw signal.reason;
+  throw new DOMException("Aborted", "AbortError");
+}
+
 function flag(value: boolean | undefined): string | undefined {
   if (value === undefined) return undefined;
   return value ? "true" : "false";
@@ -29,11 +35,13 @@ function flag(value: boolean | undefined): string | undefined {
 /** Fetches every tagged occurrence in a bounded date window (follows ``nextCursor``). */
 export async function fetchCalendarWindow(
   params: FetchCalendarWindowParams,
+  signal?: AbortSignal,
 ): Promise<CalendarWindowItem[]> {
   const items: CalendarWindowItem[] = [];
   let cursor: string | undefined;
 
   while (true) {
+    throwIfAborted(signal);
     const query: Record<string, string> = {
       startTime: params.startTime,
       endTime: params.endTime,
@@ -52,6 +60,7 @@ export async function fetchCalendarWindow(
     const page = await apiClient.get<CalendarWindowResponse>(
       "/api/v1/calendar/window",
       query,
+      signal ? { signal } : undefined,
     );
     items.push(...page.items);
     if (!page.nextCursor || page.items.length === 0) {

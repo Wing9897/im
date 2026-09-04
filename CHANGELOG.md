@@ -4,6 +4,9 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Gantt **全局**: visible canvas and `GET /calendar/window` are separate. Fetch span is `min(visible × 2, 90d)` snapped to 14/30-day buckets so small pans reuse the same ISO bounds; a zoomed-out decade still never requests more than 90 days. Pan/zoom debounce 250ms; a newer load **aborts** the in-flight window request (cancel is not a toast or timeout wipe). Axis tick labels thin when they would overlap (prefer a nearby major tick).
+- Timeline sidebar: when the focused day sits outside the visible 全局 window, the list follows the window center and shows **不在當前視圖**.
+- `/tasks` toolbar no longer renders workset **目錄 | 流程圖** chrome (those pills stay on `/worksets` only).
 - SPA unknown URLs render a NotFound page (home button) instead of silently redirecting to `/`. `/` and `viewerRoute` still use `DefaultHomeRedirect`.
 - AI settings live under `/settings/ai/provider|voice|staff` (sidebar AI vs system settings). Old `/ai/provider|voice|staff` and `/ai` permanently redirect; `/ai/analysis-strategy` opens `/tasks?scheduling=open`. `/assistant` is unchanged.
 - `/tasks` is an independent 任務設定 page again (sidebar + command palette `nav:tasks`). Sidebar 任務設定 always opens the list `/tasks`, not the last editor. Workset catalog pills are **目錄 | 流程圖** only; `/worksets?tab=tasks` bookmarks redirect to `/tasks` (keep `scheduling=open`). Workset detail keeps a scoped member-task list. Simple mode still hides `/tasks` and editors.

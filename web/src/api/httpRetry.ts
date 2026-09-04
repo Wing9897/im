@@ -14,6 +14,12 @@ export function isAbortError(error: unknown): boolean {
   );
 }
 
+/** User-cancelled fetch (AbortSignal) — not a timeout and not a UI error. */
+export function isCancelledError(error: unknown): boolean {
+  if (isAbortError(error)) return true;
+  return error instanceof NetworkError && error.message === "Request cancelled";
+}
+
 export function shouldRetryGet(error: unknown): boolean {
   if (error instanceof NetworkError) {
     // Timeouts / explicit cancel should not hammer the server.

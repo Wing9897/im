@@ -144,6 +144,7 @@
     "cardTagEndingOnFocusedDay": "结束于当日",
     "phaseFilterAria": "按进行状态筛选本日事件",
     "emptyFiltered": "当前筛选没有对应事件",
+    "outOfView": "不在当前视图",
     "eventAvatarAria": "情报事件与任务标记",
     "statusWithLabel": "状态：{value}",
     "subscribeIconAria": "订阅",

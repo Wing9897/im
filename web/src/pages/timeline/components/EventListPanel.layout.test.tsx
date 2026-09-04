@@ -77,6 +77,18 @@ describe("EventListPanel", () => {
     expect(header?.className).toContain("items-center");
   });
 
+  it("shows 不在當前視圖 instead of pretending the off-screen day is empty", () => {
+    const { container } = renderPanel({
+      rangeEvents: [],
+      focusedDay: new Date(2026, 6, 16),
+      outOfView: true,
+    });
+    expect(container.textContent).toContain("不在當前視圖");
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-out-of-view"]'),
+    ).not.toBeNull();
+  });
+
 
   it("renders multiline body as a single truncated preview line", () => {
     const event = makeEvent(

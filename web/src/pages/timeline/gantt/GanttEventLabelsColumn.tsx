@@ -15,6 +15,7 @@ import {
   ganttLabelStatusDotClass,
   ganttLabelTitleClass,
   ganttLeftColumnClass,
+  ganttLeftColumnSubgridClass,
 } from "./timelineGanttClasses";
 
 interface GanttEventLabelsColumnProps {
@@ -24,6 +25,8 @@ interface GanttEventLabelsColumnProps {
   onSelectEvent?: (event: TimelineItem) => void;
   onHoverStart: (rowId: string) => void;
   onHoverEnd: () => void;
+  /** 全局: participate in the parent CSS grid so lanes share row tracks. */
+  syncGrid?: boolean;
 }
 
 function rowDisplayTitle(row: GanttEventRowModel): string {
@@ -66,59 +69,60 @@ export function GanttEventLabelsColumn({
   onSelectEvent,
   onHoverStart,
   onHoverEnd,
+  syncGrid = false,
 }: GanttEventLabelsColumnProps) {
   const { t } = useTranslation("timeline");
   const untitled = t("gantt.untitled");
 
-  return (
-    <div className={ganttLeftColumnClass}>
-      <div className={ganttHeaderLabelClass}>{t("gantt.eventColumn")}</div>
-      <div className={ganttEventNamesColumnClass}>
-        {rows.map((row) => {
-          const first = row.occurrences[0];
-          const title = rowDisplayTitle(row) || untitled;
-          const status = eventStatuses[first?.id ?? ""] ?? "pending";
-          const statusColor = getEventStatusColor(status);
-          const leading = first ? resolveCalendarLeadingGlyph(first) : null;
+  const labels = rows.map((row) => {
+    const first = row.occurrences[0];
+    const title = rowDisplayTitle(row) || untitled;
+    const status = eventStatuses[first?.id ?? ""] ?? "pending";
+    const statusColor = getEventStatusColor(status);
+    const leading = first ? resolveCalendarLeadingGlyph(first) : null;
 
-          return (
-            <div
-              key={row.rowId}
-              title={rowTooltip(row, untitled)}
-              onClick={() => onSelectEvent?.(first)}
-              className={ganttEventNameClass(
-                hoveredRowId === row.rowId,
-                row.dismissed,
-              )}
-              onMouseEnter={() => onHoverStart(row.rowId)}
-              onMouseLeave={onHoverEnd}
-            >
-              <span
-                className={ganttLabelStatusDotClass}
-                style={{ backgroundColor: statusColor }}
-                aria-hidden="true"
-                data-testid={`gantt-label-status-${row.rowId}`}
-              />
-              {leading ? (
-                <span
-                  className={itemDateKindMarkerClass(
-                    leading.type === "item" ? leading.itemDateKind : null,
-                  )}
-                  aria-hidden="true"
-                  data-testid={
-                    leading.type === "important"
-                      ? `gantt-label-important-${row.rowId}`
-                      : `gantt-label-kind-${row.rowId}`
-                  }
-                >
-                  {leading.emoji}
-                </span>
-              ) : null}
-              <span className={ganttLabelTitleClass}>{title}</span>
-            </div>
-          );
-        })}
+    return (
+      <div
+        key={row.rowId}
+        title={rowTooltip(row, untitled)}
+        onClick={() => onSelectEvent?.(first)}
+        className={ganttEventNameClass(
+          hoveredRowId === row.rowId,
+          row.dismissed,
+        )}
+        onMouseEnter={() => onHoverStart(row.rowId)}
+        onMouseLeave={onHoverEnd}
+      >
+        <span
+          className={ganttLabelStatusDotClass}
+          style={{ backgroundColor: statusColor }}
+          aria-hidden="true"
+          data-testid={`gantt-label-status-${row.rowId}`}
+        />
+        {leading ? (
+          <span
+            className={itemDateKindMarkerClass(
+              leading.type === "item" ? leading.itemDateKind : null,
+            )}
+            aria-hidden="true"
+            data-testid={
+              leading.type === "important"
+                ? `gantt-label-important-${row.rowId}`
+                : `gantt-label-kind-${row.rowId}`
+            }
+          >
+            {leading.emoji}
+          </span>
+        ) : null}
+        <span className={ganttLabelTitleClass}>{title}</span>
       </div>
+    );
+  });
+
+  return (
+    <div className={syncGrid ? ganttLeftColumnSubgridClass : ganttLeftColumnClass}>
+      <div className={ganttHeaderLabelClass}>{t("gantt.eventColumn")}</div>
+      {syncGrid ? labels : <div className={ganttEventNamesColumnClass}>{labels}</div>}
     </div>
   );
 }

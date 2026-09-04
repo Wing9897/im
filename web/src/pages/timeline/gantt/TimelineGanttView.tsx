@@ -22,10 +22,12 @@ import {
   ganttErrorContainerClass,
   ganttErrorTextClass,
   ganttMainFlexContainerClass,
+  ganttMainOverviewGridClass,
   ganttRetryButtonClass,
   ganttRootClass,
   ganttVerticalScrollClass,
 } from "./timelineGanttClasses";
+import { ganttOverviewGridTemplateRows } from "./ganttGridLayout";
 
 type TimelineGanttViewProps = {
   events: TimelineItem[];
@@ -41,6 +43,7 @@ type TimelineGanttViewProps = {
   overviewMode?: boolean;
   overviewWindow?: GanttOverviewWindow;
   onOverviewWindowChange?: (next: GanttOverviewWindow) => void;
+  onOverviewFetchCommit?: () => void;
 };
 
 export function TimelineGanttView({
@@ -57,6 +60,7 @@ export function TimelineGanttView({
   overviewMode = false,
   overviewWindow,
   onOverviewWindowChange,
+  onOverviewFetchCommit,
 }: TimelineGanttViewProps) {
   const { t } = useTranslation(["timeline", "common"]);
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
@@ -112,7 +116,7 @@ export function TimelineGanttView({
     );
   }
 
-  if (initialLoading) {
+  if (initialLoading && events.length === 0) {
     return <div className={ganttEmptyStateClass}>{t("gantt.loading")}</div>;
   }
 
@@ -128,7 +132,14 @@ export function TimelineGanttView({
   return (
     <div className={ganttRootClass} data-testid="timeline-gantt-view">
       <div className={ganttVerticalScrollClass} data-testid="gantt-vertical-scroll">
-        <div className={ganttMainFlexContainerClass}>
+        <div
+          className={overviewActive ? ganttMainOverviewGridClass : ganttMainFlexContainerClass}
+          style={
+            overviewActive
+              ? { gridTemplateRows: ganttOverviewGridTemplateRows(ganttRows.length) }
+              : undefined
+          }
+        >
           <GanttEventLabelsColumn
             rows={ganttRows}
             hoveredRowId={hoveredRowId}
@@ -136,12 +147,14 @@ export function TimelineGanttView({
             onSelectEvent={onSelectEvent}
             onHoverStart={setHoveredRowId}
             onHoverEnd={() => setHoveredRowId(null)}
+            syncGrid={overviewActive}
           />
           {overviewActive && overviewWindow && onOverviewWindowChange ? (
             <GanttOverviewPanel
               rows={ganttRows}
               overviewWindow={overviewWindow}
               onOverviewWindowChange={onOverviewWindowChange}
+              onOverviewFetchCommit={onOverviewFetchCommit}
               eventStatuses={eventStatuses}
               hoveredRowId={hoveredRowId}
               onSelectEvent={onSelectEvent}
@@ -168,6 +181,7 @@ export function TimelineGanttView({
         <GanttOverviewTimebar
           overviewWindow={overviewWindow}
           onOverviewWindowChange={onOverviewWindowChange}
+          onOverviewFetchCommit={onOverviewFetchCommit}
           dataMinMs={dataExtent?.min}
           dataMaxMs={dataExtent?.max}
         />

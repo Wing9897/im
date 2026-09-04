@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { isCancelledError } from "../api/httpRetry";
 import { ToastContext } from "../context/ToastContext";
 import { toErrorMessage } from "../utils/errors";
 import { useLatestRequest } from "./useLatestRequest";
@@ -22,7 +23,10 @@ export interface UseAsyncResourceResult<TArgs, TResult> {
   /** True when re-fetching while cached data is still shown. */
   isRefreshing: boolean;
   error: string | null;
-  /** Execute the fetcher. Stale responses are automatically dropped. Returns null if stale. */
+  /**
+   * Execute the fetcher. A newer `execute` aborts the previous request.
+   * Stale / aborted responses are dropped. Returns null if stale or cancelled.
+   */
   execute: (args: TArgs) => Promise<TResult | null>;
   /** Reset data/error/loading to initial state without triggering a fetch. */
   reset: () => void;
@@ -35,12 +39,14 @@ export interface UseAsyncResourceResult<TArgs, TResult> {
  *
  * - Stale responses (those superseded by a newer `execute` call) are dropped
  *   and `execute` resolves with `null` for that call.
+ * - A newer `execute` aborts the previous in-flight request via AbortController.
+ *   Cancellation is not a user-facing error.
  * - Errors are mapped via `options.errorMessage ?? toErrorMessage` and, when
  *   `options.toastOnError === true`, surfaced through `useToast().showToast`.
  * - State updates after unmount are skipped so callers don't need extra guards.
  */
 export function useAsyncResource<TArgs, TResult>(
-  fetcher: (args: TArgs) => Promise<TResult>,
+  fetcher: (args: TArgs, signal: AbortSignal) => Promise<TResult>,
   options?: UseAsyncResourceOptions,
 ): UseAsyncResourceResult<TArgs, TResult> {
   const { toastOnError = false, errorMessage } = options ?? {};
@@ -56,13 +62,16 @@ export function useAsyncResource<TArgs, TResult>(
   const [error, setError] = useState<string | null>(null);
 
   // Track mount status so we don't setState after unmount when a pending
-  // fetcher eventually resolves. `useLatestRequest` has no cancel primitive,
-  // so this is the guard for the unmount cleanup case.
+  // fetcher eventually resolves. In-flight work is also aborted on unmount
+  // and when a newer `execute` starts.
   const mountedRef = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      abortRef.current?.abort();
+      abortRef.current = null;
     };
   }, []);
 
@@ -85,13 +94,16 @@ export function useAsyncResource<TArgs, TResult>(
 
   const execute = useCallback(
     async (args: TArgs): Promise<TResult | null> => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       const token = request.begin();
       if (mountedRef.current) {
         setLoading(true);
         setError(null);
       }
       try {
-        const result = await fetcherRef.current(args);
+        const result = await fetcherRef.current(args, controller.signal);
         if (!mountedRef.current || !request.isCurrent(token)) {
           return null;
         }
@@ -100,6 +112,10 @@ export function useAsyncResource<TArgs, TResult>(
         return result;
       } catch (e) {
         if (!mountedRef.current || !request.isCurrent(token)) {
+          return null;
+        }
+        if (isCancelledError(e)) {
+          setLoading(false);
           return null;
         }
         const msg = errorMessageRef.current?.(e) ?? toErrorMessage(e);
@@ -115,6 +131,8 @@ export function useAsyncResource<TArgs, TResult>(
   );
 
   const reset = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
     // Invalidate any in-flight request so its result is dropped.
     request.begin();
     if (!mountedRef.current) return;

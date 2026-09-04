@@ -12,7 +12,6 @@ import {
   ONE_HOUR,
   clamp,
   draw,
-  genTicks,
   hitTest,
   type HitZone,
 } from "../../../domain/intelligence/timelineSliderLayout";
@@ -20,7 +19,9 @@ import {
   OVERVIEW_MAX_SPAN_MS,
   OVERVIEW_MIN_SPAN_MS,
   clampOverviewWindow,
+  minOverviewTickLabelPct,
   overviewWindowEndMs,
+  ticksForOverviewWindow,
   type GanttOverviewWindow,
 } from "../../../domain/gantt/ganttOverviewWindow";
 
@@ -42,10 +43,11 @@ function overviewSpanFor(window: GanttOverviewWindow): number {
 export function useGanttOverviewTimebar(args: {
   overviewWindow: GanttOverviewWindow;
   onChange: (next: GanttOverviewWindow) => void;
+  onCommit?: () => void;
   dataMinMs?: number;
   dataMaxMs?: number;
 }) {
-  const { overviewWindow, onChange, dataMinMs, dataMaxMs } = args;
+  const { overviewWindow, onChange, onCommit, dataMinMs, dataMaxMs } = args;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [canvasW, setCanvasW] = useState(600);
@@ -59,6 +61,8 @@ export function useGanttOverviewTimebar(args: {
   const [focusedHandle, setFocusedHandle] = useState<"left" | "right" | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onCommitRef = useRef(onCommit);
+  onCommitRef.current = onCommit;
 
   const wS = overviewWindow.startMs;
   const wE = overviewWindowEndMs(overviewWindow);
@@ -87,7 +91,10 @@ export function useGanttOverviewTimebar(args: {
     }
   }, [overviewWindow, viewSpan, viewStart, wE, wS]);
 
-  const viewEnd = viewStart + viewSpan;
+  const viewWindow = useMemo(
+    () => ({ startMs: viewStart, spanMs: viewSpan }),
+    [viewStart, viewSpan],
+  );
   const tsToX = useCallback(
     (ts: number) => ((ts - viewStart) / viewSpan) * canvasW,
     [canvasW, viewSpan, viewStart],
@@ -96,7 +103,11 @@ export function useGanttOverviewTimebar(args: {
     (ts: number) => ((ts - viewStart) / viewSpan) * 100,
     [viewSpan, viewStart],
   );
-  const ticks = useMemo(() => genTicks(viewStart, viewEnd, 20), [viewEnd, viewStart]);
+  const ticks = useMemo(
+    () => ticksForOverviewWindow(viewWindow, 16, minOverviewTickLabelPct(canvasW)),
+    [canvasW, viewWindow],
+  );
+  const tickMarks = useMemo(() => ticks.map((tick) => tick.ms), [ticks]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -118,13 +129,13 @@ export function useGanttOverviewTimebar(args: {
       toX(wS),
       toX(wE),
       dragZone.current ?? focusedHandle,
-      ticks,
+      tickMarks,
       viewStart,
       viewSpan,
       toX(dataMin),
       toX(dataMax),
     );
-  }, [canvasW, dataMax, dataMin, focusedHandle, ticks, viewSpan, viewStart, wE, wS]);
+  }, [canvasW, dataMax, dataMin, focusedHandle, tickMarks, viewSpan, viewStart, wE, wS]);
 
   const onMouseDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -164,6 +175,7 @@ export function useGanttOverviewTimebar(args: {
       dragState.current = null;
       dragZone.current = null;
       if (canvasRef.current) canvasRef.current.style.cursor = "default";
+      onCommitRef.current?.();
     };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -203,6 +215,7 @@ export function useGanttOverviewTimebar(args: {
     wS,
     wE,
     ticks,
+    viewWindow,
     tsPct,
     canvasW,
     focusedHandle,

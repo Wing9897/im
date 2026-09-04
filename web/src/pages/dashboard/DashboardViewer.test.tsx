@@ -266,6 +266,9 @@ describe("DashboardViewer", () => {
     expect(container.textContent).toContain("新增任務");
     expect(container.textContent).toContain("Task Alpha");
     expect(container.textContent).toContain("Task Beta");
+    expect(toolbar!.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
+    expect(toolbar!.textContent).not.toContain("目錄");
+    expect(toolbar!.textContent).not.toContain("流程圖");
   });
 
   it("keeps a visible search TextField in the tasks toolbar on /tasks", () => {
@@ -293,6 +296,9 @@ describe("DashboardViewer", () => {
     expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
     expect(toolbar.textContent).toContain("新增任務");
+    expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
+    expect(toolbar.textContent).not.toContain("目錄");
+    expect(toolbar.textContent).not.toContain("流程圖");
   });
 
   it("opens the global scheduling dialog from the tasks toolbar icon", () => {

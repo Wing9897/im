@@ -182,6 +182,8 @@ export function TimelinePage() {
               monthEvents={navigation.monthEvents}
               focusedDay={navigation.focusedDay}
               onFocusDay={sources.focusDay}
+              sidebarDay={filters.sidebarDay}
+              sidebarOutOfView={filters.sidebarOutOfView}
             />
           </div>
         </AppPageShell>

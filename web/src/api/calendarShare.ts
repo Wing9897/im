@@ -149,10 +149,12 @@ export function removeCalendarShareSubscription(handle: string, slug: string): P
 export async function fetchCalendarShareSubscriptionEvents(
   fromIso: string,
   toIso: string,
+  signal?: AbortSignal,
 ): Promise<CalendarShareEvent[]> {
   const page = await apiClient.get<{ items: CalendarShareEvent[] }>(
     "/api/v1/calendar-share/subscriptions/events",
     { from: fromIso, to: toIso },
+    signal ? { signal } : undefined,
   );
   return page.items ?? [];
 }

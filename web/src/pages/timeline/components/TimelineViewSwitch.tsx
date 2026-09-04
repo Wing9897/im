@@ -42,6 +42,9 @@ interface TimelineViewSwitchProps {
   focusedDay: Date | null;
   onFocusDay: (day: Date) => void;
   error?: string | null;
+  /** Sidebar day (may follow the visible window center in 全局). */
+  sidebarDay?: Date | null;
+  sidebarOutOfView?: boolean;
 }
 
 export function TimelineViewSwitch({
@@ -63,6 +66,8 @@ export function TimelineViewSwitch({
   focusedDay,
   onFocusDay,
   error,
+  sidebarDay,
+  sidebarOutOfView = false,
 }: TimelineViewSwitchProps) {
   const { t } = useTranslation("timeline");
   const {
@@ -122,7 +127,8 @@ export function TimelineViewSwitch({
             ) : (
               <TimelineSidebar
                 rangeEvents={sidebarEvents}
-                focusedDay={focusedDay}
+                focusedDay={sidebarDay ?? focusedDay}
+                outOfView={sidebarOutOfView}
               />
             )}
           </div>

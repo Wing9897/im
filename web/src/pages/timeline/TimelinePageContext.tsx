@@ -88,6 +88,7 @@ export interface TimelinePageContextValue {
   overviewMode?: boolean;
   overviewWindow?: GanttOverviewWindow;
   onOverviewWindowChange?: (next: GanttOverviewWindow) => void;
+  onOverviewFetchCommit?: () => void;
 }
 
 const TimelinePageContext = createContext<TimelinePageContextValue | null>(null);

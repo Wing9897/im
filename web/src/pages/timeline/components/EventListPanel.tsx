@@ -30,11 +30,14 @@ export function EventListPanel({
   rangeEvents,
   focusedDay,
   onSelectEvent,
+  outOfView = false,
 }: {
   /** Day-filtered events for the sidebar (from {@link computeSidebarEvents}). */
   rangeEvents: TimelineItem[];
   focusedDay: Date | null;
   onSelectEvent: (event: TimelineItem | null) => void;
+  /** Focused day is outside the visible 全局 window; list follows the window center. */
+  outOfView?: boolean;
 }) {
   const { t } = useTranslation("timeline");
   const metaLookups = useEventListMetaLookups();
@@ -89,6 +92,14 @@ export function EventListPanel({
           data-testid="timeline-event-list-day-label"
         >
           {dayLabel}
+          {outOfView ? (
+            <span
+              className="ml-1.5 font-normal opacity-80"
+              data-testid="timeline-event-list-out-of-view"
+            >
+              {t("eventList.outOfView")}
+            </span>
+          ) : null}
         </p>
       </div>
       <div

@@ -80,6 +80,7 @@ export function useTimelinePageContextValue({
       overviewMode: sources.overviewMode,
       overviewWindow: navigation.overviewWindow,
       onOverviewWindowChange: navigation.setOverviewWindow,
+      onOverviewFetchCommit: navigation.commitFetchWindow,
     }),
     [
       sources,
@@ -87,6 +88,7 @@ export function useTimelinePageContextValue({
       navigation.ganttColumns,
       navigation.overviewWindow,
       navigation.setOverviewWindow,
+      navigation.commitFetchWindow,
       gantt,
       selection,
       dialogs,

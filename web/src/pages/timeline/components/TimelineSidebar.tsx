@@ -38,12 +38,14 @@ type TimelineSidebarProps = {
   rangeEvents: TimelineItem[];
   focusedDay: Date | null;
   onClose?: () => void;
+  outOfView?: boolean;
 };
 
 export function TimelineSidebar({
   rangeEvents,
   focusedDay,
   onClose,
+  outOfView = false,
 }: TimelineSidebarProps) {
   const { t } = useTranslation("timeline");
   const {
@@ -334,6 +336,7 @@ export function TimelineSidebar({
         <EventListPanel
           rangeEvents={rangeEvents}
           focusedDay={focusedDay}
+          outOfView={outOfView}
           onSelectEvent={onSelectEvent}
         />
       )}

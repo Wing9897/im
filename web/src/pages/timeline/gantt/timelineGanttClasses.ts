@@ -1,4 +1,10 @@
 import { dismissedTitleClass } from "../timelineDismissUtils";
+import {
+  GANTT_AXIS_FOLLOW_GAP_CLASS,
+  GANTT_AXIS_HEIGHT_CLASS,
+  GANTT_LANE_HEIGHT_CLASS,
+  GANTT_LANE_STACK_CLASS,
+} from "./ganttGridLayout";
 
 /** Fill the timeline grid column; body scrolls vertically when rows overflow. */
 export const ganttRootClass =
@@ -9,14 +15,21 @@ export const ganttVerticalScrollClass =
 
 export const ganttMainFlexContainerClass = "flex min-h-0 min-w-0";
 
+/** 全局: one CSS grid so label lanes and bar lanes share row tracks. */
+export const ganttMainOverviewGridClass =
+  "grid min-h-0 min-w-0 grid-cols-[168px_minmax(0,1fr)]";
+
 export const ganttLeftColumnClass =
   "z-[2] flex w-[168px] min-w-[168px] max-w-[168px] shrink-0 flex-col border-r border-[color-mix(in_srgb,var(--surface-border)_58%,transparent)] pr-1.5";
 
-export const ganttEventNamesColumnClass = "flex min-w-0 flex-col gap-0.5";
+export const ganttLeftColumnSubgridClass =
+  "z-[2] col-start-1 row-span-full grid min-w-0 grid-rows-subgrid border-r border-[color-mix(in_srgb,var(--surface-border)_58%,transparent)] pr-1.5";
+
+export const ganttEventNamesColumnClass = GANTT_LANE_STACK_CLASS;
 
 export const ganttRightAreaBaseClass = "min-w-0 flex-1";
 
-export const ganttEventBarRowsContainerClass = "flex flex-col gap-0.5";
+export const ganttEventBarRowsContainerClass = GANTT_LANE_STACK_CLASS;
 
 export const ganttColumnHeaderTextClass =
   "text-center text-caption font-medium tabular-nums text-text-secondary";
@@ -46,8 +59,11 @@ export const ganttRetryButtonClass =
   "im-surface-panel cursor-pointer rounded-lg border border-surface-border px-lg py-sm text-body text-text-primary";
 
 /** Sticky chrome frost so scrolling rows do not punch through under photo BG. */
-export const ganttHeaderLabelClass =
-  "im-surface-chrome sticky top-0 z-[3] mb-2 flex h-5 items-center pl-0.5 text-xs font-medium text-text-secondary";
+export const ganttHeaderLabelClass = [
+  "im-surface-chrome sticky top-0 z-[3] flex items-center pl-0.5 text-xs font-medium text-text-secondary",
+  GANTT_AXIS_HEIGHT_CLASS,
+  GANTT_AXIS_FOLLOW_GAP_CLASS,
+].join(" ");
 
 export const ganttLegendContainerClass =
   "mt-lg flex shrink-0 flex-wrap gap-lg border-t border-surface-border pt-md";
@@ -63,8 +79,8 @@ export const ganttLabelTitleClass = "min-w-0 flex-1 truncate";
 
 export function ganttEventNameClass(isHovered: boolean, dismissed = false): string {
   return [
-    // Fixed row height + flex center (avoid h + py + leading fighting each other).
-    "box-border flex h-7 w-full min-w-0 max-w-full shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-caption font-medium leading-none",
+    // Fixed lane height + flex center (avoid h + py + leading fighting each other).
+    `flex w-full min-w-0 max-w-full cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-caption font-medium leading-none ${GANTT_LANE_HEIGHT_CLASS}`,
     dismissed
       ? `${dismissedTitleClass} opacity-70`
       : "text-text-primary",
@@ -82,21 +98,31 @@ export function ganttBarClass(
   isHovered: boolean,
   isCompact: boolean,
   dismissed = false,
+  layout: "grid" | "overlay" = "grid",
 ): string {
   return [
-    "relative z-[1] box-border h-[13px] self-center rounded-full transition-[opacity,box-shadow,filter] duration-150",
+    layout === "overlay"
+      ? "absolute top-1/2 z-[1] -translate-y-1/2"
+      : "relative z-[1] self-center",
+    "box-border h-[13px] rounded-full transition-[opacity,box-shadow,filter] duration-150",
     dismissed
       ? "border border-dashed border-error bg-[color-mix(in_srgb,var(--error)_48%,transparent)]"
       : "border-0",
     isHovered ? "opacity-100 brightness-110 shadow-sm" : dismissed ? "opacity-55" : "opacity-92",
-    isCompact ? "mx-[16%] min-w-[6px]" : "mx-px min-w-1",
+    isCompact
+      ? layout === "overlay"
+        ? "mx-0 min-w-[6px]"
+        : "mx-[16%] min-w-[6px]"
+      : layout === "overlay"
+        ? "mx-0 min-w-1"
+        : "mx-px min-w-1",
   ].join(" ");
 }
 
 /** Row shell — hairline track only; no habit-grid capsules. */
 export function ganttEventRowClass(isHovered: boolean): string {
   return [
-    "relative grid h-7 shrink-0 cursor-pointer items-center",
+    `relative grid cursor-pointer items-center ${GANTT_LANE_HEIGHT_CLASS}`,
     "border-b border-[color-mix(in_srgb,var(--surface-border)_52%,transparent)]",
     isHovered
       ? "bg-[color-mix(in_srgb,var(--accent-pink)_8%,transparent)]"
@@ -121,18 +147,31 @@ export function ganttDayCellClass(isToday: boolean): string {
     .join(" ");
 }
 
-export const ganttTimeAxisGridClass =
-  "sticky top-0 z-[3] mb-1.5 grid h-5 items-center bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]";
+export const ganttTimeAxisGridClass = [
+  "sticky top-0 z-[3] grid items-center bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]",
+  GANTT_AXIS_HEIGHT_CLASS,
+  GANTT_AXIS_FOLLOW_GAP_CLASS,
+].join(" ");
 
 export const ganttScrollInnerFullClass = "min-w-0 w-full";
 
-export const ganttOverviewPanelClass = "flex min-h-0 min-w-0 flex-1 flex-col";
+export const ganttOverviewPanelClass =
+  "relative col-start-2 row-span-full grid min-h-0 min-w-0 grid-rows-subgrid";
 
 export const ganttOverviewTrackClass =
-  "relative min-h-0 min-w-0 flex-1 cursor-grab touch-none overflow-hidden active:cursor-grabbing";
+  "relative col-span-full row-span-full grid min-h-0 min-w-0 cursor-grab touch-none grid-rows-subgrid overflow-x-clip active:cursor-grabbing";
 
-export const ganttOverviewAxisClass =
-  "relative sticky top-0 z-[3] mb-1.5 h-5 overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]";
+export const ganttOverviewAxisClass = [
+  "relative sticky top-0 z-[3] overflow-hidden bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]",
+  GANTT_AXIS_HEIGHT_CLASS,
+  GANTT_AXIS_FOLLOW_GAP_CLASS,
+].join(" ");
+
+export const ganttOverviewGridLineClass =
+  "absolute top-0 h-full w-px bg-[color-mix(in_srgb,var(--surface-border)_55%,transparent)]";
+
+export const ganttOverviewGridOverlayClass =
+  "pointer-events-none absolute inset-0 z-0";
 
 export function ganttOverviewTickClass(major: boolean): string {
   return [
@@ -146,7 +185,7 @@ export const ganttOverviewNowMarkerClass =
 
 export function ganttOverviewTrackRowClass(isHovered: boolean): string {
   return [
-    "relative h-7 shrink-0 cursor-pointer",
+    `relative cursor-pointer ${GANTT_LANE_HEIGHT_CLASS}`,
     "border-b border-[color-mix(in_srgb,var(--surface-border)_52%,transparent)]",
     isHovered ? "bg-[color-mix(in_srgb,var(--accent-pink)_8%,transparent)]" : "",
   ].join(" ");

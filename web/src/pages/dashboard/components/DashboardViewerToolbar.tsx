@@ -98,7 +98,7 @@ export function DashboardViewerToolbar({
       className="!flex-wrap"
     >
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-        <WorksetCatalogChrome />
+        {isWorksetView ? <WorksetCatalogChrome /> : null}
         {isTaskView && taskCount > 0 ? (
           <>
             <FilterChip

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { makeTimelineItem } from "../../test/analysisEventFixtures";
-import { computeSidebarEvents, eventOverlapsLocalDay } from "./timelinePageUtils";
+import { computeSidebarEvents, eventOverlapsLocalDay, resolveSidebarFocusForWindow } from "./timelinePageUtils";
 
 describe("eventOverlapsLocalDay", () => {
   it("includes overnight timed spans on the end day", () => {
@@ -72,5 +72,29 @@ describe("computeSidebarEvents", () => {
       other,
     ]);
     expect(result.map((e) => e.id)).toEqual(["on", "overnight"]);
+  });
+});
+
+describe("resolveSidebarFocusForWindow", () => {
+  it("keeps focusedDay when it still overlaps the visible window", () => {
+    const focused = new Date(2026, 6, 15);
+    const result = resolveSidebarFocusForWindow(
+      focused,
+      new Date(2026, 6, 9),
+      new Date(2026, 6, 23),
+    );
+    expect(result.outOfView).toBe(false);
+    expect(result.day.getDate()).toBe(15);
+  });
+
+  it("follows the window center when focusedDay is off-screen", () => {
+    const result = resolveSidebarFocusForWindow(
+      new Date(2026, 7, 4),
+      new Date(2026, 6, 9),
+      new Date(2026, 6, 23),
+    );
+    expect(result.outOfView).toBe(true);
+    expect(result.day.getMonth()).toBe(6);
+    expect(result.day.getDate()).toBe(16);
   });
 });

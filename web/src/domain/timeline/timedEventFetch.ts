@@ -44,6 +44,7 @@ export type FetchMergedTimedEventsOpts = {
   };
   userEventLabels?: UserEventLabelOpts;
   sort?: "time_desc" | "none";
+  signal?: AbortSignal;
 };
 
 function projectWindowItems(
@@ -74,6 +75,7 @@ export async function fetchMergedTimedEvents(
     filterPlan,
     userEventLabels,
     sort = "none",
+    signal,
   } = opts;
 
   if (filterPlan) {
@@ -97,14 +99,17 @@ export async function fetchMergedTimedEvents(
       return EMPTY_EVENTS;
     }
 
-    const windowItems = await fetchCalendarWindow({
+    const windowParams = {
       startTime: startIso,
       endTime: endIso,
       includeAnalysis: plan.fetchAnalysis,
       includeUser: plan.fetchUserEvents,
       includeRecurring: plan.fetchCalendar,
       includeItems: plan.fetchItems,
-    });
+    };
+    const windowItems = await (signal
+      ? fetchCalendarWindow(windowParams, signal)
+      : fetchCalendarWindow(windowParams));
     return filterTimelineWindowEvents({
       selectedSources,
       filterPlan: plan,
@@ -116,14 +121,17 @@ export async function fetchMergedTimedEvents(
     return EMPTY_EVENTS;
   }
 
-  const windowItems = await fetchCalendarWindow({
+  const windowParams = {
     startTime: startIso,
     endTime: endIso,
     includeAnalysis: true,
     includeUser: includeUserEvents !== false,
     includeRecurring: includeRrule !== false,
     includeItems: includeRrule !== false,
-  });
+  };
+  const windowItems = await (signal
+    ? fetchCalendarWindow(windowParams, signal)
+    : fetchCalendarWindow(windowParams));
   const merged = projectWindowItems(windowItems, userEventLabels);
   return sort === "time_desc" ? sortEventsByTimeDesc(merged) : merged;
 }

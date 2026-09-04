@@ -32,6 +32,36 @@ export function resolveSidebarDay(focusedDay: Date | null, now = new Date()): Da
   return focusedDay ? startOfDay(focusedDay) : startOfDay(now);
 }
 
+/** Whether a local calendar day overlaps the half-open visible window. */
+export function dayOverlapsVisibleWindow(
+  day: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+): boolean {
+  const dayStart = startOfDay(day);
+  const dayEnd = addDays(dayStart, 1);
+  return dayStart.getTime() < rangeEnd.getTime() && dayEnd.getTime() > rangeStart.getTime();
+}
+
+/**
+ * Sidebar day for a panned 全局 window: keep focusedDay when it still intersects
+ * the visible range; otherwise follow the window center so the list is not an
+ * empty "no events" for a day that is simply off-screen.
+ */
+export function resolveSidebarFocusForWindow(
+  focusedDay: Date | null,
+  rangeStart: Date,
+  rangeEnd: Date,
+  now = new Date(),
+): { day: Date; outOfView: boolean } {
+  const intended = resolveSidebarDay(focusedDay, now);
+  if (dayOverlapsVisibleWindow(intended, rangeStart, rangeEnd)) {
+    return { day: intended, outOfView: false };
+  }
+  const center = new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2);
+  return { day: startOfDay(center), outOfView: true };
+}
+
 /**
  * Sidebar events for one local day (default today when focus is cleared).
  * Includes cross-day spans that end or cover that day.

@@ -94,6 +94,7 @@ export function TimelineGrid({
     overviewMode = false,
     overviewWindow,
     onOverviewWindowChange,
+    onOverviewFetchCommit,
     showDismissed,
     showOngoing,
     showEnding,
@@ -158,6 +159,7 @@ export function TimelineGrid({
                 overviewMode={overviewMode}
                 overviewWindow={overviewWindow}
                 onOverviewWindowChange={onOverviewWindowChange}
+                onOverviewFetchCommit={onOverviewFetchCommit}
               />
             </div>
           </Suspense>
