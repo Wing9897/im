@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 
 import {
+  overviewTickLabelPct,
+  overviewTickLeftPct,
   overviewWindowEndMs,
   ticksForOverviewWindow,
   type GanttOverviewWindow,
@@ -11,11 +13,12 @@ import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGan
 import { GanttOverviewEventRow } from "./GanttOverviewEventRow";
 import {
   ganttOverviewAxisClass,
+  ganttOverviewGridLineClass,
+  ganttOverviewGridOverlayClass,
   ganttOverviewNowMarkerClass,
   ganttOverviewPanelClass,
   ganttOverviewTickClass,
   ganttOverviewTrackClass,
-  ganttEventBarRowsContainerClass,
 } from "./timelineGanttClasses";
 import { useGanttOverviewPanZoom } from "./useGanttOverviewPanZoom";
 
@@ -23,6 +26,7 @@ interface GanttOverviewPanelProps {
   rows: GanttEventRowModel[];
   overviewWindow: GanttOverviewWindow;
   onOverviewWindowChange: (next: GanttOverviewWindow) => void;
+  onOverviewFetchCommit?: () => void;
   eventStatuses: TimelineEventStatusMap;
   hoveredRowId: string | null;
   onSelectEvent?: (event: TimelineItem) => void;
@@ -34,6 +38,7 @@ export function GanttOverviewPanel({
   rows,
   overviewWindow,
   onOverviewWindowChange,
+  onOverviewFetchCommit,
   eventStatuses,
   hoveredRowId,
   onSelectEvent,
@@ -43,6 +48,7 @@ export function GanttOverviewPanel({
   const { trackRef, beginPan } = useGanttOverviewPanZoom({
     window: overviewWindow,
     onChange: onOverviewWindowChange,
+    onCommit: onOverviewFetchCommit,
   });
   const ticks = useMemo(() => ticksForOverviewWindow(overviewWindow, 12), [overviewWindow]);
   const nowMs = Date.now();
@@ -58,19 +64,18 @@ export function GanttOverviewPanel({
         className={ganttOverviewTrackClass}
         onPointerDown={beginPan}
       >
-        <div className={ganttOverviewAxisClass} data-testid="gantt-overview-axis">
+        <div
+          aria-hidden="true"
+          className={ganttOverviewGridOverlayClass}
+          style={{ gridColumn: 1, gridRow: "1 / -1" }}
+          data-testid="gantt-overview-grid"
+        >
           {ticks.map((tick) => (
             <span
-              key={tick.ms}
-              data-testid="gantt-overview-tick"
-              data-major={tick.major ? "true" : undefined}
-              className={ganttOverviewTickClass(tick.major)}
-              style={{
-                left: `${((tick.ms - overviewWindow.startMs) / overviewWindow.spanMs) * 100}%`,
-              }}
-            >
-              {tick.label}
-            </span>
+              key={`grid-${tick.ms}`}
+              className={ganttOverviewGridLineClass}
+              style={{ left: `${overviewTickLeftPct(tick.ms, overviewWindow)}%` }}
+            />
           ))}
           {nowRatio != null ? (
             <span
@@ -81,20 +86,34 @@ export function GanttOverviewPanel({
           ) : null}
         </div>
 
-        <div className={ganttEventBarRowsContainerClass}>
-          {rows.map((row) => (
-            <GanttOverviewEventRow
-              key={row.rowId}
-              row={row}
-              overviewWindow={overviewWindow}
-              eventStatuses={eventStatuses}
-              isHovered={hoveredRowId === row.rowId}
-              onSelect={onSelectEvent}
-              onHoverStart={() => onHoverStart(row.rowId)}
-              onHoverEnd={onHoverEnd}
-            />
+        <div className={ganttOverviewAxisClass} data-testid="gantt-overview-axis">
+          {ticks.map((tick, index) => (
+            <span
+              key={tick.ms}
+              data-testid="gantt-overview-tick"
+              data-major={tick.major ? "true" : undefined}
+              className={ganttOverviewTickClass(tick.major)}
+              style={{
+                left: `${overviewTickLabelPct(tick, ticks[index + 1]?.ms ?? null, overviewWindow)}%`,
+              }}
+            >
+              {tick.label}
+            </span>
           ))}
         </div>
+
+        {rows.map((row) => (
+          <GanttOverviewEventRow
+            key={row.rowId}
+            row={row}
+            overviewWindow={overviewWindow}
+            eventStatuses={eventStatuses}
+            isHovered={hoveredRowId === row.rowId}
+            onSelect={onSelectEvent}
+            onHoverStart={() => onHoverStart(row.rowId)}
+            onHoverEnd={onHoverEnd}
+          />
+        ))}
       </div>
     </div>
   );

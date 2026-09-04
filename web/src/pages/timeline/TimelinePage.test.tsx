@@ -278,6 +278,8 @@ function makeContainer(
       setShowEnding: vi.fn(),
       filteredEvents: [],
       sidebarEvents: [],
+      sidebarDay: null,
+      sidebarOutOfView: false,
     },
     selection: {
       selectedEvent,

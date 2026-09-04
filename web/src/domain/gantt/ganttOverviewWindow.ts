@@ -20,6 +20,16 @@ import { clipIntervalToAxis, GANTT_DAY_MS, GANTT_HOUR_MS } from "./ganttTimeGeom
 export const OVERVIEW_MIN_SPAN_MS = 2 * GANTT_HOUR_MS;
 export const OVERVIEW_MAX_SPAN_MS = Math.round(10 * 365.25 * GANTT_DAY_MS);
 export const OVERVIEW_ZOOM_FACTOR = 1.2;
+/** Hard cap for GET /calendar/window in 全局/Overview — never approach OVERVIEW_MAX_SPAN_MS. */
+export const OVERVIEW_FETCH_MAX_MS = 90 * GANTT_DAY_MS;
+export const OVERVIEW_FETCH_BUCKET_SHORT_MS = 14 * GANTT_DAY_MS;
+export const OVERVIEW_FETCH_BUCKET_LONG_MS = 30 * GANTT_DAY_MS;
+/** Pan/zoom commits the fetch window after this idle period (pointerup commits immediately). */
+export const OVERVIEW_FETCH_DEBOUNCE_MS = 250;
+/** Drop a tick label when it would sit closer than this fraction of the track. */
+export const OVERVIEW_MIN_TICK_LABEL_PCT = 6;
+/** Floor used when the track width is known — long labels like "2031 Q1" need ~56px. */
+export const OVERVIEW_MIN_TICK_LABEL_PX = 56;
 
 export type GanttOverviewWindow = {
   startMs: number;
@@ -38,12 +48,23 @@ export type OverviewBarLayout = {
   isPoint: boolean;
 };
 
+/**
+ * Duration bars narrower than this (percent of the visible window) read as
+ * ticks on a zoomed-out 全局 canvas — same compact treatment as true points.
+ */
+export const OVERVIEW_COMPACT_WIDTH_PCT = 1.25;
+
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
 export function overviewWindowEndMs(window: GanttOverviewWindow): number {
   return window.startMs + window.spanMs;
+}
+
+/** Last included instant of a half-open `[start, end)` window. */
+export function overviewInclusiveEndMs(window: GanttOverviewWindow): number {
+  return overviewWindowEndMs(window) - 1;
 }
 
 export function clampOverviewSpan(spanMs: number): number {
@@ -157,7 +178,7 @@ function hourTicks(
   let t = startDate.getTime();
   if (t < startMs) t += step;
   const ticks: OverviewTick[] = [];
-  while (t <= endMs && ticks.length < maxTicks + 2) {
+  while (t < endMs && ticks.length < maxTicks + 2) {
     const d = new Date(t);
     ticks.push({
       ms: t,
@@ -173,7 +194,7 @@ function dayTicks(startMs: number, endMs: number, maxTicks: number): OverviewTic
   let cursor = startOfDay(new Date(startMs));
   if (cursor.getTime() < startMs) cursor = addDays(cursor, 1);
   const ticks: OverviewTick[] = [];
-  while (cursor.getTime() <= endMs && ticks.length < maxTicks + 2) {
+  while (cursor.getTime() < endMs && ticks.length < maxTicks + 2) {
     ticks.push({
       ms: cursor.getTime(),
       label: `${cursor.getMonth() + 1}/${cursor.getDate()}`,
@@ -188,7 +209,7 @@ function weekTicks(startMs: number, endMs: number, maxTicks: number): OverviewTi
   let cursor = startOfWeek(new Date(startMs));
   if (cursor.getTime() < startMs) cursor = addDays(cursor, 7);
   const ticks: OverviewTick[] = [];
-  while (cursor.getTime() <= endMs && ticks.length < maxTicks + 2) {
+  while (cursor.getTime() < endMs && ticks.length < maxTicks + 2) {
     ticks.push({
       ms: cursor.getTime(),
       label: `${cursor.getMonth() + 1}/${cursor.getDate()}`,
@@ -211,7 +232,7 @@ function monthTicks(
     cursor = new Date(cursor.getFullYear(), cursor.getMonth() + stepMonths, 1);
   }
   const ticks: OverviewTick[] = [];
-  while (cursor.getTime() <= endMs && ticks.length < maxTicks + 2) {
+  while (cursor.getTime() < endMs && ticks.length < maxTicks + 2) {
     const month = cursor.getMonth();
     ticks.push({
       ms: cursor.getTime(),
@@ -235,7 +256,7 @@ function yearTicks(startMs: number, endMs: number, maxTicks: number): OverviewTi
     cursor = new Date(year, 0, 1);
   }
   const ticks: OverviewTick[] = [];
-  while (cursor.getTime() <= endMs && ticks.length < maxTicks + 2) {
+  while (cursor.getTime() < endMs && ticks.length < maxTicks + 2) {
     ticks.push({
       ms: cursor.getTime(),
       label: String(cursor.getFullYear()),
@@ -246,40 +267,91 @@ function yearTicks(startMs: number, endMs: number, maxTicks: number): OverviewTi
   return ticks;
 }
 
-/** Time-axis ticks that coarsen from hours → days → weeks → months → quarters → years. */
+/** Minimum label spacing as a percent of the track, given an optional pixel width. */
+export function minOverviewTickLabelPct(trackWidthPx: number): number {
+  if (!(trackWidthPx > 0)) return OVERVIEW_MIN_TICK_LABEL_PCT;
+  return Math.max(
+    OVERVIEW_MIN_TICK_LABEL_PCT,
+    (OVERVIEW_MIN_TICK_LABEL_PX / trackWidthPx) * 100,
+  );
+}
+
+/**
+ * Drop labels that would overlap. Prefers a nearby major tick over a minor one.
+ * Positions use the same cell-midpoint / on-hour rules as the axis renderer.
+ */
+export function thinOverviewTicks(
+  ticks: OverviewTick[],
+  window: GanttOverviewWindow,
+  minLabelPct = OVERVIEW_MIN_TICK_LABEL_PCT,
+): OverviewTick[] {
+  if (ticks.length <= 1 || !(minLabelPct > 0) || !(window.spanMs > 0)) return ticks;
+  const kept: OverviewTick[] = [];
+  let lastPct = Number.NEGATIVE_INFINITY;
+  for (let i = 0; i < ticks.length; i++) {
+    const tick = ticks[i];
+    const pct = overviewTickLabelPct(tick, ticks[i + 1]?.ms ?? null, window);
+    if (kept.length > 0 && pct - lastPct < minLabelPct) {
+      const last = kept[kept.length - 1];
+      if (last !== undefined && tick.major && !last.major) {
+        kept[kept.length - 1] = tick;
+        lastPct = pct;
+      }
+      continue;
+    }
+    kept.push(tick);
+    lastPct = pct;
+  }
+  return kept;
+}
+
+/**
+ * Time-axis ticks that coarsen from hours → days → weeks → months → quarters → years.
+ * Hour labels only appear on hour-scale windows; a ~year span is month/quarter (never hours).
+ * Labels closer than `minLabelPct` of the track are skipped so they cannot overlap.
+ */
 export function ticksForOverviewWindow(
   window: GanttOverviewWindow,
   maxTicks = 12,
+  minLabelPct = OVERVIEW_MIN_TICK_LABEL_PCT,
 ): OverviewTick[] {
   const span = Math.max(1, window.spanMs);
   const start = window.startMs;
   const end = start + span;
   const cap = Math.max(4, maxTicks);
 
-  if (span <= 12 * GANTT_HOUR_MS) return hourTicks(start, end, 1, cap);
-  if (span <= 36 * GANTT_HOUR_MS) return hourTicks(start, end, 3, cap);
-  if (span <= 4 * GANTT_DAY_MS) return hourTicks(start, end, 6, cap);
-  if (span <= 16 * GANTT_DAY_MS) return dayTicks(start, end, cap);
-  if (span <= 70 * GANTT_DAY_MS) return weekTicks(start, end, cap);
-  if (span <= 240 * GANTT_DAY_MS) return monthTicks(start, end, 1, cap);
-  if (span <= 800 * GANTT_DAY_MS) return monthTicks(start, end, 3, cap);
-  return yearTicks(start, end, cap);
+  let ticks: OverviewTick[];
+  if (span <= 12 * GANTT_HOUR_MS) ticks = hourTicks(start, end, 1, cap);
+  else if (span <= 36 * GANTT_HOUR_MS) ticks = hourTicks(start, end, 3, cap);
+  else if (span <= 2 * GANTT_DAY_MS) ticks = hourTicks(start, end, 6, cap);
+  else if (span <= 16 * GANTT_DAY_MS) ticks = dayTicks(start, end, cap);
+  else if (span <= 70 * GANTT_DAY_MS) ticks = weekTicks(start, end, cap);
+  else if (span <= 240 * GANTT_DAY_MS) ticks = monthTicks(start, end, 1, cap);
+  else if (span <= 4 * 365 * GANTT_DAY_MS) ticks = monthTicks(start, end, 3, cap);
+  else ticks = yearTicks(start, end, cap);
+
+  return thinOverviewTicks(ticks, window, minLabelPct);
 }
 
 export function formatOverviewWindowLabel(window: GanttOverviewWindow): string {
   const start = new Date(window.startMs);
-  const end = new Date(overviewWindowEndMs(window) - 1);
+  const inclusiveEnd = new Date(overviewInclusiveEndMs(window));
   const span = window.spanMs;
   if (span <= 2 * GANTT_DAY_MS) {
-    return `${start.getMonth() + 1}/${start.getDate()} ${pad2(start.getHours())}:${pad2(start.getMinutes())} – ${end.getMonth() + 1}/${end.getDate()} ${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+    return `${start.getMonth() + 1}/${start.getDate()} ${pad2(start.getHours())}:${pad2(start.getMinutes())} – ${inclusiveEnd.getMonth() + 1}/${inclusiveEnd.getDate()} ${pad2(inclusiveEnd.getHours())}:${pad2(inclusiveEnd.getMinutes())}`;
   }
+  const firstTickDay =
+    startOfDay(start).getTime() < window.startMs ? addDays(startOfDay(start), 1) : startOfDay(start);
+  const lastDay = startOfDay(inclusiveEnd);
+  const labelStart =
+    firstTickDay.getTime() <= lastDay.getTime() ? firstTickDay : start;
   if (span <= 70 * GANTT_DAY_MS) {
-    return `${start.getMonth() + 1}/${start.getDate()} – ${end.getMonth() + 1}/${end.getDate()}`;
+    return `${labelStart.getMonth() + 1}/${labelStart.getDate()} – ${lastDay.getMonth() + 1}/${lastDay.getDate()}`;
   }
   if (span <= 400 * GANTT_DAY_MS) {
-    return `${start.getFullYear()}-${pad2(start.getMonth() + 1)} – ${end.getFullYear()}-${pad2(end.getMonth() + 1)}`;
+    return `${labelStart.getFullYear()}-${pad2(labelStart.getMonth() + 1)} – ${lastDay.getFullYear()}-${pad2(lastDay.getMonth() + 1)}`;
   }
-  return `${start.getFullYear()} – ${end.getFullYear()}`;
+  return `${labelStart.getFullYear()} – ${lastDay.getFullYear()}`;
 }
 
 export function overviewBarLayout(
@@ -302,13 +374,81 @@ export function overviewBarLayout(
   return { leftPct, widthPct, isPoint };
 }
 
+export function overviewBarIsCompact(layout: OverviewBarLayout): boolean {
+  return layout.isPoint || layout.widthPct <= OVERVIEW_COMPACT_WIDTH_PCT;
+}
+
+export function overviewTickLeftPct(tickMs: number, window: GanttOverviewWindow): number {
+  if (!(window.spanMs > 0)) return 0;
+  return ((tickMs - window.startMs) / window.spanMs) * 100;
+}
+
 /**
- * Padded, day-snapped fetch range so small pans do not refetch.
- * Visible window stays inside this range until it approaches the edge.
+ * Hour marks stay on the hour. Day/week/month/year labels sit in the middle
+ * of [tick, nextTick|windowEnd) so they line up with the cell, not the
+ * midnight grid line.
  */
+export function overviewTickLabelPct(
+  tick: OverviewTick,
+  nextTickMs: number | null,
+  window: GanttOverviewWindow,
+): number {
+  if (tick.label.includes(":")) return overviewTickLeftPct(tick.ms, window);
+  const endMs = nextTickMs ?? overviewWindowEndMs(window);
+  const mid = tick.ms + Math.max(0, endMs - tick.ms) / 2;
+  return overviewTickLeftPct(mid, window);
+}
+
+/**
+ * Bucketed, capped fetch range for 全局/Overview.
+ * Span is `min(visibleSpan * 2, 90 days)` so pans inside a 14/30-day bucket
+ * keep the same ISO bounds. Discrete day/week/month views keep ±7d padding
+ * separately; Overview must not stack that pad on top of this window.
+ */
+export function overviewFetchSpanMs(visibleSpanMs: number): number {
+  const span = Number.isFinite(visibleSpanMs) ? Math.max(visibleSpanMs, OVERVIEW_MIN_SPAN_MS) : OVERVIEW_MIN_SPAN_MS;
+  return Math.min(Math.max(span * 2, 2 * GANTT_DAY_MS), OVERVIEW_FETCH_MAX_MS);
+}
+
+function snapDown(ms: number, bucketMs: number): number {
+  return Math.floor(ms / bucketMs) * bucketMs;
+}
+
+function snapUp(ms: number, bucketMs: number): number {
+  return Math.ceil(ms / bucketMs) * bucketMs;
+}
+
 export function overviewFetchWindow(window: GanttOverviewWindow): { start: Date; end: Date } {
-  const padMs = Math.max(window.spanMs * 0.5, GANTT_DAY_MS);
-  const start = startOfDay(new Date(window.startMs - padMs));
-  const endDay = startOfDay(new Date(overviewWindowEndMs(window) + padMs));
-  return { start, end: addDays(endDay, 1) };
+  const w = clampOverviewWindow(window);
+  const visibleStart = w.startMs;
+  const visibleEnd = overviewWindowEndMs(w);
+  const center = visibleStart + w.spanMs / 2;
+  const fetchSpanMs = overviewFetchSpanMs(w.spanMs);
+  const bucketMs =
+    w.spanMs <= 40 * GANTT_DAY_MS
+      ? OVERVIEW_FETCH_BUCKET_SHORT_MS
+      : OVERVIEW_FETCH_BUCKET_LONG_MS;
+
+  let rawStart = center - fetchSpanMs / 2;
+  let rawEnd = center + fetchSpanMs / 2;
+  if (w.spanMs <= OVERVIEW_FETCH_MAX_MS) {
+    rawStart = Math.min(rawStart, visibleStart);
+    rawEnd = Math.max(rawEnd, visibleEnd);
+  }
+
+  let startMs = snapDown(rawStart, bucketMs);
+  let endMs = snapUp(rawEnd, bucketMs);
+  if (endMs - startMs > OVERVIEW_FETCH_MAX_MS) {
+    startMs = snapDown(center - OVERVIEW_FETCH_MAX_MS / 2, bucketMs);
+    endMs = startMs + OVERVIEW_FETCH_MAX_MS;
+  }
+
+  const start = startOfDay(new Date(startMs));
+  let end = startOfDay(new Date(endMs));
+  if (end.getTime() < endMs) end = addDays(end, 1);
+  if (end.getTime() <= start.getTime()) end = addDays(start, 1);
+  if (end.getTime() - start.getTime() > OVERVIEW_FETCH_MAX_MS) {
+    end = new Date(start.getTime() + OVERVIEW_FETCH_MAX_MS);
+  }
+  return { start, end };
 }

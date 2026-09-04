@@ -37,6 +37,7 @@ export type FetchMergedTimelineEventsOpts = {
   taskNameById?: ReadonlyMap<string, string>;
   generalWorksetLabel?: string;
   worksetNameById?: ReadonlyMap<string, string>;
+  signal?: AbortSignal;
 };
 
 /**
@@ -54,6 +55,7 @@ export async function fetchMergedTimelineEvents(
     taskNameById,
     generalWorksetLabel,
     worksetNameById,
+    signal,
   } = opts;
 
   return fetchMergedTimedEvents({
@@ -64,5 +66,6 @@ export async function fetchMergedTimelineEvents(
     includeRrule: true,
     filterPlan: { selectedSources, plan: filterPlan },
     userEventLabels: { taskNameById, generalWorksetLabel, worksetNameById },
+    signal,
   }) as Promise<TimelineItem[]>;
 }

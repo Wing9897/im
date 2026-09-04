@@ -58,6 +58,7 @@ export function makeContext(
 export function renderPanel(props: {
   rangeEvents: TimelineItem[];
   focusedDay?: Date | null;
+  outOfView?: boolean;
   onSelectEvent?: (event: TimelineItem | null) => void;
   context?: Partial<TimelinePageContextValue>;
 }) {
@@ -71,6 +72,7 @@ export function renderPanel(props: {
           children: createElement(EventListPanel, {
             rangeEvents: props.rangeEvents,
             focusedDay: props.focusedDay ?? null,
+            outOfView: props.outOfView,
             onSelectEvent: props.onSelectEvent ?? (() => {}),
           }),
         }),

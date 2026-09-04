@@ -44,6 +44,7 @@ import { createElement } from "react";
 import { MonitorModeProvider } from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetAnalysisStatusState, resetTaskCatalogState, taskCatalogState } from "../../test/context-mocks";
 import { emitResourceModified } from "../../domain/sse/resourceModified";
+import { TIMELINE_RESOURCE_REFRESH_COALESCE_MS } from "../../hooks/useTimelineCalendarRefresh";
 import {
   makeCalendarWindowItem,
   renderTimelineDataHook,
@@ -82,6 +83,7 @@ describe("useTimelineData calendar refresh and errors", () => {
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
       expect.objectContaining({ includeItems: true }),
+      expect.any(AbortSignal),
     );
 
     mockFetchCalendarWindow.mockClear();
@@ -109,6 +111,7 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
       expect.objectContaining({ includeItems: true }),
+      expect.any(AbortSignal),
     );
     const events = resultRef.current!.events;
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
@@ -157,6 +160,7 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
       expect.objectContaining({ includeItems: true }),
+      expect.any(AbortSignal),
     );
     const itemEvent = resultRef.current!.events.find((e) => e.source === "item_remind");
     expect(itemEvent?.id).toBe("item:i1:remind");
@@ -165,16 +169,20 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     mockFetchCalendarWindow.mockClear();
     mockFetchCalendarWindow.mockResolvedValue([]);
-    await act(async () => {
-      emitResourceModified({
-        resourceType: "item",
-        resourceId: "i1",
-        action: "updated",
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        emitResourceModified({
+          resourceType: "item",
+          resourceId: "i1",
+          action: "updated",
+        });
+        await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
       });
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(mockFetchCalendarWindow).toHaveBeenCalled();
+      expect(mockFetchCalendarWindow).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("refreshes user events after user_event SSE", async () => {
@@ -199,16 +207,20 @@ describe("useTimelineData calendar refresh and errors", () => {
 
     mockFetchCalendarWindow.mockClear();
     mockFetchCalendarWindow.mockResolvedValue([]);
-    await act(async () => {
-      emitResourceModified({
-        resourceType: "user_event",
-        resourceId: "ue-1",
-        action: "updated",
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        emitResourceModified({
+          resourceType: "user_event",
+          resourceId: "ue-1",
+          action: "updated",
+        });
+        await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
       });
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(mockFetchCalendarWindow).toHaveBeenCalled();
+      expect(mockFetchCalendarWindow).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("refreshes calendar without refreshing tasks after recurring SSE", async () => {
@@ -216,18 +228,21 @@ describe("useTimelineData calendar refresh and errors", () => {
     mockFetchCalendarWindow.mockClear();
     taskCatalogState.refreshTasks.mockClear();
 
-    await act(async () => {
-      emitResourceModified({
-        resourceType: "recurring",
-        resourceId: "series-1",
-        action: "updated",
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        emitResourceModified({
+          resourceType: "recurring",
+          resourceId: "series-1",
+          action: "updated",
+        });
+        await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
       });
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(mockFetchCalendarWindow).toHaveBeenCalled();
-    expect(taskCatalogState.refreshTasks).not.toHaveBeenCalled();
+      expect(mockFetchCalendarWindow).toHaveBeenCalled();
+      expect(taskCatalogState.refreshTasks).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("refreshes catalog before calendar fetch when a task row changes", async () => {
@@ -238,20 +253,24 @@ describe("useTimelineData calendar refresh and errors", () => {
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
     mockFetchCalendarWindow.mockClear();
 
-    await act(async () => {
-      emitResourceModified({
-        resourceType: "task",
-        resourceId: "evt-new",
-        action: "created",
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        emitResourceModified({
+          resourceType: "task",
+          resourceId: "evt-new",
+          action: "created",
+        });
+        await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
       });
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(taskCatalogState.refreshTasks).toHaveBeenCalled();
-    expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
-      expect.objectContaining({ includeItems: true }),
-    );
+      expect(taskCatalogState.refreshTasks).toHaveBeenCalled();
+      expect(mockFetchCalendarWindow).toHaveBeenCalledWith(
+        expect.objectContaining({ includeItems: true }),
+        expect.any(AbortSignal),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("drops inactive analysis tasks from the assignable timeline task list", async () => {

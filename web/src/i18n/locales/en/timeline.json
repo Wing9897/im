@@ -146,6 +146,7 @@
     "cardTagEndingOnFocusedDay": "Ends that day",
     "phaseFilterAria": "Filter today’s events by progress",
     "emptyFiltered": "No events match this filter",
+    "outOfView": "Not in current view",
     "eventAvatarAria": "Intelligence event and task mark",
     "statusWithLabel": "Status: {value}",
     "subscribeIconAria": "Subscribed",

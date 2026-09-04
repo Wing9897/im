@@ -72,6 +72,9 @@ describe("GanttOverviewEventRow display", () => {
     const { container, onSelect } = renderRow(row);
     const bar = container.querySelector(`[data-testid="event-bar-${eventId}"]`) as HTMLElement;
     expect(bar.style.left).toBe(`${(9 / 24) * 100}%`);
+    expect(bar.className).toContain("absolute");
+    expect(bar.className).toContain("top-1/2");
+    expect(bar.className).not.toContain("relative");
     act(() => {
       bar.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });

@@ -125,7 +125,7 @@ describe("TimelineGanttView", () => {
 
   describe("loading state rendering", () => {
     it("renders loading indicator while fetching", () => {
-      const container = render(makeProps({ initialLoading: true }));
+      const container = render(makeProps({ initialLoading: true, events: [] }));
       expect(container.textContent).toContain("載入排程事件中");
     });
 
@@ -362,6 +362,10 @@ describe("TimelineGanttView", () => {
       expect(
         container.querySelector('[data-testid="event-bar-ue-1"]')?.getAttribute("data-gantt-editable"),
       ).toBeNull();
+      const grid = container.querySelector('[data-testid="gantt-vertical-scroll"] > div');
+      expect((grid as HTMLElement).className).toContain("grid-cols-[168px_minmax(0,1fr)]");
+      expect((grid as HTMLElement).style.gridTemplateRows).toContain("minmax(1.75rem, auto)");
+      expect(container.querySelector('[data-testid="gantt-overview-grid"]')).not.toBeNull();
     });
 
     it("renders exactly one continuous bar per visible event", () => {

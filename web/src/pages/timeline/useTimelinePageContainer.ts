@@ -19,6 +19,7 @@ import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
 import { useGanttOverviewSession } from "./useGanttOverviewSession";
 import { useTimelineFiltering } from "./useTimelineFiltering";
+import { resolveSidebarFocusForWindow } from "./timelinePageUtils";
 import { useTimelineNavigation } from "./useTimelineNavigation";
 import { useTimelinePagePrefs } from "./useTimelinePagePrefs";
 import { useTimelineSelection } from "./useTimelineSelection";
@@ -111,6 +112,7 @@ export function useTimelinePageContainer() {
     rangeStart: dataRangeStart,
     rangeEnd: dataRangeEnd,
     monthCardsMode,
+    padFetchWindow: !overviewActive,
   });
   const subscribeAvailability = resolveSubscribeAvailability({
     connected: catalog.session?.connected,
@@ -124,6 +126,10 @@ export function useTimelinePageContainer() {
     catalogLoading: data.tasksLoading,
   });
 
+  const sidebarFocus = overviewActive
+    ? resolveSidebarFocusForWindow(prefs.focusedDay, visibleRangeStart, visibleRangeEnd)
+    : { day: prefs.focusedDay, outOfView: false };
+
   const filtering = useTimelineFiltering({
     events: data.events,
     eventTimeOverrides,
@@ -131,7 +137,7 @@ export function useTimelinePageContainer() {
     rangeEnd: visibleRangeEnd,
     monthCursor: navigation.monthCursor,
     showDismissed: prefs.showDismissed,
-    focusedDay: prefs.focusedDay,
+    focusedDay: sidebarFocus.day,
   });
 
   const selection = useTimelineSelection({
@@ -243,6 +249,7 @@ export function useTimelinePageContainer() {
       visibleRangeLabel: overviewActive ? overview.visibleRangeLabel : navigation.visibleRangeLabel,
       overviewWindow: overview.overviewWindow,
       setOverviewWindow: overview.setOverviewWindow,
+      commitFetchWindow: overview.commitFetchWindow,
     },
     filters: {
       showDismissed: prefs.showDismissed,
@@ -253,6 +260,8 @@ export function useTimelinePageContainer() {
       setShowEnding: prefs.setShowEnding,
       filteredEvents: filtering.filteredEvents,
       sidebarEvents: filtering.sidebarEvents,
+      sidebarDay: sidebarFocus.day,
+      sidebarOutOfView: sidebarFocus.outOfView,
     },
     selection: {
       selectedEvent: selection.selectedEvent,

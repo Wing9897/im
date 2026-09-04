@@ -17,12 +17,15 @@ const OVERVIEW_PAN_THRESHOLD_PX = 3;
 export function useGanttOverviewPanZoom(args: {
   window: GanttOverviewWindow;
   onChange: (next: GanttOverviewWindow) => void;
+  onCommit?: () => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef(args.window);
   windowRef.current = args.window;
   const onChangeRef = useRef(args.onChange);
   onChangeRef.current = args.onChange;
+  const onCommitRef = useRef(args.onCommit);
+  onCommitRef.current = args.onCommit;
 
   useEffect(() => {
     const el = trackRef.current;
@@ -61,6 +64,7 @@ export function useGanttOverviewPanZoom(args: {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
+      onCommitRef.current?.();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);

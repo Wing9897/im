@@ -12,6 +12,7 @@ export function useTimelineLoadTimeout(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Cached events (including refresh) must not surface a timeout wipe/toast.
     if (initialLoading && !hasEvents) {
       setTimedOut(false);
       timeoutRef.current = setTimeout(() => setTimedOut(true), timeoutMs);

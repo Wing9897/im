@@ -92,10 +92,41 @@ describe("useAsyncResource", () => {
     });
 
     expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(fetcher).toHaveBeenCalledWith({ id: "x" });
+    expect(fetcher).toHaveBeenCalledWith({ id: "x" }, expect.any(AbortSignal));
     expect(result).toEqual({ value: 42 });
     expect(latest!.data).toEqual({ value: 42 });
     expect(latest!.loading).toBe(false);
+    expect(latest!.error).toBeNull();
+    expect(mockShowToast).not.toHaveBeenCalled();
+
+    cleanup(root, container);
+  });
+
+  it("abort: cancelled execute is not a user-facing error", async () => {
+    const fetcher = vi
+      .fn<(args: unknown, signal: AbortSignal) => Promise<string>>()
+      .mockImplementationOnce(
+        (_args, signal) =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener("abort", () => {
+              reject(new DOMException("Aborted", "AbortError"));
+            });
+          }),
+      )
+      .mockResolvedValueOnce("ok");
+
+    const { root, container } = renderHarness(
+      fetcher as unknown as (args: unknown) => Promise<unknown>,
+    );
+
+    act(() => {
+      void latest!.execute(undefined);
+    });
+    await act(async () => {
+      await latest!.execute(undefined);
+    });
+
+    expect(latest!.data).toBe("ok");
     expect(latest!.error).toBeNull();
     expect(mockShowToast).not.toHaveBeenCalled();
 

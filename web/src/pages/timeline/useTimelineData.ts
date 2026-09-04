@@ -20,6 +20,7 @@ import {
   type SubscribedCalendarSelection,
 } from "../../domain/calendarShare/subscribedCalendars";
 import { toErrorMessage } from "../../utils/errors";
+import { isCancelledError } from "../../api/httpRetry";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useTimelineCalendarRefresh } from "../../hooks/useTimelineCalendarRefresh";
 import type { AnalysisTask, TimelineItem, TaskActivitySpan } from "../../types";
@@ -46,6 +47,11 @@ interface UseTimelineDataOptions {
    * only when the merged catalog stays at or under 12 cards.
    */
   monthCardsMode?: boolean;
+  /**
+   * When false, fetch exactly `[rangeStart, rangeEnd]` (全局/Overview already
+   * applies a capped bucket). Discrete day/week/month keep the default ±7d pad.
+   */
+  padFetchWindow?: boolean;
 }
 
 interface UseTimelineDataReturn {
@@ -128,6 +134,7 @@ export function useTimelineData({
   rangeStart,
   rangeEnd,
   monthCardsMode = false,
+  padFetchWindow = true,
 }: UseTimelineDataOptions): UseTimelineDataReturn {
   const { monitorMode } = useMonitorMode();
   // Pages shell stays keep-mounted under canvas — pause expensive Timeline
@@ -152,10 +159,12 @@ export function useTimelineData({
   );
   const planKey = useMemo(() => filterPlanKey(filterPlan), [filterPlan]);
 
-  const calendarWindow = useMemo(
-    () => paddedTimelineFetchWindow(rangeStart, rangeEnd),
-    [rangeStart, rangeEnd],
-  );
+  const calendarWindow = useMemo(() => {
+    if (!padFetchWindow) {
+      return { startIso: rangeStart.toISOString(), endIso: rangeEnd.toISOString() };
+    }
+    return paddedTimelineFetchWindow(rangeStart, rangeEnd);
+  }, [padFetchWindow, rangeStart, rangeEnd]);
   const calendarWindowRef = useRef(calendarWindow);
   calendarWindowRef.current = calendarWindow;
   const selectedSourcesRef = useRef(selectedSources);
@@ -174,7 +183,7 @@ export function useTimelineData({
   const lastSubscribedRef = useRef<TimelineItem[]>([]);
 
   const fetcher = useCallback(
-    async (key: TimelineFetchKey): Promise<TimelineFetchResult> => {
+    async (key: TimelineFetchKey, signal: AbortSignal): Promise<TimelineFetchResult> => {
       const localEmpty =
         key.selectedSources !== null &&
         key.selectedSources.taskIds.length === 0 &&
@@ -206,6 +215,7 @@ export function useTimelineData({
             taskNameById,
             generalWorksetLabel,
             worksetNameById,
+            signal,
           });
       let subscribed: TimelineItem[] = [];
       let shareError: string | null = null;
@@ -214,7 +224,11 @@ export function useTimelineData({
         : resolvedSubscribeKeys(key.selectedSubscribeKeys, key.subscribeCatalogKeys);
       if (visibleKeys.length > 0) {
         try {
-          const remote = await fetchCalendarShareSubscriptionEvents(key.startIso, key.endIso);
+          const remote = await fetchCalendarShareSubscriptionEvents(
+            key.startIso,
+            key.endIso,
+            signal,
+          );
           subscribed = applySubscribedDismissals(
             projectSubscribedTimelineItems(remote).filter((event) =>
               subscribedEventVisible(event.source, key.selectedSubscribeKeys, key.subscribeCatalogKeys),
@@ -222,6 +236,9 @@ export function useTimelineData({
           );
           lastSubscribedRef.current = subscribed;
         } catch (error) {
+          if (isCancelledError(error) || signal.aborted) {
+            throw error;
+          }
           shareError = toErrorMessage(error);
           subscribed = lastSubscribedRef.current;
         }

@@ -98,7 +98,7 @@ describe("DashboardViewerToolbar", () => {
   }
 
   it("puts a visible search TextField in the tasks catalog OpsControlBar", () => {
-    const container = track({ isWorksetView: false, taskCount: 3 });
+    const container = track({ isWorksetView: false, taskCount: 3 }, "/tasks");
 
     const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
     expect(toolbar).not.toBeNull();
@@ -122,16 +122,21 @@ describe("DashboardViewerToolbar", () => {
     expect(actions!.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
     expect(actions!.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
     expect(actions!.textContent).toContain("新增任務");
+    expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
+    expect(toolbar.textContent).not.toContain("目錄");
+    expect(toolbar.textContent).not.toContain("流程圖");
   });
 
   it("keeps the tasks search field in the toolbar when the catalog is empty", () => {
-    const container = track({ isWorksetView: false, taskCount: 0 });
+    const container = track({ isWorksetView: false, taskCount: 0 }, "/tasks");
 
     const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
     const search = toolbar.querySelector('[data-testid="tasks-search"]');
     expect(search).toBeInstanceOf(HTMLInputElement);
     expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
+    expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
+    expect(toolbar.textContent).not.toContain("流程圖");
   });
 
   it("keeps workset search in the worksets catalog toolbar", () => {
@@ -196,6 +201,8 @@ describe("DashboardViewerToolbar", () => {
     ) as HTMLButtonElement;
     expect(scheduling).not.toBeNull();
     expect(scheduling.getAttribute("aria-label")).toBe("全局調度設定");
+    expect(tasks.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
+    expect(tasks.textContent).not.toContain("流程圖");
 
     const worksets = track({ isWorksetView: true, taskCount: 0 }, "/worksets");
     expect(worksets.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();

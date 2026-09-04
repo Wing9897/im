@@ -41,6 +41,7 @@ interface GanttEventBarProps {
   isHovered: boolean;
   isCompact: boolean;
   extraClassName?: string;
+  layout?: "grid" | "overlay";
   style: CSSProperties;
   eventStatuses: TimelineEventStatusMap;
   onSelect?: (event: TimelineItem) => void;
@@ -53,6 +54,7 @@ export function GanttEventBar({
   isHovered,
   isCompact,
   extraClassName,
+  layout = "grid",
   style,
   eventStatuses,
   onSelect,
@@ -66,7 +68,7 @@ export function GanttEventBar({
     <div
       data-testid={`event-bar-${event.id}`}
       data-status={status}
-      className={[ganttBarClass(isHovered, isCompact, dismissed), extraClassName]
+      className={[ganttBarClass(isHovered, isCompact, dismissed, layout), extraClassName]
         .filter(Boolean)
         .join(" ")}
       style={{

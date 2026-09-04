@@ -1,7 +1,9 @@
 import {
+  overviewBarIsCompact,
   overviewBarLayout,
   type GanttOverviewWindow,
 } from "../../../domain/gantt/ganttOverviewWindow";
+import { timelineEventDateRange } from "../../../domain/timeline/dateUtils";
 import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGanttRows";
@@ -9,7 +11,6 @@ import { ganttOverviewTrackRowClass } from "./timelineGanttClasses";
 import {
   GanttEventBar,
   GanttEventBarTooltip,
-  occurrenceDisplayRange,
   useGanttBarTooltip,
 } from "./GanttEventBar";
 
@@ -48,10 +49,10 @@ export function GanttOverviewEventRow({
       className={ganttOverviewTrackRowClass(isHovered)}
     >
       {row.occurrences.map((event) => {
-        const { start, displayEnd } = occurrenceDisplayRange(event);
+        const { start, end } = timelineEventDateRange(event);
         const layout = overviewBarLayout(
           start.getTime(),
-          displayEnd ? displayEnd.getTime() : null,
+          Number.isNaN(end.getTime()) ? null : end.getTime(),
           overviewWindow,
         );
         if (!layout) return null;
@@ -61,8 +62,8 @@ export function GanttOverviewEventRow({
             key={event.id}
             event={event}
             isHovered={isHovered}
-            isCompact={layout.isPoint}
-            extraClassName="absolute top-1/2 !mx-0 -translate-y-1/2"
+            isCompact={overviewBarIsCompact(layout)}
+            layout="overlay"
             style={{
               left: `${layout.leftPct}%`,
               width: `${layout.widthPct}%`,

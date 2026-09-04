@@ -93,7 +93,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       includeUser: true,
       includeRecurring: true,
       includeItems: true,
-    });
+    }, expect.any(AbortSignal));
   });
 
   it("maps recurring window rows into events in the all-tasks view", async () => {
@@ -227,6 +227,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         includeRecurring: true,
         includeItems: true,
       }),
+      expect.any(AbortSignal),
     );
     expect(resultRef.current!.timelineEvents).toHaveLength(2);
     expect(resultRef.current!.timelineEventsInitialLoading).toBe(false);
@@ -253,6 +254,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         includeRecurring: false,
         includeItems: false,
       }),
+      expect.any(AbortSignal),
     );
   });
 
@@ -330,6 +332,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         includeRecurring: true,
         includeItems: true,
       }),
+      expect.any(AbortSignal),
     );
   });
 });

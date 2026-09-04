@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { emitResourceModified } from "../domain/sse/resourceModified";
 import { ANALYSIS_EVENTS_MODES } from "../domain/tasks/analysisModeCapabilities";
-import { useTimelineCalendarRefresh } from "./useTimelineCalendarRefresh";
+import { useTimelineCalendarRefresh, TIMELINE_RESOURCE_REFRESH_COALESCE_MS } from "./useTimelineCalendarRefresh";
 
 const mockUseRefreshOnAnalysisEvent = vi.hoisted(() => vi.fn());
 
@@ -32,6 +32,7 @@ describe("useTimelineCalendarRefresh", () => {
   const refreshTasks = vi.fn(async () => [{ id: "rec-new" }]);
 
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -41,6 +42,7 @@ describe("useTimelineCalendarRefresh", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.useRealTimers();
   });
 
   it("wires analysis refresh for intel_event + agent when enabled", () => {
@@ -95,7 +97,7 @@ describe("useTimelineCalendarRefresh", () => {
         resourceId: "ue-1",
         action: "created",
       });
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
     });
 
     expect(refreshEvents).toHaveBeenCalledTimes(1);
@@ -120,11 +122,38 @@ describe("useTimelineCalendarRefresh", () => {
         resourceId: "rec-new",
         action: "created",
       });
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
     });
 
     expect(refreshTasks).toHaveBeenCalledTimes(1);
     expect(refreshEvents).toHaveBeenCalledWith([{ id: "rec-new" }]);
+  });
+
+  it("coalesces resource_modified bursts into one refresh", async () => {
+    act(() =>
+      root.render(
+        createElement(Probe, {
+          enabled: true,
+          refreshEvents,
+        }),
+      ),
+    );
+
+    refreshEvents.mockClear();
+    await act(async () => {
+      emitResourceModified({
+        resourceType: "user_event",
+        resourceId: "ue-1",
+        action: "created",
+      });
+      emitResourceModified({
+        resourceType: "user_event",
+        resourceId: "ue-2",
+        action: "updated",
+      });
+      await vi.advanceTimersByTimeAsync(TIMELINE_RESOURCE_REFRESH_COALESCE_MS);
+    });
+
+    expect(refreshEvents).toHaveBeenCalledTimes(1);
   });
 });
