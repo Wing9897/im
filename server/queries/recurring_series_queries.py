@@ -37,12 +37,9 @@ SELECT id,
 FROM recurring_schedules
 """
 
-# Backward-compatible private alias for in-module call sites.
-_SERIES_SELECT = SERIES_SELECT
-
 
 async def fetch_series_row(db: Any, series_id: str) -> dict[str, Any] | None:
-    return await db.fetch_one(f"{_SERIES_SELECT} WHERE id = ?", (series_id,))
+    return await db.fetch_one(f"{SERIES_SELECT} WHERE id = ?", (series_id,))
 
 
 async def list_series_rows(
@@ -79,7 +76,7 @@ async def list_series_rows(
         tuple(params),
     )
     total = int(count_row["n"] if count_row else 0)
-    sql = f"{_SERIES_SELECT} {where} ORDER BY created_at ASC, id ASC"
+    sql = f"{SERIES_SELECT} {where} ORDER BY created_at ASC, id ASC"
     if limit is not None:
         sql += " LIMIT ? OFFSET ?"
         params.extend((int(limit), max(0, int(offset))))

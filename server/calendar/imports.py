@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from typing import Any
 
 from server.calendar.ics import ParsedIcsEvent, parse_ics
 from server.calendar.imports_upsert import _upsert_recurring_task, _upsert_user_event
 from server.db.database import Database
-from server.util import new_id, utc_now_iso
+from server.util import new_id, parse_json_list, utc_now_iso
 
 __all__ = [
     "CalendarImportError",
@@ -30,14 +29,8 @@ class ImportSelection:
     fingerprint: str
 
 
-def _json_list(value: Any) -> list[str]:
-    if not isinstance(value, str) or not value:
-        return []
-    try:
-        parsed = json.loads(value)
-    except (TypeError, ValueError):
-        return []
-    return [str(item) for item in parsed] if isinstance(parsed, list) else []
+def _json_str_list(value: Any) -> list[str]:
+    return [str(item) for item in parse_json_list(value)]
 
 
 def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any]:
@@ -52,8 +45,8 @@ def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any
             "timezone": row.get("event_timezone"),
             "timezoneIcal": row.get("event_timezone_ical"),
             "rrule": row.get("rrule"),
-            "exdates": _json_list(row.get("event_exdates_json")),
-            "rdates": _json_list(row.get("event_rdates_json")),
+            "exdates": _json_str_list(row.get("event_exdates_json")),
+            "rdates": _json_str_list(row.get("event_rdates_json")),
         }
     return {
         "title": str(row.get("title") or ""),

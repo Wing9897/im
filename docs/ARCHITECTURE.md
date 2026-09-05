@@ -132,7 +132,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `services/task_policy.py` | HTTP-agnostic task write policy (`ALLOWED_MODES`, agent-policy fields, workset resolve, require-row); routes map `TaskWriteError` → 422 |
 | `services/task_crud.py` | Task CRUD façade (`task_crud_list` / `task_crud_mutate`) for REST catalog + mutations |
 | `services/recurring_series_writes.py` | Standalone recurring-series write façade (`create` / `patch` / hard delete) |
-| `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
+| `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps; owns `utc_now_iso` (re-exported by `util.py`) |
 | `calendar/user_events_read.py`／`user_events_write.py` | Shared read／write halves for manual UI + assistant calendar tools (wire shape via `wire/serializers.serialize_user_event`; single-row query stays in `queries/calendar_queries.fetch_user_event`) |
 | `actions/` | Automated responses — Telegram send, Discord send, HTTP webhook, MQTT publish |
 | `outbound.py` | Outbound notify dispatch helpers used by actions |

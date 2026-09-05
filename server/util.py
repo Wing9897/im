@@ -5,14 +5,22 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import Mapping
-from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
+# Time formatting lives in ``server.time_iso``; re-exported for the many call sites.
+from server.time_iso import utc_now_iso
 
-def utc_now_iso() -> str:
-    """Current UTC time as ISO 8601 with a trailing Z (second precision)."""
-    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+__all__ = [
+    "is_openai_json_mode_enabled",
+    "new_id",
+    "parse_bool",
+    "parse_json_dict",
+    "parse_json_list",
+    "parse_mqtt_url",
+    "task_value",
+    "utc_now_iso",
+]
 
 
 def new_id() -> str:

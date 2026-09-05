@@ -125,20 +125,8 @@ def json_array_text(value: Any) -> str:
     """Normalize a JSON-array field to compact text (``[]`` if empty/invalid)."""
     if isinstance(value, str):
         return value.strip() or "[]"
-    if value is None:
-        return "[]"
-    if isinstance(value, list):
-        try:
-            return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-        except (TypeError, ValueError):
-            return "[]"
-    parsed = parse_json_list(value)
-    if parsed:
-        try:
-            return json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
-        except (TypeError, ValueError):
-            return "[]"
+    items = parse_json_list(value)
     try:
-        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+        return json.dumps(items, ensure_ascii=False, separators=(",", ":"))
     except (TypeError, ValueError):
         return "[]"
