@@ -1,3 +1,5 @@
+import { compactOverlayBtnClass, compactSelectTriggerClass } from "../../../components/ui/controlStyles";
+
 export type PanelSpineVariant = "event" | "live";
 
 export const mapContainerClass = "relative flex h-full flex-1 flex-col";
@@ -130,8 +132,7 @@ export const mapTransientItemsColumnClass = "flex min-w-0 flex-1 flex-col gap-1"
 export const mapBottomBarClass =
   "im-surface-chrome shrink-0 overflow-visible border-t border-surface-border";
 
-export const mapSmallBtnClass =
-  "cursor-pointer whitespace-nowrap rounded-md border border-surface-border bg-transparent px-2.5 py-1 text-caption font-medium text-text-secondary transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";
+export const mapSmallBtnClass = compactOverlayBtnClass;
 
 const mapSmallBtnActiveClass =
   "border-[var(--accent-pink)] text-[var(--accent-pink)]";
@@ -139,7 +140,7 @@ const mapSmallBtnActiveClass =
 const mapSmallBtnMutedClass = "border-surface-border text-text-muted";
 
 /** LIVE±Nh MenuSelect trigger — match overlay buttons, override form-chrome h-8/card bg. */
-export const mapSmallSelectClass = `${mapSmallBtnClass} !h-auto !min-h-0 !max-h-none !bg-transparent pr-7`;
+export const mapSmallSelectClass = compactSelectTriggerClass;
 
 export function overlayButtonClass(active: boolean): string {
   return [mapSmallBtnClass, active ? mapSmallBtnActiveClass : mapSmallBtnMutedClass].join(" ");

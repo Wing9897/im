@@ -17,8 +17,7 @@ import {
   type TimelineMonthLayout,
 } from "../../../domain/timeline/monthCardSources";
 import { MenuSelect, OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
-import { pageOpsControlClass } from "../../../components/ui/controlStyles";
-import { mapSmallSelectClass } from "../../intelligence/map/mapViewClasses";
+import { compactSelectTriggerClass, pageOpsControlClass } from "../../../components/ui/controlStyles";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import type { SubscribeAvailability, SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
 
@@ -209,7 +208,7 @@ export function TimelineControlBar({
           onChange={(next) => onOverviewRangeChange?.(next as OverviewRangePresetId)}
           data-testid="gantt-overview-range-select"
           className="shrink-0"
-          triggerClassName={`${pageOpsControlClass} ${mapSmallSelectClass}`}
+          triggerClassName={`${pageOpsControlClass} ${compactSelectTriggerClass}`}
         />
       ) : null}
 

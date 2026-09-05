@@ -32,3 +32,10 @@ export const pageOpsControlClass = "im-page-ops-ctrl";
 
 /** Shared 30px square icon button for page ops bars. */
 export const pageOpsIconButtonClass = "im-page-ops-icon-btn";
+
+/** Compact overlay/toolbar button chrome (map LIVE±Nh, timeline range select). */
+export const compactOverlayBtnClass =
+  "cursor-pointer whitespace-nowrap rounded-md border border-surface-border bg-transparent px-2.5 py-1 text-caption font-medium text-text-secondary transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";
+
+/** Compact MenuSelect trigger — match overlay buttons, override form-chrome h-8/card bg. */
+export const compactSelectTriggerClass = `${compactOverlayBtnClass} !h-auto !min-h-0 !max-h-none !bg-transparent pr-7`;

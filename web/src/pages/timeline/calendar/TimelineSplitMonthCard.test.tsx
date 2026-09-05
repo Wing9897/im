@@ -255,11 +255,11 @@ describe("TimelineSplitMonthCard", () => {
     const icon = subscribed.container.querySelector('[data-testid="timeline-month-card-subscribe-icon"]');
     expect(icon).not.toBeNull();
     expect(icon?.getAttribute("aria-label")).toBe("訂閱日曆");
-    expect(icon?.getAttribute("title")).toBe("已訂閱");
+    expect(icon?.parentElement?.getAttribute("title")).toBe("已訂閱");
     const header = subscribed.container.querySelector(".im-split-month-header");
     const title = subscribed.container.querySelector(".im-split-month-title");
     expect(header?.contains(icon)).toBe(true);
-    expect(title?.nextElementSibling).toBe(icon);
+    expect(title?.nextElementSibling).toBe(icon?.parentElement);
   });
 
   it("renders a cover strip between the title and weekday row", async () => {
