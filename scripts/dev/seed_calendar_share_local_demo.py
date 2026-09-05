@@ -11,7 +11,8 @@ Env:
   VERIFY_BEARER / IM_ACCESS_TOKEN — after admin register (loopback not exempt)
   IC_BASE — IntelligenceCalendar origin (default http://127.0.0.1:8787)
 
-IC demo users from IntelligenceCalendar ``scripts/seed_demo_calendars.py --dev`` use password ``change-me``.
+IC local users are created with ``.venv\\Scripts\\python.exe -m app create-user``
+(e.g. ``--handle Wing --password change-me``); there is no ``scripts/seed_demo_calendars.py``.
 """
 
 from __future__ import annotations
