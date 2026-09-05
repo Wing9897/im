@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDebouncedCallback } from "../../hooks/useDebouncedCallback";
 
 import {
   OVERVIEW_FETCH_DEBOUNCE_MS,
@@ -52,22 +53,26 @@ export function useGanttOverviewSession(options: {
   const wasOverview = useRef(false);
   const visibleRef = useRef(overviewWindow);
   visibleRef.current = overviewWindow;
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const applyVisible = useCallback((next: GanttOverviewWindow): GanttOverviewWindow => {
     const clamped = clampOverviewWindow(next);
     visibleRef.current = clamped;
     return clamped;
   }, []);
 
-  const commitFetchWindow = useCallback(() => {
-    if (debounceRef.current != null) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
+  const applyCommitted = useCallback(() => {
     const next = clampOverviewWindow(visibleRef.current);
     setCommittedFetchWindow((prev) => (windowsEqual(prev, next) ? prev : next));
   }, []);
+
+  const { schedule: scheduleFetchCommit, cancel: cancelFetchCommit } = useDebouncedCallback(
+    applyCommitted,
+    OVERVIEW_FETCH_DEBOUNCE_MS,
+  );
+
+  const commitFetchWindow = useCallback(() => {
+    cancelFetchCommit();
+    applyCommitted();
+  }, [applyCommitted, cancelFetchCommit]);
 
   const applyNavigatedWindow = useCallback(
     (next: GanttOverviewWindow) => {
@@ -77,20 +82,6 @@ export function useGanttOverviewSession(options: {
     },
     [applyVisible, commitFetchWindow],
   );
-
-  const scheduleFetchCommit = useCallback(() => {
-    if (debounceRef.current != null) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      debounceRef.current = null;
-      commitFetchWindow();
-    }, OVERVIEW_FETCH_DEBOUNCE_MS);
-  }, [commitFetchWindow]);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current != null) clearTimeout(debounceRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     if (overviewMode && !wasOverview.current) {

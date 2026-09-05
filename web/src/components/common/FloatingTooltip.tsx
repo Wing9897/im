@@ -6,6 +6,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { zIndex } from "../../styles/tokens";
 
 type FloatingTooltipProps = {
   open: boolean;
@@ -87,7 +88,7 @@ export function FloatingTooltip(props: FloatingTooltipProps) {
         position: "fixed",
         top,
         left,
-        zIndex: 3000,
+        zIndex: zIndex.tooltip,
       });
     };
 
@@ -117,7 +118,7 @@ export function FloatingTooltip(props: FloatingTooltipProps) {
       ]
         .filter(Boolean)
         .join(" ")}
-      style={style ?? { position: "fixed", top: -9999, left: -9999, zIndex: 3000 }}
+      style={style ?? { position: "fixed", top: -9999, left: -9999, zIndex: zIndex.tooltip }}
     >
       {children}
     </div>,

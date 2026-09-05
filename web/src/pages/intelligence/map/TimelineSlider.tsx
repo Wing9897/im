@@ -1,7 +1,7 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import type { TimeWindow } from "../../../types";
-import { formatDateTime, formatTickLabel } from "../../../utils/dateFormat";
+import { formatDateTime, formatTickLabel } from "../../../domain/timeline/dateUtils";
 import { ONE_HOUR } from "../../../domain/intelligence/timelineSliderLayout";
 import { useTimelineSliderInteraction } from "./useTimelineSliderInteraction";
 import {

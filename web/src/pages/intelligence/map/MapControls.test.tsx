@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../../styles/tokens";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 import { MapControls } from "./MapControls";
 
@@ -115,7 +116,7 @@ describe("MapControls", () => {
     expect(row!.contains(list)).toBe(false);
     expect(list?.parentElement).toBe(document.body);
     expect(list?.style.position).toBe("fixed");
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
     expect(list?.textContent).toMatch(/LIVE ±1h/);
     expect(list?.textContent).toMatch(/LIVE ±12h/);
 

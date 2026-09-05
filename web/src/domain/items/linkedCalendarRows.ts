@@ -1,7 +1,7 @@
 import type { UserEvent } from "../../api/userEvents";
 import type { RecurringSeries } from "../../types/recurring";
 import { isExpiresCalendarEvent } from "../timeline/userEventCalendarKind";
-import { formatDateOnly, formatDateTime } from "../../utils/dateFormat";
+import { formatDateOnly, formatDateTime } from "../timeline/dateUtils";
 
 export type LinkedCalendarRowBase = {
   id: string;

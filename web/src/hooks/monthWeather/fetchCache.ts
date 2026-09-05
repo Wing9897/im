@@ -1,5 +1,5 @@
 import { fetchWeatherForecast } from "../../api/weather";
-import { dateKey } from "../../utils/dateFormat";
+import { dateKey } from "../../domain/timeline/dateUtils";
 
 export type DailyWeather = {
   code: number;

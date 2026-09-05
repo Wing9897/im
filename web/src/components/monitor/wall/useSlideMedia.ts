@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDebouncedCallback } from "../../../hooks/useDebouncedCallback";
 
 import { fetchMessageMediaBlob } from "../../../api/messages";
 import type { Message } from "../../../types";
@@ -72,32 +73,8 @@ export function useSlideMedia({
   const [attempt, setAttempt] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const retry = useCallback(() => setAttempt((current) => current + 1), []);
-
-  useEffect(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-
-    if (!enabled || !message?.media || !isVisualMediaKind(message.media.kind)) {
-      setObjectUrl(null);
-      setLoading(false);
-      setFailed(false);
-      return undefined;
-    }
-
-    const cached = getCachedUrl(message.id);
-    if (cached) {
-      setObjectUrl(cached);
-      setLoading(false);
-      setFailed(false);
-      return undefined;
-    }
-
-    const targetId = message.id;
-    setObjectUrl(null);
-    setFailed(false);
-    setLoading(true);
-
-    const debounceTimer = window.setTimeout(() => {
+  const startFetch = useCallback(
+    (targetId: string) => {
       const controller = new AbortController();
       abortRef.current = controller;
       void (async () => {
@@ -120,14 +97,45 @@ export function useSlideMedia({
           }
         }
       })();
-    }, MEDIA_DEBOUNCE_MS);
+    },
+    [putCachedUrl],
+  );
+  const { schedule: scheduleFetch, cancel: cancelFetch } = useDebouncedCallback(
+    startFetch,
+    MEDIA_DEBOUNCE_MS,
+  );
+
+  useEffect(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    cancelFetch();
+
+    if (!enabled || !message?.media || !isVisualMediaKind(message.media.kind)) {
+      setObjectUrl(null);
+      setLoading(false);
+      setFailed(false);
+      return undefined;
+    }
+
+    const cached = getCachedUrl(message.id);
+    if (cached) {
+      setObjectUrl(cached);
+      setLoading(false);
+      setFailed(false);
+      return undefined;
+    }
+
+    setObjectUrl(null);
+    setFailed(false);
+    setLoading(true);
+    scheduleFetch(message.id);
 
     return () => {
-      window.clearTimeout(debounceTimer);
+      cancelFetch();
       abortRef.current?.abort();
       abortRef.current = null;
     };
-  }, [attempt, enabled, getCachedUrl, message, putCachedUrl]);
+  }, [attempt, cancelFetch, enabled, getCachedUrl, message, scheduleFetch]);
 
   return { objectUrl, loading, failed, retry };
 }

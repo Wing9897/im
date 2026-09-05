@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import { weatherIcon } from "../../../hooks/useMonthWeather";
-import { dateKey } from "../../../utils/dateFormat";
+import { dateKey } from "../../../domain/timeline/dateUtils";
 
 type TimelineWeatherChipProps = {
   day: Date;

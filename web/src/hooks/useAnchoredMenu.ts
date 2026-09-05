@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { zIndex as zIndexToken } from "../styles/tokens";
 
 export type AnchoredMenuPosition = {
   top: number;
@@ -163,7 +164,7 @@ export function anchoredMenuPortalStyle(
     left: menuPos?.left ?? -9999,
     width: menuPos?.width ?? undefined,
     minWidth: menuPos?.width ?? undefined,
-    zIndex: 3000,
+    zIndex: zIndexToken.menu,
     visibility: menuPos ? "visible" : "hidden",
     ...(menuPos?.maxHeight != null ? { maxHeight: menuPos.maxHeight } : {}),
   };

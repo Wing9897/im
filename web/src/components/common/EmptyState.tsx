@@ -1,4 +1,8 @@
 import React from "react";
+import {
+  EMPTY_STATE_ILLUSTRATIONS,
+  type EmptyStateIllustrationKey,
+} from "../../assets/illustrations/EmptyStateIllustrations";
 
 interface EmptyStateProps {
   title: string;
@@ -8,6 +12,8 @@ interface EmptyStateProps {
   compact?: boolean;
   /** Optional illustration rendered above the title */
   illustration?: React.ReactNode;
+  /** Resolve an illustration from the shared map (overridden by `illustration`). */
+  illustrationKey?: EmptyStateIllustrationKey;
   className?: string;
 }
 
@@ -18,8 +24,11 @@ export const EmptyState = React.memo(function EmptyState({
   actions,
   compact = false,
   illustration,
+  illustrationKey,
   className,
 }: EmptyStateProps) {
+  const Illustration = illustrationKey ? EMPTY_STATE_ILLUSTRATIONS[illustrationKey] : null;
+  const resolvedIllustration = illustration ?? (Illustration ? <Illustration /> : null);
   return (
     <div
       role="status"
@@ -32,8 +41,8 @@ export const EmptyState = React.memo(function EmptyState({
         .filter(Boolean)
         .join(" ")}
     >
-      {illustration ? (
-        <div className="mb-lg flex h-16 w-16 items-center justify-center">{illustration}</div>
+      {resolvedIllustration ? (
+        <div className="mb-lg flex h-16 w-16 items-center justify-center">{resolvedIllustration}</div>
       ) : null}
       <div className="max-w-[420px] text-section-title font-semibold leading-snug tracking-wide text-text-primary">
         {title}

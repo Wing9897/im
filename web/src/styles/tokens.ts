@@ -133,6 +133,9 @@ export type EasingKey = keyof typeof easing;
 export const zIndex = {
   overlay: 1400,
   lightbox: 1600,
+  menu: 3000,
+  tooltip: 3000,
+  toast: 9999,
 } as const;
 
 export type ZIndexKey = keyof typeof zIndex;

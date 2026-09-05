@@ -1,6 +1,7 @@
 import { act, createElement, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, afterEach } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import { FloatingTooltip } from "./FloatingTooltip";
 
 describe("FloatingTooltip", () => {
@@ -41,7 +42,7 @@ describe("FloatingTooltip", () => {
     expect(tip.textContent).toContain("Hello tip");
     expect(tip.parentElement).toBe(document.body);
     expect(tip.style.position).toBe("fixed");
-    expect(tip.style.zIndex).toBe("3000");
+    expect(tip.style.zIndex).toBe(String(zIndex.tooltip));
 
     await act(async () => {
       root.unmount();

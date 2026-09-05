@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EmptyStateSources } from "../../../assets/illustrations/EmptyStateIllustrations";
 import { AlertBanner, Button } from "../../../components/ui";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import type { Source } from "../../../types";
@@ -80,7 +79,6 @@ export function TelegramSourceListSection({
         title: t("sources.emptyTitle"),
         description: t("sources.emptyDescription"),
         hint: t("sources.emptyHint"),
-        illustration: <EmptyStateSources />,
       }}
     >
       {sources.map((source) => (

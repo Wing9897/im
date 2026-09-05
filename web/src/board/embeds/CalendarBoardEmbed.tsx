@@ -5,6 +5,7 @@ import { asTimedAnalysisEvent } from "../../types/timelineItem";
 import { EventListRow } from "../../components/timeline/EventListRow";
 import {
   buildCalendarDays,
+  dateKey,
   eventStartsOnDay,
   isToday,
   startOfDay,
@@ -15,7 +16,6 @@ import {
   type EventListCardMetaLookups,
 } from "../../domain/timeline/eventListCardMeta";
 import { holidayNamesForDay, useMonthHolidays } from "../../hooks/useMonthHolidays";
-import { dateKey } from "../../utils/dateFormat";
 import { EventListTitleMark } from "../../components/timeline/EventListTitleMark";
 
 interface CalendarBoardEmbedProps {

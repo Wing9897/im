@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../../components/common/EmptyState";
-import { EmptyStateSources } from "../../../assets/illustrations/EmptyStateIllustrations";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import { PanelSection } from "../../../components/ui";
@@ -66,7 +65,8 @@ export function SourceListSection({
           title={emptyState.title}
           description={emptyState.description}
           hint={emptyState.hint}
-          illustration={emptyState.illustration ?? <EmptyStateSources />}
+          illustration={emptyState.illustration}
+          illustrationKey="sources"
         />
       ) : null}
 

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../../components/common/EmptyState";
-import { EmptyStateIntelligence } from "../../../assets/illustrations/EmptyStateIllustrations";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import {
   Button,
@@ -121,7 +120,7 @@ function IntelligenceListPaneComponent({
 
     return (
       <EmptyState
-        illustration={<EmptyStateIntelligence />}
+        illustrationKey="intelligence"
         title={copy.title}
         description={copy.description}
         hint={copy.hint}

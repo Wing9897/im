@@ -7,6 +7,9 @@ import {
   allDayFormRangeForDays,
   buildCalendarDays,
   buildWeekDays,
+  formatDateOnly,
+  formatDateTime,
+  formatTickLabel,
   eventOverlapsRange,
   eventStartsOnDay,
   formatRangeLabel,
@@ -122,5 +125,15 @@ describe("dateUtils", () => {
       startDate: "2026-08-01",
       endDate: "2026-08-03",
     });
+  });
+
+  it("formats local date/time and tick labels", () => {
+    expect(formatDateTime(new Date(2024, 0, 15, 9, 5).getTime())).toBe("2024-01-15 09:05");
+    expect(formatDateTime(new Date(2024, 2, 3, 14, 30).getTime())).toBe("2024-03-03 14:30");
+    expect(formatDateOnly(new Date(2024, 5, 7, 15, 30).getTime())).toBe("2024-06-07");
+    expect(formatTickLabel(new Date(2024, 3, 10, 0, 0, 0).getTime())).toBe("4/10");
+    expect(formatTickLabel(new Date(2024, 3, 10, 14, 30, 0).getTime())).toBe("4/10 14:30");
+    expect(formatTickLabel(new Date(2024, 3, 10, 8, 5, 45).getTime())).toBe("4/10 08:05:45");
+    expect(formatTickLabel(new Date(2024, 0, 5, 3, 7, 0).getTime())).toBe("1/5 03:07");
   });
 });

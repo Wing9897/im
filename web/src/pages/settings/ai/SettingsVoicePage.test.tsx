@@ -1,5 +1,6 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../../styles/tokens";
 import { createTestHarness, type TestHarness } from "../../../test/render-helpers";
 import i18n from "../../../i18n";
 
@@ -169,7 +170,7 @@ describe("SettingsVoicePage", () => {
     expect(list?.textContent).toContain("zh-HK");
     expect(list?.textContent).toContain("en-US");
     expect(list?.querySelector('[data-testid="voice-tts-voice-search"]')).toBeNull();
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
   });
 
   it("adds in-menu search when Chromium returns a long voice list", async () => {
@@ -218,7 +219,7 @@ describe("SettingsVoicePage", () => {
     expect(list).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="voice-tts-voice-list"]')).toBeNull();
     expect(list?.parentElement).toBe(document.body);
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
     expect(list?.style.background).toContain("--surface-raised");
     expect(list?.style.color).toContain("--text-primary");
   });

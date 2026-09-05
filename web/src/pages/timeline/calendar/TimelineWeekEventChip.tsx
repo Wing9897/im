@@ -26,7 +26,7 @@ import {
   weekEventChipTimeClass,
   weekEventChipTitleClass,
 } from "./calendarCellClasses";
-import { dayCardTimeLabel } from "./dayCardTimeLabel";
+import { dayCardTimeLabel } from "../../../domain/timeline/dateUtils";
 
 type WeekEventChipProps = {
   event: TimelineItem;

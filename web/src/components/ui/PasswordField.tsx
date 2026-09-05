@@ -1,6 +1,7 @@
 import { useState, type InputHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { surfaceOverlayHover60Class } from "./controlStyles";
 import { TextField } from "./TextField";
 
 type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
@@ -23,7 +24,7 @@ export function PasswordField({ className, ...rest }: PasswordFieldProps) {
         type="button"
         tabIndex={-1}
         aria-label={visible ? t("ui.hidePassword") : t("ui.showPassword")}
-        className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm border-none bg-transparent p-1 text-text-secondary transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
+        className={`absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-sm border-none bg-transparent p-1 text-text-secondary transition-colors ${surfaceOverlayHover60Class} hover:text-text-primary`}
         onClick={() => setVisible((v) => !v)}
       >
         {visible ? (

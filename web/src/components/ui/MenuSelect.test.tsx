@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import { MenuSelect } from "./MenuSelect";
 
 const options = [
@@ -162,7 +163,7 @@ describe("MenuSelect", () => {
       expect(list).toBeTruthy();
       expect(container.querySelector('[data-testid="portal-select-list"]')).toBeNull();
       expect(list?.parentElement).toBe(document.body);
-      expect(list?.style.zIndex).toBe("3000");
+      expect(list?.style.zIndex).toBe(String(zIndex.menu));
       expect(list?.style.background).toContain("--surface-raised");
       expect(list?.style.color).toContain("--text-primary");
     });
@@ -219,7 +220,7 @@ describe("MenuSelect", () => {
       expect(container.querySelector('[data-testid="map-live-window-select-list"]')).toBeNull();
       expect(list?.parentElement).toBe(document.body);
       expect(list?.style.position).toBe("fixed");
-      expect(list?.style.zIndex).toBe("3000");
+      expect(list?.style.zIndex).toBe(String(zIndex.menu));
       Object.defineProperty(list!, "offsetHeight", { configurable: true, value: 180 });
       act(() => {
         window.dispatchEvent(new Event("resize"));

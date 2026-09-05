@@ -1,4 +1,4 @@
-interface EmptyStateIllustrationProps {
+export interface EmptyStateIllustrationProps {
   /** Maximum width in pixels, default 200 */
   maxWidth?: number;
   /** Maximum height in pixels, default 160 */
@@ -102,3 +102,11 @@ export function EmptyStateSources({
     </svg>
   );
 }
+
+/** Named illustrations used by EmptyState `illustrationKey`. */
+export const EMPTY_STATE_ILLUSTRATIONS = {
+  intelligence: EmptyStateIntelligence,
+  sources: EmptyStateSources,
+} as const;
+
+export type EmptyStateIllustrationKey = keyof typeof EMPTY_STATE_ILLUSTRATIONS;

@@ -16,7 +16,7 @@ import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 import { getDateTimeLocale } from "../../i18n/locale";
 import i18n from "../../i18n";
-import { dateKey } from "../../utils/dateFormat";
+import { dateKey } from "../../domain/timeline/dateUtils";
 
 /** Today + next 6 days (7 total); upcoming days wrap in a 3-column forecast grid. */
 const FORECAST_DAYS = 7;

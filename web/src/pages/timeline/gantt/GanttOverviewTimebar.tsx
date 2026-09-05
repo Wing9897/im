@@ -4,7 +4,7 @@ import {
   overviewTickLabelPct,
   type GanttOverviewWindow,
 } from "../../../domain/gantt/ganttOverviewWindow";
-import { formatDateTime } from "../../../utils/dateFormat";
+import { formatDateTime } from "../../../domain/timeline/dateUtils";
 import { ONE_HOUR } from "../../../domain/intelligence/timelineSliderLayout";
 import {
   ganttOverviewTimebarCanvasClass,

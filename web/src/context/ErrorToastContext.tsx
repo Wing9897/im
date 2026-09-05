@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 
 import { ErrorToast } from "../components/ErrorToast";
 import { errorToastEmitter, type ErrorToastEvent } from "../api/errorToastEmitter";
+import { zIndex } from "../styles/tokens";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -161,7 +162,7 @@ export function ErrorToastProvider({ children, onNavigate }: ErrorToastProviderP
             position: "fixed",
             bottom: 24,
             right: 24,
-            zIndex: 9999,
+            zIndex: zIndex.toast,
             display: "flex",
             flexDirection: "column",
             gap: 8,

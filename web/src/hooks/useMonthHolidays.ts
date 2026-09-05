@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchSystemSettings } from "../api/config";
 import { fetchCalendarHolidays, type CalendarHolidayItem } from "../api/holidays";
 import { toErrorMessage } from "../utils/errors";
-import { dateKey } from "../utils/dateFormat";
+import { dateKey } from "../domain/timeline/dateUtils";
 import { resolveWeatherLocation } from "./monthWeather/timezone";
 
 export type DailyHoliday = CalendarHolidayItem;
