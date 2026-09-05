@@ -15,13 +15,14 @@ export function SubscribedEventSubscribeIcon({
 }) {
   const { t } = useTranslation("timeline");
   return (
-    <Bookmark
-      size={14}
-      strokeWidth={2.25}
-      aria-label={ariaLabel ?? t("eventList.subscribeIconAria")}
-      title={title}
-      className={["shrink-0 text-accent", className].filter(Boolean).join(" ")}
-      data-testid={testId}
-    />
+    <span title={title} className="inline-flex shrink-0">
+      <Bookmark
+        size={14}
+        strokeWidth={2.25}
+        aria-label={ariaLabel ?? t("eventList.subscribeIconAria")}
+        className={["text-accent", className].filter(Boolean).join(" ")}
+        data-testid={testId}
+      />
+    </span>
   );
 }
