@@ -2,11 +2,11 @@ import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  _resetConnectionStoreForTests,
   clearConnection,
   hasDeviceSession,
   saveDeviceSession,
 } from "./domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "./domain/connection/connectionStore.testing";
 import { wrapWithI18n } from "./test/i18nHarness";
 
 const fetchHealth = vi.fn();
@@ -15,7 +15,8 @@ const syncDesktopConnectionOnBoot = vi.fn();
 const isElectronDesktop = vi.fn(() => false);
 
 vi.mock("./api/system", async () => {
-  const actual = await vi.importActual<typeof import("./api/system")>("./api/system");
+  const actual =
+    await vi.importActual<typeof import("./api/system")>("./api/system");
   return {
     ...actual,
     fetchHealth: (...args: unknown[]) => fetchHealth(...args),
@@ -27,9 +28,9 @@ vi.mock("./domain/connection/authGate", () => ({
 }));
 
 vi.mock("./electron/electronConnection", async () => {
-  const actual = await vi.importActual<typeof import("./electron/electronConnection")>(
-    "./electron/electronConnection",
-  );
+  const actual = await vi.importActual<
+    typeof import("./electron/electronConnection")
+  >("./electron/electronConnection");
   return {
     ...actual,
     syncDesktopConnectionOnBoot: (...args: unknown[]) =>
@@ -139,14 +140,14 @@ describe("App smoke", () => {
     resolveAuthGate.mockResolvedValue({ kind: "ready" });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeTruthy();
     expect(container.querySelector('[data-testid="routes-stub"]')).toBeTruthy();
   });
 
@@ -185,9 +186,7 @@ describe("App smoke", () => {
     });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
     });
 
@@ -201,7 +200,9 @@ describe("App smoke", () => {
     });
 
     expect(order).toEqual(["sync", "health"]);
-    expect(container.querySelector('[data-testid="first-run-wizard"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="first-run-wizard"]'),
+    ).toBeTruthy();
   });
 
   it("Desktop host query with existing admin and no session opens login", async () => {
@@ -227,17 +228,21 @@ describe("App smoke", () => {
     });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
 
     expect(syncDesktopConnectionOnBoot).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('[data-testid="session-reauth-wizard"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="first-run-wizard"]')).toBeNull();
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="session-reauth-wizard"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="first-run-wizard"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeNull();
   });
 
   it("session_lost with expire reason opens SessionReauthWizard (not 3-step)", async () => {
@@ -269,14 +274,14 @@ describe("App smoke", () => {
       });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeTruthy();
 
     await act(async () => {
       clearConnection();
@@ -286,10 +291,18 @@ describe("App smoke", () => {
 
     expect(resolveAuthGate).toHaveBeenCalledTimes(2);
     expect(resolveAuthGate).toHaveBeenLastCalledWith({ fromSessionLoss: true });
-    expect(container.querySelector('[data-testid="session-reauth-wizard"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="first-run-wizard"]')).toBeNull();
-    expect(container.querySelector('[data-testid="setup-step-indicator"]')).toBeNull();
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="session-reauth-wizard"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="first-run-wizard"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="setup-step-indicator"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeNull();
   });
 
   it("session_lost needs_login opens unified login card (not create-system)", async () => {
@@ -321,9 +334,7 @@ describe("App smoke", () => {
       });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -334,10 +345,18 @@ describe("App smoke", () => {
       await Promise.resolve();
     });
 
-    expect(container.querySelector('[data-testid="session-reauth-wizard"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="first-run-wizard"]')).toBeNull();
-    expect(container.querySelector('[data-testid="setup-step-indicator"]')).toBeNull();
-    expect(container.querySelector('[data-testid="setup-mode-local"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="session-reauth-wizard"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="first-run-wizard"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="setup-step-indicator"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="setup-mode-local"]'),
+    ).toBeNull();
   });
 
   it("secretsReady false clears session and shows SecretsBrokenGate", async () => {
@@ -356,9 +375,7 @@ describe("App smoke", () => {
     });
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -366,12 +383,24 @@ describe("App smoke", () => {
     expect(resolveAuthGate).not.toHaveBeenCalled();
     expect(hasDeviceSession()).toBe(false);
     expect(container.textContent).toMatch(/加密|Encryption|金鑰|密钥/i);
-    expect(container.querySelector('[data-testid="secrets-broken-gate"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="secrets-rotate-username"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="secrets-rotate-password"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="secrets-rotate-submit"]')).toBeTruthy();
-    expect(container.textContent).not.toMatch(/完全重置本机数据库|Fully reset local database|完全重設本機資料庫/);
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="secrets-broken-gate"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="secrets-rotate-username"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="secrets-rotate-password"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="secrets-rotate-submit"]'),
+    ).toBeTruthy();
+    expect(container.textContent).not.toMatch(
+      /完全重置本机数据库|Fully reset local database|完全重設本機資料庫/,
+    );
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeNull();
   });
 
   it("surfaces Desktop connection sync failure as unavailable", async () => {
@@ -379,15 +408,15 @@ describe("App smoke", () => {
     syncDesktopConnectionOnBoot.mockRejectedValue(new Error("IPC unavailable"));
 
     await act(async () => {
-      root.render(
-        wrapWithI18n(createElement(App)),
-      );
+      root.render(wrapWithI18n(createElement(App)));
       await Promise.resolve();
       await Promise.resolve();
     });
 
     expect(fetchHealth).not.toHaveBeenCalled();
     expect(container.textContent).toMatch(/IPC unavailable/);
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeNull();
   });
 });

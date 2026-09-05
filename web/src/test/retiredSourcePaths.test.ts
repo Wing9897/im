@@ -139,6 +139,27 @@ const RETIRED_SOURCE_PATHS = [
   // Notify — validate/buildConfiguration moved to domain/actions/
   "pages/notify/actionConfiguration.ts",
   "pages/notify/validateActionTypeFields.ts",
+  "pages/ai/assistant/AssistantPage.tsx",
+  "pages/ai/assistant/AssistantPage.test.tsx",
+  "components/chat/chatBubbleClasses.ts",
+  "components/user/IdentityAvatar.tsx",
+  "domain/user/IdentityAvatar.tsx",
+  "components/pipeline/PipelineGuideChecklist.tsx",
+  "components/pipeline/PipelineGuideChecklist.test.tsx",
+  "components/map/MapMarkers.tsx",
+  "components/map/GroupMarker.tsx",
+  "components/calendarShare/SubscribeFilterGroup.tsx",
+  "components/calendarShare/SubscribeFilterGroup.test.tsx",
+  "components/calendarShare/CalendarShareConnectionStatusIcon.tsx",
+  "components/calendarShare/CalendarShareConnectionStatusIcon.test.tsx",
+  "components/sidebar/SidebarNavItems.tsx",
+  "components/sidebar/sidebarNavStyles.ts",
+  "logging/appLogClient.ts",
+  "logging/appLogClient.test.ts",
+  "config/serviceEndpoints.ts",
+  "config/serviceEndpoints.drift.test.ts",
+  "pages/subscriptions/SubscriptionsAccountPage.tsx",
+  "pages/settings/SettingsThemePage.tsx",
 ] as const;
 
 // Settings → General LAN bind toggle lived inline (no dedicated module).

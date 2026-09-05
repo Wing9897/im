@@ -3,9 +3,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_NOTIFY_SETTINGS,
-  resetNotifySettingsCacheForTests,
   saveNotifySettings,
 } from "../../domain/notify/scanner/settings";
+import { resetNotifySettingsCacheForTests } from "../../domain/notify/scanner/settings.testing";
 import { NotifyChannelToggles } from "./NotifyChannelToggles";
 
 vi.mock("react-i18next", () => ({
@@ -15,9 +15,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("../../domain/notify/scanner/settings", async () => {
-  const actual = await vi.importActual<typeof import("../../domain/notify/scanner/settings")>(
-    "../../domain/notify/scanner/settings",
-  );
+  const actual = await vi.importActual<
+    typeof import("../../domain/notify/scanner/settings")
+  >("../../domain/notify/scanner/settings");
   return {
     ...actual,
     hydrateNotifySettings: () => Promise.resolve(actual.loadNotifySettings()),
@@ -33,7 +33,10 @@ const { mockPutSettings } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../api/uiPrefs", () => ({
-  fetchNotifySettings: vi.fn(async () => ({ configured: false, settings: null })),
+  fetchNotifySettings: vi.fn(async () => ({
+    configured: false,
+    settings: null,
+  })),
   putNotifySettings: (...args: unknown[]) => mockPutSettings(...args),
 }));
 
@@ -69,11 +72,20 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "icons", testIdPrefix: "chrome" }));
+      root.render(
+        createElement(NotifyChannelToggles, {
+          variant: "icons",
+          testIdPrefix: "chrome",
+        }),
+      );
     });
 
-    const voice = host.querySelector<HTMLButtonElement>('[data-testid="chrome-channel-voice"]');
-    const flash = host.querySelector<HTMLButtonElement>('[data-testid="chrome-channel-flash"]');
+    const voice = host.querySelector<HTMLButtonElement>(
+      '[data-testid="chrome-channel-voice"]',
+    );
+    const flash = host.querySelector<HTMLButtonElement>(
+      '[data-testid="chrome-channel-flash"]',
+    );
     expect(voice?.getAttribute("aria-pressed")).toBe("true");
     expect(flash?.getAttribute("aria-pressed")).toBe("true");
     expect(flash?.getAttribute("aria-label")).toBe("notify.channelFlashAria");
@@ -96,11 +108,20 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "notify" }));
+      root.render(
+        createElement(NotifyChannelToggles, {
+          variant: "tiles",
+          testIdPrefix: "notify",
+        }),
+      );
     });
 
-    const voice = host.querySelector<HTMLButtonElement>('[data-testid="notify-channel-voice"]');
-    const flash = host.querySelector<HTMLButtonElement>('[data-testid="notify-channel-flash"]');
+    const voice = host.querySelector<HTMLButtonElement>(
+      '[data-testid="notify-channel-voice"]',
+    );
+    const flash = host.querySelector<HTMLButtonElement>(
+      '[data-testid="notify-channel-flash"]',
+    );
     expect(voice?.getAttribute("role")).toBe("switch");
     expect(voice?.className).toContain("im-surface-inset");
     expect(flash?.getAttribute("aria-checked")).toBe("true");
@@ -126,13 +147,18 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "notify" }));
+      root.render(
+        createElement(NotifyChannelToggles, {
+          variant: "tiles",
+          testIdPrefix: "notify",
+        }),
+      );
     });
 
     const mode = host.querySelector('[data-testid="notify-flash-mode"]');
-    const persistent = Array.from(mode?.querySelectorAll('[role="tab"]') ?? []).find(
-      (node) => node.textContent === "voice.flashModePersistent",
-    );
+    const persistent = Array.from(
+      mode?.querySelectorAll('[role="tab"]') ?? [],
+    ).find((node) => node.textContent === "voice.flashModePersistent");
     expect(persistent).not.toBeUndefined();
     await act(async () => {
       (persistent as HTMLButtonElement).click();
@@ -151,10 +177,17 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "labeled", testIdPrefix: "drawer" }));
+      root.render(
+        createElement(NotifyChannelToggles, {
+          variant: "labeled",
+          testIdPrefix: "drawer",
+        }),
+      );
     });
 
-    const flash = host.querySelector<HTMLButtonElement>('[data-testid="drawer-channel-flash"]');
+    const flash = host.querySelector<HTMLButtonElement>(
+      '[data-testid="drawer-channel-flash"]',
+    );
     expect(flash?.getAttribute("aria-label")).toBe("notify.channelFlashAria");
     expect(flash?.getAttribute("title")).toBe("notify.channelFlash");
     expect(flash?.textContent).toContain("notify.channelFlash");

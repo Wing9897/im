@@ -3,11 +3,16 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarWindowItem } from "../../../api/calendarWindow";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
-import { mockShowToast, resetTaskCatalogState, taskCatalogState } from "../../../test/context-mocks";
-import { loadRecentInbox, resetRecentInboxForTests } from "../recentInbox";
-
+import {
+  mockShowToast,
+  resetTaskCatalogState,
+  taskCatalogState,
+} from "../../../test/context-mocks";
+import { loadRecentInbox } from "../recentInbox";
+import { resetRecentInboxForTests } from "../recentInbox.testing";
 function windowRow(
-  overrides: Partial<CalendarWindowItem> & Pick<CalendarWindowItem, "id" | "source" | "title">,
+  overrides: Partial<CalendarWindowItem> &
+    Pick<CalendarWindowItem, "id" | "source" | "title">,
 ): CalendarWindowItem {
   return {
     startTime: "2026-07-20T10:00:00.000Z",
@@ -66,13 +71,16 @@ vi.mock("../../../api/tasks", () => ({
 }));
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
-  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
+);
 
 vi.mock("../../../context/ToastContext", async () =>
-  (await import("../../../test/context-mocks")).toastContextModuleMock());
+  (await import("../../../test/context-mocks")).toastContextModuleMock(),
+);
 
 vi.mock("./settings", async () => {
-  const actual = await vi.importActual<typeof import("./settings")>("./settings");
+  const actual =
+    await vi.importActual<typeof import("./settings")>("./settings");
   return {
     ...actual,
     loadNotifySettings: () => mockLoadSettings(),
@@ -143,12 +151,22 @@ describe("useNotifyScanner notify resolve", () => {
     resetTaskCatalogState();
     mockShowToast.mockReset();
     mockShowFlash.mockReset();
-    vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-07-20T09:00:00.000Z"));
+    vi.spyOn(Date, "now").mockReturnValue(
+      Date.parse("2026-07-20T09:00:00.000Z"),
+    );
     mockAnnounce.mockReset().mockResolvedValue(undefined);
-    mockAppendTrigger.mockReset().mockResolvedValue({ entry: {}, persisted: true });
+    mockAppendTrigger
+      .mockReset()
+      .mockResolvedValue({ entry: {}, persisted: true });
     mockSaveFiredKeys.mockReset().mockResolvedValue(true);
-    mockClaimFiredKeys.mockReset().mockImplementation(async (keys: string[]) => new Set(keys));
-    mockListRecurringSeries.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+    mockClaimFiredKeys
+      .mockReset()
+      .mockImplementation(async (keys: string[]) => new Set(keys));
+    mockListRecurringSeries.mockResolvedValue({
+      items: [],
+      totalCount: 0,
+      hasMore: false,
+    });
     taskCatalogState.worksets = [
       {
         id: SYSTEM_WORKSET_ID,
@@ -211,8 +229,12 @@ describe("useNotifyScanner notify resolve", () => {
     expect(mockAnnounce).toHaveBeenCalledTimes(2);
     expect(mockShowFlash).toHaveBeenCalled();
     expect(mockShowToast).not.toHaveBeenCalled();
-    expect(mockAnnounce.mock.calls.flat().join(" ")).toContain("First paged event");
-    expect(mockAnnounce.mock.calls.flat().join(" ")).toContain("Manual event included");
+    expect(mockAnnounce.mock.calls.flat().join(" ")).toContain(
+      "First paged event",
+    );
+    expect(mockAnnounce.mock.calls.flat().join(" ")).toContain(
+      "Manual event included",
+    );
   });
 
   it("does not fetch events while enabled quiet hours are active", async () => {
@@ -297,7 +319,9 @@ describe("useNotifyScanner notify resolve", () => {
     });
 
     expect(mockAnnounce).toHaveBeenCalledTimes(1);
-    expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("Passport remind");
+    expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain(
+      "Passport remind",
+    );
   });
 
   it("mutes item_remind rows that inherit force-off from the linked calendar", async () => {
@@ -373,7 +397,9 @@ describe("useNotifyScanner notify resolve", () => {
 
     expect(mockAnnounce).not.toHaveBeenCalled();
     expect(mockShowFlash).toHaveBeenCalledTimes(1);
-    expect(mockShowFlash).toHaveBeenCalledWith(expect.any(String), { persist: false });
+    expect(mockShowFlash).toHaveBeenCalledWith(expect.any(String), {
+      persist: false,
+    });
     expect(mockShowToast).not.toHaveBeenCalled();
     expect(loadRecentInbox()).toHaveLength(1);
   });
@@ -402,7 +428,9 @@ describe("useNotifyScanner notify resolve", () => {
       await flushScan();
     });
 
-    expect(mockShowFlash).toHaveBeenCalledWith(expect.any(String), { persist: true });
+    expect(mockShowFlash).toHaveBeenCalledWith(expect.any(String), {
+      persist: true,
+    });
     expect(mockAnnounce).not.toHaveBeenCalled();
   });
 

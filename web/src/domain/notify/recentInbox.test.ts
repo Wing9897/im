@@ -6,11 +6,10 @@ import {
   loadRecentInbox,
   loadRecentInboxDismissedKeys,
   markRecentInboxRead,
-  resetRecentInboxForTests,
   setRecentInboxOpen,
   unreadRecentInboxCount,
 } from "./recentInbox";
-
+import { resetRecentInboxForTests } from "./recentInbox.testing";
 describe("recentInbox", () => {
   afterEach(() => {
     resetRecentInboxForTests();

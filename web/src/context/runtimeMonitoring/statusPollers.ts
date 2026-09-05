@@ -10,7 +10,7 @@ import {
   buildAiHealthStatusLog,
   normalizeAiStatus,
 } from "../appRuntimeShared";
-import { APP_LOG_KIND } from "../../logging/appLogClient";
+import { APP_LOG_KIND } from "../../api/appLogClient";
 import type { RuntimeStateBundle } from "./stateManagement";
 import {
   buildAiHealthSignature,

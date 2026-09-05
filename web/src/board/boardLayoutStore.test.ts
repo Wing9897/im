@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import {
-  BOARD_LAYOUT_VERSION,
-  type BoardConfig,
-} from "./types";
+import { BOARD_LAYOUT_VERSION, type BoardConfig } from "./types";
 import {
   addWidget,
   createDefaultBoardConfig,
@@ -14,12 +11,14 @@ import {
   parseBoardConfig,
   removeWidget,
   resetBoardConfig,
-  resetBoardPrefsCacheForTests,
   saveBoardConfig,
-  seedBoardPrefsCacheForTests,
   updateWidgetSizeId,
   widgetDesignRect,
 } from "./boardLayoutStore";
+import {
+  resetBoardPrefsCacheForTests,
+  seedBoardPrefsCacheForTests,
+} from "./boardPrefsStore.testing";
 import {
   BOARD_LIST_WIDGET_MIN_ROWS,
   BOARD_SCHEDULE_MIN_ROWS,
@@ -89,7 +88,9 @@ describe("boardLayoutStore", () => {
   });
 
   it("exposes Traditional Chinese display titles for events and feed", () => {
-    expect(BOARD_WIDGET_DESCRIPTORS.events.titleKey).toBe("board:widgets.events.title");
+    expect(BOARD_WIDGET_DESCRIPTORS.events.titleKey).toBe(
+      "board:widgets.events.title",
+    );
     expect(getWidgetMeta("events").title).toBe("情報事件");
     expect(getWidgetMeta("feed").title).toBe("實時監控");
     expect(getWidgetMeta("wall").title).toBe("訊息牆");
@@ -115,8 +116,17 @@ describe("boardLayoutStore", () => {
     expect(BOARD_WIDGET_DESCRIPTORS.schedule.sizeOptions).not.toContain("3x2");
     expect(BOARD_WIDGET_DESCRIPTORS.schedule.sizeOptions).toContain("3x3");
     expect(getWidgetMinRows("schedule")).toBe(BOARD_SCHEDULE_MIN_ROWS);
-    for (const type of ["items", "tasks", "actions", "events", "feed", "logs"] as const) {
-      expect(getWidgetMinRows(type)).toBeGreaterThanOrEqual(BOARD_LIST_WIDGET_MIN_ROWS);
+    for (const type of [
+      "items",
+      "tasks",
+      "actions",
+      "events",
+      "feed",
+      "logs",
+    ] as const) {
+      expect(getWidgetMinRows(type)).toBeGreaterThanOrEqual(
+        BOARD_LIST_WIDGET_MIN_ROWS,
+      );
       expect(BOARD_WIDGET_DESCRIPTORS[type].sizeOptions).not.toContain("3x1");
     }
     for (const type of ["clock", "system", "gantt"] as const) {
@@ -137,11 +147,13 @@ describe("boardLayoutStore", () => {
       row: 0,
       sizeId: "16x1",
     });
-    expect(config.widgets.find((w) => w.type === "gantt-events")).toMatchObject({
-      col: 0,
-      row: 1,
-      sizeId: "16x1",
-    });
+    expect(config.widgets.find((w) => w.type === "gantt-events")).toMatchObject(
+      {
+        col: 0,
+        row: 1,
+        sizeId: "16x1",
+      },
+    );
     expect(config.widgets.find((w) => w.type === "clock")).toMatchObject({
       col: 0,
       row: 2,
@@ -182,11 +194,13 @@ describe("boardLayoutStore", () => {
       row: 2,
       sizeId: "5x2",
     });
-    expect(config.widgets.find((w) => w.type === "calendar-day")).toMatchObject({
-      col: 11,
-      row: 4,
-      sizeId: "5x2",
-    });
+    expect(config.widgets.find((w) => w.type === "calendar-day")).toMatchObject(
+      {
+        col: 11,
+        row: 4,
+        sizeId: "5x2",
+      },
+    );
     expect(config.widgets.find((w) => w.type === "weather")).toMatchObject({
       col: 3,
       row: 5,
@@ -230,7 +244,14 @@ describe("boardLayoutStore", () => {
       { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 2 },
       { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 3 },
       { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 4 },
-      { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 5 },
+      {
+        i: "w-gantt-events",
+        type: "gantt-events",
+        col: 0,
+        row: 1,
+        sizeId: "16x1",
+        z: 5,
+      },
       { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 6 },
     ];
     const parsed = parseBoardConfig({
@@ -239,12 +260,16 @@ describe("boardLayoutStore", () => {
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
     expect(parsed.widgets).toHaveLength(customWidgets.length);
-    expect(parsed.widgets.find((widget) => widget.type === "map")).toMatchObject({
+    expect(
+      parsed.widgets.find((widget) => widget.type === "map"),
+    ).toMatchObject({
       col: 5,
       row: 0,
       sizeId: "5x3",
     });
-    expect(parsed.widgets.map((w) => w.type)).toEqual(customWidgets.map((w) => w.type));
+    expect(parsed.widgets.map((w) => w.type)).toEqual(
+      customWidgets.map((w) => w.type),
+    );
   });
 
   it("parseBoardConfig preserves custom placement across older versions", () => {
@@ -255,7 +280,9 @@ describe("boardLayoutStore", () => {
       ),
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
-    expect(parsed.widgets.find((widget) => widget.type === "map")).toMatchObject({
+    expect(
+      parsed.widgets.find((widget) => widget.type === "map"),
+    ).toMatchObject({
       col: 5,
       row: 2,
       sizeId: "5x5",
@@ -271,8 +298,12 @@ describe("boardLayoutStore", () => {
       ],
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
-    expect(parsed.widgets).toHaveLength(createDefaultBoardConfig().widgets.length);
-    expect(parsed.widgets.find((widget) => widget.type === "calendar")).toMatchObject({
+    expect(parsed.widgets).toHaveLength(
+      createDefaultBoardConfig().widgets.length,
+    );
+    expect(
+      parsed.widgets.find((widget) => widget.type === "calendar"),
+    ).toMatchObject({
       col: 11,
       row: 2,
       sizeId: "5x2",
@@ -283,12 +314,33 @@ describe("boardLayoutStore", () => {
     const parsed = parseBoardConfig({
       version: 10,
       widgets: [
-        { i: "w-retired", type: "legacy-radar", col: 0, row: 0, sizeId: "3x2", z: 1 },
+        {
+          i: "w-retired",
+          type: "legacy-radar",
+          col: 0,
+          row: 0,
+          sizeId: "3x2",
+          z: 1,
+        },
         { i: "w-map", type: "map", col: 4, row: 1, sizeId: "5x3", z: 2 },
         { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 3 },
-        { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 4 },
+        {
+          i: "w-weather",
+          type: "weather",
+          col: 0,
+          row: 3,
+          sizeId: "5x2",
+          z: 4,
+        },
         { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 5 },
-        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 6 },
+        {
+          i: "w-gantt-events",
+          type: "gantt-events",
+          col: 0,
+          row: 1,
+          sizeId: "16x1",
+          z: 6,
+        },
         { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 7 },
       ],
     });
@@ -319,23 +371,79 @@ describe("boardLayoutStore", () => {
       version: 16,
       widgets: [
         { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 1 },
-        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 2 },
+        {
+          i: "w-gantt-events",
+          type: "gantt-events",
+          col: 0,
+          row: 1,
+          sizeId: "16x1",
+          z: 2,
+        },
         { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 3 },
         { i: "w-system", type: "system", col: 0, row: 3, sizeId: "3x1", z: 4 },
-        { i: "w-actions", type: "actions", col: 0, row: 4, sizeId: "3x2", z: 5 },
-        { i: "w-leaderboard", type: "leaderboard", col: 0, row: 6, sizeId: "3x2", z: 6 },
-        { i: "w-schedule", type: "schedule", col: 0, row: 8, sizeId: "3x2", z: 7 },
+        {
+          i: "w-actions",
+          type: "actions",
+          col: 0,
+          row: 4,
+          sizeId: "3x2",
+          z: 5,
+        },
+        {
+          i: "w-leaderboard",
+          type: "leaderboard",
+          col: 0,
+          row: 6,
+          sizeId: "3x2",
+          z: 6,
+        },
+        {
+          i: "w-schedule",
+          type: "schedule",
+          col: 0,
+          row: 8,
+          sizeId: "3x2",
+          z: 7,
+        },
         { i: "w-map", type: "map", col: 3, row: 2, sizeId: "5x3", z: 8 },
         { i: "w-wall", type: "wall", col: 8, row: 2, sizeId: "3x3", z: 9 },
-        { i: "w-calendar", type: "calendar", col: 11, row: 2, sizeId: "5x3", z: 10 },
-        { i: "w-calendar-day", type: "calendar-day", col: 11, row: 5, sizeId: "5x1", z: 11 },
-        { i: "w-weather", type: "weather", col: 3, row: 5, sizeId: "5x2", z: 12 },
+        {
+          i: "w-calendar",
+          type: "calendar",
+          col: 11,
+          row: 2,
+          sizeId: "5x3",
+          z: 10,
+        },
+        {
+          i: "w-calendar-day",
+          type: "calendar-day",
+          col: 11,
+          row: 5,
+          sizeId: "5x1",
+          z: 11,
+        },
+        {
+          i: "w-weather",
+          type: "weather",
+          col: 3,
+          row: 5,
+          sizeId: "5x2",
+          z: 12,
+        },
         { i: "w-tasks", type: "tasks", col: 8, row: 5, sizeId: "3x2", z: 13 },
         { i: "w-stats", type: "stats", col: 11, row: 6, sizeId: "5x2", z: 14 },
         { i: "w-events", type: "events", col: 3, row: 7, sizeId: "4x3", z: 15 },
         { i: "w-feed", type: "feed", col: 7, row: 7, sizeId: "4x3", z: 16 },
         { i: "w-items", type: "items", col: 11, row: 8, sizeId: "3x2", z: 17 },
-        { i: "w-llm-health", type: "llm-health", col: 14, row: 8, sizeId: "2x2", z: 18 },
+        {
+          i: "w-llm-health",
+          type: "llm-health",
+          col: 14,
+          row: 8,
+          sizeId: "2x2",
+          z: 18,
+        },
       ],
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
@@ -349,11 +457,13 @@ describe("boardLayoutStore", () => {
       row: 6,
       sizeId: "3x1",
     });
-    expect(parsed.widgets.find((w) => w.type === "calendar-day")).toMatchObject({
-      col: 11,
-      row: 4,
-      sizeId: "5x2",
-    });
+    expect(parsed.widgets.find((w) => w.type === "calendar-day")).toMatchObject(
+      {
+        col: 11,
+        row: 4,
+        sizeId: "5x2",
+      },
+    );
     expect(parsed.widgets.find((w) => w.type === "calendar")).toMatchObject({
       col: 11,
       row: 2,
@@ -367,11 +477,32 @@ describe("boardLayoutStore", () => {
       widgets: [
         { i: "w-map", type: "map", col: 5, row: 0, sizeId: "5x3", z: 1 },
         { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 2 },
-        { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 3 },
+        {
+          i: "w-weather",
+          type: "weather",
+          col: 0,
+          row: 3,
+          sizeId: "5x2",
+          z: 3,
+        },
         { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 4 },
-        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 5 },
+        {
+          i: "w-gantt-events",
+          type: "gantt-events",
+          col: 0,
+          row: 1,
+          sizeId: "16x1",
+          z: 5,
+        },
         { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 6 },
-        { i: "w-schedule", type: "schedule", col: 0, row: 8, sizeId: "3x2", z: 7 },
+        {
+          i: "w-schedule",
+          type: "schedule",
+          col: 0,
+          row: 8,
+          sizeId: "3x2",
+          z: 7,
+        },
       ],
     });
     expect(parsed.widgets.find((w) => w.type === "schedule")).toMatchObject({
@@ -406,8 +537,10 @@ describe("boardLayoutStore", () => {
   it("falls back on invalid JSON / schema via parseBoardConfig", () => {
     expect(loadBoardConfig().widgets.length).toBeGreaterThan(0);
     expect(
-      parseBoardConfig({ version: 1, widgets: [{ i: "x", type: "nope", x: 0, y: 0, w: 1, h: 1 }] })
-        .widgets.length,
+      parseBoardConfig({
+        version: 1,
+        widgets: [{ i: "x", type: "nope", x: 0, y: 0, w: 1, h: 1 }],
+      }).widgets.length,
     ).toBeGreaterThan(0);
   });
 
@@ -433,7 +566,9 @@ describe("boardLayoutStore", () => {
       widgets: [{ i: "x", type: "nope", col: 0, row: 0, sizeId: "3x2" }],
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
-    expect(parsed.widgets.length).toBe(createDefaultBoardConfig().widgets.length);
+    expect(parsed.widgets.length).toBe(
+      createDefaultBoardConfig().widgets.length,
+    );
   });
 
   it("addWidget / removeWidget persist", () => {
@@ -467,12 +602,19 @@ describe("boardLayoutStore", () => {
   it("findFreePlacement prefers an empty cell when space exists", () => {
     const sparse: BoardConfig = {
       version: BOARD_LAYOUT_VERSION,
-      widgets: [{ i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 1 }],
+      widgets: [
+        { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 1 },
+      ],
     };
     const spot = findFreePlacement(sparse.widgets, "wall", "4x3");
     expect(spot).toEqual({ col: 4, row: 0 });
     const next = addWidget(sparse, "wall");
-    expect(next.widgets.at(-1)).toMatchObject({ type: "wall", col: 4, row: 0, sizeId: "3x3" });
+    expect(next.widgets.at(-1)).toMatchObject({
+      type: "wall",
+      col: 4,
+      row: 0,
+      sizeId: "3x3",
+    });
   });
 
   it("findFreePlacement cascades on a full mosaic so duplicates stay visible", () => {
@@ -510,9 +652,13 @@ describe("boardLayoutStore", () => {
   it("reset clears sparse custom layout", () => {
     let config: BoardConfig = createDefaultBoardConfig();
     config = addWidget(config, "logs");
-    expect(config.widgets.length).toBeGreaterThan(createDefaultBoardConfig().widgets.length);
+    expect(config.widgets.length).toBeGreaterThan(
+      createDefaultBoardConfig().widgets.length,
+    );
     const reset = resetBoardConfig();
-    expect(reset.widgets).toHaveLength(createDefaultBoardConfig().widgets.length);
+    expect(reset.widgets).toHaveLength(
+      createDefaultBoardConfig().widgets.length,
+    );
     expect(reset.widgets.map((w) => w.type)).toEqual(
       expect.arrayContaining([
         "map",

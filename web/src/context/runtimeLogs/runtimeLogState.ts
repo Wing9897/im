@@ -5,7 +5,7 @@ import i18n from "../../i18n";
 import {
   buildAppLogDetailsEnvelope,
   recordAppLog,
-} from "../../logging/appLogClient";
+} from "../../api/appLogClient";
 import { logWarn } from "../../utils/logger";
 import type { AppLogCursorPayload } from "../../types";
 import { toErrorMessage } from "../../utils/errors";

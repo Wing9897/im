@@ -5,9 +5,9 @@ import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { flushMicrotasks } from "../../test/async-helpers";
 
-vi.mock("../../logging/appLogClient", async () => {
-  const actual = await vi.importActual<typeof import("../../logging/appLogClient")>(
-    "../../logging/appLogClient",
+vi.mock("../../api/appLogClient", async () => {
+  const actual = await vi.importActual<typeof import("../../api/appLogClient")>(
+    "../../api/appLogClient",
   );
   return {
     ...actual,
@@ -15,7 +15,7 @@ vi.mock("../../logging/appLogClient", async () => {
   };
 });
 
-import { APP_LOG_KIND, recordAppLog } from "../../logging/appLogClient";
+import { APP_LOG_KIND, recordAppLog } from "../../api/appLogClient";
 
 const mockedRecordAppLog = vi.mocked(recordAppLog);
 

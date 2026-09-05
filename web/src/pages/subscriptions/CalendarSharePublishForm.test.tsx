@@ -3,7 +3,10 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/calendarShare", async () =>
-  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+  (
+    await import("../../test/calendarShareApiMock")
+  ).calendarShareApiModuleMock(),
+);
 
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock(),
@@ -11,10 +14,12 @@ vi.mock("../../context/ToastContext", async () =>
 
 import { CalendarSharePublishForm } from "./CalendarSharePublishForm";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
-import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import {
+  calendarShareApiMocks,
+  resetCalendarShareApiMocks,
+} from "../../test/calendarShareApiMock";
 import { mockShowToast } from "../../test/context-mocks";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
-
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
 const PUBLISH = {
   worksetId: "ws-1",
   slug: "Ops",
@@ -88,31 +93,55 @@ describe("CalendarSharePublishForm", () => {
       status: "disconnected",
     });
     await renderForm();
-    expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
-    expect(calendarShareApiMocks.fetchCalendarSharePublish).toHaveBeenCalledWith("ws-1");
-    expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
     expect(
-      (container.querySelector('[data-testid="calendar-share-slug"]') as HTMLInputElement).disabled,
+      calendarShareApiMocks.fetchCalendarShareSession,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      calendarShareApiMocks.fetchCalendarSharePublish,
+    ).toHaveBeenCalledWith("ws-1");
+    expect(
+      container.querySelector('[data-testid="calendar-share-enabled"]'),
+    ).toBeNull();
+    expect(
+      (
+        container.querySelector(
+          '[data-testid="calendar-share-slug"]',
+        ) as HTMLInputElement
+      ).disabled,
     ).toBe(true);
   });
 
   it("enables publish controls when the catalog session is connected", async () => {
     mockConnectedSession();
     await renderForm();
-    expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
     expect(
-      (container.querySelector('[data-testid="calendar-share-slug"]') as HTMLInputElement).disabled,
+      calendarShareApiMocks.fetchCalendarShareSession,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      container.querySelector('[data-testid="calendar-share-enabled"]'),
+    ).toBeNull();
+    expect(
+      (
+        container.querySelector(
+          '[data-testid="calendar-share-slug"]',
+        ) as HTMLInputElement
+      ).disabled,
     ).toBe(false);
-    expect(document.querySelector('[data-testid="calendar-share-slug"]')).toBeTruthy();
+    expect(
+      document.querySelector('[data-testid="calendar-share-slug"]'),
+    ).toBeTruthy();
     expect(container.textContent).toContain("誰能訂這本私人群組日曆");
-    const listing = container.querySelector('[data-testid="calendar-share-public-value"]') as HTMLButtonElement;
+    const listing = container.querySelector(
+      '[data-testid="calendar-share-public-value"]',
+    ) as HTMLButtonElement;
     expect(listing).toBeTruthy();
     expect(listing.textContent).toContain("私人");
     await act(async () => {
       listing.click();
     });
-    const publicList = document.body.querySelector('[data-testid="calendar-share-public-list"]');
+    const publicList = document.body.querySelector(
+      '[data-testid="calendar-share-public-list"]',
+    );
     expect(publicList?.textContent).toContain("私人");
     expect(publicList?.textContent).toContain("公開");
     expect(publicList?.textContent).toContain("公開閒忙");
@@ -133,7 +162,9 @@ describe("CalendarSharePublishForm", () => {
     await act(async () => {
       grantTrigger.click();
     });
-    const grantList = document.body.querySelector('[data-testid="calendar-share-grant-visibility-0-list"]');
+    const grantList = document.body.querySelector(
+      '[data-testid="calendar-share-grant-visibility-0-list"]',
+    );
     expect(grantList?.textContent).toContain("私人閒忙");
     expect(grantList?.textContent).toContain("詳情");
     expect(grantList?.textContent).not.toContain("公開閒忙");
@@ -150,11 +181,21 @@ describe("CalendarSharePublishForm", () => {
     expect(container.textContent).not.toContain("啟用上載");
     expect(container.textContent).not.toContain("關閉上載會刪除遠端 slug 日曆");
     expect(container.textContent).not.toContain("更新公開副本");
-    expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
-    expect(container.querySelector('[data-testid="calendar-share-auto-sync"]')).toBeNull();
-    expect(container.querySelector('[data-testid="calendar-share-save"]')).toBeNull();
-    expect(container.querySelector('[data-testid="calendar-share-sync"]')).toBeNull();
-    expect(container.querySelector('[data-testid="calendar-share-apply"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-enabled"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-auto-sync"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-save"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-sync"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-apply"]'),
+    ).toBeNull();
     expect(container.textContent).not.toContain("變更後自動上載");
     expect(container.textContent).not.toContain("儲存設定");
   });
@@ -166,7 +207,14 @@ describe("CalendarSharePublishForm", () => {
       lastSyncAt: "2026-08-27T00:00:00Z",
     });
     calendarShareApiMocks.fetchCalendarSharePublishList.mockResolvedValue({
-      items: [{ ...PUBLISH, lastSyncAt: "2026-08-27T00:00:00Z", worksetName: "Ops", worksetMissing: false }],
+      items: [
+        {
+          ...PUBLISH,
+          lastSyncAt: "2026-08-27T00:00:00Z",
+          worksetName: "Ops",
+          worksetMissing: false,
+        },
+      ],
     });
     await renderForm();
     expect(submitRef.current).toBeTruthy();
@@ -174,12 +222,15 @@ describe("CalendarSharePublishForm", () => {
       const ok = await submitRef.current!();
       expect(ok).toBe(true);
     });
-    expect(calendarShareApiMocks.putCalendarSharePublish).toHaveBeenCalledWith("ws-1", {
-      slug: "Ops",
-      publicVisibility: "private_group",
-      grants: [],
-      syncNow: true,
-    });
+    expect(calendarShareApiMocks.putCalendarSharePublish).toHaveBeenCalledWith(
+      "ws-1",
+      {
+        slug: "Ops",
+        publicVisibility: "private_group",
+        grants: [],
+        syncNow: true,
+      },
+    );
     expect(mockShowToast).toHaveBeenCalledWith("已上載", "success");
   });
 
@@ -197,24 +248,42 @@ describe("CalendarSharePublishForm", () => {
       const ok = await submitRef.current!();
       expect(ok).toBe(true);
     });
-    expect(mockShowToast).toHaveBeenCalledWith("已上載，列表稍後更新", "warning");
-    expect(mockShowToast).not.toHaveBeenCalledWith("Calendar share request failed", "error");
-    expect(mockShowToast.mock.calls.some((call) => String(call[0]).includes("Calendar share request failed"))).toBe(
-      false,
+    expect(mockShowToast).toHaveBeenCalledWith(
+      "已上載，列表稍後更新",
+      "warning",
     );
+    expect(mockShowToast).not.toHaveBeenCalledWith(
+      "Calendar share request failed",
+      "error",
+    );
+    expect(
+      mockShowToast.mock.calls.some((call) =>
+        String(call[0]).includes("Calendar share request failed"),
+      ),
+    ).toBe(false);
   });
 
   it("does not unpublish from the form", async () => {
     mockConnectedSession();
-    calendarShareApiMocks.fetchCalendarSharePublish.mockResolvedValue({ ...PUBLISH });
+    calendarShareApiMocks.fetchCalendarSharePublish.mockResolvedValue({
+      ...PUBLISH,
+    });
     await renderForm();
-    expect(container.querySelector('[data-testid="calendar-share-apply"]')).toBeNull();
-    expect(container.querySelector('[data-testid="calendar-share-enabled"]')).toBeNull();
-    expect([...container.querySelectorAll("button")].map((button) => button.textContent)).not.toContain(
-      "取消上載",
-    );
+    expect(
+      container.querySelector('[data-testid="calendar-share-apply"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="calendar-share-enabled"]'),
+    ).toBeNull();
+    expect(
+      [...container.querySelectorAll("button")].map(
+        (button) => button.textContent,
+      ),
+    ).not.toContain("取消上載");
     expect(submitRef.current).toBeTruthy();
-    calendarShareApiMocks.putCalendarSharePublish.mockResolvedValue({ ...PUBLISH });
+    calendarShareApiMocks.putCalendarSharePublish.mockResolvedValue({
+      ...PUBLISH,
+    });
     await act(async () => {
       await submitRef.current!();
     });
@@ -248,19 +317,29 @@ describe("CalendarSharePublishForm", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    const input = container.querySelector('[data-testid="calendar-share-slug"]') as HTMLInputElement;
+    const input = container.querySelector(
+      '[data-testid="calendar-share-slug"]',
+    ) as HTMLInputElement;
     expect(input.value).toBe("general");
   });
 
   it("rejects a slug with spaces without calling publish", async () => {
     mockConnectedSession();
-    calendarShareApiMocks.fetchCalendarSharePublish.mockResolvedValue({ ...PUBLISH, slug: "foo bar" });
+    calendarShareApiMocks.fetchCalendarSharePublish.mockResolvedValue({
+      ...PUBLISH,
+      slug: "foo bar",
+    });
     await renderForm();
     await act(async () => {
       const ok = await submitRef.current!();
       expect(ok).toBe(false);
     });
-    expect(calendarShareApiMocks.putCalendarSharePublish).not.toHaveBeenCalled();
-    expect(mockShowToast).toHaveBeenCalledWith("slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。", "error");
+    expect(
+      calendarShareApiMocks.putCalendarSharePublish,
+    ).not.toHaveBeenCalled();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      "slug 須為 1–64 字元，以字母或數字開頭，其後可為字母、數字、點、底線或連字號。",
+      "error",
+    );
   });
 });

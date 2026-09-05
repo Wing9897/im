@@ -10,10 +10,13 @@ import {
 import { MonitorModeSwitch } from "../components/MonitorModeSwitch";
 import { ToastProvider } from "../context/ToastContext";
 import { BoardRoot } from "./BoardRoot";
-import { resetBoardPrefsCacheForTests } from "./boardPrefsStore";
-
+import { resetBoardPrefsCacheForTests } from "./boardPrefsStore.testing";
 vi.mock("../api/results", () => ({
-  fetchEvents: vi.fn(async () => ({ items: [], totalCount: 0, hasMore: false })),
+  fetchEvents: vi.fn(async () => ({
+    items: [],
+    totalCount: 0,
+    hasMore: false,
+  })),
   fetchTrendingTopics: vi.fn(async () => []),
   fetchTaskAnalysisStats: vi.fn(async () => []),
   fetchQueueStatus: vi.fn(async () => ({
@@ -48,14 +51,13 @@ vi.mock("../api/uiPrefs", () => ({
     layout: null,
     widgetState: null,
   })),
-  putBoardPrefs: vi.fn(async (body: {
-    layout?: unknown;
-    widgetState?: unknown;
-  }) => ({
-    configured: true,
-    layout: body.layout ?? null,
-    widgetState: body.widgetState ?? { mapViews: {}, sourceFilters: {} },
-  })),
+  putBoardPrefs: vi.fn(
+    async (body: { layout?: unknown; widgetState?: unknown }) => ({
+      configured: true,
+      layout: body.layout ?? null,
+      widgetState: body.widgetState ?? { mapViews: {}, sourceFilters: {} },
+    }),
+  ),
 }));
 
 vi.mock("../api/actions", () => ({
@@ -167,7 +169,11 @@ function ShellFixture() {
             },
             ">",
           ),
-          createElement("nav", { "data-testid": "app-sidebar", "aria-label": "側欄" }, "sidebar"),
+          createElement(
+            "nav",
+            { "data-testid": "app-sidebar", "aria-label": "側欄" },
+            "sidebar",
+          ),
         ),
   );
 }
@@ -192,7 +198,9 @@ describe("monitor mode + board smoke", () => {
       }
       private fire() {
         if (!this.target) return;
-        const hidden = Boolean((this.target as HTMLElement).closest("[hidden]"));
+        const hidden = Boolean(
+          (this.target as HTMLElement).closest("[hidden]"),
+        );
         const width = hidden ? 0 : 640;
         const entry = {
           target: this.target,
@@ -249,7 +257,11 @@ describe("monitor mode + board smoke", () => {
           createElement(
             ToastProvider,
             null,
-            createElement(MonitorModeProvider, null, createElement(ShellFixture)),
+            createElement(
+              MonitorModeProvider,
+              null,
+              createElement(ShellFixture),
+            ),
           ),
         ),
       );
@@ -266,19 +278,31 @@ describe("monitor mode + board smoke", () => {
 
   it("pages mode shows sidebar; canvas mode hides it", async () => {
     renderShell();
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="app-sidebar"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="sidebar-edge-toggle"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="app-shell-canvas"]')).toBeNull();
     expect(
-      container.querySelector('[data-testid="app-shell-pages-pane"]')?.hasAttribute("hidden"),
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeTruthy();
+    expect(container.querySelector('[data-testid="app-sidebar"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="sidebar-edge-toggle"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-canvas"]'),
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-testid="app-shell-pages-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(false);
     // Inactive board must use display:none class — `.flex` alone would stack shells.
     expect(
-      container.querySelector('[data-testid="app-shell-board-pane"]')?.classList.contains("hidden"),
+      container
+        .querySelector('[data-testid="app-shell-board-pane"]')
+        ?.classList.contains("hidden"),
     ).toBe(true);
     expect(
-      container.querySelector('[data-testid="app-shell-pages-pane"]')?.classList.contains("flex"),
+      container
+        .querySelector('[data-testid="app-shell-pages-pane"]')
+        ?.classList.contains("flex"),
     ).toBe(true);
     // Visible pages shell must sit above a keep-mounted board (z-index / DOM order).
     const pagesPane = container.querySelector(
@@ -289,11 +313,16 @@ describe("monitor mode + board smoke", () => {
     ) as HTMLElement;
     expect(pagesPane.className).toContain("z-[2]");
     expect(boardPane.className).toContain("hidden");
-    expect(boardPane.compareDocumentPosition(pagesPane) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      boardPane.compareDocumentPosition(pagesPane) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     // Board stays mounted but hidden in pages mode.
     expect(container.querySelector('[data-testid="board-root"]')).toBeTruthy();
     expect(
-      container.querySelector('[data-testid="app-shell-board-pane"]')?.hasAttribute("hidden"),
+      container
+        .querySelector('[data-testid="app-shell-board-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(true);
 
     const canvasBtn = container.querySelector(
@@ -306,15 +335,23 @@ describe("monitor mode + board smoke", () => {
     });
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="app-shell-canvas"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-canvas"]'),
+    ).toBeTruthy();
     expect(container.querySelector('[data-testid="app-sidebar"]')).toBeNull();
-    expect(container.querySelector('[data-testid="sidebar-edge-toggle"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="sidebar-edge-toggle"]'),
+    ).toBeNull();
     // Pages shell stays mounted (warm routes) but is hidden in canvas mode.
     expect(
-      container.querySelector('[data-testid="app-shell-pages-pane"]')?.hasAttribute("hidden"),
+      container
+        .querySelector('[data-testid="app-shell-pages-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(true);
     expect(
-      container.querySelector('[data-testid="app-shell-board-pane"]')?.hasAttribute("hidden"),
+      container
+        .querySelector('[data-testid="app-shell-board-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(false);
     expect(container.querySelector('[data-testid="board-root"]')).toBeTruthy();
     expect(window.localStorage.getItem(MONITOR_MODE_KEY)).toBe("canvas");
@@ -345,8 +382,12 @@ describe("monitor mode + board smoke", () => {
     act(() => {
       fabToggle.click();
     });
-    expect(container.querySelector('[data-testid="board-add-widget"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-enter-edit"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="board-add-widget"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-enter-edit"]'),
+    ).toBeNull();
 
     const pagesBtn = container.querySelector(
       '[data-testid="monitor-mode-pages"]',
@@ -356,13 +397,21 @@ describe("monitor mode + board smoke", () => {
     });
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="board-root"]')).toBe(boardBefore);
-    expect(container.querySelector('[data-testid="board-add-widget"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="board-root"]')).toBe(
+      boardBefore,
+    );
     expect(
-      container.querySelector('[data-testid="app-shell-board-pane"]')?.hasAttribute("hidden"),
+      container.querySelector('[data-testid="board-add-widget"]'),
+    ).toBeTruthy();
+    expect(
+      container
+        .querySelector('[data-testid="app-shell-board-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(true);
     expect(
-      container.querySelector('[data-testid="app-shell-pages-pane"]')?.hasAttribute("hidden"),
+      container
+        .querySelector('[data-testid="app-shell-pages-pane"]')
+        ?.hasAttribute("hidden"),
     ).toBe(false);
 
     // Switch back to canvas: free-surface keeps the same mount — no remount key.
@@ -374,11 +423,15 @@ describe("monitor mode + board smoke", () => {
     });
     await flushEffects();
     await act(async () => {
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => resolve(undefined)),
+      );
     });
 
     expect(container.querySelector(".board-free-surface")).toBe(surfaceBefore);
-    const item = container.querySelector("[data-widget-mount]") as HTMLElement | null;
+    const item = container.querySelector(
+      "[data-widget-mount]",
+    ) as HTMLElement | null;
     expect(item).toBeTruthy();
   });
 
@@ -413,7 +466,9 @@ describe("monitor mode + board smoke", () => {
     renderShell("/intelligence");
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="app-shell-canvas"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-canvas"]'),
+    ).toBeTruthy();
 
     const pagesBtn = container.querySelector(
       '[data-testid="monitor-mode-pages"]',
@@ -423,7 +478,9 @@ describe("monitor mode + board smoke", () => {
     });
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="app-shell-pages"]'),
+    ).toBeTruthy();
     expect(window.localStorage.getItem(MONITOR_MODE_KEY)).toBe("pages");
   });
 
@@ -432,34 +489,78 @@ describe("monitor mode + board smoke", () => {
     renderShell();
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="board-chrome"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-canvas"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-canvas"]')?.getAttribute("data-board-widget-count")).toBe(
-      "18",
-    );
-    expect(container.querySelector('[data-testid="board-widget-map"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-wall"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-weather"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-events"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-feed"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-gantt"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-gantt-events"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-leaderboard"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-system"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-clock"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-calendar-day"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-schedule"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-stats"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-items"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-llm-health"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-map-reset-view"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-map-save-view"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-fab-toggle"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-chrome"]')).toBeTruthy();
     expect(
-      container.querySelector('[data-testid="board-free-surface"]')?.contains(
-        container.querySelector('[data-testid="board-chrome"]'),
-      ),
+      container.querySelector('[data-testid="board-chrome"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-canvas"]'),
+    ).toBeTruthy();
+    expect(
+      container
+        .querySelector('[data-testid="board-canvas"]')
+        ?.getAttribute("data-board-widget-count"),
+    ).toBe("18");
+    expect(
+      container.querySelector('[data-testid="board-widget-map"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-wall"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-weather"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-events"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-feed"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-gantt"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-gantt-events"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-leaderboard"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-system"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-clock"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-calendar-day"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-schedule"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-stats"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-items"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-llm-health"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-map-reset-view"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-map-save-view"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-fab-toggle"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-chrome"]'),
+    ).toBeTruthy();
+    expect(
+      container
+        .querySelector('[data-testid="board-free-surface"]')
+        ?.contains(container.querySelector('[data-testid="board-chrome"]')),
     ).toBe(true);
 
     const fabToggle = container.querySelector(
@@ -468,9 +569,15 @@ describe("monitor mode + board smoke", () => {
     act(() => {
       fabToggle.click();
     });
-    expect(container.querySelector('[data-testid="board-enter-edit"]')).toBeNull();
-    expect(container.querySelector('[data-testid="board-add-widget"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-done-edit"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-enter-edit"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="board-add-widget"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-done-edit"]'),
+    ).toBeTruthy();
   });
 
   it("reset layout restores full mosaic after sparse cache", async () => {
@@ -480,7 +587,11 @@ describe("monitor mode + board smoke", () => {
     renderShell();
     await flushEffects();
     expect(
-      Number(container.querySelector('[data-testid="board-canvas"]')?.getAttribute("data-board-widget-count")),
+      Number(
+        container
+          .querySelector('[data-testid="board-canvas"]')
+          ?.getAttribute("data-board-widget-count"),
+      ),
     ).toBeGreaterThanOrEqual(6);
 
     const fabToggle = container.querySelector(
@@ -513,13 +624,23 @@ describe("monitor mode + board smoke", () => {
     });
     await flushEffects();
 
-    expect(container.querySelector('[data-testid="board-canvas"]')?.getAttribute("data-board-widget-count")).toBe(
-      "18",
-    );
-    expect(container.querySelector('[data-testid="board-widget-map"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-wall"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-gantt"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="board-widget-events"]')).toBeTruthy();
+    expect(
+      container
+        .querySelector('[data-testid="board-canvas"]')
+        ?.getAttribute("data-board-widget-count"),
+    ).toBe("18");
+    expect(
+      container.querySelector('[data-testid="board-widget-map"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-wall"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-gantt"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="board-widget-events"]'),
+    ).toBeTruthy();
     void removeButtons;
   });
 });

@@ -180,7 +180,7 @@ export function clearConnection(): void {
   writeRaw({ ...EMPTY });
 }
 
-/** Test helper: wipe in-memory cache. */
+/** Test helper: wipe in-memory cache. Production builds drop the body. */
 export function _resetConnectionStoreForTests(): void {
   cached = null;
   listeners.clear();

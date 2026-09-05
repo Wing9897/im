@@ -1,36 +1,48 @@
 /** Conversational assistant at `/assistant`. AI settings pages live in `pages/settings/ai/` (`/settings/ai/*`). */
-import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import {
+  useEffect,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from "react";
 import { Link } from "react-router-dom";
 import { Eraser, MessageSquare, Volume2, VolumeX } from "lucide-react";
-import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
+import { EmptyStateGlyph } from "../../components/common/EmptyStateGlyph";
 import { useTranslation } from "react-i18next";
-import { Button, SurfaceCard, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
-import { EmptyState } from "../../../components/common/EmptyState";
-import { AssistantComposerShell } from "../../../components/assistant/AssistantComposerShell";
-import { useErrorToast } from "../../../hooks/useErrorToast";
-import { useAssistantSpacePtt } from "../../../hooks/useAssistantSpacePtt";
-import { useStickToBottom } from "../../../hooks/useStickToBottom";
-import { useAssistantChat } from "../../../hooks/useAssistantChat";
-import { useCollectorStatus } from "../../../context/CollectorStatusContext";
-import { AssistantMarkdown } from "../../../components/assistant/AssistantMarkdown";
+import {
+  Button,
+  SurfaceCard,
+  captionClass,
+  pageTitleClass,
+  AlertBanner,
+} from "../../components/ui";
+import { EmptyState } from "../../components/common/EmptyState";
+import { AssistantComposerShell } from "../../components/assistant/AssistantComposerShell";
+import { useErrorToast } from "../../hooks/useErrorToast";
+import { useAssistantSpacePtt } from "../../hooks/useAssistantSpacePtt";
+import { useStickToBottom } from "../../hooks/useStickToBottom";
+import { useAssistantChat } from "../../hooks/useAssistantChat";
+import { useCollectorStatus } from "../../context/CollectorStatusContext";
+import { AssistantMarkdown } from "../../components/assistant/AssistantMarkdown";
 import {
   AssistantLiveToolSteps,
   AssistantToolSummary,
-} from "../../../components/assistant/AssistantToolSteps";
-import { AiStaffAvatar } from "../../../components/aiStaff/AiStaffAvatar";
-import { AiStaffChatRow } from "../../../components/aiStaff/AiStaffChatRow";
+} from "../../components/assistant/AssistantToolSteps";
+import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
+import { AiStaffChatRow } from "../../components/aiStaff/AiStaffChatRow";
 import {
   assistantChatBubbleClass,
   userChatBubbleClass,
-} from "../../../components/chat/chatBubbleClasses";
+} from "../../components/assistant/chatBubbleClasses";
 import {
   resolveAssistantDisplayName,
   useAssistantIdentity,
-} from "../../../domain/aiStaff/assistantIdentity";
-import { isEditableTarget } from "../../../utils/isEditableTarget";
-import { isAssistantDirectModeSupported } from "../../../domain/assistant/directModeSupport";
-import { listLlmGlobalSlots, listLlmProfiles } from "../../../api/llmProfiles";
-import { isLlmProfileComplete } from "../../../domain/settings/llmProfileCompleteness";
+} from "../../domain/aiStaff/assistantIdentity";
+import { isEditableTarget } from "../../utils/isEditableTarget";
+import { isAssistantDirectModeSupported } from "../../domain/assistant/directModeSupport";
+import { listLlmGlobalSlots, listLlmProfiles } from "../../api/llmProfiles";
+import { isLlmProfileComplete } from "../../domain/settings/llmProfileCompleteness";
+import { errorMatchesCode } from "../../i18n/errorCodes";
 
 /**
  * Built-in assistant: text chat + optional browser PTT / TTS.
@@ -69,7 +81,9 @@ export function AssistantPage() {
   useErrorToast(error);
   const { aiEngineStatus, requestAiStatusRefresh } = useCollectorStatus();
   const aiUnavailable = aiEngineStatus === "unavailable";
-  const [assistantSlotReady, setAssistantSlotReady] = useState<boolean | null>(null);
+  const [assistantSlotReady, setAssistantSlotReady] = useState<boolean | null>(
+    null,
+  );
   const [profileCount, setProfileCount] = useState<number | null>(null);
   const sendDisabled = aiUnavailable || assistantSlotReady === false;
 
@@ -80,10 +94,8 @@ export function AssistantPage() {
   useEffect(() => {
     if (!error) return;
     if (
-      error.includes("AI 引擎無法連線") ||
-      error.includes("AI engine unreachable") ||
-      error.includes("localhost:11434") ||
-      error.includes("Cannot connect")
+      errorMatchesCode(error, "ai_engine_unreachable") ||
+      errorMatchesCode(error, "ai_engine_failed")
     ) {
       requestAiStatusRefresh(true);
     }
@@ -102,7 +114,9 @@ export function AssistantPage() {
           return;
         }
         const profile = profiles.find((p) => p.id === profileId);
-        setAssistantSlotReady(Boolean(profile && isLlmProfileComplete(profile)));
+        setAssistantSlotReady(
+          Boolean(profile && isLlmProfileComplete(profile)),
+        );
       })
       .catch(() => {
         if (!cancelled) {
@@ -126,10 +140,15 @@ export function AssistantPage() {
   });
 
   /** Clicking messages/header/actions blurs the draft so Space PTT can arm. */
-  const blurDraftIfOutsideEditable = (event: ReactPointerEvent<HTMLElement>) => {
+  const blurDraftIfOutsideEditable = (
+    event: ReactPointerEvent<HTMLElement>,
+  ) => {
     if (isEditableTarget(event.target)) return;
     const active = document.activeElement;
-    if (active instanceof HTMLTextAreaElement && active.dataset.testid === "assistant-draft") {
+    if (
+      active instanceof HTMLTextAreaElement &&
+      active.dataset.testid === "assistant-draft"
+    ) {
       active.blur();
     }
   };
@@ -333,7 +352,9 @@ export function AssistantPage() {
           sendDisabled={sendDisabled}
           leadingActions={
             ttsEnabled && ttsAvailable ? (
-              <span className={`${captionClass} inline-flex items-center gap-1 text-text-muted`}>
+              <span
+                className={`${captionClass} inline-flex items-center gap-1 text-text-muted`}
+              >
                 <Volume2 className="size-3.5" aria-hidden />
                 {t("ttsOnLabel")}
               </span>

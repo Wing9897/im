@@ -35,7 +35,7 @@ import { DashboardViewerDialogs } from "./components/DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./components/DashboardViewerToolbar";
 import { AnalysisSchedulingDialog } from "../../components/settings/AnalysisSchedulingDialog";
 import { WorksetPipelineGraphPanel } from "../../components/worksets/WorksetPipelineGraphPanel";
-import { PipelineGuideChecklist } from "../../components/pipeline/PipelineGuideChecklist";
+import { PipelineGuideChecklist } from "../../components/worksets/PipelineGuideChecklist";
 import { usePipelineReadiness } from "../../hooks/usePipelineReadiness";
 
 export function DashboardViewer() {

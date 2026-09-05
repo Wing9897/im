@@ -41,12 +41,12 @@ import {
 import { formatAppVersionLabel } from "../utils/appVersion";
 import { OverlayPortal } from "./common/OverlayPortal";
 import { AssistantHistoryRail } from "./AssistantHistoryRail";
-import { railModeButtonClass } from "./sidebar/sidebarNavStyles";
+import { railModeButtonClass } from "./sidebarNavStyles";
 import {
   SidebarNavLink,
   SidebarSectionLabel,
   TasksNavLink,
-} from "./sidebar/SidebarNavItems";
+} from "./SidebarNavItems";
 
 export { MAIN_SIDEBAR_PREFETCH_PATHS };
 

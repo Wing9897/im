@@ -1,4 +1,4 @@
-import { APP_LOG_KIND } from "../../logging/appLogClient";
+import { APP_LOG_KIND } from "../../api/appLogClient";
 import { LOGS_SHOW_ANALYSIS_TRACE_STORAGE_KEY } from "../prefs";
 
 export const ANALYSIS_TRACE_KIND = APP_LOG_KIND.ANALYSIS_TRACE;

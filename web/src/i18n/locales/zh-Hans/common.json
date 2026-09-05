@@ -175,6 +175,7 @@
     "agent_timeout": "助手请求超时，请稍后再试或缩短问题。",
     "ai_engine_unreachable": "AI 引擎无法连线（例如本机 Ollama 未启动或端口错误）。设置页「AI 测试」成功仍可能无法支持助手长对话。",
     "ai_engine_failed": "AI 引擎无法完成这次请求。请检查供应商状态与日志页，然后再试一次。",
+    "imap_auth_failed": "IMAP 登录失败：帐号或 App Password 不正确。",
     "NO_LLM_PROFILE": "尚未建立任何 AI 设定档，请先到 AI 供应商页面建立设定档。",
     "ASSISTANT_SLOT_UNBOUND": "助手全局槽位尚未绑定 AI 设定档，请到 AI 供应商页面绑定。",
     "LLM_PROFILE_INCOMPLETE": "已绑定的 AI 设定档不完整，请到 AI 供应商页面补齐后再试。",

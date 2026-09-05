@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SubscribeFilterGroup } from "./SubscribeFilterGroup";
-import { subscribeCalendarIdentity } from "../../domain/calendarShare/subscribedCalendars";
+import { subscribeCalendarIdentity } from "./subscribedCalendars";
 import { i18n, wrapWithI18n } from "../../test/i18nHarness";
 import { setAppLocale } from "../../i18n/locale";
 

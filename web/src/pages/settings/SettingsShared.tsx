@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  SettingsContentCard,
+  SettingsFieldGroup,
+} from "../../components/settings/SettingsFormLayout";
+import { ThemePicker } from "../../components/settings/ThemePicker";
 import { Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
 import { aiWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
@@ -13,10 +18,7 @@ import { createWorkspacePage } from "../shared/createWorkspacePage";
  * ``components/settings/useSettingsPageState`` — import those directly from
  * account / logs / ai (and any non-settings feature).
  */
-export {
-  SettingsContentCard,
-  SettingsFieldGroup,
-} from "../../components/settings/SettingsFormLayout";
+export { SettingsContentCard, SettingsFieldGroup };
 
 /** Shared chrome for Settings integrations docs pages (links + code samples). */
 export const settingsDocsLinkClass = `${captionClass} font-medium text-accent no-underline hover:underline`;
@@ -44,7 +46,9 @@ export function SettingsDocsExample({
   return (
     <div className="mt-sm">
       <div className="mb-1 flex flex-wrap items-center gap-x-md gap-y-xs">
-        <div className={`${captionClass} font-medium text-text-primary`}>{title}</div>
+        <div className={`${captionClass} font-medium text-text-primary`}>
+          {title}
+        </div>
         <Button
           type="button"
           variant="secondary"
@@ -86,3 +90,11 @@ export const SettingsAiShellPage = createWorkspacePage(
   aiWorkspaceNavItems,
   "shell.aiSettingsSection",
 );
+
+export function SettingsThemePage() {
+  return (
+    <SettingsContentCard>
+      <ThemePicker />
+    </SettingsContentCard>
+  );
+}

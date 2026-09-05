@@ -3,10 +3,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApiClient } from "./client";
-import {
-  _resetConnectionStoreForTests,
-  saveDeviceSession,
-} from "../domain/connection/connectionStore";
+import { saveDeviceSession } from "../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
 import { localStorageMock } from "./clientTestUtils";
 
 const SSE_RECONNECT_DELAY_MS = 5000;
@@ -62,9 +60,11 @@ describe("ApiClient", () => {
         const instance = {
           url,
           close: vi.fn(),
-          addEventListener: vi.fn((type: string, handler: (e: Event) => void) => {
-            instance.listeners[type] = handler;
-          }),
+          addEventListener: vi.fn(
+            (type: string, handler: (e: Event) => void) => {
+              instance.listeners[type] = handler;
+            },
+          ),
           onmessage: null,
           onopen: null,
           onerror: null,
@@ -88,7 +88,9 @@ describe("ApiClient", () => {
 
       track(client.connectSSE(() => {}));
 
-      expect(MockEventSource).toHaveBeenCalledWith("http://localhost:18820/api/v1/events");
+      expect(MockEventSource).toHaveBeenCalledWith(
+        "http://localhost:18820/api/v1/events",
+      );
     });
 
     it("includes token as query param in SSE URL when set", () => {
@@ -109,7 +111,9 @@ describe("ApiClient", () => {
       track(client.connectSSE((e) => events.push(e)));
 
       // Simulate a named event
-      const messageEvent = { data: '{"channelId":"ch1","count":5}' } as MessageEvent;
+      const messageEvent = {
+        data: '{"channelId":"ch1","count":5}',
+      } as MessageEvent;
       instances[0].listeners["messages_updated"]?.(messageEvent);
 
       expect(events).toHaveLength(1);
@@ -192,22 +196,29 @@ describe("ApiClient", () => {
         accessExpiresAt: past,
       });
 
-      const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("/api/v1/setup/refresh")) {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.includes("/api/v1/setup/refresh")) {
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                accessToken: "rotated-token",
+                refreshToken: "refresh-1",
+                accessExpiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+                refreshExpiresAt: "",
+              }),
+            };
+          }
           return {
             ok: true,
             status: 200,
-            json: async () => ({
-              accessToken: "rotated-token",
-              refreshToken: "refresh-1",
-              accessExpiresAt: new Date(Date.now() + 3_600_000).toISOString(),
-              refreshExpiresAt: "",
-            }),
+            text: async () => "",
+            json: async () => ({}),
           };
-        }
-        return { ok: true, status: 200, text: async () => "", json: async () => ({}) };
-      });
+        });
       vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
 
       const { MockEventSource, instances } = createMockEventSourceClass();
@@ -219,9 +230,11 @@ describe("ApiClient", () => {
       instances[0].onerror?.(new Event("error"));
       await vi.advanceTimersByTimeAsync(SSE_RECONNECT_DELAY_MS);
 
-      expect(fetchMock.mock.calls.some((c) => String(c[0]).includes("/api/v1/setup/refresh"))).toBe(
-        true,
-      );
+      expect(
+        fetchMock.mock.calls.some((c) =>
+          String(c[0]).includes("/api/v1/setup/refresh"),
+        ),
+      ).toBe(true);
       expect(MockEventSource).toHaveBeenLastCalledWith(
         "http://localhost:18820/api/v1/events?token=rotated-token",
       );
@@ -237,16 +250,33 @@ describe("ApiClient", () => {
         accessExpiresAt: future,
       });
 
-      const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("/api/v1/setup/devices")) {
-          return { ok: false, status: 401, text: async () => "", json: async () => ({}) };
-        }
-        if (url.includes("/api/v1/setup/refresh")) {
-          return { ok: false, status: 401, text: async () => "", json: async () => ({}) };
-        }
-        return { ok: true, status: 200, text: async () => "", json: async () => ({}) };
-      });
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.includes("/api/v1/setup/devices")) {
+            return {
+              ok: false,
+              status: 401,
+              text: async () => "",
+              json: async () => ({}),
+            };
+          }
+          if (url.includes("/api/v1/setup/refresh")) {
+            return {
+              ok: false,
+              status: 401,
+              text: async () => "",
+              json: async () => ({}),
+            };
+          }
+          return {
+            ok: true,
+            status: 200,
+            text: async () => "",
+            json: async () => ({}),
+          };
+        });
       vi.stubGlobal("fetch", fetchMock as unknown as typeof fetch);
 
       const { instances } = createMockEventSourceClass();

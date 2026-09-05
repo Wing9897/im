@@ -26,6 +26,5 @@ export {
   claimFiredKeys,
   hydrateFiredKeys,
   loadFiredKeys,
-  resetFiredKeysCacheForTests,
   saveFiredKeys,
 } from "./scannerFiredStore";

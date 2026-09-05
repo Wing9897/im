@@ -1,4 +1,4 @@
-import { IdentityAvatar } from "../user/IdentityAvatar";
+import { IdentityAvatar } from "../../domain/user/IdentityAvatarView";
 import {
   lookupSubscribedOwnerAvatar,
   lookupSubscribedPublisherHandle,

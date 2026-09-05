@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchAccessKeys, type AccessKeyPublic } from "../../../api/accessKeys";
 import { resolveBaseUrl } from "../../../api/client";
-import { DEFAULT_API_PORT } from "../../../config/serviceEndpoints";
+import { DEFAULT_API_PORT } from "../../../api/serviceEndpoints";
 import { toErrorMessage } from "../../../utils/errors";
 
 /** Read-only service port derived from the active API base URL. */

@@ -9,7 +9,7 @@ import {
   type CalendarShareSearchHit,
 } from "../../api/calendarShare";
 import { Badge, Button, OpsControlBar, TextField } from "../../components/ui";
-import { CalendarShareConnectionStatusIcon } from "../../components/calendarShare/CalendarShareConnectionStatusIcon";
+import { CalendarShareConnectionStatusIcon } from "../../domain/calendarShare/CalendarShareConnectionStatusIcon";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {
   isCalendarShareNotFound,

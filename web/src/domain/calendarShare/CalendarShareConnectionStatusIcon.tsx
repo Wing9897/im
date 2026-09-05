@@ -2,8 +2,8 @@ import { Share2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { PillButton } from "../ui/PillButton";
-import type { SubscribeAvailability } from "../../domain/calendarShare/subscribedCalendars";
+import { PillButton } from "../../components/ui/PillButton";
+import type { SubscribeAvailability } from "./subscribedCalendars";
 import { colorStatusDotStyle } from "../../styles/statusDot";
 
 export const CALENDAR_SHARE_ACCOUNT_PATH = "/subscriptions/account";

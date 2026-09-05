@@ -179,7 +179,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 
 - API field shapes: `server/tests/test_contract_*.py`
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
-- Default listen port: `server/constants.py` `SERVICE_PORT` (SoT) ↔ FE `web/src/config/serviceEndpoints.ts` `DEFAULT_API_PORT` ↔ desktop `desktop/ports.ts` `DEFAULT_SERVER_PORT` ↔ `scripts/service-ports.mjs` (drift-tested in `serviceEndpoints.drift.test.ts` / `service-port-drift.test.ts`)
+- Default listen port: `server/constants.py` `SERVICE_PORT` (SoT) ↔ FE `web/src/api/serviceEndpoints.ts` `DEFAULT_API_PORT` ↔ desktop `desktop/ports.ts` `DEFAULT_SERVER_PORT` ↔ `scripts/service-ports.mjs` (drift-tested in `serviceEndpoints.drift.test.ts` / `service-port-drift.test.ts`)
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.

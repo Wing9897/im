@@ -3,7 +3,7 @@ import {
   AccentBarCard,
   type BadgeTone,
 } from "../../components/ui";
-import { IdentityAvatar } from "../../components/user/IdentityAvatar";
+import { IdentityAvatar } from "../../domain/user/IdentityAvatarView";
 import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
 import {
   type CalendarShareGrantVisibility,

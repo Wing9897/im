@@ -7,14 +7,10 @@ import {
   normalizeNotifySettings,
   parseLeadOffsetMinutes,
   reminderChannelDelivery,
-  resetNotifySettingsCacheForTests,
   saveNotifySettings,
 } from "./settings";
-
-const {
-  mockFetchSettings,
-  mockPutSettings,
-} = vi.hoisted(() => ({
+import { resetNotifySettingsCacheForTests } from "./settings.testing";
+const { mockFetchSettings, mockPutSettings } = vi.hoisted(() => ({
   mockFetchSettings: vi.fn(),
   mockPutSettings: vi.fn(),
 }));
@@ -50,9 +46,9 @@ describe("notify settings", () => {
     const listener = vi.fn();
     window.addEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, listener);
 
-    await expect(saveNotifySettings({ ...next, leadOffsetsMinutes: [15, 1440] })).resolves.toBe(
-      true,
-    );
+    await expect(
+      saveNotifySettings({ ...next, leadOffsetsMinutes: [15, 1440] }),
+    ).resolves.toBe(true);
     expect(mockPutSettings).toHaveBeenCalledWith({
       enabled: true,
       voiceEnabled: true,
@@ -209,7 +205,11 @@ describe("notify settings", () => {
         enabled: true,
         leadOffsetsMinutes: [60],
       } as never),
-    ).toMatchObject({ voiceEnabled: true, flashEnabled: true, flashMode: "timed" });
+    ).toMatchObject({
+      voiceEnabled: true,
+      flashEnabled: true,
+      flashMode: "timed",
+    });
     expect(
       normalizeNotifySettings({
         flashMode: "nope",
@@ -224,16 +224,32 @@ describe("notify settings", () => {
 
   it("keeps voice and flash independently off", () => {
     expect(
-      reminderChannelDelivery({ voiceEnabled: true, flashEnabled: false, flashMode: "timed" }),
+      reminderChannelDelivery({
+        voiceEnabled: true,
+        flashEnabled: false,
+        flashMode: "timed",
+      }),
     ).toEqual({ speak: true, flash: false, flashPersist: false });
     expect(
-      reminderChannelDelivery({ voiceEnabled: false, flashEnabled: true, flashMode: "persistent" }),
+      reminderChannelDelivery({
+        voiceEnabled: false,
+        flashEnabled: true,
+        flashMode: "persistent",
+      }),
     ).toEqual({ speak: false, flash: true, flashPersist: true });
     expect(
-      reminderChannelDelivery({ voiceEnabled: false, flashEnabled: false, flashMode: "timed" }),
+      reminderChannelDelivery({
+        voiceEnabled: false,
+        flashEnabled: false,
+        flashMode: "timed",
+      }),
     ).toEqual({ speak: false, flash: false, flashPersist: false });
     expect(
-      reminderChannelDelivery({ voiceEnabled: true, flashEnabled: true, flashMode: "timed" }),
+      reminderChannelDelivery({
+        voiceEnabled: true,
+        flashEnabled: true,
+        flashMode: "timed",
+      }),
     ).toEqual({ speak: true, flash: true, flashPersist: false });
   });
 });

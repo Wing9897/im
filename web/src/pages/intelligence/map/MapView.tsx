@@ -35,7 +35,7 @@ import {
 } from "./DanmakuOverlay";
 import { TimelineSlider } from "./TimelineSlider";
 import { useMapView } from "./useMapView";
-import { MapMarkers } from "../../../components/map/MapMarkers";
+import { MapMarkers } from "../../../components/intelligence/MapMarkers";
 import { MapControls } from "./MapControls";
 
 /**

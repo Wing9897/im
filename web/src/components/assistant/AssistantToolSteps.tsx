@@ -3,7 +3,7 @@ import type { AgentToolCallSummary } from "../../api/agent";
 import type { LiveToolStep } from "../../domain/assistant/liveToolStep";
 import { AiStaffAvatar } from "../aiStaff/AiStaffAvatar";
 import { captionClass } from "../ui";
-import { assistantChatBubbleClass } from "../chat/chatBubbleClasses";
+import { assistantChatBubbleClass } from "./chatBubbleClasses";
 import { staffIdForAgentTool } from "./assistantToolStaff";
 import { formatToolResultSummary, localizeToolName } from "../../domain/assistant/formatToolSummary";
 

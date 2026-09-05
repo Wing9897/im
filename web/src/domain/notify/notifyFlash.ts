@@ -78,7 +78,7 @@ export function dismissNotifyFlash(id: string): void {
   emit();
 }
 
-/** Test helper. */
+/** Test helper. Production builds drop the body. */
 export function resetNotifyFlashForTests(): void {
   clearAll();
   seq = 0;

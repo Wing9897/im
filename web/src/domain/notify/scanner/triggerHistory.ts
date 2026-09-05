@@ -137,7 +137,7 @@ export function buildNotifyTriggerReason(
   );
 }
 
-/** Test helper: reset in-memory history cache between cases. */
+/** Test helper: reset in-memory history cache between cases. Production builds drop the body. */
 export function resetNotifyHistoryCacheForTests(): void {
   cachedEntries = null;
   hydrateHistoryPromise = null;

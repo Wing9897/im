@@ -4,10 +4,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApiClient, ApiRequestError, resolveBaseUrl } from "./client";
 import {
-  _resetConnectionStoreForTests,
   saveDeviceSession,
   setServerBaseUrl,
 } from "../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
 import { localStorageMock } from "./clientTestUtils";
 
 describe("ApiClient 401 refresh", () => {
@@ -38,56 +38,60 @@ describe("ApiClient 401 refresh", () => {
       .map((call) => String(call[0]))
       .filter(
         (url) =>
-          url.includes("/api/v1/tasks") || url.includes("/api/v1/setup/refresh"),
+          url.includes("/api/v1/tasks") ||
+          url.includes("/api/v1/setup/refresh"),
       );
   }
 
   it("refreshes once on 401 then retries the original request", async () => {
-    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.includes("/api/v1/setup/refresh")) {
-        return {
-          ok: true,
-          status: 200,
-          statusText: "OK",
-          json: () =>
-            Promise.resolve({
-              accessToken: "new-access",
-              refreshToken: "new-refresh",
-              accessExpiresAt: "t1",
-              refreshExpiresAt: "t2",
-              device: { id: "d1", label: "Browser" },
-            }),
-          text: () => Promise.resolve(""),
-        };
-      }
-      if (url.includes("/api/v1/tasks")) {
-        if (client.getToken() === "new-access") {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/v1/setup/refresh")) {
           return {
             ok: true,
             status: 200,
             statusText: "OK",
-            json: () => Promise.resolve({ ok: true }),
+            json: () =>
+              Promise.resolve({
+                accessToken: "new-access",
+                refreshToken: "new-refresh",
+                accessExpiresAt: "t1",
+                refreshExpiresAt: "t2",
+                device: { id: "d1", label: "Browser" },
+              }),
             text: () => Promise.resolve(""),
           };
         }
+        if (url.includes("/api/v1/tasks")) {
+          if (client.getToken() === "new-access") {
+            return {
+              ok: true,
+              status: 200,
+              statusText: "OK",
+              json: () => Promise.resolve({ ok: true }),
+              text: () => Promise.resolve(""),
+            };
+          }
+          return {
+            ok: false,
+            status: 401,
+            statusText: "Unauthorized",
+            json: () =>
+              Promise.resolve({ error: "unauthorized", message: "expired" }),
+            text: () => Promise.resolve(""),
+          };
+        }
+        // Ignore background locale/settings writes from test setup.
         return {
-          ok: false,
-          status: 401,
-          statusText: "Unauthorized",
-          json: () => Promise.resolve({ error: "unauthorized", message: "expired" }),
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          json: () => Promise.resolve({}),
           text: () => Promise.resolve(""),
         };
-      }
-      // Ignore background locale/settings writes from test setup.
-      return {
-        ok: true,
-        status: 200,
-        statusText: "OK",
-        json: () => Promise.resolve({}),
-        text: () => Promise.resolve(""),
-      };
-    });
+      });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
     const result = await client.get<{ ok: boolean }>("/api/v1/tasks");
@@ -102,25 +106,31 @@ describe("ApiClient 401 refresh", () => {
   });
 
   it("does not loop refresh when refresh itself returns 401", async () => {
-    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.includes("/api/v1/setup/refresh") || url.includes("/api/v1/tasks")) {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (
+          url.includes("/api/v1/setup/refresh") ||
+          url.includes("/api/v1/tasks")
+        ) {
+          return {
+            ok: false,
+            status: 401,
+            statusText: "Unauthorized",
+            json: () =>
+              Promise.resolve({ error: "unauthorized", message: "expired" }),
+            text: () => Promise.resolve(""),
+          };
+        }
         return {
-          ok: false,
-          status: 401,
-          statusText: "Unauthorized",
-          json: () => Promise.resolve({ error: "unauthorized", message: "expired" }),
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          json: () => Promise.resolve({}),
           text: () => Promise.resolve(""),
         };
-      }
-      return {
-        ok: true,
-        status: 200,
-        statusText: "OK",
-        json: () => Promise.resolve({}),
-        text: () => Promise.resolve(""),
-      };
-    });
+      });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
     await expect(client.get("/api/v1/tasks")).rejects.toThrow(ApiRequestError);
@@ -162,4 +172,3 @@ describe("resolveBaseUrl", () => {
     expect(resolveBaseUrl()).toBe("http://10.0.0.2:18820");
   });
 });
-

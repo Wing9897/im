@@ -50,7 +50,7 @@ export function LazyPage({
   );
 }
 
-/** Test-only: clear the lazy cache between cases. */
+/** Test-only: clear the lazy cache between cases. Production builds drop the body. */
 export function resetLazyPageCacheForTests(): void {
   lazyByExport.clear();
 }

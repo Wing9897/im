@@ -2,9 +2,9 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
-import { prefetchRoute } from "../../routing/prefetchRoute";
-import { CountBadge } from "../ui/CountBadge";
+import { useAnalysisStatus } from "../context/AnalysisStatusContext";
+import { prefetchRoute } from "../routing/prefetchRoute";
+import { CountBadge } from "./ui/CountBadge";
 import { sidebarNavLinkClass } from "./sidebarNavStyles";
 
 export function SidebarSectionLabel({ label }: { label: string }) {
@@ -38,7 +38,9 @@ export function TasksNavLink({ isActive }: { isActive: boolean }) {
       onMouseEnter={() => prefetchRoute(to)}
       onFocus={() => prefetchRoute(to)}
       aria-label={
-        showPendingBadge ? t("tasksPendingAria", { count: pendingCount }) : tasksLabel
+        showPendingBadge
+          ? t("tasksPendingAria", { count: pendingCount })
+          : tasksLabel
       }
       title={
         showPendingBadge

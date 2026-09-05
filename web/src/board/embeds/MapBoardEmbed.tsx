@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AnalysisEvent } from "../../types";
-import { MapMarkers } from "../../components/map/MapMarkers";
+import { MapMarkers } from "../../components/intelligence/MapMarkers";
 import { CARTO_ATTR } from "../../domain/intelligence/mapTiles";
 import { useCartoTileUrl } from "../../domain/intelligence/useCartoTileUrl";
 

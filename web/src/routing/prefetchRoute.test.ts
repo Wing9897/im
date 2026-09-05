@@ -21,8 +21,8 @@ describe("prefetchRoute", () => {
   });
 
   it("maps /tasks to DashboardViewer", () => {
-    const src = readFileSync(resolve(__dirname, "./prefetchRoute.ts"), "utf8");
-    expect(src).toContain('"/tasks": () => import("../pages/dashboard/DashboardViewer")');
+    const src = readFileSync(resolve(__dirname, "./routeModules.ts"), "utf8");
+    expect(src).toContain('"/tasks": ROUTE_PAGES.DashboardViewer');
     expect(src).not.toContain('"/ai/analysis-strategy"');
   });
 

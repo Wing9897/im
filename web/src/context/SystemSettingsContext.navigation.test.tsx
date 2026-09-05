@@ -7,7 +7,7 @@ import { SystemSettingsProvider } from "./SystemSettingsContext";
 import { SimpleModeProvider } from "./SimpleModeContext";
 import { SettingsAiShellPage, SettingsShellPage } from "../pages/settings/SettingsShared";
 import { SettingsAiProviderPage } from "../pages/settings/ai/SettingsAiProviderPage";
-import { SettingsThemePage } from "../pages/settings/SettingsThemePage";
+import { SettingsThemePage } from "../pages/settings/SettingsShared";
 import { SettingsDataPage } from "../pages/settings/SettingsDataPage";
 
 const { mockFetchSystemSettings } = vi.hoisted(() => ({

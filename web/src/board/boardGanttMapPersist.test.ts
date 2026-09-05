@@ -2,10 +2,12 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import { resolveBoardMapBootView } from "./embeds/MapBoardEmbed";
 import {
   loadBoardMapViewFromCache,
-  resetBoardPrefsCacheForTests,
   saveBoardMapViewToApi,
-  seedBoardPrefsCacheForTests,
 } from "./boardPrefsStore";
+import {
+  resetBoardPrefsCacheForTests,
+  seedBoardPrefsCacheForTests,
+} from "./boardPrefsStore.testing";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 import { putBoardPrefs } from "../api/uiPrefs";
 
@@ -33,13 +35,15 @@ describe("board map view persistence", () => {
 
   it("saves and restores center/zoom per widgetId via prefs cache", () => {
     saveBoardMapViewToApi("map-a", { center: [25.0, 121.5], zoom: 6 });
-    expect(loadBoardMapViewFromCache("map-a")).toEqual({ center: [25.0, 121.5], zoom: 6 });
+    expect(loadBoardMapViewFromCache("map-a")).toEqual({
+      center: [25.0, 121.5],
+      zoom: 6,
+    });
     // Server ui-prefs is SoT — no localStorage write path for map views.
     expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeNull();
     expect(loadBoardMapViewFromCache("map-b")).toBeNull();
     expect(putBoardPrefs).toHaveBeenCalled();
   });
-
 
   it("resolveBoardMapBootView re-reads cache so remounts see the latest save", () => {
     expect(resolveBoardMapBootView("w-map")).toBeNull();

@@ -3,18 +3,27 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/calendarShare", async () =>
-  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+  (
+    await import("../../test/calendarShareApiMock")
+  ).calendarShareApiModuleMock(),
+);
 
-import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
+import {
+  calendarShareApiMocks,
+  resetCalendarShareApiMocks,
+} from "../../test/calendarShareApiMock";
 import {
   applyCalendarShareCatalogItems,
   invalidateCalendarShareCatalog,
   refreshCalendarShareCatalog,
-  resetCalendarShareCatalogForTests,
   useCalendarShareCatalog,
 } from "./useCalendarShareCatalog";
-
-function Harness({ refOut }: { refOut: { current: ReturnType<typeof useCalendarShareCatalog> | null } }) {
+import { resetCalendarShareCatalogForTests } from "./useCalendarShareCatalog.testing";
+function Harness({
+  refOut,
+}: {
+  refOut: { current: ReturnType<typeof useCalendarShareCatalog> | null };
+}) {
   refOut.current = useCalendarShareCatalog();
   return null;
 }
@@ -65,25 +74,40 @@ describe("useCalendarShareCatalog", () => {
   it("loads session and subscriptions together and exposes ownHandle from the catalog", async () => {
     await renderHook();
     expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalled();
-    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalled();
-    expect(resultRef.current?.items).toEqual([{ handle: "DemoPub", slug: "Open" }]);
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSubscriptions,
+    ).toHaveBeenCalled();
+    expect(resultRef.current?.items).toEqual([
+      { handle: "DemoPub", slug: "Open" },
+    ]);
     expect(resultRef.current?.ownHandle).toBe("Wing");
     expect(resultRef.current?.session?.connected).toBe(true);
   });
 
   it("applyCalendarShareCatalogItems updates items without fetch", async () => {
     await renderHook();
-    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalledTimes(1);
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSubscriptions,
+    ).toHaveBeenCalledTimes(1);
     act(() => {
-      applyCalendarShareCatalogItems([{ handle: "Alice", slug: "Work" }], "Wing");
+      applyCalendarShareCatalogItems(
+        [{ handle: "Alice", slug: "Work" }],
+        "Wing",
+      );
     });
-    expect(resultRef.current?.items).toEqual([{ handle: "Alice", slug: "Work" }]);
-    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalledTimes(1);
+    expect(resultRef.current?.items).toEqual([
+      { handle: "Alice", slug: "Work" },
+    ]);
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSubscriptions,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it("shares one fetch across subscribers and refreshes all of them on invalidate", async () => {
     await renderHook();
-    expect(calendarShareApiMocks.fetchCalendarShareSubscriptions).toHaveBeenCalledTimes(1);
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSubscriptions,
+    ).toHaveBeenCalledTimes(1);
 
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
       items: [{ handle: "Alice", slug: "Work" }],
@@ -94,7 +118,9 @@ describe("useCalendarShareCatalog", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(resultRef.current?.items).toEqual([{ handle: "Alice", slug: "Work" }]);
+    expect(resultRef.current?.items).toEqual([
+      { handle: "Alice", slug: "Work" },
+    ]);
   });
 
   it("refresh is a no-op while a request is in flight", async () => {
@@ -117,7 +143,9 @@ describe("useCalendarShareCatalog", () => {
   });
 
   it("treats a subscriptions 404 as an empty catalog, not an error", async () => {
-    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(new Error("Not found"));
+    calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(
+      new Error("Not found"),
+    );
     await renderHook();
     expect(resultRef.current?.items).toEqual([]);
     expect(resultRef.current?.error).toBeNull();
@@ -128,7 +156,10 @@ describe("useCalendarShareCatalog", () => {
 
   it("marks catalog unreachable on 502 without treating it as logged out", async () => {
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(
-      Object.assign(new Error("Calendar share server unreachable"), { status: 502, name: "ApiRequestError" }),
+      Object.assign(new Error("Calendar share server unreachable"), {
+        status: 502,
+        name: "ApiRequestError",
+      }),
     );
     await renderHook();
     expect(resultRef.current?.unreachable).toBe(true);
@@ -149,13 +180,20 @@ describe("useCalendarShareCatalog", () => {
       void invalidateCalendarShareCatalog();
     });
     expect(resultRef.current?.loading).toBe(false);
-    expect(resultRef.current?.items).toEqual([{ handle: "DemoPub", slug: "Open" }]);
-    resolveSubs({ items: [{ handle: "Alice", slug: "Work" }], ownHandle: "Wing" });
+    expect(resultRef.current?.items).toEqual([
+      { handle: "DemoPub", slug: "Open" },
+    ]);
+    resolveSubs({
+      items: [{ handle: "Alice", slug: "Work" }],
+      ownHandle: "Wing",
+    });
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(resultRef.current?.items).toEqual([{ handle: "Alice", slug: "Work" }]);
+    expect(resultRef.current?.items).toEqual([
+      { handle: "Alice", slug: "Work" },
+    ]);
     expect(resultRef.current?.loading).toBe(false);
   });
 });

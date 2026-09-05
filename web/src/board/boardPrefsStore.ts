@@ -47,7 +47,7 @@ function cloneWidgetState(state: BoardWidgetStatePref): BoardWidgetStatePref {
   };
 }
 
-/** Test helper — wipe memory so each case starts clean. */
+/** Test helper — wipe memory so each case starts clean. Production builds drop the body. */
 export function resetBoardPrefsCacheForTests(): void {
   layoutCache = null;
   widgetStateCache = emptyWidgetState();
@@ -270,7 +270,7 @@ export function saveBoardGanttViewModeToApi(
   schedulePersist({ widgetState: cloneWidgetState(widgetStateCache) });
 }
 
-/** Seed caches without network (unit tests for sync mutators). */
+/** Seed caches without network (unit tests for sync mutators). Production builds drop the body. */
 export function seedBoardPrefsCacheForTests(
   layout: BoardConfig,
   widgetState: BoardWidgetStatePref = EMPTY_WIDGET_STATE,

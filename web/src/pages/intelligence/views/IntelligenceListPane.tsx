@@ -17,7 +17,7 @@ import { IntelligenceCard } from "./IntelligenceCardView";
 import { IntelligenceDetailView } from "./IntelligenceDetailDialog";
 import { IntelligenceRow } from "./IntelligenceListView";
 import { getIntelligenceEmptyCopy } from "../intelligenceEmptyState";
-import { PipelineGuideChecklist } from "../../../components/pipeline/PipelineGuideChecklist";
+import { PipelineGuideChecklist } from "../../../components/worksets/PipelineGuideChecklist";
 
 /**
  * List + card pane only (infinite scroll + modal detail). Map stays in

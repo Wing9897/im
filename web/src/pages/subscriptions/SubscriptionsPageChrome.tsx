@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarShareConnectionStatusIcon } from "../../components/calendarShare/CalendarShareConnectionStatusIcon";
+import { CalendarShareConnectionStatusIcon } from "../../domain/calendarShare/CalendarShareConnectionStatusIcon";
 import { CardGrid, OpsControlBar, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import {

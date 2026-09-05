@@ -1,6 +1,6 @@
 import { Button, SettingsRow, SurfaceCard, TextField } from "../../components/ui";
 import { cardTitleClass, formHelpClass } from "../../components/ui/pageTypography";
-import { IdentityAvatar } from "../../components/user/IdentityAvatar";
+import { IdentityAvatar } from "../../domain/user/IdentityAvatarView";
 import type { useSubscriptionsIdentity } from "./useSubscriptionsIdentity";
 import { DEFAULT_CALENDAR_SHARE_URL } from "./useSubscriptionsIdentity";
 import { SubscriptionsIdentityTimezone } from "./SubscriptionsIdentityTimezone";

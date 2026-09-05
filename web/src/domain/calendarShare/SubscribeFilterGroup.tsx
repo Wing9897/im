@@ -3,15 +3,19 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { SourceFilterColumnShell, SourceFilterColumnActions, SourceFilterSectionHeading } from "../SourceFilterTree";
-import { IdentityAvatar } from "../user/IdentityAvatar";
+import {
+  SourceFilterColumnShell,
+  SourceFilterColumnActions,
+  SourceFilterSectionHeading,
+} from "../../components/SourceFilterTree";
+import { IdentityAvatar } from "../user/IdentityAvatarView";
 import {
   SUBSCRIBE_UNAVAILABLE_CLASS,
   matchesCalendarShareFilter,
   type SubscribeAvailability,
   type SubscribeCalendarIdentity,
   type SubscribedCalendarSelection,
-} from "../../domain/calendarShare/subscribedCalendars";
+} from "./subscribedCalendars";
 
 export type SubscribeCalendarOption = SubscribeCalendarIdentity;
 
@@ -44,7 +48,13 @@ export function SubscribeFilterGroup({
   const { t } = useTranslation("subscriptions");
   const visible = useMemo(() => {
     return calendars.filter((row) =>
-      matchesCalendarShareFilter(query, row.label, row.key, row.handle, row.slug),
+      matchesCalendarShareFilter(
+        query,
+        row.label,
+        row.key,
+        row.handle,
+        row.slug,
+      ),
     );
   }, [calendars, query]);
   const searching = Boolean(query.trim());
@@ -61,7 +71,10 @@ export function SubscribeFilterGroup({
 
   const list =
     visible.length > 0 ? (
-      <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label={t("filter.browseAria")}>
+      <ul
+        className="m-0 flex list-none flex-col gap-1.5 p-0"
+        aria-label={t("filter.browseAria")}
+      >
         {visible.map((row) => {
           const checked = draft === null || draft.includes(row.key);
           return (
@@ -79,7 +92,9 @@ export function SubscribeFilterGroup({
                     testId={`timeline-subscribe-avatar-mark-${row.key}`}
                   />
                 </span>
-                <label className={`flex min-w-0 flex-1 items-center gap-sm pr-sm${disabled ? "" : " cursor-pointer"}`}>
+                <label
+                  className={`flex min-w-0 flex-1 items-center gap-sm pr-sm${disabled ? "" : " cursor-pointer"}`}
+                >
                   <input
                     type="checkbox"
                     checked={checked}
@@ -97,7 +112,10 @@ export function SubscribeFilterGroup({
         })}
       </ul>
     ) : disabled ? null : (
-      <p className="m-0 px-1 text-caption text-text-secondary" data-testid="timeline-subscribe-empty">
+      <p
+        className="m-0 px-1 text-caption text-text-secondary"
+        data-testid="timeline-subscribe-empty"
+      >
         {statusCopy}
       </p>
     );
@@ -111,9 +129,16 @@ export function SubscribeFilterGroup({
         aria-label={heading}
         aria-disabled={disabled || undefined}
       >
-        <SourceFilterSectionHeading icon={Bookmark} label={heading} testId="timeline-filter-section-subscribe" />
+        <SourceFilterSectionHeading
+          icon={Bookmark}
+          label={heading}
+          testId="timeline-filter-section-subscribe"
+        />
         {disabled ? (
-          <p className="m-0 px-1 text-caption text-text-muted" data-testid="timeline-subscribe-disabled">
+          <p
+            className="m-0 px-1 text-caption text-text-muted"
+            data-testid="timeline-subscribe-disabled"
+          >
             {statusCopy}{" "}
             {availability === "loggedOut" ? (
               <Link
@@ -173,7 +198,10 @@ export function SubscribeFilterGroup({
       dataAvailability={availability}
       beforeActions={
         disabled ? (
-          <p className="m-0 px-1 text-caption text-text-muted" data-testid="timeline-subscribe-disabled">
+          <p
+            className="m-0 px-1 text-caption text-text-muted"
+            data-testid="timeline-subscribe-disabled"
+          >
             {statusCopy}{" "}
             {availability === "loggedOut" ? (
               <Link

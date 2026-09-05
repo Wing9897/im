@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { resolveIdentityAvatar } from "../../domain/user/identityAvatar";
+import { resolveIdentityAvatar } from "./identityAvatar";
 
 export type IdentityAvatarSize = "sm" | "md" | "lg";
 

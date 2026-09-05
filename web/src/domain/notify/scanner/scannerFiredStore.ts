@@ -87,7 +87,7 @@ export async function claimFiredKeys(keys: readonly string[]): Promise<Set<strin
   }
 }
 
-/** Test helper: reset in-memory fired cache between cases. */
+/** Test helper: reset in-memory fired cache between cases. Production builds drop the body. */
 export function resetFiredKeysCacheForTests(): void {
   cachedFiredKeys = null;
   hydrateFiredPromise = null;

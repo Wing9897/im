@@ -1,11 +1,8 @@
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  _resetConnectionStoreForTests,
-  saveDeviceSession,
-} from "../../domain/connection/connectionStore";
-
+import { saveDeviceSession } from "../../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../../domain/connection/connectionStore.testing";
 const handleAnalysisPausedChange = vi.fn(async () => {});
 const handleEmergencyAbort = vi.fn(async () => {});
 
@@ -27,7 +24,8 @@ vi.mock("../../context/CollectorStatusContext", () => ({
   }),
 }));
 
-const { DesktopTrayAnalysisBridge } = await import("./DesktopTrayAnalysisBridge");
+const { DesktopTrayAnalysisBridge } =
+  await import("./DesktopTrayAnalysisBridge");
 
 describe("DesktopTrayAnalysisBridge", () => {
   let container: HTMLDivElement;
@@ -80,7 +78,10 @@ describe("DesktopTrayAnalysisBridge", () => {
       root.render(createElement(DesktopTrayAnalysisBridge));
     });
 
-    expect(setAnalysisTrayState).toHaveBeenCalledWith({ paused: false, enabled: true });
+    expect(setAnalysisTrayState).toHaveBeenCalledWith({
+      paused: false,
+      enabled: true,
+    });
 
     await act(async () => {
       emitCommand?.("pause");

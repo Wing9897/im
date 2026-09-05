@@ -3,30 +3,35 @@ import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 
-const {
-  mockFetchCalendarWindow,
-  mockFetchTaskActivitySpans,
-} = vi.hoisted(() => ({
-  mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
-  mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
-}));
+const { mockFetchCalendarWindow, mockFetchTaskActivitySpans } = vi.hoisted(
+  () => ({
+    mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
+    mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
+  }),
+);
 
 vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/calendarShare", async () =>
-  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+  (
+    await import("../../test/calendarShareApiMock")
+  ).calendarShareApiModuleMock(),
+);
 
 vi.mock("../../api/tasks", () => ({
-  fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
+  fetchTaskActivitySpans: (...args: unknown[]) =>
+    mockFetchTaskActivitySpans(...args),
 }));
 
 vi.mock("../../context/TaskCatalogContext", async () =>
-  (await import("../../test/context-mocks")).taskCatalogModuleMock());
+  (await import("../../test/context-mocks")).taskCatalogModuleMock(),
+);
 
 vi.mock("../../context/ToastContext", async () =>
-  (await import("../../test/context-mocks")).toastContextModuleMock());
+  (await import("../../test/context-mocks")).toastContextModuleMock(),
+);
 
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
   useRefreshOnAnalysisEvent: vi.fn(),
@@ -40,13 +45,20 @@ import {
   makeAnalysisTask,
   resetTaskCatalogState,
 } from "../../test/context-mocks";
-import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
+import {
+  calendarShareApiMocks,
+  resetCalendarShareApiMocks,
+} from "../../test/calendarShareApiMock";
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 type HookResult = ReturnType<typeof useTimelinePageContainer>;
 
-function HookHarness({ resultRef }: { resultRef: { current: HookResult | null } }) {
+function HookHarness({
+  resultRef,
+}: {
+  resultRef: { current: HookResult | null };
+}) {
   const result = useTimelinePageContainer();
   resultRef.current = result;
   return null;
@@ -67,7 +79,11 @@ describe("useTimelinePageContainer URL view query", () => {
     resetCalendarShareApiMocks();
     resetCalendarShareCatalogForTests();
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "task-a", name: "任務 A", analysisMode: "intel_event" }),
+      makeAnalysisTask({
+        id: "task-a",
+        name: "任務 A",
+        analysisMode: "intel_event",
+      }),
     ]);
     resultRef = { current: null };
   });
@@ -104,19 +120,28 @@ describe("useTimelinePageContainer URL view query", () => {
   }
 
   it("selects gantt when ?view=gantt", async () => {
-    window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("calendar"));
+    window.localStorage.setItem(
+      "im:timeline:view-mode",
+      JSON.stringify("calendar"),
+    );
     await renderAt("/timeline?view=gantt");
     expect(resultRef.current!.sources.viewMode).toBe("gantt");
   });
 
   it("selects calendar when ?view=calendar", async () => {
-    window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("gantt"));
+    window.localStorage.setItem(
+      "im:timeline:view-mode",
+      JSON.stringify("gantt"),
+    );
     await renderAt("/timeline?view=calendar");
     expect(resultRef.current!.sources.viewMode).toBe("calendar");
   });
 
   it("clears sticky ?view= so UI calendar toggle is not forced back to gantt", async () => {
-    window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("calendar"));
+    window.localStorage.setItem(
+      "im:timeline:view-mode",
+      JSON.stringify("calendar"),
+    );
     await renderAt("/timeline?view=gantt");
     expect(resultRef.current!.sources.viewMode).toBe("gantt");
 

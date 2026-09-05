@@ -5,10 +5,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApiClient, ApiRequestError, NetworkError } from "./client";
 import type { ApiError } from "./client";
 import { errorToastEmitter } from "./errorToastEmitter";
-import {
-  _resetConnectionStoreForTests,
-  saveDeviceSession,
-} from "../domain/connection/connectionStore";
+import { saveDeviceSession } from "../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
 import { localStorageMock, mockFetch } from "./clientTestUtils";
 
 describe("ApiClient", () => {
@@ -28,7 +26,11 @@ describe("ApiClient", () => {
   describe("constructor", () => {
     it("uses provided base URL", async () => {
       const c = new ApiClient("http://example.com:8080");
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve([]) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      });
       await c.get("/api/v1/tasks");
       expect(fetchMock).toHaveBeenCalledWith(
         "http://example.com:8080/api/v1/tasks",
@@ -38,7 +40,11 @@ describe("ApiClient", () => {
 
     it("strips trailing slashes from base URL", async () => {
       const c = new ApiClient("http://example.com:8080///");
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve([]) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      });
       await c.get("/api/v1/tasks");
       expect(fetchMock).toHaveBeenCalledWith(
         "http://example.com:8080/api/v1/tasks",
@@ -54,13 +60,19 @@ describe("ApiClient", () => {
       expect(localStorageMock.getItem("im_api_token")).toBeNull();
       const raw = localStorageMock.getItem("im:connection");
       expect(raw).toBeTruthy();
-      const parsed = JSON.parse(raw!) as { accessToken: string; refreshToken: string | null };
+      const parsed = JSON.parse(raw!) as {
+        accessToken: string;
+        refreshToken: string | null;
+      };
       expect(parsed.accessToken).toBe("my-secret-token");
       expect(parsed.refreshToken).toBeNull();
     });
 
     it("getToken returns access from im:connection", () => {
-      saveDeviceSession({ accessToken: "test-token", refreshToken: "refresh-token" });
+      saveDeviceSession({
+        accessToken: "test-token",
+        refreshToken: "refresh-token",
+      });
       expect(client.getToken()).toBe("test-token");
     });
 
@@ -88,7 +100,11 @@ describe("ApiClient", () => {
   describe("get()", () => {
     it("sends GET request and returns parsed JSON", async () => {
       const data = [{ id: "1", name: "Task 1" }];
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve(data) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(data),
+      });
 
       const result = await client.get("/api/v1/tasks");
 
@@ -100,7 +116,11 @@ describe("ApiClient", () => {
     });
 
     it("appends query parameters to URL", async () => {
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve([]) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve([]),
+      });
 
       await client.get("/api/v1/tasks", { task_id: "abc" });
 
@@ -110,20 +130,30 @@ describe("ApiClient", () => {
 
     it("includes Authorization header when token is set", async () => {
       saveDeviceSession({ accessToken: "bearer-test", refreshToken: "r" });
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      });
 
       await client.get("/api/v1/tasks");
 
-      const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+      const headers = (fetchMock.mock.calls[0][1] as RequestInit)
+        .headers as Record<string, string>;
       expect(headers["Authorization"]).toBe("Bearer bearer-test");
     });
 
     it("omits Authorization header when no token", async () => {
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      });
 
       await client.get("/api/v1/tasks");
 
-      const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+      const headers = (fetchMock.mock.calls[0][1] as RequestInit)
+        .headers as Record<string, string>;
       expect(headers["Authorization"]).toBeUndefined();
     });
   });
@@ -132,7 +162,11 @@ describe("ApiClient", () => {
     it("sends POST request with JSON body", async () => {
       const body = { name: "New Task", prompt: "Test" };
       const responseData = { id: "2", ...body };
-      const fetchMock = mockFetch({ ok: true, status: 201, json: () => Promise.resolve(responseData) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 201,
+        json: () => Promise.resolve(responseData),
+      });
 
       const result = await client.post("/api/v1/tasks", body);
 
@@ -147,7 +181,11 @@ describe("ApiClient", () => {
     });
 
     it("sends POST without body when no body provided", async () => {
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      });
 
       await client.post("/api/v1/sources/refresh-all");
 
@@ -159,7 +197,11 @@ describe("ApiClient", () => {
   describe("put()", () => {
     it("sends PUT request with JSON body", async () => {
       const body = { name: "Updated Task" };
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve(body) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(body),
+      });
 
       await client.put("/api/v1/tasks/123", body);
 
@@ -175,7 +217,11 @@ describe("ApiClient", () => {
 
   describe("patch()", () => {
     it("sends PATCH request", async () => {
-      const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve({ isActive: true }) });
+      const fetchMock = mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ isActive: true }),
+      });
 
       await client.patch("/api/v1/tasks/123/active", { active: true });
 
@@ -198,14 +244,19 @@ describe("ApiClient", () => {
 
   describe("error handling", () => {
     it("throws ApiRequestError with parsed error body on non-OK response", async () => {
-      const errorBody: ApiError = { error: "not_found", message: "Task not found" };
+      const errorBody: ApiError = {
+        error: "not_found",
+        message: "Task not found",
+      };
       mockFetch({
         ok: false,
         status: 404,
         json: () => Promise.resolve(errorBody),
       });
 
-      await expect(client.get("/api/v1/tasks/999")).rejects.toThrow(ApiRequestError);
+      await expect(client.get("/api/v1/tasks/999")).rejects.toThrow(
+        ApiRequestError,
+      );
 
       try {
         await client.get("/api/v1/tasks/999");
@@ -253,11 +304,16 @@ describe("ApiClient", () => {
 
     it("maps AbortError to NetworkError (timeout when no external signal)", async () => {
       const abortError = new DOMException("Aborted", "AbortError");
-      globalThis.fetch = vi.fn().mockRejectedValue(abortError) as unknown as typeof fetch;
+      globalThis.fetch = vi
+        .fn()
+        .mockRejectedValue(abortError) as unknown as typeof fetch;
 
-      await expect(client.get("/api/v1/tasks", undefined, { timeoutMs: 0 })).rejects.toSatisfy(
+      await expect(
+        client.get("/api/v1/tasks", undefined, { timeoutMs: 0 }),
+      ).rejects.toSatisfy(
         (error: unknown) =>
-          error instanceof NetworkError && error.message === "Request timed out",
+          error instanceof NetworkError &&
+          error.message === "Request timed out",
       );
     });
 
@@ -280,7 +336,8 @@ describe("ApiClient", () => {
 
       await expect(request).rejects.toSatisfy(
         (error: unknown) =>
-          error instanceof NetworkError && error.message === "Request cancelled",
+          error instanceof NetworkError &&
+          error.message === "Request cancelled",
       );
       expect(fetchMock).toHaveBeenCalledOnce();
     });
@@ -299,7 +356,9 @@ describe("ApiClient", () => {
           }),
       });
 
-      await expect(client.get("/api/v1/tasks")).rejects.toThrow(ApiRequestError);
+      await expect(client.get("/api/v1/tasks")).rejects.toThrow(
+        ApiRequestError,
+      );
       expect(emitSpy).not.toHaveBeenCalled();
     });
 
@@ -318,7 +377,11 @@ describe("ApiClient", () => {
       });
 
       await expect(
-        client.post("/api/v1/sources", {}, { emitErrorToast: true, timeoutMs: 0 }),
+        client.post(
+          "/api/v1/sources",
+          {},
+          { emitErrorToast: true, timeoutMs: 0 },
+        ),
       ).rejects.toThrow(ApiRequestError);
       expect(emitSpy).toHaveBeenCalledOnce();
       expect(emitSpy).toHaveBeenCalledWith(

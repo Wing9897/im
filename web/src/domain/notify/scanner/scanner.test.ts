@@ -18,14 +18,13 @@ import {
   mergeTimedKeyEventsById,
   parseStartTimeFromDedupeKey,
   pruneFiredKeys,
-  resetFiredKeysCacheForTests,
   saveFiredKeys,
   claimFiredKeys,
   toTimedKeyEvents,
   userEventsToTimedKeyEvents,
   type TimedKeyEvent,
 } from "./scanner";
-
+import { resetFiredKeysCacheForTests } from "./scannerFiredStore.testing";
 const { mockFetchFired, mockPutFired, mockClaimFired } = vi.hoisted(() => ({
   mockFetchFired: vi.fn(),
   mockPutFired: vi.fn(),
@@ -62,16 +61,28 @@ describe("notify scanner", () => {
   describe("lead calc / speak text", () => {
     it("gates reminders during normal and overnight quiet hours", () => {
       expect(
-        isWithinQuietHours(new Date(2026, 6, 20, 23, 0), { start: "22:00", end: "07:00" }),
+        isWithinQuietHours(new Date(2026, 6, 20, 23, 0), {
+          start: "22:00",
+          end: "07:00",
+        }),
       ).toBe(true);
       expect(
-        isWithinQuietHours(new Date(2026, 6, 20, 6, 59), { start: "22:00", end: "07:00" }),
+        isWithinQuietHours(new Date(2026, 6, 20, 6, 59), {
+          start: "22:00",
+          end: "07:00",
+        }),
       ).toBe(true);
       expect(
-        isWithinQuietHours(new Date(2026, 6, 20, 7, 0), { start: "22:00", end: "07:00" }),
+        isWithinQuietHours(new Date(2026, 6, 20, 7, 0), {
+          start: "22:00",
+          end: "07:00",
+        }),
       ).toBe(false);
       expect(
-        isWithinQuietHours(new Date(2026, 6, 20, 13, 0), { start: "12:00", end: "14:00" }),
+        isWithinQuietHours(new Date(2026, 6, 20, 13, 0), {
+          start: "12:00",
+          end: "14:00",
+        }),
       ).toBe(true);
     });
 
@@ -83,18 +94,16 @@ describe("notify scanner", () => {
       expect(buildSpeakText("情資任務", "會議", 60)).toBe(
         "「會議」，還有約一小時",
       );
-      expect(buildSpeakText("", "會議", 60)).toBe(
-        "「會議」，還有約一小時",
-      );
-      expect(buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user")).toBe(
-        "「用戶提醒」，還有約十五分鐘",
-      );
+      expect(buildSpeakText("", "會議", 60)).toBe("「會議」，還有約一小時");
+      expect(
+        buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user"),
+      ).toBe("「用戶提醒」，還有約十五分鐘");
       expect(buildSpeakText("週會", "站立會議", 15, "recurring")).toBe(
         "「站立會議」，還有約十五分鐘",
       );
-      expect(buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user")).not.toContain(
-        "工作集",
-      );
+      expect(
+        buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user"),
+      ).not.toContain("工作集");
     });
 
     it("maps user-event rows with the shared filter label as taskName", () => {
@@ -165,9 +174,10 @@ describe("notify scanner", () => {
         }),
       ];
       expect(
-        filterEventsByNotify(items, { globalEnabled: true, worksetNotifyById }).map(
-          (row) => row.id,
-        ),
+        filterEventsByNotify(items, {
+          globalEnabled: true,
+          worksetNotifyById,
+        }).map((row) => row.id),
       ).toEqual(["follow-on"]);
     });
 
@@ -181,7 +191,10 @@ describe("notify scanner", () => {
         }),
       ];
       expect(
-        filterEventsByNotify(items, { globalEnabled: false, worksetNotifyById }),
+        filterEventsByNotify(items, {
+          globalEnabled: false,
+          worksetNotifyById,
+        }),
       ).toEqual([]);
     });
   });
@@ -241,7 +254,10 @@ describe("notify scanner", () => {
     it("keeps first occurrence of duplicate ids", () => {
       const merged = mergeTimedKeyEventsById(
         [makeEvent({ id: "same", title: "first" })],
-        [makeEvent({ id: "same", title: "second" }), makeEvent({ id: "other" })],
+        [
+          makeEvent({ id: "same", title: "second" }),
+          makeEvent({ id: "other" }),
+        ],
       );
       expect(merged.map((event) => event.id)).toEqual(["same", "other"]);
       expect(merged[0]?.title).toBe("first");
@@ -302,7 +318,11 @@ describe("notify scanner", () => {
       expect(key).toBe(`x::60::${startTime}`);
       expect(parseStartTimeFromDedupeKey(key)).toBe(startTime);
       const nowMs = Date.parse("2026-07-10T00:00:00.000Z");
-      const pruned = pruneFiredKeys(new Set([key]), nowMs, 2 * 24 * 60 * 60_000);
+      const pruned = pruneFiredKeys(
+        new Set([key]),
+        nowMs,
+        2 * 24 * 60 * 60_000,
+      );
       expect(pruned.size).toBe(0);
     });
 
@@ -310,7 +330,9 @@ describe("notify scanner", () => {
       const startTime = "2026-07-20T10:00:00.000Z";
       const key = `evt|60|${startTime}`;
       expect(parseStartTimeFromDedupeKey(key)).toBeNull();
-      expect(pruneFiredKeys(new Set([key]), Date.parse(startTime), 0)).toEqual(new Set());
+      expect(pruneFiredKeys(new Set([key]), Date.parse(startTime), 0)).toEqual(
+        new Set(),
+      );
     });
   });
 

@@ -19,7 +19,7 @@ export function coalesceAsync<T>(key: string, factory: () => Promise<T>): Promis
   return promise;
 }
 
-/** Test helper — clears the in-flight map between cases. */
+/** Test helper — clears the in-flight map between cases. Production builds drop the body. */
 export function resetCoalesceAsyncForTests(): void {
   inflight.clear();
 }
