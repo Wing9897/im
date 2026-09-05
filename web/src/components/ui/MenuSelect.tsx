@@ -1,20 +1,12 @@
-import type { CSSProperties, KeyboardEvent, ReactElement, RefObject } from "react";
-import { useEffect, useId, useMemo, useState } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
-import { anchoredMenuPortalStyle, useAnchoredMenu } from "../../hooks/useAnchoredMenu";
+import { anchoredMenuPortalStyle } from "../../hooks/useAnchoredMenu";
 import { controlBaseClass, controlSizeClass } from "./controlStyles";
+import { listBoxChromeStyle, MenuSelectList } from "./MenuSelectList";
+import { useMenuSelectState, type MenuSelectOption } from "./useMenuSelectState";
 
-export type MenuSelectOption = {
-  value: string;
-  label: string;
-  /** Shown in the list but not selectable. */
-  disabled?: boolean;
-  /** Consecutive options with the same group render a section header. */
-  group?: string;
-  /** Tooltip / title; defaults to `label` (full text when the row ellipsizes). */
-  title?: string;
-};
+export type { MenuSelectOption };
 
 type MenuSelectVariant = "default" | "field" | "toolbar";
 
@@ -123,24 +115,7 @@ const labelStyle: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-/** Opaque elevated panel so options stay `--text-primary` on a readable surface. */
-const listSurfaceStyle: CSSProperties = {
-  background: "var(--surface-raised, var(--surface-card))",
-  color: "var(--text-primary)",
-};
-
-const listBoxChromeStyle: CSSProperties = {
-  margin: 0,
-  padding: 4,
-  listStyle: "none",
-  maxHeight: 280,
-  overflowY: "auto",
-  scrollbarGutter: "stable",
-  boxSizing: "border-box",
-  ...listSurfaceStyle,
-};
-
-const listStyle: CSSProperties = {
+const defaultListStyle: CSSProperties = {
   position: "absolute",
   left: 0,
   right: 0,
@@ -150,17 +125,6 @@ const listStyle: CSSProperties = {
   minWidth: 280,
   maxWidth: "100%",
   ...listBoxChromeStyle,
-};
-
-const optionStyle: CSSProperties = {
-  display: "block",
-  width: "100%",
-  boxSizing: "border-box",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  textAlign: "left",
-  cursor: "pointer",
 };
 
 /**
@@ -194,59 +158,32 @@ export function MenuSelect({
   const isField = variant === "field";
   const isToolbar = variant === "toolbar";
   const usesFormChrome = isField || isToolbar;
-  const autoId = useId();
-  const listId = `${id ?? autoId}-list`;
-  const [query, setQuery] = useState("");
-  const { open, setOpen, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
-    enabled: !disabled,
-    align: "start",
-    gap: 4,
-    edge: 8,
-    flip: menuPortal,
-    contentKey: searchable ? `${options.length}:${query}` : options.length,
-    dismissPointerEvent: "mousedown",
+  const {
+    listId,
+    query,
+    setQuery,
+    open,
+    setOpen,
+    menuPos,
+    anchorRef,
+    menuRef,
+    rootRef,
+    filteredOptions,
+    selected,
+    closeAndSelect,
+    onTriggerKeyDown,
+    displayLabel,
+    showingPlaceholder,
+  } = useMenuSelectState({
+    id,
+    value,
+    options,
+    onChange,
+    placeholder,
+    searchable,
+    disabled,
+    menuPortal,
   });
-
-  useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
-
-  const filteredOptions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((opt) => {
-      if (opt.label.toLowerCase().includes(q)) return true;
-      return Boolean(opt.group?.toLowerCase().includes(q));
-    });
-  }, [options, query]);
-
-  const selected = useMemo(() => {
-    const match = options.find((opt) => opt.value === value);
-    if (match) return match;
-    if (placeholder !== undefined) {
-      return { value: value || "", label: placeholder };
-    }
-    if (options[0]) return options[0];
-    return { value, label: value || "—" };
-  }, [options, placeholder, value]);
-
-  const closeAndSelect = (next: string, optionDisabled?: boolean) => {
-    if (optionDisabled) return;
-    onChange(next);
-    setOpen(false);
-  };
-
-  const onTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (disabled) return;
-    if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      setOpen(true);
-    }
-  };
-
-  const displayLabel = selected.label.trim() || "—";
-  const showingPlaceholder =
-    placeholder !== undefined && (!value || !options.some((opt) => opt.value === value));
 
   const shellClass = isField
     ? ["relative block w-full min-w-0 box-border", className ?? ""].filter(Boolean).join(" ")
@@ -256,7 +193,7 @@ export function MenuSelect({
           .join(" ")
       : className;
 
-  const listBoxStyle: CSSProperties | undefined = menuPortal
+  const listBoxStyle: CSSProperties = menuPortal
     ? {
         ...anchoredMenuPortalStyle(menuPos),
         ...listBoxChromeStyle,
@@ -274,90 +211,25 @@ export function MenuSelect({
           maxWidth: isToolbar ? "none" : "100%",
           ...listBoxChromeStyle,
         }
-      : listStyle;
+      : defaultListStyle;
 
-  // useAnchoredMenu owns open/dismiss even when not portaled; we only skip fixed placement.
   const listbox = open ? (
-    <ul
-      ref={menuPortal ? (menuRef as RefObject<HTMLUListElement>) : undefined}
-      id={listId}
-      role="listbox"
-      aria-label={ariaLabel}
-      className="im-menu-surface rounded-md border border-surface-border shadow-md"
-      style={listBoxStyle}
-      data-testid={testId ? `${testId}-list` : undefined}
-    >
-      {searchable ? (
-        <li
-          role="presentation"
-          className="sticky top-0 z-[1] mb-0.5"
-          style={listSurfaceStyle}
-        >
-          <input
-            type="search"
-            value={query}
-            autoComplete="off"
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-            data-testid={testId ? `${testId}-search` : undefined}
-            className={`${controlBaseClass} ${controlSizeClass.sm}`}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => event.stopPropagation()}
-          />
-        </li>
-      ) : null}
-      {filteredOptions.length === 0 ? (
-        <li role="presentation">
-          <div className="px-sm py-1.5 text-caption text-text-muted">
-            {searchEmptyLabel || "—"}
-          </div>
-        </li>
-      ) : (
-        filteredOptions.flatMap((opt, index) => {
-          const isActive = opt.value === selected.value && Boolean(value);
-          const optionDisabled = Boolean(opt.disabled);
-          const prev = filteredOptions[index - 1];
-          const showGroup = Boolean(opt.group) && opt.group !== prev?.group;
-          const optionTitle = opt.title?.trim() || opt.label;
-          const nodes: ReactElement[] = [];
-          if (showGroup && opt.group) {
-            nodes.push(
-              <li key={`group:${opt.group}:${index}`} role="presentation">
-                <div className="px-sm pb-0.5 pt-1.5 text-[11px] font-medium text-text-muted">
-                  {opt.group}
-                </div>
-              </li>,
-            );
-          }
-          nodes.push(
-            <li key={opt.value || `__empty-${index}`} role="presentation">
-              <button
-                type="button"
-                role="option"
-                aria-selected={isActive}
-                aria-disabled={optionDisabled || undefined}
-                disabled={optionDisabled}
-                title={optionTitle}
-                data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
-                className={[
-                  "rounded-sm border-none px-sm py-1.5 text-caption font-medium leading-snug hover:!transform-none active:!transform-none",
-                  optionDisabled
-                    ? "cursor-not-allowed bg-transparent text-text-muted opacity-70"
-                    : isActive
-                      ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] text-text-primary"
-                      : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_10%,var(--surface-card))]",
-                ].join(" ")}
-                style={optionStyle}
-                onClick={() => closeAndSelect(opt.value, optionDisabled)}
-              >
-                {opt.label}
-              </button>
-            </li>,
-          );
-          return nodes;
-        })
-      )}
-    </ul>
+    <MenuSelectList
+      listId={listId}
+      menuRef={menuPortal ? (menuRef as RefObject<HTMLUListElement | null>) : undefined}
+      ariaLabel={ariaLabel}
+      testId={testId}
+      listBoxStyle={listBoxStyle}
+      searchable={searchable}
+      query={query}
+      searchPlaceholder={searchPlaceholder}
+      searchEmptyLabel={searchEmptyLabel}
+      onQueryChange={setQuery}
+      filteredOptions={filteredOptions}
+      selectedValue={selected.value}
+      value={value}
+      onSelect={closeAndSelect}
+    />
   ) : null;
 
   return (
