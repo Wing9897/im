@@ -608,9 +608,7 @@ async def seed(db: Database) -> dict[str, int]:
     plain = 0
     for spec in _event_specs(now_dt):
         source_index = spec.get("source_index")
-        source_message_id = (
-            message_ids[int(source_index)] if isinstance(source_index, int) else None
-        )
+        source_message_id = message_ids[int(source_index)] if isinstance(source_index, int) else None
         await insert_analysis_event(
             db,
             event_id=str(spec["id"]),
