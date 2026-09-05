@@ -7,8 +7,9 @@ Bump rules:
 
 Authority for CI releases is **git tags** (``v*``). The repo-root ``VERSION``
 file is a development/display fallback when no tags exist (or when
-``--from-tags`` is not used). It is **not** written unless ``--write`` is
-passed.
+``--from-tags`` is not used). This script does **not** write ``VERSION`` unless
+``--write`` is passed. Release's tag job writes the computed tag version into
+``VERSION`` (via ``sync-version.mjs``) and commits it so the file tracks tags.
 
 First-release rule (``--from-tags`` only):
   When no ``v*`` tags exist, return the ``VERSION`` file **as-is** (no bump),

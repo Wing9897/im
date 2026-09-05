@@ -4,14 +4,14 @@ Talks to a **running** IM API (default ``http://127.0.0.1:18820``) and IC
 (``http://127.0.0.1:8787``). Does not change the public default origin
 ``https://subscribe.devents.tech`` — it only POSTs a session with the local URL.
 
-  uv run python scripts/seed_calendar_share_local_demo.py
+  uv run python scripts/dev/seed_calendar_share_local_demo.py
 
 Env:
   VERIFY_BASE / DESKTOP_VERIFY_BASE — IM API base
   VERIFY_BEARER / IM_ACCESS_TOKEN — after admin register (loopback not exempt)
   IC_BASE — IntelligenceCalendar origin (default http://127.0.0.1:8787)
 
-IC demo users from ``scripts/seed_demo_calendars.py --dev`` use password ``change-me``.
+IC demo users from IntelligenceCalendar ``scripts/seed_demo_calendars.py --dev`` use password ``change-me``.
 """
 
 from __future__ import annotations
@@ -25,9 +25,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-_ROOT = _SCRIPT_DIR.parent
-for _path in (_ROOT, _SCRIPT_DIR):
+_DEV_DIR = Path(__file__).resolve().parent
+_SCRIPTS_DIR = _DEV_DIR.parent
+_ROOT = _SCRIPTS_DIR.parent
+for _path in (_ROOT, _SCRIPTS_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 

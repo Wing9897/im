@@ -49,6 +49,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
       - name: Generate tag version
         id: check
         env:
@@ -77,6 +81,25 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag_name=${tag}" >> "$GITHUB_OUTPUT"
 
+      - name: Sync VERSION to tag and commit
+        env:
+          RELEASE_VERSION: ${{ steps.check.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
+          git add VERSION package.json web/package.json desktop/package.json pyproject.toml package-lock.json uv.lock web/openapi/openapi.json
+          if git diff --cached --quiet; then
+            echo "VERSION already ${RELEASE_VERSION}; no commit"
+          else
+            git commit -m "Sync VERSION to ${RELEASE_VERSION}"
+            git push origin HEAD:main
+            echo "Committed and pushed VERSION ${RELEASE_VERSION}"
+          fi
+
       - name: Create and push tag
         env:
           TAG: ${{ steps.check.outputs.tag_name }}
@@ -95,36 +118,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PRERELEASE: ${{ contains(steps.check.outputs.tag_name, 'beta') || contains(steps.check.outputs.tag_name, 'alpha') || contains(steps.check.outputs.tag_name, 'rc') || contains(steps.check.outputs.tag_name, 'update') }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          retry() {
-            local attempt=1 max=8 delay=15
-            while true; do
-              if "$@"; then
-                return 0
-              fi
-              if (( attempt >= max )); then
-                echo "failed after ${max} attempts: $*" >&2
-                return 1
-              fi
-              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
-              sleep "$delay"
-              attempt=$((attempt + 1))
-              delay=$(( delay < 60 ? delay * 2 : 60 ))
-            done
-          }
-          notes="Automated release **${TAG}** from ${GITHUB_SHA}. Desktop installers (Windows / macOS / Linux) attach as each platform job finishes. CLI is source: clone this tag, uv sync --locked, then uv run python -m server. Container: GHCR."
-          extra=()
-          if [[ "${PRERELEASE}" == "true" ]]; then
-            extra+=(--prerelease)
-          fi
-          # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release ${TAG} already exists"
-          else
-            retry gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes "$notes" "${extra[@]}"
-          fi
+        uses: ./.github/actions/gh-retry
+        with:
+          run: |
+            notes="Automated release **${TAG}** from ${GITHUB_SHA}. Desktop installers (Windows / macOS / Linux) attach as each platform job finishes. CLI is source: clone this tag, uv sync --locked, then uv run python -m server. Container: GHCR."
+            extra=()
+            if [[ "${PRERELEASE}" == "true" ]]; then
+              extra+=(--prerelease)
+            fi
+            # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Release ${TAG} already exists"
+            else
+              gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes "$notes" "${extra[@]}"
+            fi
 
   web_dist:
     needs: [tag]
@@ -160,38 +167,22 @@ jobs:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -f web/dist/index.html ]]; then
-            echo "Expected web/dist/index.html after build:web" >&2
-            ls -la web/dist || true
-            exit 1
-          fi
-          if [[ ! -d web/dist/assets ]]; then
-            echo "Expected web/dist/assets after build:web" >&2
-            ls -la web/dist || true
-            exit 1
-          fi
-          tar -C web/dist -czf web-dist.tar.gz .
-          retry() {
-            local attempt=1 max=8 delay=15
-            while true; do
-              if "$@"; then
-                return 0
-              fi
-              if (( attempt >= max )); then
-                echo "failed after ${max} attempts: $*" >&2
-                return 1
-              fi
-              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
-              sleep "$delay"
-              attempt=$((attempt + 1))
-              delay=$(( delay < 60 ? delay * 2 : 60 ))
-            done
-          }
-          retry gh release upload "$TAG" web-dist.tar.gz --clobber
-          echo "Staged web-dist.tar.gz on ${TAG}"
+        uses: ./.github/actions/gh-retry
+        with:
+          run: |
+            if [[ ! -f web/dist/index.html ]]; then
+              echo "Expected web/dist/index.html after build:web" >&2
+              ls -la web/dist || true
+              exit 1
+            fi
+            if [[ ! -d web/dist/assets ]]; then
+              echo "Expected web/dist/assets after build:web" >&2
+              ls -la web/dist || true
+              exit 1
+            fi
+            tar -C web/dist -czf web-dist.tar.gz .
+            gh release upload "$TAG" web-dist.tar.gz --clobber
+            echo "Staged web-dist.tar.gz on ${TAG}"
 
   package:
     needs: [tag, web_dist]
@@ -254,39 +245,23 @@ jobs:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p web/dist
-          retry() {
-            local attempt=1 max=8 delay=15
-            while true; do
-              if "$@"; then
-                return 0
-              fi
-              if (( attempt >= max )); then
-                echo "failed after ${max} attempts: $*" >&2
-                return 1
-              fi
-              echo "attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
-              sleep "$delay"
-              attempt=$((attempt + 1))
-              delay=$(( delay < 60 ? delay * 2 : 60 ))
-            done
-          }
-          retry gh release download "$TAG" --pattern web-dist.tar.gz --clobber
-          tar -xzf web-dist.tar.gz -C web/dist
-          rm -f web-dist.tar.gz
-          if [[ ! -f web/dist/index.html ]]; then
-            echo "Expected web/dist/index.html after downloading Release asset web-dist.tar.gz" >&2
-            ls -la web/dist || true
-            exit 1
-          fi
-          if [[ ! -d web/dist/assets ]]; then
-            echo "Expected web/dist/assets directory after downloading Release asset web-dist.tar.gz" >&2
-            ls -la web/dist || true
-            exit 1
-          fi
+        uses: ./.github/actions/gh-retry
+        with:
+          run: |
+            mkdir -p web/dist
+            gh release download "$TAG" --pattern web-dist.tar.gz --clobber
+            tar -xzf web-dist.tar.gz -C web/dist
+            rm -f web-dist.tar.gz
+            if [[ ! -f web/dist/index.html ]]; then
+              echo "Expected web/dist/index.html after downloading Release asset web-dist.tar.gz" >&2
+              ls -la web/dist || true
+              exit 1
+            fi
+            if [[ ! -d web/dist/assets ]]; then
+              echo "Expected web/dist/assets directory after downloading Release asset web-dist.tar.gz" >&2
+              ls -la web/dist || true
+              exit 1
+            fi
 
       - name: Build Desktop package
         env:
@@ -314,46 +289,31 @@ jobs:
           TAG: ${{ needs.tag.outputs.tag_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          files=(
-            desktop/release/*.exe
-            desktop/release/*.dmg
-            desktop/release/*.zip
-            desktop/release/*.AppImage
-            desktop/release/*.deb
-            desktop/release/*.yml
-            desktop/release/*.yaml
-            desktop/release/*.blockmap
-          )
-          if [[ ${#files[@]} -lt 1 ]]; then
-            echo "No Desktop artifacts to upload" >&2
-            ls -la desktop/release || true
-            exit 1
-          fi
-          echo "Uploading ${#files[@]} files to ${TAG}:"
-          printf '  %s\n' "${files[@]}"
-          retry() {
-            local attempt=1 max=8 delay=15
-            while true; do
-              if "$@"; then
-                return 0
-              fi
-              if (( attempt >= max )); then
-                echo "failed after ${max} attempts: $*" >&2
-                return 1
-              fi
-              echo "Upload attempt ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
-              sleep "$delay"
-              attempt=$((attempt + 1))
-              delay=$(( delay < 60 ? delay * 2 : 60 ))
-            done
-          }
-          # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
-          retry gh release upload "$TAG" "${files[@]}" --clobber
-          echo "Uploaded ${#files[@]} assets to ${TAG}"
+        uses: ./.github/actions/gh-retry
+        with:
+          label: Upload attempt
+          run: |
+            shopt -s nullglob
+            files=(
+              desktop/release/*.exe
+              desktop/release/*.dmg
+              desktop/release/*.zip
+              desktop/release/*.AppImage
+              desktop/release/*.deb
+              desktop/release/*.yml
+              desktop/release/*.yaml
+              desktop/release/*.blockmap
+            )
+            if [[ ${#files[@]} -lt 1 ]]; then
+              echo "No Desktop artifacts to upload" >&2
+              ls -la desktop/release || true
+              exit 1
+            fi
+            echo "Uploading ${#files[@]} files to ${TAG}:"
+            printf '  %s\n' "${files[@]}"
+            # gh, not action-gh-release: that action's Octokit uses a 10s api.github.com timeout.
+            gh release upload "$TAG" "${files[@]}" --clobber
+            echo "Uploaded ${#files[@]} assets to ${TAG}"
 
   release:
     needs: [package, tag]

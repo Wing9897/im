@@ -1,4 +1,4 @@
-"""Shared scaffolding for the dev-only ``scripts/seed_*.py`` fixtures.
+"""Shared scaffolding for the dev-only ``scripts/dev/seed_*.py`` fixtures.
 
 Owns the repeated cleanup / workset / linked-calendar create helpers plus the
 CLI + database boilerplate. Import this module **before** any ``server.*``
@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

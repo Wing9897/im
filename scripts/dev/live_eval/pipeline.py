@@ -1,6 +1,6 @@
 """Live pipeline eval: real Telegram + Gemini + Serper, no fake seed rows.
 
-**Dev-only** — not a product path. Invoked via ``scripts/live_eval_pipeline.py``.
+**Dev-only** — not a product path. Invoked via ``scripts/dev/live_eval_pipeline.py``.
 
 Split: ``setup.py`` (preflight / tasks), ``poll.py`` (wait / items), ``teardown.py``
 (deactivate / reports). Shared HTTP and state live in ``common.py``.
@@ -10,12 +10,12 @@ Environment:
   VERIFY_BEARER / IM_ACCESS_TOKEN — full-scope (*) API key from 帳戶
 
 Usage:
-  uv run python scripts/live_eval_pipeline.py              # full loop
-  uv run python scripts/live_eval_pipeline.py --apply
-  uv run python scripts/live_eval_pipeline.py --wait
-  uv run python scripts/live_eval_pipeline.py --items
-  uv run python scripts/live_eval_pipeline.py --deactivate
-  uv run python scripts/live_eval_pipeline.py --serper-only
+  uv run python scripts/dev/live_eval_pipeline.py              # full loop
+  uv run python scripts/dev/live_eval_pipeline.py --apply
+  uv run python scripts/dev/live_eval_pipeline.py --wait
+  uv run python scripts/dev/live_eval_pipeline.py --items
+  uv run python scripts/dev/live_eval_pipeline.py --deactivate
+  uv run python scripts/dev/live_eval_pipeline.py --serper-only
 """
 
 from __future__ import annotations
@@ -27,9 +27,10 @@ from pathlib import Path
 from typing import Any
 
 _PKG_DIR = Path(__file__).resolve().parent
-_SCRIPT_DIR = _PKG_DIR.parent
-_ROOT = _SCRIPT_DIR.parent
-for _path in (_ROOT, _SCRIPT_DIR):
+_DEV_DIR = _PKG_DIR.parent
+_SCRIPTS_DIR = _DEV_DIR.parent
+_ROOT = _SCRIPTS_DIR.parent
+for _path in (_ROOT, _SCRIPTS_DIR, _DEV_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 

@@ -3,8 +3,8 @@
 Prefix: ``[dev-seed]`` on titles for easy identification / cleanup.
 No analysis tasks, recurring tasks, or analysis_events — calendar + items only.
 
-  python scripts/seed_dev_items_calendar.py
-  python scripts/seed_dev_items_calendar.py --clean   # remove prior [dev-seed] rows first
+  python scripts/dev/seed_dev_items_calendar.py
+  python scripts/dev/seed_dev_items_calendar.py --clean   # remove prior [dev-seed] rows first
 """
 
 from __future__ import annotations

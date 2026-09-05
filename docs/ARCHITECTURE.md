@@ -264,7 +264,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
 6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to standalone `recurring_schedules`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
-7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is source: the same headless entry as `python -m server`／`intelligence-monitor` (`uv sync --locked` then run). GitHub Release does **not** attach CLI zips. The PyInstaller sidecar (`desktop/server-runtime/`) is for **Desktop only** and must be built on the **target OS** (no cross-compile). PRs run Ubuntu `quality` + build only (`.github/workflows/ci.yml`). **`push` to `main`** runs `.github/workflows/release.yml` in one pipeline: quality, SemVer bump (inject into build workspace only — **no** bot commit to main), **`git tag` + `git push`** (existing tag → `-update.<run_number>`), one Ubuntu Vite (`web_dist` job; stages `web-dist.tar.gz` on the GitHub Release, not Actions artifacts — private-repo quota), then the `package` matrix (win／mac／linux reuse that bundle via `dist:*:native` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`]), GitHub Release (Desktop installers; missing assets fail; staging zip is deleted only after win／mac／linux succeed so a failed-job rerun can still download it; installers are **not** Actions artifacts), and GHCR. Local `dist:win`／`dist:mac`／`dist:linux` still run `build:web` first. **Product version authority is git tags**; repo `VERSION` may lag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
+7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is source: the same headless entry as `python -m server`／`intelligence-monitor` (`uv sync --locked` then run). GitHub Release does **not** attach CLI zips. The PyInstaller sidecar (`desktop/server-runtime/`) is for **Desktop only** and must be built on the **target OS** (no cross-compile). PRs run Ubuntu `quality` + build only (`.github/workflows/ci.yml`). **`push` to `main`** runs `.github/workflows/release.yml` in one pipeline: quality, SemVer bump from tags, write the new version into `VERSION` + `sync-version.mjs` and **commit that back to `main`** (GITHUB_TOKEN push does not re-trigger Release), **`git tag` + `git push`** on the triggering SHA (existing tag → `-update.<run_number>`), one Ubuntu Vite (`web_dist` job; stages `web-dist.tar.gz` on the GitHub Release, not Actions artifacts — private-repo quota), then the `package` matrix (win／mac／linux reuse that bundle via `dist:*:native` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`]), GitHub Release (Desktop installers; missing assets fail; staging zip is deleted only after win／mac／linux succeed so a failed-job rerun can still download it; installers are **not** Actions artifacts), and GHCR. Local `dist:win`／`dist:mac`／`dist:linux` still run `build:web` first. **Product version authority is git tags**; Release keeps root `VERSION` aligned with the tag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push follows **Release on `push` to `main`**; PRs never publish an image. Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
 
@@ -296,23 +296,30 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-2 start |
-| `live_eval_pipeline.py` | — | **Dev-only:** live Telegram + Gemini + Serper pipeline eval against a running local server. Implementation lives in `scripts/live_eval/` (`pipeline.py` orchestrator; `setup.py` / `poll.py` / `teardown.py`). Not a product path — not used by CI, packaging, or runtime. Writes `scripts/.live_eval_state.json`. |
-| `seed_calendar_share_local_demo.py` | — | **Dev-only:** login IM calendar-share to a **local** IntelligenceCalendar (`IC_BASE`, default `http://127.0.0.1:8787`) and seed demo subscriptions／publish. Does not change the public origin. Not used by CI or product runtime |
-| `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
-| `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
-| `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
-| `seed_trace_correct_demo.py` | — | **Dev-only:** seed Intelligence source-quote / 「不是情報」/ Timeline dismiss / Agent 「收回最近一次調和」 fixtures (`[demo]` prefix); not used by CI or product runtime |
-| `_seed_common.py` | — | Shared scaffolding for the dev-only `seed_*.py` fixtures (`run_seed_cli` + cleanup, workset, LLM profile, task/event builders, linked-calendar helpers) |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-7 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
-| `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
+| `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority); the Release tag job then writes that version into `VERSION` and commits it. |
 | `check-i18n-parity.mjs` | `npm run i18n:check` | Locale key parity vs zh-Hant SoT |
 | `export_openapi.py` / `openapi-check.mjs` | `npm run openapi:export`／`openapi:check` | Export live OpenAPI + drift check vs committed `web/openapi/` |
-| `generate-theme-css.mjs` / `generate-theme-textures.mjs` | `npm run gen:themes`／`gen:textures` | Theme CSS／texture asset generators (also invoked from `build-web`) |
+| `generate-theme-css.mjs` | `npm run gen:themes` | Theme CSS generator; invoked from `build-web` |
+| `generate-theme-textures.mjs` | `npm run gen:textures` | Writes committed `web/src/css/theme-textures.css`; not part of `build-web` |
 | `run-pyright.mjs` | `npm run typecheck:server` | Run pyright with `--pythonpath` pinned to the uv `.venv` (bare `pyright` would pick PATH's dependency-free python) |
 | `_verify_common.py` | — | Shared HTTP helpers for smoke／desktop_verify live scripts |
-| `measure_startup_baseline.py` | — | Repeatable ASGI fresh-db startup timing (optional local perf probe) |
+
+One-off local fixtures and probes live under `scripts/dev/` (not CI or product runtime):
+
+| Script | Purpose |
+|--------|---------|
+| `dev/live_eval_pipeline.py` | Live Telegram + Gemini + Serper pipeline eval against a running local server. Implementation in `scripts/dev/live_eval/` (`pipeline.py` orchestrator; `setup.py` / `poll.py` / `teardown.py`). Writes `scripts/dev/.live_eval_state.json`. |
+| `dev/seed_calendar_share_local_demo.py` | Login IM calendar-share to a **local** IntelligenceCalendar (`IC_BASE`, default `http://127.0.0.1:8787`) and seed demo subscriptions／publish. Does not change the public origin. |
+| `dev/seed_calendar_ui_fixtures.py` | Timeline／Calendar UI fixtures (`[cal-ui]` prefix) |
+| `dev/seed_dev_items_calendar.py` | Items + calendar rows for manual UI checks (`[dev-seed]` prefix) |
+| `dev/seed_items_finance_demo.py` | Items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix) |
+| `dev/seed_trace_correct_demo.py` | Intelligence source-quote / 「不是情報」/ Timeline dismiss / Agent 「收回最近一次調和」 fixtures (`[demo]` prefix) |
+| `dev/seed_intel_map_leaderboard_demo.py` | Map + leaderboard demo rows (`[intel-demo]` prefix) |
+| `dev/_seed_common.py` | Shared scaffolding for the `seed_*.py` fixtures (`run_seed_cli` + cleanup, workset, LLM profile, task/event builders, linked-calendar helpers) |
+| `dev/measure_startup_baseline.py` | Repeatable ASGI fresh-db startup timing (optional local perf probe) |
 
 Python helpers are run via `uv run python scripts/...` from the repo root (see root `package.json`). Node helpers (`*.mjs`) are invoked via `node scripts/...`.
 
@@ -590,7 +597,7 @@ Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` i
 
 ### Startup readiness (perf note)
 
-Local ASGI fresh-db baseline: `scripts/measure_startup_baseline.py` (collector/scheduler/static disabled). Not a CI gate.
+Local ASGI fresh-db baseline: `scripts/dev/measure_startup_baseline.py` (collector/scheduler/static disabled). Not a CI gate.
 
 ## Agent / assistant
 

@@ -9,8 +9,9 @@ Product SemVer is **not** tied to the database contract: integer schema stamp
 (`PRAGMA user_version`) and public `schemaSemver` (`SCHEMA_SEMVER`) identify the
 current SQLite contract (floor + additive migrations) and may differ from the
 product tag. The repo-root
-`VERSION` file is for local／display packaging and may lag tags — it is not a
-release authority and is not rewritten by CI bots.
+`VERSION` file is for local／display packaging. Release writes the new tag
+version into `VERSION` (and synced manifests) and commits that back to `main`.
+Git tags remain the product SemVer authority.
 
 | Version | Supported |
 |---------|-----------|

@@ -51,6 +51,7 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.json",
     "typecheck:desktop-tests": "npm run typecheck:tests --workspace desktop",
     "typecheck:server": "node scripts/run-pyright.mjs",
+    "check:fast": "npm run lint && npm run typecheck",
     "check": "npm run lint && npm run sync:presets:check && npm run i18n:check && npm run openapi:check && npm run typecheck && npm run test:all",
     "sync:presets": "uv run python scripts/sync_task_presets.py",
     "sync:presets:check": "uv run python scripts/sync_task_presets.py --check",

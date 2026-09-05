@@ -9,8 +9,8 @@ Map ``GET /api/v1/results/events?hasCoords=true`` requires both columns non-null
 (and the UI skips 0,0 Null Island). Leaderboard is ``trending_topics`` on
 ``analysis_mode=leaderboard`` tasks — not derived from intel events.
 
-  uv run python scripts/seed_intel_map_leaderboard_demo.py
-  uv run python scripts/seed_intel_map_leaderboard_demo.py --clean   # remove prior [intel-demo] then re-seed
+  uv run python scripts/dev/seed_intel_map_leaderboard_demo.py
+  uv run python scripts/dev/seed_intel_map_leaderboard_demo.py --clean   # remove prior [intel-demo] then re-seed
 """
 
 from __future__ import annotations
@@ -710,7 +710,7 @@ async def _cli(db: Database, args: Namespace, path: Path) -> None:
     print("  /leaderboard   — 兩個排行榜任務（熱門話題排行、討論熱度），可點列看關聯訊息。")
     print()
     print("Tasks are is_active=0 so the dummy LLM profile is never scheduled.")
-    print("Cleanup: uv run python scripts/seed_intel_map_leaderboard_demo.py --clean")
+    print("Cleanup: uv run python scripts/dev/seed_intel_map_leaderboard_demo.py --clean")
 
 
 if __name__ == "__main__":

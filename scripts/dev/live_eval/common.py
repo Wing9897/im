@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 _PKG_DIR = Path(__file__).resolve().parent
-_SCRIPT_DIR = _PKG_DIR.parent
-_ROOT = _SCRIPT_DIR.parent
-for _path in (_ROOT, _SCRIPT_DIR):
+_DEV_DIR = _PKG_DIR.parent
+_SCRIPTS_DIR = _DEV_DIR.parent
+_ROOT = _SCRIPTS_DIR.parent
+for _path in (_ROOT, _SCRIPTS_DIR, _DEV_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
@@ -35,7 +36,7 @@ WAIT_SECONDS = 120
 SERPER_WAIT_SECONDS = 300
 POLL_EVERY = 20
 CHAT_TIMEOUT = 240
-STATE_PATH = _SCRIPT_DIR / ".live_eval_state.json"
+STATE_PATH = _DEV_DIR / ".live_eval_state.json"
 SERPER_PROMPT = (
     "先對本批訊息裡最值得核實的 1–2 個主題呼叫 web.search；"
     "沒有成功的 web.search 就不得輸出最終 JSON 事件。"
