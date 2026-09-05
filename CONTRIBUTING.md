@@ -30,6 +30,7 @@ Then pick a dev mode:
 | `npm run dev:server` | Python server only (port 18820) |
 
 Empty DB reset: see [README §開發](./README.md)（`scripts/reset_local_databases.py --apply`）.
+Optional demo seeds and live_eval helpers live under [`scripts/dev/`](scripts/dev/); they are not required to run the product.
 
 ## The gate: `npm run check`
 

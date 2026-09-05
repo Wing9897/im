@@ -15,7 +15,7 @@
 | [agent/mcp.md](agent/mcp.md) | MCP Streamable HTTP tool surface（OpenClaw 等；無本機 LLM） |
 | [agent/agent.md](agent/agent.md) | Agent schedule ticks（產品預設「專案調和」；UI URL 僅 `/tasks/:taskId/agent`） |
 | [diagrams/README.md](diagrams/README.md) | Mermaid structure: Input → Process → Output, timer, agent loop |
-| [../CHANGELOG.md](../CHANGELOG.md) | Release notes; stable baseline starts at `1.0.0` |
+| [../CHANGELOG.md](../CHANGELOG.md) | Release notes; stable baseline starts at `1.0.0`; current product tag is root `VERSION` |
 | [../Dockerfile](../Dockerfile)／[../docker-compose.yml](../docker-compose.yml) | Headless server+SPA container (GHCR) |
 | [../desktop/resources/README.md](../desktop/resources/README.md) | Packaged icon assets |
 

@@ -127,7 +127,7 @@
 | Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__general__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
-| 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 | 任務設定是獨立 `/tasks`（側欄「任務設定」），不是工作集第三段；舊 `?tab=tasks` 轉到 `/tasks` |
+| 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 | 任務設定是獨立 `/tasks`（側欄「任務設定」），不是工作集第三段；舊 `?tab=tasks` 留在目錄、不轉址 |
 | 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出當層名；塊標題（來源／物品／任務／助手／工作集）；L4 為共用輸出圖例（時間規劃／情報頁／通知／外部接口），從工作集**層／區塊**連出而非每張卡片；通知／外部接口閘門仍是卡片 icon；勿加 MCP／A2A 頁節點；**我的日程**不是流程圖塊（日曆疊加全部工作） |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
@@ -156,7 +156,7 @@
 
 | 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
 |----|----------|-------------------|------|
-| 花名冊頁 | AI 員工介紹 | 路由 `/settings/ai/staff`（舊 `/ai/staff` 永久轉址）；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、專案經理）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
+| 花名冊頁 | AI 員工介紹 | 路由 `/settings/ai/staff`（舊 `/ai/staff` 為 404／NotFound，無轉址）；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、專案經理）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
 | 任務類型徽章／選擇器 | 員工名（情報任務／排行榜任務／專案經理任務） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`intel_event`／`leaderboard`／`agent`）；員工 id 與 enum token 對齊 |
 | AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的分析任務才顯示頭像；週期序列不是 analysis task |
 | 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |
