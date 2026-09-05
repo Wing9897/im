@@ -1,7 +1,7 @@
 """Local workset publish HTTP routes (does not list remote calendars).
 
 Named ``publish_routes`` so it does not collide with ``server.calendar_share.publish``
-or ``server.calendar_share.store.publish``.
+or ``server.calendar_share.store.publish_io`` / ``publish_household_overlay``.
 """
 
 from __future__ import annotations

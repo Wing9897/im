@@ -10,6 +10,7 @@ from httpx import ASGITransport, AsyncClient
 
 from server.auth.admin_auth import create_admin_account
 from server.config import set_configs
+from server.constants import SECRET_KEY_FILE_ENV
 from server.db.database import Database
 from server.main import create_app
 from server.secrets import _fernet, protect_text
@@ -59,7 +60,7 @@ async def test_probe_empty_db_is_ready(tmp_path):
 @pytest.mark.asyncio
 async def test_probe_fails_when_ciphertext_cannot_decrypt(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
-    monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(key_path))
     _fernet.cache_clear()
 
     db = Database(str(tmp_path / "cipher.db"))
@@ -84,7 +85,7 @@ async def test_probe_fails_when_ciphertext_cannot_decrypt(tmp_path, monkeypatch)
 @pytest.mark.asyncio
 async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
-    monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(key_path))
     _fernet.cache_clear()
 
     db = Database(str(tmp_path / "scrub.db"))
@@ -134,7 +135,7 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
 @pytest.mark.asyncio
 async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
-    monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(key_path))
     _fernet.cache_clear()
 
     app1 = await _app_with_db(tmp_path, db_name="rotate.db")
@@ -214,7 +215,7 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_secrets_gate_blocks_then_reset_unlocks(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
-    monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(key_path))
     _fernet.cache_clear()
 
     # First lifespan: write ciphertext with key A.
@@ -301,7 +302,7 @@ async def test_health_includes_secrets_ready_on_fresh_app(client, app):
 @pytest.mark.asyncio
 async def test_probe_sources_ciphertext(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
-    monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(key_path))
     _fernet.cache_clear()
 
     db = Database(str(tmp_path / "sources.db"))

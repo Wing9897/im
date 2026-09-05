@@ -19,7 +19,7 @@ import sys
 from collections.abc import Iterable
 from pathlib import Path
 
-from server.constants import DATA_DIR_ENV, SESSIONS_DIR_ENV
+from server.constants import DATA_DIR_ENV, SECRET_KEY_FILE_ENV, SESSIONS_DIR_ENV
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ def clear_secret_key_files(*extra: Path) -> int:
         default_secret_key_path(),
         *extra,
     ]
-    configured = os.environ.get("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", "").strip()
+    configured = os.environ.get(SECRET_KEY_FILE_ENV, "").strip()
     if configured:
         candidates.append(Path(configured).expanduser())
 

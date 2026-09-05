@@ -11,10 +11,10 @@ from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 
+from server.constants import SECRET_KEY_FILE_ENV
 from server.paths import default_secret_key_path
 
 _ENCRYPTED_PREFIX = "enc:v1:"
-_KEY_FILE_ENV = "INTELLIGENCE_MONITOR_SECRET_KEY_FILE"
 
 MASKED_SECRET = "********"
 #: system_config secret keys only. Profile api_key / brave keys are column-encrypted.
@@ -65,7 +65,7 @@ def _dpapi_transform(data: bytes, *, decrypt: bool) -> bytes:
 
 
 def _key_file_path() -> Path:
-    configured = os.environ.get(_KEY_FILE_ENV)
+    configured = os.environ.get(SECRET_KEY_FILE_ENV)
     if configured:
         return Path(configured).expanduser()
     # Desktop / CLI share DATA_DIR → {userData}/secret.key (Electron userData when packaged)

@@ -29,6 +29,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from server.constants import DATA_DIR_ENV, DB_PATH_ENV  # noqa: E402
 from server.paths import (  # noqa: E402
     PRODUCT_DATA_DIRNAME,
     default_data_dir,
@@ -77,11 +78,11 @@ def _candidate_db_paths() -> list[Path]:
         _REPO_ROOT / _DEFAULT_DB_NAME,
     ]
 
-    env_db = os.environ.get("INTELLIGENCE_MONITOR_DB", "").strip()
+    env_db = os.environ.get(DB_PATH_ENV, "").strip()
     if env_db:
         paths.append(Path(env_db).expanduser())
 
-    data_dir = os.environ.get("INTELLIGENCE_MONITOR_DATA_DIR", "").strip()
+    data_dir = os.environ.get(DATA_DIR_ENV, "").strip()
     if data_dir:
         root = Path(data_dir).expanduser()
         paths.extend((root / _DEFAULT_DB_NAME, root / "dev-runtime" / _DEFAULT_DB_NAME))

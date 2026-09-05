@@ -1,11 +1,14 @@
-"""Local workset publish rows in ``calendar_share_publish``."""
+"""Row-level I/O for ``calendar_share_publish`` (SQL ↔ cleaned entry dicts).
+
+Nothing here knows about the household auto-sync overlay; see
+``publish_household_overlay`` for the wire-facing readers that stamp it on.
+"""
 
 from __future__ import annotations
 
 import json
 from typing import Any
 
-from server.calendar_share.auto_sync_config import read_unified_auto_sync
 from server.calendar_share.constants import (
     LISTING_PRIVATE_GROUP,
     VISIBILITY_GRANT,
@@ -14,9 +17,6 @@ from server.calendar_share.constants import (
 )
 from server.calendar_share.store.normalize import normalize_handle, normalize_slug
 from server.db.database import Database
-from server.errors import VALIDATION_ERROR, http_error
-from server.wire.serializers import serialize_catalog_wire_fields
-from server.worksets_const import SYSTEM_WORKSET_ID
 
 _EMPTY_FINGERPRINTS = {"events": {}, "series": {}}
 
@@ -24,6 +24,22 @@ PUBLISH_ROW_COLUMNS = (
     "workset_id, slug, public_visibility, grants_json, pending_sync, last_sync_at, "
     "last_error, last_grants_hash, last_server_events_hash, last_public_visibility, "
     "last_description, last_cover, last_fingerprints_json"
+)
+
+_PUBLISH_JOINED_SQL = """
+SELECT
+    p.workset_id, p.slug, p.public_visibility, p.grants_json, p.pending_sync,
+    p.last_sync_at, p.last_error, p.last_grants_hash, p.last_server_events_hash,
+    p.last_public_visibility, p.last_description, p.last_cover, p.last_fingerprints_json,
+    w.name AS workset_name, w.description AS workset_description,
+    w.cover_data_url AS workset_cover, w.is_system AS workset_is_system
+FROM calendar_share_publish p
+LEFT JOIN worksets w ON w.id = p.workset_id
+"""
+
+_LIVE_REPLICA_PREDICATE = (
+    "pending_sync = 0 AND slug != '' "
+    "AND (IFNULL(last_server_events_hash, '') != '' OR IFNULL(last_public_visibility, '') != '')"
 )
 
 
@@ -119,7 +135,8 @@ def _clean_workset_entry(workset_id: str, raw: Any) -> dict[str, Any] | None:
     }
 
 
-def _sql_row_to_entry(row: dict[str, Any]) -> dict[str, Any] | None:
+def sql_row_to_entry(row: dict[str, Any]) -> dict[str, Any] | None:
+    """Map one ``calendar_share_publish`` row to a cleaned entry (``None`` if unusable)."""
     workset_id = str(row.get("workset_id") or "").strip()
     if not workset_id:
         return None
@@ -141,16 +158,6 @@ def _sql_row_to_entry(row: dict[str, Any]) -> dict[str, Any] | None:
             "lastFingerprints": fingerprints,
         },
     )
-
-
-def _with_household_auto_sync(
-    entry: dict[str, Any],
-    *,
-    auto_sync: bool,
-    interval_seconds: int,
-) -> dict[str, Any]:
-    """Wire entries carry household ``system_config`` auto-sync (never stored per row)."""
-    return {**entry, "autoSync": auto_sync, "autoSyncIntervalSeconds": interval_seconds}
 
 
 def is_published_entry(entry: dict[str, Any] | None) -> bool:
@@ -178,95 +185,27 @@ def empty_workset_entry(workset_id: str, *, slug: str = "") -> dict[str, Any]:
     }
 
 
-def _joined_catalog_fields(row: dict[str, Any], *, missing: bool) -> dict[str, str]:
-    if missing:
-        return serialize_catalog_wire_fields({})
-    return serialize_catalog_wire_fields(
-        {
-            "description": row.get("workset_description"),
-            "cover": row.get("workset_cover"),
-        }
-    )
-
-
-async def load_workset_map(db: Database) -> dict[str, dict[str, Any]]:
-    household_on, household_interval = await read_unified_auto_sync(db)
+async def fetch_publish_rows(db: Database) -> list[dict[str, Any]]:
     rows = await db.fetch_all(f"SELECT {PUBLISH_ROW_COLUMNS} FROM calendar_share_publish")
-    out: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        entry = _sql_row_to_entry(dict(row))
-        if entry is not None:
-            out[str(entry["worksetId"])] = _with_household_auto_sync(
-                entry, auto_sync=household_on, interval_seconds=household_interval
-            )
-    return out
+    return [dict(row) for row in rows]
 
 
-async def list_publish_joined(db: Database) -> list[dict[str, Any]]:
-    """Publish rows LEFT JOIN worksets (unpublished worksets have no row)."""
-    household_on, household_interval = await read_unified_auto_sync(db)
-    rows = await db.fetch_all(
-        """
-        SELECT
-            p.workset_id, p.slug, p.public_visibility, p.grants_json, p.pending_sync,
-            p.last_sync_at, p.last_error, p.last_grants_hash, p.last_server_events_hash,
-            p.last_public_visibility, p.last_description, p.last_cover, p.last_fingerprints_json,
-            w.name AS workset_name, w.description AS workset_description,
-            w.cover_data_url AS workset_cover, w.is_system AS workset_is_system
-        FROM calendar_share_publish p
-        LEFT JOIN worksets w ON w.id = p.workset_id
-        """
-    )
-    items: list[dict[str, Any]] = []
-    for row in rows:
-        data = dict(row)
-        entry = _sql_row_to_entry(data)
-        if entry is None:
-            continue
-        missing = data.get("workset_name") is None
-        items.append(
-            {
-                **_with_household_auto_sync(entry, auto_sync=household_on, interval_seconds=household_interval),
-                "worksetName": str(data.get("workset_name") or ""),
-                "worksetMissing": missing,
-                **_joined_catalog_fields(data, missing=missing),
-                "isSystemWorkset": bool(data.get("workset_is_system")) or entry["worksetId"] == SYSTEM_WORKSET_ID,
-            }
-        )
-    items.sort(
-        key=lambda item: (
-            bool(item["worksetMissing"]),
-            str(item["worksetName"] or item["worksetId"]).casefold(),
-            str(item["worksetId"]),
-        )
-    )
-    return items
+async def fetch_publish_rows_joined(db: Database) -> list[dict[str, Any]]:
+    """Publish rows LEFT JOIN worksets (``workset_*`` columns are ``None`` when the workset is gone)."""
+    rows = await db.fetch_all(_PUBLISH_JOINED_SQL)
+    return [dict(row) for row in rows]
 
 
-async def get_workset_entry(db: Database, workset_id: str) -> dict[str, Any]:
-    household_on, household_interval = await read_unified_auto_sync(db)
+async def fetch_publish_row(db: Database, workset_id: str) -> dict[str, Any] | None:
     row = await db.fetch_one(
         f"SELECT {PUBLISH_ROW_COLUMNS} FROM calendar_share_publish WHERE workset_id = ?",
         (workset_id,),
     )
-    if row is None:
-        return _with_household_auto_sync(
-            empty_workset_entry(workset_id),
-            auto_sync=household_on,
-            interval_seconds=household_interval,
-        )
-    entry = _sql_row_to_entry(dict(row))
-    return _with_household_auto_sync(
-        entry or empty_workset_entry(workset_id),
-        auto_sync=household_on,
-        interval_seconds=household_interval,
-    )
+    return dict(row) if row is not None else None
 
 
-async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, Any]) -> dict[str, Any]:
-    cleaned = _clean_workset_entry(workset_id, {**empty_workset_entry(workset_id), **entry, "worksetId": workset_id})
-    if cleaned is None:
-        raise http_error(422, "Invalid workset publish mapping", error_code=VALIDATION_ERROR)
+async def write_workset_entry(db: Database, workset_id: str, cleaned: dict[str, Any]) -> None:
+    """Upsert an already-cleaned entry (see ``_clean_workset_entry``)."""
     await db.execute(
         """
         INSERT INTO calendar_share_publish (
@@ -304,43 +243,22 @@ async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, A
             json.dumps(cleaned["lastFingerprints"], ensure_ascii=False, separators=(",", ":")),
         ),
     )
-    household_on, household_interval = await read_unified_auto_sync(db)
-    return _with_household_auto_sync(cleaned, auto_sync=household_on, interval_seconds=household_interval)
 
 
 async def delete_workset_entry(db: Database, workset_id: str) -> None:
     await db.execute("DELETE FROM calendar_share_publish WHERE workset_id = ?", (workset_id,))
 
 
-async def mark_workset_pending(db: Database, *workset_ids: str) -> None:
-    wanted = [str(wid).strip() for wid in workset_ids if str(wid or "").strip()]
-    if not wanted:
+async def mark_live_replicas_pending(db: Database, workset_ids: list[str] | None = None) -> None:
+    """Flag live replicas dirty; ``None`` means every row, else only the given worksets."""
+    if workset_ids is None:
+        await db.execute(f"UPDATE calendar_share_publish SET pending_sync = 1 WHERE {_LIVE_REPLICA_PREDICATE}")
         return
-    household_on, _ = await read_unified_auto_sync(db)
-    if not household_on:
+    if not workset_ids:
         return
-    placeholders = ",".join("?" for _ in wanted)
+    placeholders = ",".join("?" for _ in workset_ids)
     await db.execute(
-        f"""
-        UPDATE calendar_share_publish SET pending_sync = 1
-        WHERE workset_id IN ({placeholders})
-          AND pending_sync = 0
-          AND slug != ''
-          AND (IFNULL(last_server_events_hash, '') != '' OR IFNULL(last_public_visibility, '') != '')
-        """,
-        tuple(wanted),
-    )
-
-
-async def mark_all_live_replicas_pending(db: Database) -> None:
-    household_on, _ = await read_unified_auto_sync(db)
-    if not household_on:
-        return
-    await db.execute(
-        """
-        UPDATE calendar_share_publish SET pending_sync = 1
-        WHERE pending_sync = 0
-          AND slug != ''
-          AND (IFNULL(last_server_events_hash, '') != '' OR IFNULL(last_public_visibility, '') != '')
-        """
+        f"UPDATE calendar_share_publish SET pending_sync = 1 "
+        f"WHERE workset_id IN ({placeholders}) AND {_LIVE_REPLICA_PREDICATE}",
+        tuple(workset_ids),
     )

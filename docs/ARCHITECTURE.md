@@ -97,7 +97,9 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
 | `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
 | `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; worksets in `serializer_domains/worksets.py`; shared by HTTP and non-HTTP callers) |
-| `api/routes/weather.py` | Thin route over `services/weather.py` façade — providers in `weather_providers.py`, HTTP pool in `weather_http.py`, city aliases in `location_map.py` (shared with holidays) (`GET /api/v1/weather/*`) |
+| `api/routes/weather.py` | Thin route over `services/weather.py` façade (owns the FastAPI lifespan + `WeatherServiceError` → HTTP mapping) — providers in `weather_providers.py`, HTTP pool in `weather_http.py`, city aliases in `location_map.py` (shared with holidays) (`GET /api/v1/weather/*`) |
+| `api/routes/system_ops.py` / `system_reset.py` | `/api/v1/system/*` split by mount: authenticated ops (collector, AI engine, abort/pause, retention, restart) vs. the public recovery mount (`rotate-secrets`, `reset/database`; handlers gate auth themselves) |
+| `constants.py` | `SERVICE_PORT`, default bind host, and every `INTELLIGENCE_MONITOR_*` / `IM_*` env name (`ALL_ENV_NAMES`) — never hardcode env strings elsewhere |
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
@@ -478,7 +480,8 @@ Four layers plus two snapshot helpers — do not merge them.
 |------|------|
 | HTTP | `server/api/routes/calendar_share/publish_routes.py` |
 | Orchestration | `server/calendar_share/publish.py` |
-| SQLite | `server/calendar_share/store/publish.py` |
+| SQLite rows | `server/calendar_share/store/publish_io.py` (row ↔ entry, upsert/delete, dirty-flag SQL) |
+| Household overlay | `server/calendar_share/store/publish_household_overlay.py` (stamps `system_config` auto-sync onto wire entries; gates dirty flags) |
 | IC HTTP | `server/calendar_share/publish_remote.py` |
 | Payload map | `server/calendar_share/publish_snapshot.py` |
 | Fingerprint hash | `server/calendar_share/snapshot.py` (distinct from `publish_snapshot`) |
