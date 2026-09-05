@@ -61,6 +61,8 @@
     "pageLoading": "頁面載入中…",
     "expandSidebar": "展開側欄",
     "collapseSidebar": "收起側欄",
+    "pinSidebar": "釘選側欄",
+    "unpinSidebar": "取消釘選側欄",
     "breadcrumb": "麵包屑",
     "tabs": "分頁",
     "itemsCount": "{count} 項",

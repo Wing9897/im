@@ -34,6 +34,10 @@ interface RenderOpts {
   onToggleFullscreen?: () => void;
   overviewMode?: boolean;
   onOverviewModeChange?: (next: boolean) => void;
+  overviewRangeId?: string;
+  onOverviewRangeChange?: (id: string) => void;
+  jumpDateValue?: string;
+  onJumpDate?: (isoDate: string) => void;
   onAddEvent?: () => void;
   showLoadingIndicator?: boolean;
   loadingLabel?: string;
@@ -57,6 +61,10 @@ function renderControlBar(opts: RenderOpts = {}) {
     visibleRangeLabel: opts.visibleRangeLabel ?? "2025年1月",
     overviewMode: opts.overviewMode,
     onOverviewModeChange: opts.onOverviewModeChange,
+    overviewRangeId: opts.overviewRangeId,
+    onOverviewRangeChange: opts.onOverviewRangeChange,
+    jumpDateValue: opts.jumpDateValue,
+    onJumpDate: opts.onJumpDate,
     isFullscreen: opts.isFullscreen,
     onToggleFullscreen: opts.onToggleFullscreen,
     onAddEvent: opts.onAddEvent,
@@ -89,6 +97,9 @@ describe("TimelineControlBar", () => {
   afterEach(() => {
     document
       .querySelectorAll('[data-testid="source-filter-dialog"]')
+      .forEach((node) => node.remove());
+    document
+      .querySelectorAll('[data-testid="gantt-overview-range-select-list"]')
       .forEach((node) => node.remove());
   });
 
@@ -313,6 +324,147 @@ describe("TimelineControlBar", () => {
       todayBtn.click();
     });
     expect(onJumpTo).toHaveBeenCalledWith("week");
+  });
+
+  it("shows Gantt 全局 range menu and shared 本日 button, with jump date inside the range label", () => {
+    const onOverviewRangeChange = vi.fn();
+    const onJumpDate = vi.fn();
+    const onJumpTo = vi.fn();
+    const container = renderControlBar({
+      viewMode: "gantt",
+      overviewMode: true,
+      timeScale: "week",
+      overviewRangeId: "7d",
+      onOverviewRangeChange,
+      jumpDateValue: "2026-08-09",
+      onJumpDate,
+      onJumpTo,
+      visibleRangeLabel: "8/3 – 8/10",
+    });
+
+    expect(container.querySelector('[data-testid="gantt-overview-range-select"]')).not.toBeNull();
+    const rangeLabel = container.querySelector('[data-testid="timeline-range-label"]')!;
+    const dateInput = rangeLabel.querySelector<HTMLInputElement>('[data-testid="timeline-jump-date"]');
+    expect(dateInput).not.toBeNull();
+    expect(dateInput!.value).toBe("2026-08-09");
+    expect(dateInput!.getAttribute("aria-label")).toBe(i18n.t("timeline:toolbar.jumpDateAria"));
+    expect(rangeLabel.textContent).toContain("8/3 – 8/10");
+    expect(container.querySelector('[data-testid="gantt-jump-date"]')).toBeNull();
+
+    const nowBtn = container.querySelector<HTMLButtonElement>('[data-testid="timeline-jump-now"]')!;
+    expect(nowBtn.getAttribute("aria-label")).toBe(i18n.t("timeline:toolbar.todayAria"));
+    expect(nowBtn.getAttribute("title")).toBe(i18n.t("timeline:toolbar.todayTitle"));
+    act(() => {
+      nowBtn.click();
+    });
+    expect(onJumpTo).toHaveBeenCalledWith("week");
+
+    expect(findButtonByText(container, "日")).not.toBeNull();
+    expect(findButtonByText(container, "全局")).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-fullscreen-toggle"]')).toBeNull();
+  });
+
+  it("hides the 全局 range menu on discrete Gantt 日週月 but keeps jump date on the range label", () => {
+    const container = renderControlBar({
+      viewMode: "gantt",
+      overviewMode: false,
+      onOverviewRangeChange: vi.fn(),
+      onJumpDate: vi.fn(),
+      jumpDateValue: "2026-08-09",
+    });
+    expect(container.querySelector('[data-testid="gantt-overview-range-select"]')).toBeNull();
+    expect(
+      container
+        .querySelector('[data-testid="timeline-range-label"]')
+        ?.querySelector('[data-testid="timeline-jump-date"]'),
+    ).not.toBeNull();
+  });
+
+  it("hides 全局 range menu on calendar and keeps jump date on the range label", () => {
+    const container = renderControlBar({
+      viewMode: "calendar",
+      overviewMode: true,
+      onOverviewRangeChange: vi.fn(),
+      onJumpDate: vi.fn(),
+      jumpDateValue: "2026-08-09",
+      visibleRangeLabel: "2026年8月",
+    });
+    expect(container.querySelector('[data-testid="gantt-overview-range-select"]')).toBeNull();
+    const rangeLabel = container.querySelector('[data-testid="timeline-range-label"]')!;
+    const dateInput = rangeLabel.querySelector<HTMLInputElement>('[data-testid="timeline-jump-date"]');
+    expect(dateInput).not.toBeNull();
+    expect(dateInput!.value).toBe("2026-08-09");
+    expect(rangeLabel.textContent).toContain("2026年8月");
+  });
+
+  it("commits a range-menu pick through onOverviewRangeChange", () => {
+    const onOverviewRangeChange = vi.fn();
+    const container = renderControlBar({
+      viewMode: "gantt",
+      overviewMode: true,
+      overviewRangeId: "12h",
+      onOverviewRangeChange,
+    });
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-testid="gantt-overview-range-select-value"]',
+    )!;
+    act(() => {
+      trigger.click();
+    });
+    const option = document.body.querySelector<HTMLButtonElement>(
+      '[data-testid="gantt-overview-range-select-option-30d"]',
+    );
+    expect(option).toBeTruthy();
+    expect(option!.textContent).toBe(i18n.t("timeline:toolbar.rangeOptions.30d"));
+    act(() => {
+      option!.click();
+    });
+    expect(onOverviewRangeChange).toHaveBeenCalledWith("30d");
+  });
+
+  it("commits a date-picker jump through onJumpDate from the range label", () => {
+    const onJumpDate = vi.fn();
+    const container = renderControlBar({
+      viewMode: "gantt",
+      overviewMode: true,
+      jumpDateValue: "2026-08-01",
+      onJumpDate,
+    });
+    const rangeLabel = container.querySelector('[data-testid="timeline-range-label"]')!;
+    act(() => {
+      rangeLabel.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const input = rangeLabel.querySelector<HTMLInputElement>('[data-testid="timeline-jump-date"]')!;
+    expect(input).not.toBeNull();
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    act(() => {
+      setter.call(input, "2026-08-09");
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onJumpDate).toHaveBeenCalledWith("2026-08-09");
+  });
+
+  it("exposes the date input when the calendar range label is clicked", () => {
+    const onJumpDate = vi.fn();
+    const container = renderControlBar({
+      viewMode: "calendar",
+      visibleRangeLabel: "2025年5月",
+      jumpDateValue: "2025-05-01",
+      onJumpDate,
+    });
+    const rangeLabel = container.querySelector('[data-testid="timeline-range-label"]')!;
+    act(() => {
+      rangeLabel.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const input = rangeLabel.querySelector<HTMLInputElement>('[data-testid="timeline-jump-date"]')!;
+    expect(input).not.toBeNull();
+    expect(input.type).toBe("date");
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    act(() => {
+      setter.call(input, "2025-05-20");
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onJumpDate).toHaveBeenCalledWith("2025-05-20");
   });
 
   it("calls onMoveCursor with -1 when the previous-period button is clicked", () => {

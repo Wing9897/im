@@ -61,6 +61,8 @@
     "pageLoading": "页面加载中…",
     "expandSidebar": "展开侧栏",
     "collapseSidebar": "收起侧栏",
+    "pinSidebar": "固定侧栏",
+    "unpinSidebar": "取消固定侧栏",
     "breadcrumb": "面包屑",
     "tabs": "分页",
     "itemsCount": "{count} 项",

@@ -167,6 +167,68 @@ describe("MenuSelect", () => {
       expect(list?.style.color).toContain("--text-primary");
     });
 
+    it("flips a portaled listbox above a bottom-of-viewport trigger", () => {
+      Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 });
+
+      act(() => {
+        root.render(
+          createElement(MenuSelect, {
+            value: "12",
+            options: [
+              { value: "1", label: "LIVE ±1h" },
+              { value: "12", label: "LIVE ±12h" },
+              { value: "24", label: "LIVE ±24h" },
+            ],
+            onChange: () => {},
+            variant: "toolbar",
+            menuPortal: true,
+            "data-testid": "map-live-window-select",
+            "aria-label": "LIVE 時間範圍",
+          }),
+        );
+      });
+
+      const trigger = container.querySelector<HTMLButtonElement>(
+        '[data-testid="map-live-window-select-value"]',
+      );
+      expect(trigger).toBeTruthy();
+      trigger!.getBoundingClientRect = () =>
+        ({
+          top: 760,
+          left: 200,
+          width: 120,
+          height: 32,
+          bottom: 792,
+          right: 320,
+          x: 200,
+          y: 760,
+          toJSON() {
+            return this;
+          },
+        }) as DOMRect;
+
+      act(() => {
+        trigger?.click();
+      });
+
+      const list = document.body.querySelector(
+        '[data-testid="map-live-window-select-list"]',
+      ) as HTMLElement | null;
+      expect(list).toBeTruthy();
+      expect(container.querySelector('[data-testid="map-live-window-select-list"]')).toBeNull();
+      expect(list?.parentElement).toBe(document.body);
+      expect(list?.style.position).toBe("fixed");
+      expect(list?.style.zIndex).toBe("3000");
+      Object.defineProperty(list!, "offsetHeight", { configurable: true, value: 180 });
+      act(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+      const top = Number.parseFloat(list!.style.top);
+      expect(top).toBeLessThan(760);
+      expect(top + 180).toBeLessThanOrEqual(760);
+    });
+
     it("paints options as primary text on an elevated surface with visible hover", () => {
       act(() => {
         root.render(

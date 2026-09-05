@@ -26,6 +26,10 @@ import { AssistantChatProvider } from "./hooks/useAssistantChat";
 import { isElectronDesktop } from "./electron/electronWindow";
 import { subscribeDesktopNotificationLocale } from "./electron/electronConnection";
 import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
+import {
+  SIDEBAR_PINNED_LAYOUT_CLASS,
+  useSidebarPinned,
+} from "./hooks/useSidebarPinned";
 import { prefetchRoute } from "./routing/prefetchRoute";
 import { useFocalBackgroundAutoRefresh } from "./hooks/useFocalBackgroundAutoRefresh";
 import { applyTheme, getStoredThemeId, loadBgForTheme } from "./styles/themeData";
@@ -39,11 +43,13 @@ import { useNotifyScanner } from "./domain/notify/scanner/useNotifyScanner";
  *   `shellVisibilityProps` (Tailwind `hidden` + `inert`). Do NOT unmount the
  *   inactive shell (loses deep-link / scroll / widget state).
  * - Pages pane is painted after board so a failed hide cannot steal sidebar clicks.
- * - Left nav is a surface overlay (portal drawer) in pages mode only. Ops board
- *   (canvas) stays full-bleed — no edge `>` chevron, no overlay. Switch back via
- *   MonitorModeSwitch / command palette. Overlay sidebar is a translucent panel
- *   (color-mix of --surface-card); the scrim is a light dim with no blur so
- *   the main canvas stays sharp. Do not clone wallpaper onto the drawer.
+ * - Left nav is a surface overlay (portal drawer) in pages mode by default.
+ *   Pin docks the drawer and pads the pages pane (`im-shell-pages--sidebar-pinned`,
+ *   ~200px) so main content is not overlayed. Ops board (canvas) stays full-bleed
+ *   — no edge `>` chevron, no overlay, no dock. Switch back via MonitorModeSwitch
+ *   / command palette. Overlay sidebar is a translucent panel (color-mix of
+ *   --surface-card); the scrim is a light dim with no blur so the main canvas
+ *   stays sharp. Do not clone wallpaper onto the drawer.
  * - Leave board immersive when leaving canvas; board poll must stay gated to canvas
  *   (`useBoardWidgetPoll`).
  * - Chrome forks: Electron `DesktopTitleBar` vs web `AppTopBar` vs canvas
@@ -97,6 +103,7 @@ function BrowserCanvasBar() {
 function AppShellBody() {
   const desktopShell = isElectronDesktop();
   const { monitorMode } = useMonitorMode();
+  const { pinned: sidebarPinned } = useSidebarPinned();
   const mainScrollRef = useRef<HTMLDivElement>(null);
   useFocalBackgroundAutoRefresh();
   const [boardImmersive, setBoardImmersive] = useState(false);
@@ -104,6 +111,7 @@ function AppShellBody() {
   useNotifyScanner();
 
   const isCanvas = monitorMode === "canvas";
+  const sidebarDocked = sidebarPinned && !isCanvas;
 
   // Leave immersive when switching away from canvas (board may stay mounted).
   useEffect(() => {
@@ -128,6 +136,7 @@ function AppShellBody() {
   }, []);
 
   const showShellChrome = !boardImmersive;
+  const pagesPaneVisibility = shellVisibilityProps(isCanvas);
 
   return (
     <div
@@ -135,6 +144,7 @@ function AppShellBody() {
       data-testid={isCanvas ? "app-shell-canvas" : "app-shell-pages"}
       data-monitor-mode={monitorMode}
       data-shell-mount="dual"
+      data-sidebar-pinned={sidebarDocked ? "true" : undefined}
       data-board-immersive={boardImmersive ? "true" : undefined}
     >
       {showShellChrome && desktopShell ? (
@@ -159,7 +169,14 @@ function AppShellBody() {
         <div
           data-testid="app-shell-pages-pane"
           data-shell-pane="pages"
-          {...shellVisibilityProps(isCanvas)}
+          {...pagesPaneVisibility}
+          data-sidebar-pinned={sidebarDocked ? "true" : undefined}
+          className={[
+            pagesPaneVisibility.className,
+            sidebarDocked ? SIDEBAR_PINNED_LAYOUT_CLASS : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           <div
             ref={mainScrollRef}
@@ -171,8 +188,8 @@ function AppShellBody() {
             </main>
           </div>
         </div>
+        {isCanvas ? null : <AppSidebar />}
       </div>
-      {isCanvas ? null : <AppSidebar />}
     </div>
   );
 }

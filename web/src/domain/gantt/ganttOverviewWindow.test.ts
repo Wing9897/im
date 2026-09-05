@@ -7,6 +7,7 @@ import {
   OVERVIEW_COMPACT_WIDTH_PCT,
   OVERVIEW_FETCH_MAX_MS,
   OVERVIEW_MIN_TICK_LABEL_PCT,
+  OVERVIEW_RANGE_PRESETS,
   overviewBarIsCompact,
   overviewBarLayout,
   overviewFetchWindow,
@@ -14,12 +15,15 @@ import {
   overviewTickLeftPct,
   overviewWindowEndMs,
   overviewWindowFromScale,
+  overviewWindowFromSpan,
   clampOverviewSpan,
   clampOverviewWindow,
   formatOverviewWindowLabel,
+  matchOverviewRangeId,
   minOverviewTickLabelPct,
   panOverviewWindow,
   panDeltaMsFromPointer,
+  parseOverviewRangeId,
   recenterOverviewWindow,
   thinOverviewTicks,
   ticksForOverviewWindow,
@@ -70,6 +74,24 @@ describe("clamp / pan / zoom window", () => {
     const next = recenterOverviewWindow(base, center);
     expect(next.spanMs).toBe(base.spanMs);
     expect(next.startMs + next.spanMs / 2).toBe(center);
+  });
+});
+
+describe("overview range presets", () => {
+  it("builds a window around the given center for each listed span", () => {
+    const center = Date.UTC(2026, 8, 5, 12);
+    const next = overviewWindowFromSpan(OVERVIEW_RANGE_PRESETS["7d"], center);
+    expect(next.spanMs).toBe(7 * DAY);
+    expect(next.startMs + next.spanMs / 2).toBe(center);
+  });
+
+  it("matches listed spans and rejects custom zoomed spans", () => {
+    expect(matchOverviewRangeId(12 * HOUR)).toBe("12h");
+    expect(matchOverviewRangeId(30 * DAY)).toBe("30d");
+    expect(matchOverviewRangeId(365 * DAY)).toBe("1y");
+    expect(parseOverviewRangeId("90d")).toBe("90d");
+    expect(parseOverviewRangeId("live")).toBeNull();
+    expect(matchOverviewRangeId(3 * DAY)).toBeNull();
   });
 });
 

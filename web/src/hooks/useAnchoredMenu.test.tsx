@@ -1,7 +1,11 @@
 import { act, createElement, type MutableRefObject } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { useAnchoredMenu, type UseAnchoredMenuResult } from "./useAnchoredMenu";
+import {
+  placeAnchoredMenu,
+  useAnchoredMenu,
+  type UseAnchoredMenuResult,
+} from "./useAnchoredMenu";
 
 let latest: UseAnchoredMenuResult | null = null;
 
@@ -100,5 +104,75 @@ describe("useAnchoredMenu", () => {
       latest!.toggle();
     });
     expect(latest!.open).toBe(false);
+  });
+});
+
+function box(top: number, left: number, width: number, height: number) {
+  return {
+    top,
+    left,
+    width,
+    height,
+    bottom: top + height,
+    right: left + width,
+  };
+}
+
+describe("placeAnchoredMenu", () => {
+  it("opens below the trigger when there is room", () => {
+    const placed = placeAnchoredMenu({
+      rect: box(100, 200, 120, 32),
+      menuWidth: 120,
+      menuHeight: 180,
+      viewportWidth: 1200,
+      viewportHeight: 800,
+      flip: true,
+    });
+    expect(placed.top).toBe(136);
+    expect(placed.left).toBe(200);
+    expect(placed.maxHeight).toBeUndefined();
+  });
+
+  it("flips above a bottom-of-viewport trigger so the menu is not clipped", () => {
+    const placed = placeAnchoredMenu({
+      rect: box(760, 200, 120, 32),
+      menuWidth: 120,
+      menuHeight: 180,
+      viewportWidth: 1200,
+      viewportHeight: 800,
+      gap: 4,
+      edge: 8,
+      flip: true,
+    });
+    expect(placed.top).toBe(760 - 180 - 4);
+    expect(placed.top + 180).toBeLessThanOrEqual(760);
+    expect(placed.maxHeight).toBeUndefined();
+  });
+
+  it("flips unmeasured menus when leftover space below is too thin", () => {
+    const placed = placeAnchoredMenu({
+      rect: box(760, 200, 120, 32),
+      menuWidth: 120,
+      menuHeight: 0,
+      viewportWidth: 1200,
+      viewportHeight: 800,
+      gap: 4,
+      edge: 8,
+      flip: true,
+    });
+    expect(placed.top).toBeLessThan(760);
+    expect(placed.top).toBeGreaterThanOrEqual(8);
+  });
+
+  it("stays below when flip is disabled even if the trigger is at the bottom", () => {
+    const placed = placeAnchoredMenu({
+      rect: box(760, 200, 120, 32),
+      menuWidth: 120,
+      menuHeight: 180,
+      viewportWidth: 1200,
+      viewportHeight: 800,
+      flip: false,
+    });
+    expect(placed.top).toBe(760 + 32 + 4);
   });
 });

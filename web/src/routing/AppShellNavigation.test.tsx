@@ -1,9 +1,14 @@
-import { act, createElement } from "react";
+import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AppSidebar } from "../components/AppSidebar";
 import { SIDEBAR_COLLAPSED_KEY } from "../hooks/useSidebarCollapsed";
+import {
+  SIDEBAR_PINNED_KEY,
+  SIDEBAR_PINNED_LAYOUT_CLASS,
+  useSidebarPinned,
+} from "../hooks/useSidebarPinned";
 import {
   AnalysisStatusProvider,
   type AnalysisStatusContextValue,
@@ -18,6 +23,41 @@ function PathnameProbe() {
 
 function StubPage({ label }: { label: string }) {
   return createElement("div", { "data-testid": `stub-page-${label}` }, label);
+}
+
+function ShellChrome({ children }: { children: ReactNode }) {
+  const { pinned } = useSidebarPinned();
+  return createElement(
+    "div",
+    {
+      className: "flex min-h-0 min-w-0 flex-1 overflow-hidden",
+      "data-testid": "shell-body",
+    },
+    createElement(
+      "div",
+      {
+        "data-testid": "app-shell-pages-pane",
+        "data-shell-pane": "pages",
+        "data-sidebar-pinned": pinned ? "true" : undefined,
+        className: [
+          "flex min-h-0 min-w-0 w-full flex-1 overflow-hidden",
+          pinned ? SIDEBAR_PINNED_LAYOUT_CLASS : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      },
+      createElement(
+        "main",
+        {
+          className:
+            "im-auto-scrollbar im-page-canvas flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto",
+          "data-testid": "app-shell-page-canvas",
+        },
+        children,
+      ),
+    ),
+    createElement(AppSidebar),
+  );
 }
 
 const stubAnalysisValue: AnalysisStatusContextValue = {
@@ -67,57 +107,45 @@ describe("App shell navigation", () => {
                 MonitorModeProvider,
                 null,
                 createElement(
-                  "div",
-                  {
-                    className: "flex min-h-0 min-w-0 flex-1 overflow-hidden",
-                    "data-testid": "shell-body",
-                  },
+                  ShellChrome,
+                  null,
+                  createElement(PathnameProbe),
                   createElement(
-                    "main",
-                    {
-                      className:
-                        "im-auto-scrollbar im-page-canvas flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-y-auto",
-                      "data-testid": "app-shell-page-canvas",
-                    },
-                    createElement(PathnameProbe),
-                    createElement(
-                      Routes,
-                      null,
-                      createElement(Route, {
-                        path: "/monitor",
-                        element: createElement(StubPage, { label: "monitor" }),
-                      }),
-                      createElement(Route, {
-                        path: "/worksets",
-                        element: createElement(StubPage, { label: "worksets" }),
-                      }),
-                      createElement(Route, {
-                        path: "/tasks/*",
-                        element: createElement(StubPage, { label: "tasks" }),
-                      }),
-                      createElement(Route, {
-                        path: "/intelligence",
-                        element: createElement(StubPage, { label: "intelligence" }),
-                      }),
-                      createElement(Route, {
-                        path: "/sources",
-                        element: createElement(StubPage, { label: "sources" }),
-                      }),
-                      createElement(Route, {
-                        path: "/settings/ai",
-                        element: createElement(StubPage, { label: "ai" }),
-                      }),
-                      createElement(Route, {
-                        path: "/settings/ai/provider",
-                        element: createElement(StubPage, { label: "ai" }),
-                      }),
-                      createElement(Route, {
-                        path: "/settings/ai/*",
-                        element: createElement(StubPage, { label: "ai" }),
-                      }),
-                    ),
+                    Routes,
+                    null,
+                    createElement(Route, {
+                      path: "/monitor",
+                      element: createElement(StubPage, { label: "monitor" }),
+                    }),
+                    createElement(Route, {
+                      path: "/worksets",
+                      element: createElement(StubPage, { label: "worksets" }),
+                    }),
+                    createElement(Route, {
+                      path: "/tasks/*",
+                      element: createElement(StubPage, { label: "tasks" }),
+                    }),
+                    createElement(Route, {
+                      path: "/intelligence",
+                      element: createElement(StubPage, { label: "intelligence" }),
+                    }),
+                    createElement(Route, {
+                      path: "/sources",
+                      element: createElement(StubPage, { label: "sources" }),
+                    }),
+                    createElement(Route, {
+                      path: "/settings/ai",
+                      element: createElement(StubPage, { label: "ai" }),
+                    }),
+                    createElement(Route, {
+                      path: "/settings/ai/provider",
+                      element: createElement(StubPage, { label: "ai" }),
+                    }),
+                    createElement(Route, {
+                      path: "/settings/ai/*",
+                      element: createElement(StubPage, { label: "ai" }),
+                    }),
                   ),
-                  createElement(AppSidebar),
                 ),
               ),
             ),
@@ -216,5 +244,28 @@ describe("App shell navigation", () => {
     renderShell("/monitor", { overlayOpen: false });
     expect(document.body.querySelector("[data-testid='sidebar-edge-toggle']")).toBeNull();
     expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
+  });
+
+  it("pins persist and pads the pages pane with the docked layout class", () => {
+    renderShell("/monitor");
+    const pagesPane = container.querySelector("[data-testid='app-shell-pages-pane']");
+    expect(pagesPane?.className).not.toContain(SIDEBAR_PINNED_LAYOUT_CLASS);
+
+    const pin = document.body.querySelector<HTMLButtonElement>("[data-testid='sidebar-pin']");
+    expect(pin).toBeTruthy();
+    act(() => {
+      pin!.click();
+    });
+
+    expect(window.localStorage.getItem(SIDEBAR_PINNED_KEY)).toBe("1");
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")?.className).toContain(
+      "im-sidebar-docked",
+    );
+    expect(pagesPane?.className).toContain(SIDEBAR_PINNED_LAYOUT_CLASS);
+    expect(pagesPane?.getAttribute("data-sidebar-pinned")).toBe("true");
+    const body = container.querySelector("[data-testid='shell-body']");
+    const nav = document.body.querySelector("[data-testid='app-sidebar']");
+    expect(body?.contains(nav)).toBe(true);
   });
 });

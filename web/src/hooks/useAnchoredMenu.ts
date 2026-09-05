@@ -12,7 +12,15 @@ export type AnchoredMenuPosition = {
   top: number;
   left: number;
   width: number;
+  /** Cap used when the menu is taller than the remaining viewport side. */
+  maxHeight?: number;
 };
+
+/** When the menu is not yet measured, still flip if leftover space below is this thin. */
+export const ANCHORED_MENU_UNMEASURED_MIN_BELOW = 80;
+
+/** Fallback height while flipping an unmeasured menu (matches MenuSelect list max). */
+export const ANCHORED_MENU_FALLBACK_HEIGHT = 280;
 
 export type UseAnchoredMenuOptions = {
   /** When false, positioning/outside-close effects are idle (menu stays closed). */
@@ -66,15 +74,17 @@ function resolveMenuLeft({
   edge,
   menuWidth,
   rect,
+  viewportWidth,
 }: {
   align: "start" | "end" | "auto";
   edge: number;
   menuWidth: number;
-  rect: DOMRect;
+  rect: Pick<DOMRect, "left" | "right">;
+  viewportWidth: number;
 }): number {
-  const maxLeft = window.innerWidth - menuWidth - edge;
+  const maxLeft = viewportWidth - menuWidth - edge;
   if (align === "auto") {
-    const openRightward = rect.left < window.innerWidth / 2;
+    const openRightward = rect.left < viewportWidth / 2;
     const raw = openRightward ? rect.left : rect.right - menuWidth;
     return Math.max(edge, Math.min(raw, maxLeft));
   }
@@ -82,6 +92,65 @@ function resolveMenuLeft({
     return Math.min(Math.max(edge, rect.right - menuWidth), maxLeft);
   }
   return Math.min(Math.max(edge, rect.left), maxLeft);
+}
+
+type PlaceAnchoredMenuArgs = {
+  rect: Pick<DOMRect, "top" | "left" | "right" | "bottom" | "width">;
+  menuWidth: number;
+  menuHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  align?: "start" | "end" | "auto";
+  gap?: number;
+  edge?: number;
+  flip?: boolean;
+};
+
+/**
+ * Viewport-fixed placement. Opens below the anchor; with `flip`, opens above
+ * when the measured (or estimated) menu cannot fit below and there is more
+ * room above — so bottom chrome (map LIVE window, etc.) is not window-clipped.
+ */
+export function placeAnchoredMenu({
+  rect,
+  menuWidth,
+  menuHeight,
+  viewportWidth,
+  viewportHeight,
+  align = "start",
+  gap = 4,
+  edge = 8,
+  flip = false,
+}: PlaceAnchoredMenuArgs): AnchoredMenuPosition {
+  const spaceBelow = viewportHeight - rect.bottom - edge;
+  const spaceAbove = rect.top - edge;
+  const measured = menuHeight > 0;
+  const fitsBelow = measured
+    ? menuHeight <= spaceBelow
+    : spaceBelow >= ANCHORED_MENU_UNMEASURED_MIN_BELOW;
+  const shouldFlip = Boolean(flip && !fitsBelow && spaceAbove > spaceBelow);
+  const usedHeight = measured
+    ? menuHeight
+    : shouldFlip
+      ? Math.min(ANCHORED_MENU_FALLBACK_HEIGHT, Math.max(0, spaceAbove - gap))
+      : 0;
+
+  let top = shouldFlip ? rect.top - usedHeight - gap : rect.bottom + gap;
+  let maxHeight: number | undefined;
+  if (shouldFlip && usedHeight > 0) {
+    const available = Math.max(0, spaceAbove - gap);
+    if (usedHeight > available) {
+      maxHeight = available;
+      top = rect.top - available - gap;
+    }
+  }
+
+  return {
+    top: Math.max(edge, top),
+    left: resolveMenuLeft({ align, edge, menuWidth, rect, viewportWidth }),
+    width: rect.width,
+    ...(maxHeight != null ? { maxHeight } : {}),
+  };
 }
 
 /** Fixed portal placement shared by MenuSelect and GeminiBaseUrlField. */
@@ -96,6 +165,7 @@ export function anchoredMenuPortalStyle(
     minWidth: menuPos?.width ?? undefined,
     zIndex: 3000,
     visibility: menuPos ? "visible" : "hidden",
+    ...(menuPos?.maxHeight != null ? { maxHeight: menuPos.maxHeight } : {}),
   };
 }
 
@@ -148,19 +218,19 @@ export function useAnchoredMenu({
       const rect = anchor.getBoundingClientRect();
       const menuWidth = menuRef.current?.offsetWidth ?? Math.max(rect.width, fallbackMenuWidth);
       const menuHeight = menuRef.current?.offsetHeight ?? 0;
-      let top = rect.bottom + gap;
-      if (flip && menuHeight > 0) {
-        const spaceBelow = window.innerHeight - rect.bottom - edge;
-        const spaceAbove = rect.top - edge;
-        if (menuHeight > spaceBelow && spaceAbove > spaceBelow) {
-          top = rect.top - menuHeight - gap;
-        }
-      }
-      setMenuPos({
-        top: Math.max(edge, top),
-        left: resolveMenuLeft({ align, edge, menuWidth, rect }),
-        width: rect.width,
-      });
+      setMenuPos(
+        placeAnchoredMenu({
+          rect,
+          menuWidth,
+          menuHeight,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          align,
+          gap,
+          edge,
+          flip,
+        }),
+      );
     };
     place();
     window.addEventListener("resize", place);

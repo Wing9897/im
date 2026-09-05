@@ -4,6 +4,10 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Sidebar can **pin** (dock ~200px, push pages) or stay the overlay drawer; unused icon-rail `collapsed` path is gone.
+- Intelligence map LIVE range menu portals and flips up when the bottom chrome would clip it. Gantt **全局** has a 12h–1y range menu; calendar and Gantt share one **今天** control; the date-range label opens jump-to-date.
+- Timeline **塊** cards for `subscribe` sources show the bookmark icon.
+- README: mark SVG plus workflow / calendar / 全局 Gantt shots under `docs/images/`.
 - Gantt **全局**: visible canvas and `GET /calendar/window` are separate. Fetch span is `min(visible × 2, 90d)` snapped to 14/30-day buckets so small pans reuse the same ISO bounds; a zoomed-out decade still never requests more than 90 days. Pan/zoom debounce 250ms; a newer load **aborts** the in-flight window request (cancel is not a toast or timeout wipe). Axis tick labels thin when they would overlap (prefer a nearby major tick).
 - Timeline sidebar: when the focused day sits outside the visible 全局 window, the list follows the window center and shows **不在當前視圖**.
 - `/tasks` toolbar no longer renders workset **目錄 | 流程圖** chrome (those pills stay on `/worksets` only).

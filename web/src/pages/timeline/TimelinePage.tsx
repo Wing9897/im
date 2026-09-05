@@ -112,6 +112,10 @@ export function TimelinePage() {
               visibleRangeLabel={navigation.visibleRangeLabel}
               overviewMode={sources.overviewMode}
               onOverviewModeChange={sources.setOverviewMode}
+              overviewRangeId={navigation.overviewRangeId}
+              onOverviewRangeChange={navigation.applyOverviewRange}
+              jumpDateValue={navigation.jumpDateValue}
+              onJumpDate={navigation.jumpToDate}
               onAddEvent={() => dialogs.openCreateDialog()}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => {

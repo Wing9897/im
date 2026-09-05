@@ -17,6 +17,9 @@ import { useMonthCardModels } from "./useMonthCardModels";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
+import { matchOverviewRangeId } from "../../domain/gantt/ganttOverviewWindow";
+import { calendarNoonMs } from "../../domain/intelligence/timelineSliderGestureGeometry";
+import { dateKey, formatDateOnly } from "../../utils/dateFormat";
 import { useGanttOverviewSession } from "./useGanttOverviewSession";
 import { useTimelineFiltering } from "./useTimelineFiltering";
 import { resolveSidebarFocusForWindow } from "./timelinePageUtils";
@@ -177,6 +180,24 @@ export function useTimelinePageContainer() {
     [t, selectedSources, data.timelineTasks.length],
   );
 
+  const jumpToDate = useCallback(
+    (isoDate: string) => {
+      const noon = calendarNoonMs(isoDate);
+      if (noon == null) return;
+      if (overviewActive) {
+        overview.jumpToTimestamp(noon);
+      }
+      actions.goToDay(new Date(noon));
+    },
+    [actions, overview, overviewActive],
+  );
+
+  const jumpDateValue = overviewActive
+    ? formatDateOnly(overview.overviewWindow.startMs + overview.overviewWindow.spanMs / 2)
+    : dateKey(navigation.timeCursor);
+
+  const overviewRangeId = matchOverviewRangeId(overview.overviewWindow.spanMs) ?? "";
+
   const monthCards = useMonthCardModels({
     enabled: monthCardsMode,
     selectedSources,
@@ -246,6 +267,10 @@ export function useTimelinePageContainer() {
             overview.recenterToday();
           }
         : actions.handleJumpTo,
+      jumpToDate,
+      jumpDateValue,
+      overviewRangeId,
+      applyOverviewRange: overview.applyRangeId,
       visibleRangeLabel: overviewActive ? overview.visibleRangeLabel : navigation.visibleRangeLabel,
       overviewWindow: overview.overviewWindow,
       setOverviewWindow: overview.setOverviewWindow,

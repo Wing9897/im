@@ -128,7 +128,7 @@ export const mapTransientPanelRowClass =
 export const mapTransientItemsColumnClass = "flex min-w-0 flex-1 flex-col gap-1";
 
 export const mapBottomBarClass =
-  "im-surface-chrome shrink-0 border-t border-surface-border";
+  "im-surface-chrome shrink-0 overflow-visible border-t border-surface-border";
 
 export const mapSmallBtnClass =
   "cursor-pointer whitespace-nowrap rounded-md border border-surface-border bg-transparent px-2.5 py-1 text-caption font-medium text-text-secondary transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";

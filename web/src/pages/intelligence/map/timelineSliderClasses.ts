@@ -1,4 +1,4 @@
-export const mapSliderPanelClass = "flex flex-col gap-0.5 px-lg pb-1 pt-1.5";
+export const mapSliderPanelClass = "flex flex-col gap-0.5 overflow-visible px-lg pb-1 pt-1.5";
 
 export const mapSliderCanvasWrapClass = "relative w-full";
 
@@ -12,7 +12,8 @@ export const mapSliderTickRowClass = "relative h-4 overflow-hidden";
 export const mapSliderTickLabelClass =
   "absolute top-0 -translate-x-1/2 whitespace-nowrap text-card-meta text-text-muted";
 
-export const mapSliderControlRowClass = "flex flex-wrap items-center gap-2.5 text-xs";
+export const mapSliderControlRowClass =
+  "flex flex-wrap items-center gap-2.5 overflow-visible text-xs";
 
 export const mapSliderRangeLabelClass =
   "whitespace-nowrap text-caption font-semibold text-accent-pink";
