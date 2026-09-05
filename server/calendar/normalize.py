@@ -23,7 +23,7 @@ from typing import Any, Literal
 
 from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
-from server.util import parse_json_list
+from server.wire.serializers import serialize_analysis_event
 
 Source = Literal["analysis", "recurring", "user", "item_remind"]
 Detail = Literal["compact", "full"]
@@ -129,30 +129,29 @@ def build_analysis_item(
 ) -> dict[str, Any]:
     """Analysis event as a calendar item.
 
+    Starts from the results-API wire shape (``serialize_analysis_event``) so the
+    field mapping exists once, then overlays the calendar-window conventions:
+    coerced ``id``/``taskId``/``title`` strings, ``startTime`` falling back to
+    the source/created time, blank ``endTime``/``location`` as ``None``, and the
+    ``source``/``isAllDay``/``timezone`` discriminators.
+
     Compact rows omit ``dismissed``: list windows stamp it in bulk afterwards
     via ``attach_dismissed_flag``.
     """
-    item = {
-        "id": str(row["id"]),
-        "taskId": str(row.get("task_id") or ""),
-        "title": str(row.get("title") or ""),
-        "startTime": event_sort_time(row),
-        "endTime": _text_or_none(row.get("end_time")),
-        "location": _text_or_none(row.get("location")),
-        "source": "analysis",
-        "isAllDay": False,
-        "timezone": None,
-        "body": row.get("body") or "",
-        "taskName": row.get("task_name"),
-        "participants": parse_json_list(row.get("participants_json")),
-        "sourcePlatform": row.get("source_platform"),
-        "sourceChannelName": row.get("source_channel_name"),
-        "sourceMessageId": row.get("source_message_id"),
-        "createdAt": row.get("created_at"),
-        "dismissed": bool(dismissed),
-        "important": False,
-        "emoji": emoji_from_row(row),
-    }
+    item = serialize_analysis_event(row, dismissed=dismissed)
+    item.update(
+        {
+            "id": str(row["id"]),
+            "taskId": str(row.get("task_id") or ""),
+            "title": str(row.get("title") or ""),
+            "startTime": event_sort_time(row),
+            "endTime": _text_or_none(row.get("end_time")),
+            "location": _text_or_none(row.get("location")),
+            "source": "analysis",
+            "isAllDay": False,
+            "timezone": None,
+        }
+    )
     return _project(item, detail, _COMPACT_ANALYSIS_FIELDS)
 
 

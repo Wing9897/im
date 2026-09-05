@@ -37,3 +37,8 @@ def parse_iso(value: Any, *, end_of_day: bool = False) -> datetime | None:
 def to_iso_z(dt: datetime) -> str:
     """Format a datetime as ``YYYY-MM-DDTHH:MM:SSZ`` (UTC)."""
     return dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def utc_now_iso() -> str:
+    """Current UTC time in the same ``Z`` form as :func:`to_iso_z` (second precision)."""
+    return to_iso_z(datetime.now(UTC))
