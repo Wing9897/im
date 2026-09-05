@@ -5,7 +5,8 @@ import { makeAnalysisEvent } from "../../test/analysisEventFixtures";
 
 const MAP_PAGE_CLASS = "im-intelligence-page";
 
-const { mockFetchEvents, runtimeState } = vi.hoisted(() => ({
+const { MOCK_MAP_VIEW_TEST_ID, mockFetchEvents, runtimeState } = vi.hoisted(() => ({
+  MOCK_MAP_VIEW_TEST_ID: "mock-map-view",
   mockFetchEvents: vi.fn(),
   runtimeState: {
     lastAnalysisEvent: null as {
@@ -51,6 +52,13 @@ vi.mock("../../hooks/usePipelineReadiness", () => ({
     showChecklist: false,
     loading: false,
   }),
+}));
+
+// IntelligenceContentArea lazy-loads MapView (react-leaflet → leaflet, which
+// touches `window` at module eval). Mock it so the lazy chunk never pulls in
+// leaflet, and so the chunk can be settled inside act() before teardown.
+vi.mock("./map/MapView", () => ({
+  MapView: () => <div data-testid={MOCK_MAP_VIEW_TEST_ID} />,
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -159,6 +167,22 @@ describe("IntelligencePage", () => {
     vi.useRealTimers();
   });
 
+  /**
+   * Resolve the React.lazy MapView boundary inside act() so the dynamic import
+   * does not land after the jsdom environment is torn down. Bounded, condition
+   * driven (not a fixed sleep); the map test runs on real timers.
+   */
+  async function settleLazyMapView() {
+    const isMapMounted = () =>
+      container.querySelector(`[data-testid="${MOCK_MAP_VIEW_TEST_ID}"]`) !== null;
+    for (let attempt = 0; attempt < 50 && !isMapMounted(); attempt += 1) {
+      await act(async () => {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      });
+    }
+    expect(isMapMounted()).toBe(true);
+  }
+
   it("refetches items when an event analysis completes", async () => {
     await act(async () => {
       root = createRoot(container);
@@ -166,6 +190,7 @@ describe("IntelligencePage", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+    await settleLazyMapView();
 
     expect(mockFetchEvents.mock.calls).toHaveLength(1);
 
@@ -278,6 +303,7 @@ describe("IntelligencePage", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+    await settleLazyMapView();
 
     const cardButton = Array.from(container.querySelectorAll('[role="tab"]')).find(
       (tab) => tab.textContent?.includes("卡片"),
