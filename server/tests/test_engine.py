@@ -10,8 +10,8 @@ import pytest
 from server.analyzer.engine import AnalysisEngine
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.analyzer.prompt import AssembledPrompt
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.prompts.assistant import TASK_CONFIG_SCHEMA_PROMPT
+from server.tests.seed import SEED_LLM_PROFILE_ID
 from server.util import utc_now_iso
 
 
@@ -69,19 +69,19 @@ async def test_json_mode_for_analyze_honors_profile_json_mode(app) -> None:
     # against is_openai_json_mode_enabled in test_util.py.
     await db.execute(
         "UPDATE llm_profiles SET json_mode = 'disabled', updated_at = ? WHERE id = ?",
-        (utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+        (utc_now_iso(), SEED_LLM_PROFILE_ID),
     )
-    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is False
+    assert await engine._json_mode_for_analyze(mock_client, SEED_LLM_PROFILE_ID) is False
 
     for value in ("json_schema", "json_object"):
         await db.execute(
             "UPDATE llm_profiles SET json_mode = ?, updated_at = ? WHERE id = ?",
-            (value, utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+            (value, utc_now_iso(), SEED_LLM_PROFILE_ID),
         )
-        assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
+        assert await engine._json_mode_for_analyze(mock_client, SEED_LLM_PROFILE_ID) is True
 
     mock_client.provider = "ollama"
-    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
+    assert await engine._json_mode_for_analyze(mock_client, SEED_LLM_PROFILE_ID) is True
 
 
 async def test_engine_provider_and_model_are_empty_before_first_use(app) -> None:
@@ -103,14 +103,14 @@ async def test_concurrent_first_use_creates_one_llm_client(app) -> None:
         patch.object(
             AnalysisEngine,
             "_config_hash_for_profile",
-            AsyncMock(return_value=(DEFAULT_LLM_PROFILE_ID, "same-config")),
+            AsyncMock(return_value=(SEED_LLM_PROFILE_ID, "same-config")),
         ),
         patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(side_effect=create_client)) as from_profile,
     ):
         clients = await asyncio.gather(*(engine._ensure_client(None) for _ in range(3)))
 
     assert clients == [mock_client, mock_client, mock_client]
-    from_profile.assert_awaited_once_with(app.state.db, DEFAULT_LLM_PROFILE_ID)
+    from_profile.assert_awaited_once_with(app.state.db, SEED_LLM_PROFILE_ID)
 
 
 async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:

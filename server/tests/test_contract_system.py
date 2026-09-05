@@ -98,11 +98,11 @@ async def test_ai_engine_status_unbound_assistant_slot(client, app):
 
 
 async def test_ai_engine_status_incomplete_bound_profile(client, app):
-    from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
+    from server.tests.seed import SEED_LLM_PROFILE_ID
 
     await app.state.db.execute(
         "UPDATE llm_profiles SET model = '' WHERE id = ?",
-        (DEFAULT_LLM_PROFILE_ID,),
+        (SEED_LLM_PROFILE_ID,),
     )
     resp = await client.get("/api/v1/system/ai-engine/status")
     assert resp.status_code == 200

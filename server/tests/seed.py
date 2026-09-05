@@ -6,9 +6,12 @@ import json
 from typing import Any
 
 from server.collector.email_config import build_email_credentials, email_channel_platform_id
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES
 from server.secrets import protect_text
+
+#: Test-only LLM profile id. Fresh DDL seeds zero profiles; production never
+#: invents a fallback id, so the fixture owns this name.
+SEED_LLM_PROFILE_ID = "seed-profile"
 
 NOW = "2026-07-01T12:00:00+00:00"
 EARLIER = "2026-07-01T11:00:00+00:00"
@@ -68,14 +71,14 @@ async def ensure_default_llm_profile(db: Any) -> str:
     """
     exists = await db.fetch_value(
         "SELECT id FROM llm_profiles WHERE id = ?",
-        (DEFAULT_LLM_PROFILE_ID,),
+        (SEED_LLM_PROFILE_ID,),
     )
     if exists:
-        return DEFAULT_LLM_PROFILE_ID
+        return SEED_LLM_PROFILE_ID
     await db.execute(
         LLM_PROFILE_INSERT_SQL,
         (
-            DEFAULT_LLM_PROFILE_ID,
+            SEED_LLM_PROFILE_ID,
             "Test Ollama",
             "ollama",
             "http://localhost:11434",
@@ -89,7 +92,7 @@ async def ensure_default_llm_profile(db: Any) -> str:
             NOW,
         ),
     )
-    return DEFAULT_LLM_PROFILE_ID
+    return SEED_LLM_PROFILE_ID
 
 
 async def seed_database(db: Any) -> None:
@@ -100,7 +103,7 @@ async def seed_database(db: Any) -> None:
     await db.execute(
         LLM_PROFILE_INSERT_SQL,
         (
-            DEFAULT_LLM_PROFILE_ID,
+            SEED_LLM_PROFILE_ID,
             "Test Ollama",
             "ollama",
             "http://localhost:11434",
@@ -119,7 +122,7 @@ async def seed_database(db: Any) -> None:
             "INSERT INTO llm_staff_instances ("
             "id, staff_class, profile_id, display_name, is_active, created_at, updated_at"
             ") VALUES (?, ?, ?, NULL, 1, ?, ?)",
-            (f"staff-default-{staff_class}", staff_class, DEFAULT_LLM_PROFILE_ID, now, now),
+            (f"staff-default-{staff_class}", staff_class, SEED_LLM_PROFILE_ID, now, now),
         )
     # Singleton global slots (assistant / A2A / task advisor) → default test profile.
     for key in (
@@ -131,7 +134,7 @@ async def seed_database(db: Any) -> None:
             "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
             "updated_at = excluded.updated_at",
-            (key, DEFAULT_LLM_PROFILE_ID, now),
+            (key, SEED_LLM_PROFILE_ID, now),
         )
 
     # ── sources ──────────────────────────────────────────────────────
@@ -366,7 +369,7 @@ async def seed_database(db: Any) -> None:
                 policy.get("cap_read_items", 1),
                 policy["output_calendar"],
                 policy["output_analysis_events"],
-                "__default__",
+                SEED_LLM_PROFILE_ID,
                 now,
                 now,
             ),

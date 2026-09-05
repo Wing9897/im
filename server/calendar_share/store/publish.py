@@ -5,11 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from server.calendar_share.auto_sync_config import (
-    DEFAULT_AUTO_SYNC_INTERVAL_SECONDS,
-    normalize_auto_sync_interval_seconds,
-    read_unified_auto_sync,
-)
+from server.calendar_share.auto_sync_config import read_unified_auto_sync
 from server.calendar_share.constants import (
     LISTING_PRIVATE_GROUP,
     VISIBILITY_GRANT,
@@ -27,7 +23,7 @@ _EMPTY_FINGERPRINTS = {"events": {}, "series": {}}
 PUBLISH_ROW_COLUMNS = (
     "workset_id, slug, public_visibility, grants_json, pending_sync, last_sync_at, "
     "last_error, last_grants_hash, last_server_events_hash, last_public_visibility, "
-    "last_description, last_cover, last_fingerprints_json, auto_sync, auto_sync_interval_seconds"
+    "last_description, last_cover, last_fingerprints_json"
 )
 
 
@@ -95,7 +91,7 @@ def _clean_workset_entry(workset_id: str, raw: Any) -> dict[str, Any] | None:
     if not slug_raw:
         return None
     try:
-        slug = normalize_slug(slug_raw, allow_legacy=True)
+        slug = normalize_slug(slug_raw)
     except Exception:
         return None
     visibility = canonicalize_listing_visibility(raw.get("publicVisibility") or LISTING_PRIVATE_GROUP)
@@ -106,10 +102,6 @@ def _clean_workset_entry(workset_id: str, raw: Any) -> dict[str, Any] | None:
     last_public_visibility = try_canonicalize_listing_visibility(raw.get("lastPublicVisibility"))
     last_description = str(raw.get("lastDescription") or "")
     last_cover = str(raw.get("lastCover") or "")
-    auto_sync = bool(raw.get("autoSync", True))
-    auto_sync_interval = normalize_auto_sync_interval_seconds(
-        raw.get("autoSyncIntervalSeconds", DEFAULT_AUTO_SYNC_INTERVAL_SECONDS)
-    )
     return {
         "worksetId": workset_id,
         "slug": slug,
@@ -124,8 +116,6 @@ def _clean_workset_entry(workset_id: str, raw: Any) -> dict[str, Any] | None:
         "lastDescription": last_description,
         "lastCover": last_cover,
         "lastFingerprints": _clean_fingerprints(raw.get("lastFingerprints")),
-        "autoSync": auto_sync,
-        "autoSyncIntervalSeconds": auto_sync_interval,
     }
 
 
@@ -149,10 +139,6 @@ def _sql_row_to_entry(row: dict[str, Any]) -> dict[str, Any] | None:
             "lastDescription": row.get("last_description") or "",
             "lastCover": row.get("last_cover") or "",
             "lastFingerprints": fingerprints,
-            "autoSync": bool(row.get("auto_sync", 1)),
-            "autoSyncIntervalSeconds": normalize_auto_sync_interval_seconds(
-                row.get("auto_sync_interval_seconds", DEFAULT_AUTO_SYNC_INTERVAL_SECONDS)
-            ),
         },
     )
 
@@ -163,7 +149,7 @@ def _with_household_auto_sync(
     auto_sync: bool,
     interval_seconds: int,
 ) -> dict[str, Any]:
-    """Row columns are a cache of household ``system_config`` auto-sync."""
+    """Wire entries carry household ``system_config`` auto-sync (never stored per row)."""
     return {**entry, "autoSync": auto_sync, "autoSyncIntervalSeconds": interval_seconds}
 
 
@@ -189,8 +175,6 @@ def empty_workset_entry(workset_id: str, *, slug: str = "") -> dict[str, Any]:
         "lastDescription": "",
         "lastCover": "",
         "lastFingerprints": {"events": {}, "series": {}},
-        "autoSync": True,
-        "autoSyncIntervalSeconds": DEFAULT_AUTO_SYNC_INTERVAL_SECONDS,
     }
 
 
@@ -227,7 +211,6 @@ async def list_publish_joined(db: Database) -> list[dict[str, Any]]:
             p.workset_id, p.slug, p.public_visibility, p.grants_json, p.pending_sync,
             p.last_sync_at, p.last_error, p.last_grants_hash, p.last_server_events_hash,
             p.last_public_visibility, p.last_description, p.last_cover, p.last_fingerprints_json,
-            p.auto_sync, p.auto_sync_interval_seconds,
             w.name AS workset_name, w.description AS workset_description,
             w.cover_data_url AS workset_cover, w.is_system AS workset_is_system
         FROM calendar_share_publish p
@@ -281,8 +264,6 @@ async def get_workset_entry(db: Database, workset_id: str) -> dict[str, Any]:
 
 
 async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, Any]) -> dict[str, Any]:
-    household_on, household_interval = await read_unified_auto_sync(db)
-    entry = _with_household_auto_sync(entry, auto_sync=household_on, interval_seconds=household_interval)
     cleaned = _clean_workset_entry(workset_id, {**empty_workset_entry(workset_id), **entry, "worksetId": workset_id})
     if cleaned is None:
         raise http_error(422, "Invalid workset publish mapping", error_code=VALIDATION_ERROR)
@@ -291,9 +272,8 @@ async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, A
         INSERT INTO calendar_share_publish (
             workset_id, slug, public_visibility, grants_json, pending_sync,
             last_sync_at, last_error, last_grants_hash, last_server_events_hash,
-            last_public_visibility, last_description, last_cover, last_fingerprints_json,
-            auto_sync, auto_sync_interval_seconds
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            last_public_visibility, last_description, last_cover, last_fingerprints_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(workset_id) DO UPDATE SET
             slug = excluded.slug,
             public_visibility = excluded.public_visibility,
@@ -306,9 +286,7 @@ async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, A
             last_public_visibility = excluded.last_public_visibility,
             last_description = excluded.last_description,
             last_cover = excluded.last_cover,
-            last_fingerprints_json = excluded.last_fingerprints_json,
-            auto_sync = excluded.auto_sync,
-            auto_sync_interval_seconds = excluded.auto_sync_interval_seconds
+            last_fingerprints_json = excluded.last_fingerprints_json
         """,
         (
             workset_id,
@@ -324,11 +302,10 @@ async def upsert_workset_entry(db: Database, workset_id: str, entry: dict[str, A
             cleaned["lastDescription"],
             cleaned["lastCover"],
             json.dumps(cleaned["lastFingerprints"], ensure_ascii=False, separators=(",", ":")),
-            1 if cleaned["autoSync"] else 0,
-            cleaned["autoSyncIntervalSeconds"],
         ),
     )
-    return cleaned
+    household_on, household_interval = await read_unified_auto_sync(db)
+    return _with_household_auto_sync(cleaned, auto_sync=household_on, interval_seconds=household_interval)
 
 
 async def delete_workset_entry(db: Database, workset_id: str) -> None:

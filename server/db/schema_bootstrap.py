@@ -1,11 +1,11 @@
 """Schema bootstrap: create current DDL, walk FLOOR..CURRENT-1, or hard-reject.
 
-Stamp **6** is both the schema floor (``SCHEMA_FLOOR``) and current stamp.
+Stamp **7** is both the schema floor (``SCHEMA_FLOOR``) and current stamp.
 Empty databases are created from the authoritative domain DDL aggregated by
 ``schema.py``. Exact unstamped current fingerprints are stamped
 (``PRAGMA user_version`` = current stamp). ``FLOOR <= version < CURRENT``
 backs up once and applies additive ``SCHEMA_MIGRATIONS`` (empty while floor
-equals current). Stamp 1–5 files hard-reject — backup then reset. Future
+equals current). Stamp 1–6 files hard-reject — backup then reset. Future
 stamps (``version > CURRENT``, including retired 27/45) refuse with an
 update-the-app message. Corrupt / lookalike fingerprints hard-reject with the
 explicit reset command. Startup never silently deletes or rebuilds a database.
@@ -72,30 +72,6 @@ async def apply_authoritative_ddl(conn: aiosqlite.Connection) -> None:
     await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
 
 
-async def _remap_legacy_listing_rows(conn: aiosqlite.Connection) -> None:
-    """One-shot UPDATE of leftover listing aliases. No-op when none remain."""
-    await conn.execute(
-        """
-        UPDATE calendar_share_publish
-        SET
-          public_visibility = CASE public_visibility
-            WHEN 'off' THEN 'private_group'
-            WHEN 'details' THEN 'public'
-            WHEN 'busy' THEN 'public_busy'
-            ELSE public_visibility
-          END,
-          last_public_visibility = CASE last_public_visibility
-            WHEN 'off' THEN 'private_group'
-            WHEN 'details' THEN 'public'
-            WHEN 'busy' THEN 'public_busy'
-            ELSE last_public_visibility
-          END
-        WHERE public_visibility IN ('off', 'details', 'busy')
-           OR last_public_visibility IN ('off', 'details', 'busy')
-        """
-    )
-
-
 async def ensure_supported_schema(
     conn: aiosqlite.Connection,
     db_path: str | Path,
@@ -108,7 +84,6 @@ async def ensure_supported_schema(
 
     if not fingerprint.tables and version == 0:
         await apply_authoritative_ddl(conn)
-        await _remap_legacy_listing_rows(conn)
         await conn.commit()
         return
 
@@ -117,13 +92,10 @@ async def ensure_supported_schema(
             _require_current_structure(fingerprint)
         except SchemaEvolutionError as exc:
             raise _reset_required(str(exc)) from exc
-        await _remap_legacy_listing_rows(conn)
-        await conn.commit()
         return
 
     if version == 0 and not _fingerprint_mismatch_categories(fingerprint):
         await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
-        await _remap_legacy_listing_rows(conn)
         await conn.commit()
         return
 
@@ -140,7 +112,6 @@ async def ensure_supported_schema(
             _require_current_structure(migrated)
         except SchemaEvolutionError as exc:
             raise _reset_required(str(exc)) from exc
-        await _remap_legacy_listing_rows(conn)
         await conn.commit()
         return
 

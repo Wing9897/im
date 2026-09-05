@@ -16,8 +16,6 @@ from server.errors import INVALID_CALENDAR_SLUG, VALIDATION_ERROR, http_error
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 _SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-#: Stored / remote slugs may start or end with underscore (pre-fix ``__general__``).
-_LEGACY_SLUG_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 _HANDLE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
@@ -72,10 +70,9 @@ def default_publish_slug(workset_title: str, workset_id: str) -> str:
     return "calendar"
 
 
-def normalize_slug(raw: str, *, allow_legacy: bool = False) -> str:
+def normalize_slug(raw: str) -> str:
     text = (raw or "").strip()
-    pattern = _LEGACY_SLUG_RE if allow_legacy else _SLUG_RE
-    if not text or len(text) > SLUG_MAX_LEN or not pattern.fullmatch(text):
+    if not text or len(text) > SLUG_MAX_LEN or not _SLUG_RE.fullmatch(text):
         raise http_error(
             422,
             INVALID_SLUG_MESSAGE,
@@ -93,4 +90,4 @@ def parse_calendar_path(raw: str) -> tuple[str, str]:
     parts = [p for p in text.split("/") if p]
     if len(parts) != 2:
         raise http_error(422, "Expected handle/slug", error_code=VALIDATION_ERROR)
-    return normalize_handle(parts[0]), normalize_slug(parts[1], allow_legacy=True)
+    return normalize_handle(parts[0]), normalize_slug(parts[1])

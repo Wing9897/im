@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler (schema floor 6 / current stamp 6): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler (schema floor 7 / current stamp 7): [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md). See also [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -70,7 +70,7 @@ Pointer only — stamp / semver / floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BAS
 
 ## LLM simplifications (intentional)
 
-Still in force under schema floor **6** / current stamp **6** / `SCHEMA_SEMVER` `1.5.0`. Do **not** restore without a new contract:
+Still in force under schema floor **7** / current stamp **7** / `SCHEMA_SEMVER` `1.6.0`. Do **not** restore without a new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -79,9 +79,9 @@ Still in force under schema floor **6** / current stamp **6** / `SCHEMA_SEMVER` 
 | No `llm_profiles.is_default` column; no make-default API | Resolve via **hard-bound global slots** only |
 | No `assistant` in `llm_staff_instances` | Staff table = task modes (`leaderboard`／`intel_event`／`agent`) only |
 | Global slots hard-bind (assistant／liaison／taskEditor) | Unbound slot → hard-fail (assistant same as liaison); UI on `/settings/ai/provider` + `GET/PUT /api/v1/llm/global-slots` |
-| Fresh DDL seeds **zero** profiles | Tests use ephemeral profile ids; production never invents `__default__` |
+| Fresh DDL seeds **zero** profiles | Tests seed `SEED_LLM_PROFILE_ID` (`server/tests/seed.py`); production has no fallback profile id constant |
 
-**Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns); Viewer `/viewer/*` as read-only diagnostics (Dashboard stays the operable surface — not duplicate debt).
+**Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `SEED_LLM_PROFILE_ID` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns); Viewer `/viewer/*` as read-only diagnostics (Dashboard stays the operable surface — not duplicate debt).
 
 ### Debt purge notes
 

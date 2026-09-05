@@ -103,7 +103,7 @@ async def _insert_ingested(db: Any, body: IngestMessageBody) -> dict | None:
             "channelId (or platformId) is required",
             error_code=VALIDATION_ERROR,
         )
-    timestamp = body.timestamp or body.messageTime or utc_now_iso()
+    timestamp = body.timestamp or utc_now_iso()
 
     # An unknown sourceId must not violate the FK.
     source_id = body.sourceId

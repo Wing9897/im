@@ -21,10 +21,10 @@ export type ServerStatusKey = 'Running' | 'Stopped' | 'Error';
  * Must match ``server/db/schema_inspect.py`` (drift-tested by architecture-invariants).
  * Bump these when SCHEMA stamp / SemVer changes — do not hardcode elsewhere in this file.
  */
-export const SHELL_SCHEMA_BASELINE = 6;
-export const SHELL_SCHEMA_SEMVER = '1.5.0';
-/** Schema floor (must match ``SCHEMA_FLOOR``). Stamp 6 is current; stamp 1–5 reject. */
-export const SHELL_SCHEMA_FLOOR = 6;
+export const SHELL_SCHEMA_BASELINE = 7;
+export const SHELL_SCHEMA_SEMVER = '1.6.0';
+/** Schema floor (must match ``SCHEMA_FLOOR``). Stamp 7 is current; stamp 1–6 reject. */
+export const SHELL_SCHEMA_FLOOR = 7;
 
 export type ShellCopy = {
   showWindow: string;
@@ -89,7 +89,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   if (locale === 'zh-Hans') {
     return (
       `本地数据库结构不兼容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
-      `SCHEMA_MIGRATIONS 为空。stamp 1–5 请先备份再重置）。\n\n` +
+      `SCHEMA_MIGRATIONS 为空。stamp 1–6 请先备份再重置）。\n\n` +
       '未来 stamp：请升级应用。坏库／无法识别：请先备份，再于启动对话框选择“重置数据库”，完成后重新启动，或运行：\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       '然后重新启动应用程序。'
@@ -98,7 +98,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   if (locale === 'en') {
     return (
       `The local database schema is incompatible (schema baseline ${baseline} / schemaSemver ${semver} / SCHEMA_FLOOR ${floor}; ` +
-      `SCHEMA_MIGRATIONS is empty. Stamp 1–5: back up, then reset).\n\n` +
+      `SCHEMA_MIGRATIONS is empty. Stamp 1–6: back up, then reset).\n\n` +
       'Future stamps: update the application. Corrupt or unrecognized databases: back up, then choose “Reset database” in the startup dialog and restart, or run:\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       'Then restart the app.'
@@ -106,7 +106,7 @@ function schemaHardRejectHint(locale: ShellLocale): string {
   }
   return (
     `本機資料庫結構不相容（schema baseline ${baseline}／schemaSemver ${semver}／SCHEMA_FLOOR ${floor}；` +
-    `SCHEMA_MIGRATIONS 為空。stamp 1–5 請先備份再重置）。\n\n` +
+    `SCHEMA_MIGRATIONS 為空。stamp 1–6 請先備份再重置）。\n\n` +
       '未來 stamp：請升級應用。壞庫／無法識別：請先備份，再於啟動對話框選擇「重置資料庫」，完成後重新啟動，或執行：\n' +
       'scripts/reset_local_databases.py --apply\n\n' +
       '然後重新啟動應用程式。'

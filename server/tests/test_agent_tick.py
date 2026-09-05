@@ -10,7 +10,6 @@ import pytest
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.config import set_configs
 from server.db.database import Database, TransactionDb
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import insert_analysis_task
@@ -21,6 +20,7 @@ from server.scheduler.agent_tick import (
 )
 from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster
+from server.tests.seed import SEED_LLM_PROFILE_ID
 from server.util import new_id, utc_now_iso
 
 _MESSAGE_SUMMARY_LIMIT = MESSAGE_SUMMARY_LIMIT
@@ -46,7 +46,7 @@ async def _insert_agent_task(
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             agent_wave_interval_seconds=agent_wave_interval_seconds,
-            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
+            llm_profile_id=SEED_LLM_PROFILE_ID,
             now=now,
             **policy,
         )

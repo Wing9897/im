@@ -13,6 +13,7 @@ from server.agent.timeouts import (
     agent_wall_timeout_seconds,
 )
 from server.analyzer.llm_client import ConfigurableLlmClient
+from server.tests.seed import SEED_LLM_PROFILE_ID
 
 
 def test_agent_round_and_wall_cap_constants() -> None:
@@ -86,7 +87,7 @@ async def test_agent_compacts_long_client_history(app) -> None:
     db = app.state.db
     await db.execute(
         "UPDATE llm_profiles SET web_search_enabled = 0, updated_at = ? WHERE id = ?",
-        ("2026-07-01T12:00:00+00:00", "__default__"),
+        ("2026-07-01T12:00:00+00:00", SEED_LLM_PROFILE_ID),
     )
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
     mock_llm.complete = AsyncMock(return_value={"text": json.dumps({"message": "ok"})})
@@ -238,7 +239,7 @@ async def test_agent_retries_without_json_mode_when_provider_rejects_it(app) -> 
     runtime = AgentRuntime(db, mock_llm)
     await db.execute(
         "UPDATE llm_profiles SET json_mode = 'json_schema', updated_at = ? WHERE id = ?",
-        ("2026-07-01T12:00:00+00:00", "__default__"),
+        ("2026-07-01T12:00:00+00:00", SEED_LLM_PROFILE_ID),
     )
     result = await runtime.chat([{"role": "user", "content": "你好"}])
 

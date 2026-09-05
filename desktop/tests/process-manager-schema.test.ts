@@ -12,7 +12,7 @@ SchemaBaselineError: Unsupported database schema version 2; floor 6
 `;
 
 const FUTURE_TRACE =
-  'Unsupported database schema version 27; this application supports stamp 6. Update the application. Reset is a last resort: python scripts/reset_local_databases.py --apply';
+  'Unsupported database schema version 27; this application supports stamp 7. Update the application. Reset is a last resort: python scripts/reset_local_databases.py --apply';
 
 describe('process-manager-schema', () => {
   it('detects packaged stamp-2 floor rejects from stderr', () => {

@@ -12,7 +12,11 @@ from server.db.schema import DDL
 _DEFAULT_LOG = ("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test")
 _STAMP3_WORKSET_COLUMNS = ("description",)
 _STAMP5_WORKSET_COLUMNS = ("cover_data_url",)
-_STAMP6_PUBLISH_COLUMNS = ("auto_sync", "auto_sync_interval_seconds")
+#: Stamp-6-only household auto-sync cache columns (dropped again at stamp 7).
+_STAMP6_PUBLISH_COLUMNS_DDL = (
+    "auto_sync INTEGER NOT NULL DEFAULT 1",
+    "auto_sync_interval_seconds INTEGER NOT NULL DEFAULT 60",
+)
 
 
 async def _drop_workset_stamp3_columns(conn: aiosqlite.Connection) -> None:
@@ -32,10 +36,10 @@ async def _drop_calendar_share_publish(conn: aiosqlite.Connection) -> None:
     await conn.execute("DROP TABLE IF EXISTS calendar_share_publish")
 
 
-async def _drop_stamp6_auto_sync_columns(conn: aiosqlite.Connection) -> None:
-    """Strip stamp-6 household auto-sync cache columns so stamp-5 fixtures match published v5."""
-    for column in _STAMP6_PUBLISH_COLUMNS:
-        await conn.execute(f"ALTER TABLE calendar_share_publish DROP COLUMN {column}")
+async def _add_stamp6_auto_sync_columns(conn: aiosqlite.Connection) -> None:
+    """Re-add the stamp-6 household auto-sync cache columns so fixtures match published v6."""
+    for column_ddl in _STAMP6_PUBLISH_COLUMNS_DDL:
+        await conn.execute(f"ALTER TABLE calendar_share_publish ADD COLUMN {column_ddl}")
 
 
 async def logical_snapshot(path: str) -> dict[str, Any]:
@@ -169,12 +173,11 @@ async def make_stamp_4_db(
     *,
     log_rows: list[tuple[str, str, str, str]] | None = None,
 ) -> None:
-    """Stamp-4 shape: publish table present, workset cover and stamp-6 auto-sync cache absent."""
+    """Stamp-4 shape: publish table present, workset cover absent."""
     await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
     conn = await aiosqlite.connect(path)
     try:
         await _drop_workset_stamp5_columns(conn)
-        await _drop_stamp6_auto_sync_columns(conn)
         await conn.execute("UPDATE schema_meta SET schema_semver = '1.3.0' WHERE id = 1")
         await conn.execute("PRAGMA user_version=4")
         await conn.commit()
@@ -187,13 +190,29 @@ async def make_stamp_5_db(
     *,
     log_rows: list[tuple[str, str, str, str]] | None = None,
 ) -> None:
-    """Stamp-5 shape: publish table present, household auto-sync columns absent."""
+    """Stamp-5 shape: current structure stamped 5 with its published semver."""
     await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
     conn = await aiosqlite.connect(path)
     try:
-        await _drop_stamp6_auto_sync_columns(conn)
         await conn.execute("UPDATE schema_meta SET schema_semver = '1.4.0' WHERE id = 1")
         await conn.execute("PRAGMA user_version=5")
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def make_stamp_6_db(
+    path: str,
+    *,
+    log_rows: list[tuple[str, str, str, str]] | None = None,
+) -> None:
+    """Stamp-6 shape: publish table carries the retired household auto-sync cache columns."""
+    await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
+    conn = await aiosqlite.connect(path)
+    try:
+        await _add_stamp6_auto_sync_columns(conn)
+        await conn.execute("UPDATE schema_meta SET schema_semver = '1.5.0' WHERE id = 1")
+        await conn.execute("PRAGMA user_version=6")
         await conn.commit()
     finally:
         await conn.close()

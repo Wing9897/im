@@ -31,8 +31,8 @@ async def test_stats_pending_markers_not_counted_as_analyzed(app, client):
 async def test_stats_agent_mode_zeros_marker_counts(app, client):
     """Agent progress is cursor-based; marker stats must stay zero."""
     from server.db.database import TransactionDb
-    from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
     from server.queries.tasks_queries import insert_analysis_task
+    from server.tests.seed import SEED_LLM_PROFILE_ID
 
     db = app.state.db
     task_id = new_id()
@@ -47,7 +47,7 @@ async def test_stats_agent_mode_zeros_marker_counts(app, client):
             analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
-            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
+            llm_profile_id=SEED_LLM_PROFILE_ID,
             now=now,
             trigger_mode="message_cursor",
             cap_calendar_read=1,

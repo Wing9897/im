@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.llm_staff_classes import LLM_STAFF_CLASSES
 from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WEB_SEARCH_SECRET_WIRE_NAMES
 from server.secrets import MASKED_SECRET
 from server.tests.contract_helpers import assert_keys
-from server.tests.seed import LLM_PROFILE_INSERT_SQL
+from server.tests.seed import LLM_PROFILE_INSERT_SQL, SEED_LLM_PROFILE_ID
 
 PROFILE_KEYS = [
     "id",
@@ -44,7 +43,7 @@ async def test_list_profiles_includes_seeded_profile_and_task_staff(client):
     assert resp.status_code == 200
     profiles = resp.json()
     assert len(profiles) >= 1
-    seeded = next(p for p in profiles if p["id"] == DEFAULT_LLM_PROFILE_ID)
+    seeded = next(p for p in profiles if p["id"] == SEED_LLM_PROFILE_ID)
     assert_keys(seeded, PROFILE_KEYS, "LlmProfile")
     assert "isDefault" not in seeded
     assert seeded["provider"] == "ollama"
@@ -56,7 +55,7 @@ async def test_list_profiles_includes_seeded_profile_and_task_staff(client):
     for row in staff:
         assert_keys(row, STAFF_KEYS, "LlmStaffInstance")
         assert row["staffClass"] != "assistant"
-    classes = {row["staffClass"] for row in staff if row["profileId"] == DEFAULT_LLM_PROFILE_ID}
+    classes = {row["staffClass"] for row in staff if row["profileId"] == SEED_LLM_PROFILE_ID}
     assert classes == set(LLM_STAFF_CLASSES)
 
 
@@ -230,7 +229,7 @@ async def test_task_create_defaults_llm_profile_id(client):
     )
     assert create.status_code == 201
     body = create.json()
-    assert body["llmProfileId"] == DEFAULT_LLM_PROFILE_ID
+    assert body["llmProfileId"] == SEED_LLM_PROFILE_ID
 
     # Explicit override
     create2 = await client.post(
@@ -242,11 +241,11 @@ async def test_task_create_defaults_llm_profile_id(client):
             "analysisTimeRange": "all",
             "channelIds": [],
             "scheduleRrule": "FREQ=DAILY",
-            "llmProfileId": DEFAULT_LLM_PROFILE_ID,
+            "llmProfileId": SEED_LLM_PROFILE_ID,
         },
     )
     assert create2.status_code == 201
-    assert create2.json()["llmProfileId"] == DEFAULT_LLM_PROFILE_ID
+    assert create2.json()["llmProfileId"] == SEED_LLM_PROFILE_ID
 
 
 async def test_task_create_rejects_incomplete_profile(client, app):
@@ -336,7 +335,7 @@ async def test_global_slots_list_and_rebind(client, app):
     payload = listed.json()
     assert {row["slot"] for row in payload["slots"]} == {"assistant", "liaison", "taskEditor"}
     for row in payload["slots"]:
-        assert row["profileId"] == DEFAULT_LLM_PROFILE_ID
+        assert row["profileId"] == SEED_LLM_PROFILE_ID
         assert "profileIsDefault" not in row
 
     create = await client.post(

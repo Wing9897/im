@@ -88,3 +88,11 @@ All `/api/v1/accounts*` paths stay 404. Live collector surface is `/api/v1/sourc
 | GET/PUT | `/api/v1/ui-prefs/schedule/emojis` | Entity `emoji` columns |
 | GET/PUT | `/api/v1/ui-prefs/tasks/emojis` | Entity `emoji` columns |
 | GET/PUT | `/api/v1/ui-prefs/voice-reminder/*` | `/api/v1/ui-prefs/notify/{settings,fired,history}` |
+
+## Retired request fields
+
+Request bodies use `extra="forbid"`, so these keys are now 422 rather than silently accepted.
+
+| Endpoint | Field | Replacement |
+|----------|-------|-------------|
+| `POST /api/v1/messages`, `POST /api/v1/messages/batch` | `messageTime` | `timestamp` |

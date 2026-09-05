@@ -83,7 +83,7 @@ async def add_remote_subscription(
         handle, slug = parse_calendar_path(body.path)
     else:
         handle = normalize_handle(body.handle or "")
-        slug = normalize_slug(body.slug or "", allow_legacy=True)
+        slug = normalize_slug(body.slug or "")
     own = await get_handle(db)
     if own and handle.casefold() == own.casefold():
         raise http_error(422, "Cannot subscribe to your own calendar", error_code=VALIDATION_ERROR)
@@ -112,7 +112,7 @@ async def delete_subscription(
         parsed_handle, parsed_slug = parse_calendar_path(path)
     else:
         parsed_handle = normalize_handle(handle or "")
-        parsed_slug = normalize_slug(slug or "", allow_legacy=True)
+        parsed_slug = normalize_slug(slug or "")
     if not await session_connected(db):
         raise http_error(401, "Not signed in to calendar share")
     await authorized_request(

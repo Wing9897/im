@@ -4132,8 +4132,6 @@ export interface components {
             content: string;
             /** Timestamp */
             timestamp?: string | null;
-            /** Messagetime */
-            messageTime?: string | null;
             /** Metadata */
             metadata?: {
                 [key: string]: unknown;

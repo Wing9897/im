@@ -12,10 +12,6 @@ from server.domain.llm_staff_classes import (
 )
 from server.domain.web_search_providers import WEB_SEARCH_PROVIDER_DEFAULT, WEB_SEARCH_SECRET_COLUMNS
 
-#: Legacy / test fixture id only — fresh DDL never seeds this row; production
-#: paths must not invent it as a fallback.
-DEFAULT_LLM_PROFILE_ID = "__default__"
-
 _SEARCH_API_KEY_COLUMNS_DDL = "\n".join(
     f"    {column} TEXT NOT NULL DEFAULT ''," for column in WEB_SEARCH_SECRET_COLUMNS
 )
@@ -66,7 +62,6 @@ CREATE INDEX IF NOT EXISTS idx_llm_staff_instances_class
 
 __all__ = [
     "DDL",
-    "DEFAULT_LLM_PROFILE_ID",
     "LLM_STAFF_CLASSES",
     "LLM_TASK_STAFF_CLASSES",
 ]

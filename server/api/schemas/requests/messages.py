@@ -23,7 +23,6 @@ class IngestMessageBody(BaseModel):
     senderName: str | None = Field(default=None, max_length=512)
     content: str = Field(default="", max_length=MAX_INGEST_CONTENT_LENGTH)
     timestamp: str | None = Field(default=None, max_length=64)
-    messageTime: str | None = Field(default=None, max_length=64)
     metadata: dict[str, Any] | None = None
 
 

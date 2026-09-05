@@ -17,11 +17,10 @@ from server.analyzer.llm_config import (
 )
 from server.analyzer.llm_json import extract_json_from_markdown, normalize_items, parse_json_response
 from server.analyzer.llm_providers import LlmClientError
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.web_search_providers import empty_web_search_api_keys
 from server.llm_global_slots import set_global_slot
 from server.secrets import protect_text
-from server.tests.seed import LLM_PROFILE_INSERT_SQL
+from server.tests.seed import LLM_PROFILE_INSERT_SQL, SEED_LLM_PROFILE_ID
 from server.util import utc_now_iso
 
 
@@ -67,7 +66,7 @@ async def _update_fixture_profile(
     api_key: str = "",
     base_url: str = "",
 ) -> None:
-    """Patch the seeded fixture profile (``DEFAULT_LLM_PROFILE_ID`` / ``__default__``)."""
+    """Patch the seeded fixture profile (``SEED_LLM_PROFILE_ID``)."""
     await db.execute(
         "UPDATE llm_profiles SET provider = ?, model = ?, api_key = ?, base_url = ?, updated_at = ? WHERE id = ?",
         (
@@ -76,7 +75,7 @@ async def _update_fixture_profile(
             protect_text(api_key) if api_key else "",
             base_url,
             utc_now_iso(),
-            DEFAULT_LLM_PROFILE_ID,
+            SEED_LLM_PROFILE_ID,
         ),
     )
 
@@ -96,7 +95,7 @@ async def test_load_llm_config_uses_fixture_profile(app) -> None:
     assert config["provider_raw"] == "ollama"
     assert config["model"] == "llama-default"
     assert config["base_url"] == "http://localhost:11434"
-    assert config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+    assert config["profile_id"] == SEED_LLM_PROFILE_ID
 
 
 async def test_load_llm_config_resolves_provider_aliases(app) -> None:
@@ -131,7 +130,7 @@ async def test_load_agent_llm_config_follows_assistant_global_slot(app) -> None:
 
     assert config["provider"] == "ollama"
     assert config["model"] == "llama-agent"
-    assert config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+    assert config["profile_id"] == SEED_LLM_PROFILE_ID
 
 
 async def test_load_agent_llm_config_follows_assistant_slot_elsewhere(app) -> None:
@@ -210,7 +209,7 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
 
     staff_config = await load_agent_llm_config(db)
     assert staff_config["model"] == "staff-llama"
-    assert staff_config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+    assert staff_config["profile_id"] == SEED_LLM_PROFILE_ID
 
 
 async def test_global_slots_resolve_assistant_liaison_task_editor_separately(app) -> None:
@@ -302,7 +301,7 @@ def test_config_from_draft_fields_merges_over_fallback() -> None:
         "web_search_enabled": True,
         "web_search_provider": "auto",
         "web_search_api_keys": empty_web_search_api_keys(),
-        "profile_id": DEFAULT_LLM_PROFILE_ID,
+        "profile_id": SEED_LLM_PROFILE_ID,
     }
     config = config_from_draft_fields(
         {

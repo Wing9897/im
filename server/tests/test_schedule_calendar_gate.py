@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from server.calendar.rrule import expand_calendar_occurrences
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.schedule import (
     may_calendar_expand_series,
     may_register_trigger,
     preset_to_trigger_rrule,
 )
 from server.queries.calendar_queries import fetch_active_recurring_series_rows
+from server.tests.seed import SEED_LLM_PROFILE_ID
 from server.util import utc_now_iso
 
 
@@ -29,7 +29,7 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
         "analysis_time_range, version, is_active, schedule_rrule, llm_profile_id, "
         "created_at, updated_at) "
         "VALUES (?, 'AI gate', 'Analyze', 'intel_event', 'all', 1, 1, ?, ?, ?, ?)",
-        (ai_id, preset_to_trigger_rrule("custom_seconds", "10"), DEFAULT_LLM_PROFILE_ID, now, now),
+        (ai_id, preset_to_trigger_rrule("custom_seconds", "10"), SEED_LLM_PROFILE_ID, now, now),
     )
     await db.execute(
         "INSERT INTO recurring_schedules "
@@ -73,7 +73,7 @@ async def test_calendar_window_http_excludes_ai_trigger_schedules(client, app) -
         "analysis_time_range, version, is_active, schedule_rrule, llm_profile_id, "
         "created_at, updated_at) "
         "VALUES (?, 'HTTP AI', 'Analyze', 'leaderboard', 'all', 1, 1, ?, ?, ?, ?)",
-        (ai_id, "FREQ=SECONDLY;INTERVAL=10", DEFAULT_LLM_PROFILE_ID, now, now),
+        (ai_id, "FREQ=SECONDLY;INTERVAL=10", SEED_LLM_PROFILE_ID, now, now),
     )
     await db.execute(
         "INSERT INTO recurring_schedules "
