@@ -1,7 +1,9 @@
-"""Weather provider orchestration, caching, and HTTP lifecycle.
+"""Weather provider orchestration, caching, and HTTP session lifecycle.
 
 Provider clients live in ``weather_providers``; shared HTTP in ``weather_http``.
-This module owns cache / failover / public ``get_forecast`` + lifespan.
+This module owns cache / failover / public ``get_forecast`` + the shared
+session context. It is framework-free: failures surface as
+:class:`WeatherServiceError` and ``api/routes/weather.py`` maps them to HTTP.
 """
 
 from __future__ import annotations
@@ -9,15 +11,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from typing import Any
 
 import aiohttp
-from fastapi import FastAPI
 
 from server.api.schemas.responses import WeatherForecastResponse
-from server.errors import http_error
 from server.services import weather_http
 from server.services.weather_http import WeatherProviderError
 from server.services.weather_providers import (
@@ -36,6 +37,16 @@ _FORECAST_CACHE: dict[tuple[str, date, date], tuple[float, dict[str, Any]]] = {}
 
 # Mirrored for tests that monkeypatch ``weather._HTTP_SESSION``.
 _HTTP_SESSION: aiohttp.ClientSession | None = None
+
+
+class WeatherServiceError(Exception):
+    """Forecast request failed; carries the HTTP status/code the route should emit."""
+
+    def __init__(self, status: int, message: str, *, error_code: str) -> None:
+        super().__init__(message)
+        self.status = status
+        self.message = message
+        self.error_code = error_code
 
 
 def _sync_http_session() -> None:
@@ -64,8 +75,8 @@ async def _get_json(
 
 
 @asynccontextmanager
-async def weather_lifespan(_app: FastAPI):
-    """Keep one connection pool for all weather providers during app lifetime."""
+async def shared_http_session() -> AsyncIterator[None]:
+    """Keep one connection pool for all weather providers while the block runs."""
     global _HTTP_SESSION
     previous_session = weather_http._HTTP_SESSION
     session = aiohttp.ClientSession(timeout=weather_http._REQUEST_TIMEOUT)
@@ -159,12 +170,12 @@ async def _forecast_with_fallbacks(location: str, start_date: date, end_date: da
     except WeatherProviderError as exc:
         _LOGGER.warning("所有天氣供應商皆失敗（地區=%r）：%s", location, exc)
         if coordinates is None:
-            raise http_error(
+            raise WeatherServiceError(
                 404,
                 "Unable to resolve weather location",
                 error_code="weather_location_not_found",
             ) from exc
-        raise http_error(
+        raise WeatherServiceError(
             502,
             "All weather providers unavailable",
             error_code="weather_unavailable",
@@ -180,7 +191,7 @@ async def get_forecast(
 ) -> WeatherForecastResponse:
     """Validate, clip, cache, and execute one forecast request."""
     if end_date < start_date or (end_date - start_date).days + 1 > MAX_FORECAST_DAYS:
-        raise http_error(422, "Invalid weather forecast date range", error_code="weather_invalid_date_range")
+        raise WeatherServiceError(422, "Invalid weather forecast date range", error_code="weather_invalid_date_range")
     intersection = _forecast_intersection(start_date, end_date)
     if intersection is None:
         return _empty_forecast()
@@ -208,10 +219,10 @@ async def get_forecast(
         return response
     except TimeoutError as exc:
         _LOGGER.warning("天氣預報總逾時（地區=%r）", normalized_location)
-        raise http_error(502, "Weather provider timed out", error_code="weather_timeout") from exc
+        raise WeatherServiceError(502, "Weather provider timed out", error_code="weather_timeout") from exc
     except (KeyError, TypeError, ValueError, WeatherProviderError) as exc:
         _LOGGER.warning("天氣供應商回傳無效資料（地區=%r）：%s", normalized_location, exc)
-        raise http_error(
+        raise WeatherServiceError(
             502,
             "Weather provider returned invalid data",
             error_code="weather_unavailable",

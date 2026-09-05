@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from server.domain.channel_keys import MAX_CHANNEL_KEY_LIST, ChannelKeyError
+from server.domain.channel_keys import parse_channel_key_csv as _parse_channel_key_csv
 from server.errors import VALIDATION_ERROR, http_error
 
-MAX_CHANNEL_KEY_LIST = 100
+__all__ = ["MAX_CHANNEL_KEY_LIST", "parse_channel_key_csv", "parse_channel_refs"]
 
 
 def parse_channel_key_csv(
@@ -14,29 +16,11 @@ def parse_channel_key_csv(
     *,
     max_keys: int = MAX_CHANNEL_KEY_LIST,
 ) -> list[tuple[str, str]]:
-    """Parse comma-separated ``platform:platformId`` tokens with dedup."""
-    keys: list[tuple[str, str]] = []
-    seen: set[tuple[str, str]] = set()
-    for token in raw.split(","):
-        token = token.strip()
-        if not token:
-            continue
-        if ":" not in token:
-            raise http_error(422, f"Invalid channel key: {token}", error_code=VALIDATION_ERROR)
-        platform, platform_id = token.split(":", 1)
-        if not platform or not platform_id:
-            raise http_error(422, f"Invalid channel key: {token}", error_code=VALIDATION_ERROR)
-        key = (platform, platform_id)
-        if key not in seen:
-            keys.append(key)
-            seen.add(key)
-        if len(keys) > max_keys:
-            raise http_error(
-                422,
-                f"A maximum of {max_keys} channels may be requested",
-                error_code=VALIDATION_ERROR,
-            )
-    return keys
+    """HTTP boundary: parse ``platform:platformId`` CSV, mapping errors to 422."""
+    try:
+        return _parse_channel_key_csv(raw, max_keys=max_keys)
+    except ChannelKeyError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
 
 
 def parse_channel_refs(

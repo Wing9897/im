@@ -32,7 +32,13 @@ async def patch_recurring_series(
     workset_id: str | None | EllipsisType = ...,
     notify_pref: str | None | EllipsisType = ...,
     emoji: str | None | EllipsisType = ...,
+    item_id: str | None | EllipsisType = ...,
 ) -> dict[str, Any]:
+    """Patch a series in one transaction.
+
+    ``item_id`` is written verbatim when given (``None`` unbinds); the caller
+    validates the item exists (``resolve_user_event_item_id``) beforehand.
+    """
     sid = (series_id or "").strip()
     row = await fetch_series_row(db, sid)
     if row is None:
@@ -113,13 +119,18 @@ async def patch_recurring_series(
     if is_active is not None:
         active_sql = ", is_active = ?"
         active_params = (1 if is_active else 0,)
+    item_sql = ""
+    item_params: tuple[Any, ...] = ()
+    if item_id is not ...:
+        item_sql = ", item_id = ?"
+        item_params = (item_id,)
 
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await tx.execute(
             "UPDATE recurring_schedules SET name = ?, description = ?, workset_id = ?, rrule = ?, "
             f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, emoji = ?, "
-            f"updated_at = ?{active_sql} WHERE id = ?",
+            f"updated_at = ?{active_sql}{item_sql} WHERE id = ?",
             (
                 new_name,
                 new_description,
@@ -133,6 +144,7 @@ async def patch_recurring_series(
                 resolved_emoji,
                 now,
                 *active_params,
+                *item_params,
                 sid,
             ),
         )
