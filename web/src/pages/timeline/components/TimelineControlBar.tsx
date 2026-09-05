@@ -4,6 +4,10 @@ import { useTranslation } from "react-i18next";
 import { CalendarShareConnectionStatusIcon } from "../../../components/calendarShare/CalendarShareConnectionStatusIcon";
 import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
+import {
+  OVERVIEW_RANGE_PRESET_IDS,
+  type OverviewRangePresetId,
+} from "../../../domain/gantt/ganttOverviewWindow";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import {
   applyCalendarScalePill,
@@ -12,9 +16,14 @@ import {
   type CalendarScalePill,
   type TimelineMonthLayout,
 } from "../../../domain/timeline/monthCardSources";
-import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
+import { MenuSelect, OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
+import { pageOpsControlClass } from "../../../components/ui/controlStyles";
+import { mapSmallSelectClass } from "../../intelligence/map/mapViewClasses";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import type { SubscribeAvailability, SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
+
+const rangeLabelClass =
+  "min-w-[7.5rem] select-none px-1 text-center text-sm font-medium tabular-nums text-text-secondary";
 
 type TimelineTaskOption = {
   id: string;
@@ -49,6 +58,12 @@ type TimelineControlBarProps = {
   visibleRangeLabel: string;
   overviewMode?: boolean;
   onOverviewModeChange?: (next: boolean) => void;
+  /** 全局 range-menu value (`12h`…`1y`); empty when the visible span is custom. */
+  overviewRangeId?: string;
+  onOverviewRangeChange?: (id: OverviewRangePresetId) => void;
+  /** `YYYY-MM-DD` for the range-label jump-date picker (calendar and Gantt). */
+  jumpDateValue?: string;
+  onJumpDate?: (isoDate: string) => void;
   onAddEvent?: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
@@ -79,6 +94,10 @@ export function TimelineControlBar({
   visibleRangeLabel,
   overviewMode = false,
   onOverviewModeChange,
+  overviewRangeId = "",
+  onOverviewRangeChange,
+  jumpDateValue,
+  onJumpDate,
   onAddEvent,
   isFullscreen = false,
   onToggleFullscreen,
@@ -94,6 +113,14 @@ export function TimelineControlBar({
   const filterOptions = useMemo(
     () => timelineTasks.map((task) => ({ id: task.id, name: task.name })),
     [timelineTasks],
+  );
+  const overviewRangeOptions = useMemo(
+    () =>
+      OVERVIEW_RANGE_PRESET_IDS.map((id) => ({
+        value: id,
+        label: t(`toolbar.rangeOptions.${id}`),
+      })),
+    [t],
   );
 
   const handleScaleClick = (pill: CalendarScalePill) => {
@@ -113,6 +140,8 @@ export function TimelineControlBar({
     isCalendarScalePillActive(pill, { viewMode, timeScale, monthLayout, overviewMode });
 
   const scales = calendarScalePills(viewMode);
+  const ganttChrome = viewMode === "gantt";
+  const showOverviewRange = ganttChrome && overviewMode && Boolean(onOverviewRangeChange);
 
   return (
     <OpsControlBar
@@ -169,6 +198,21 @@ export function TimelineControlBar({
         ))}
       </div>
 
+      {showOverviewRange ? (
+        <MenuSelect
+          variant="toolbar"
+          menuPortal
+          aria-label={t("toolbar.rangeAria")}
+          placeholder={t("toolbar.rangePlaceholder")}
+          value={overviewRangeId}
+          options={overviewRangeOptions}
+          onChange={(next) => onOverviewRangeChange?.(next as OverviewRangePresetId)}
+          data-testid="gantt-overview-range-select"
+          className="shrink-0"
+          triggerClassName={`${pageOpsControlClass} ${mapSmallSelectClass}`}
+        />
+      ) : null}
+
       <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-2">
         <div
           className="flex shrink-0 flex-nowrap items-center gap-1"
@@ -202,6 +246,7 @@ export function TimelineControlBar({
             onClick={() => onJumpTo(timeScale)}
             aria-label={t("toolbar.todayAria")}
             title={t("toolbar.todayTitle")}
+            data-testid="timeline-jump-now"
           >
             <CalendarDays size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>
@@ -213,9 +258,42 @@ export function TimelineControlBar({
           <PillButton onClick={() => onMoveCursor(-1)} aria-label={t("toolbar.prevPeriodAria")}>
             <ChevronLeft size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>
-          <span className="min-w-[7.5rem] select-none px-1 text-center text-sm font-medium tabular-nums text-text-secondary">
-            {visibleRangeLabel}
-          </span>
+          {onJumpDate ? (
+            <label
+              className={`relative cursor-pointer ${rangeLabelClass}`}
+              data-testid="timeline-range-label"
+              title={t("toolbar.jumpDateAria")}
+              onClick={(event) => {
+                const input = event.currentTarget.querySelector("input[type='date']");
+                if (input instanceof HTMLInputElement && typeof input.showPicker === "function") {
+                  try {
+                    input.showPicker();
+                  } catch {
+                    /* Already open, or the user-gesture check failed. */
+                  }
+                }
+              }}
+            >
+              <span className="pointer-events-none" aria-hidden="true">
+                {visibleRangeLabel}
+              </span>
+              <input
+                type="date"
+                aria-label={t("toolbar.jumpDateAria")}
+                className="absolute inset-0 h-full w-full min-w-0 cursor-pointer opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                data-testid="timeline-jump-date"
+                value={jumpDateValue ?? ""}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  if (next) onJumpDate(next);
+                }}
+              />
+            </label>
+          ) : (
+            <span className={rangeLabelClass} data-testid="timeline-range-label">
+              {visibleRangeLabel}
+            </span>
+          )}
           <PillButton onClick={() => onMoveCursor(1)} aria-label={t("toolbar.nextPeriodAria")}>
             <ChevronRight size={16} strokeWidth={2.5} aria-hidden="true" />
           </PillButton>

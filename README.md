@@ -1,6 +1,8 @@
-# Intelligence Monitor
+# <img src="docs/images/im-mark.svg" width="32" height="32" alt=""> Intelligence Monitor
 
 自託管的多源情報監控與 AI 分析桌面工作站：採集 → 排程分析 → 時間規劃／畫布 → 通知與動作，全在本機完成。
+
+![物品、任務、工作集連到時間規劃與通知的流程畫布](docs/images/workflow.png)
 
 契約細節見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。文件索引：[`docs/README.md`](docs/README.md)。
 
@@ -9,6 +11,10 @@
 - **採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)；統一入庫、SSE 即時更新
 - **分析** — `leaderboard`／`intel_event`／`agent`；Ollama / OpenAI / Gemini / OpenRouter
 - **時間規劃** — 日曆／甘特。甘特離散尺標 **日／週／月／季／年**；**全局**（Overview）為連續平移／縮放視窗，底欄為地圖式時間軸。日曆另有 **塊**（按來源分月卡）
+
+  ![月曆檢視與當日任務側欄](docs/images/schedule_calendar.png)
+
+  ![甘特全局視窗與底欄地圖式時間軸](docs/images/schedule_gantt_global.png)
 - **物品／工作集** — 庫存與歸屬標籤；不是主導航重做
 - **助手／通知／畫布** — 自然語言助手、本機通知、可排版儀表
 - **日曆分享** — 可選；公開日曆來源預設 **https://subscribe.devents.tech**。自架 IntelligenceCalendar sidecar（不在本倉庫）仍用本機 `http://127.0.0.1:8787`。IM 只經 `/api/v1/calendar-share/*` 代理，前端不直連

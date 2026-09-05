@@ -163,6 +163,45 @@ export function recenterOverviewWindow(
   });
 }
 
+/** Quick-jump spans for 全局/Overview (calendar, not LIVE ±hours). */
+export const OVERVIEW_RANGE_PRESET_IDS = ["12h", "1d", "7d", "30d", "90d", "1y"] as const;
+export type OverviewRangePresetId = (typeof OVERVIEW_RANGE_PRESET_IDS)[number];
+
+export const OVERVIEW_RANGE_PRESETS: Record<OverviewRangePresetId, number> = {
+  "12h": 12 * GANTT_HOUR_MS,
+  "1d": GANTT_DAY_MS,
+  "7d": 7 * GANTT_DAY_MS,
+  "30d": 30 * GANTT_DAY_MS,
+  "90d": 90 * GANTT_DAY_MS,
+  "1y": 365 * GANTT_DAY_MS,
+};
+
+const RANGE_MATCH_TOLERANCE = 0.08;
+
+export function parseOverviewRangeId(
+  value: string | null | undefined,
+): OverviewRangePresetId | null {
+  if (!value) return null;
+  return (OVERVIEW_RANGE_PRESET_IDS as readonly string[]).includes(value)
+    ? (value as OverviewRangePresetId)
+    : null;
+}
+
+/** Nearest preset id when the visible span is within 8% of a listed range. */
+export function matchOverviewRangeId(spanMs: number): OverviewRangePresetId | null {
+  if (!Number.isFinite(spanMs) || spanMs <= 0) return null;
+  for (const id of OVERVIEW_RANGE_PRESET_IDS) {
+    const preset = OVERVIEW_RANGE_PRESETS[id];
+    if (Math.abs(spanMs - preset) / preset <= RANGE_MATCH_TOLERANCE) return id;
+  }
+  return null;
+}
+
+/** Span around a center instant (range-menu / persist restore). */
+export function overviewWindowFromSpan(spanMs: number, centerMs: number): GanttOverviewWindow {
+  return recenterOverviewWindow({ startMs: 0, spanMs }, centerMs);
+}
+
 function hourTicks(
   startMs: number,
   endMs: number,

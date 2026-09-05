@@ -58,4 +58,71 @@ describe("MapControls", () => {
     expect(trigger!.style.width).toBe("auto");
     expect(trigger!.textContent).toMatch(/12/);
   });
+
+  it("portals the LIVE window listbox and flips it above a bottom trigger", () => {
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 });
+
+    act(() => {
+      root.render(
+        wrapWithI18n(
+          createElement(MapControls, {
+            overlayDisplayMode: "both",
+            onOverlayDisplayCycle: vi.fn(),
+            sharedDanmakuMode: "persistent",
+            onDanmakuModeCycle: vi.fn(),
+            liveWindowHours: 12,
+            onLiveWindowHoursChange: vi.fn(),
+            isFullscreen: false,
+            onToggleFullscreen: vi.fn(),
+          }),
+        ),
+      );
+    });
+
+    const row = container.querySelector<HTMLElement>('[data-testid="map-controls"]');
+    expect(row?.textContent).toContain("資訊+事件");
+    expect(row?.textContent).toContain("持久");
+    expect(row?.querySelector('button[aria-label="全螢幕"]')).toBeTruthy();
+
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-testid="map-live-window-select-value"]',
+    );
+    expect(trigger).toBeTruthy();
+    trigger!.getBoundingClientRect = () =>
+      ({
+        top: 760,
+        left: 200,
+        width: 120,
+        height: 32,
+        bottom: 792,
+        right: 320,
+        x: 200,
+        y: 760,
+        toJSON() {
+          return this;
+        },
+      }) as DOMRect;
+
+    act(() => {
+      trigger!.click();
+    });
+
+    const list = document.body.querySelector(
+      '[data-testid="map-live-window-select-list"]',
+    ) as HTMLElement | null;
+    expect(list).toBeTruthy();
+    expect(row!.contains(list)).toBe(false);
+    expect(list?.parentElement).toBe(document.body);
+    expect(list?.style.position).toBe("fixed");
+    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.textContent).toMatch(/LIVE ±1h/);
+    expect(list?.textContent).toMatch(/LIVE ±12h/);
+
+    Object.defineProperty(list!, "offsetHeight", { configurable: true, value: 180 });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(Number.parseFloat(list!.style.top)).toBeLessThan(760);
+  });
 });

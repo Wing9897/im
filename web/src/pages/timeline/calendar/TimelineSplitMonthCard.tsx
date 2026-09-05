@@ -16,6 +16,7 @@ import { dateKey } from "../../../utils/dateFormat";
 import { preferActiveEvents, dismissedTitleClass } from "../timelineDismissUtils";
 import { dayCardTimeLabel } from "./dayCardTimeLabel";
 import { placeSplitDayPopover } from "./splitDayPopoverPlacement";
+import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
 import { TimelineSplitMonthColorControl } from "./TimelineSplitMonthColorControl";
 
 export function eventsForSplitMonthDay(
@@ -100,6 +101,14 @@ export function TimelineSplitMonthCard({
     >
       <header className="im-split-month-header">
         <h3 className="im-split-month-title">{title}</h3>
+        {kind === "subscribe" ? (
+          <SubscribedEventSubscribeIcon
+            className="im-split-month-subscribe-icon"
+            ariaLabel={t("calendar.monthCardSubscribeAria")}
+            title={t("calendar.monthCardSubscribed")}
+            testId="timeline-month-card-subscribe-icon"
+          />
+        ) : null}
         {onAccentColorChange ? (
           <TimelineSplitMonthColorControl
             color={accentColor}

@@ -325,6 +325,10 @@ html[data-theme-bg="focal"] .im-timeline-gantt {
   color: var(--text-primary);
 }
 
+.im-split-month-subscribe-icon {
+  flex-shrink: 0;
+}
+
 /* Same frame as subscription cards: 2.4/1, no height cap, object-cover. */
 .im-split-month-cover {
   position: relative;

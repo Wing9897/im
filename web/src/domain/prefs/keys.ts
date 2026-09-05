@@ -14,6 +14,8 @@ export const PREFS_SCHEMA_VERSION = "6";
 
 export const SIDEBAR_COLLAPSED_KEY = "im:sidebar-collapsed";
 export const SIDEBAR_COLLAPSED_EVENT = "im:sidebar-collapsed-change";
+export const SIDEBAR_PINNED_KEY = "im:sidebar-pinned";
+export const SIDEBAR_PINNED_EVENT = "im:sidebar-pinned-change";
 export const SIDEBAR_RAIL_MODE_KEY = "im:sidebar-rail-mode";
 export const SIDEBAR_RAIL_MODE_EVENT = "im:sidebar-rail-mode-change";
 export const MONITOR_MODE_KEY = "im:monitor-mode";
@@ -107,6 +109,8 @@ export const TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY =
 export const TIMELINE_TIME_SCALE_STORAGE_KEY = "im:timeline:time-scale";
 /** Gantt 全局/Overview display mode: continuous pan/zoom (not a discrete scale pill). */
 export const TIMELINE_OVERVIEW_MODE_STORAGE_KEY = "im:timeline:overview-mode";
+/** Last 全局 range-menu span id (`12h` / `1d` / `7d` / `30d` / `90d` / `1y`). */
+export const TIMELINE_OVERVIEW_SPAN_STORAGE_KEY = "im:timeline:overview-span";
 /** Calendar month presentation: one grid (`unified`) or per-source cards (`split`). */
 export const TIMELINE_MONTH_LAYOUT_STORAGE_KEY = "im:timeline:month-layout";
 /** Per-source Block card accent keyed by `workset:<id>` or `subscribe:<handle/slug>`. */

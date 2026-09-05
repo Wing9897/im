@@ -61,6 +61,8 @@
     "pageLoading": "Loading page…",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
+    "pinSidebar": "Pin sidebar",
+    "unpinSidebar": "Unpin sidebar",
     "breadcrumb": "Breadcrumb",
     "tabs": "Tabs",
     "itemsCount_one": "{count} item",

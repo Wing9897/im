@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-labelledby="im-mark-title">
+  <title id="im-mark-title">Intelligence Monitor</title>
+  <rect width="32" height="32" rx="8" fill="#1a1714"/>
+  <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" stroke="#d4a017" stroke-width="1.25"/>
+  <rect x="7.25" y="8.5" width="2.75" height="15" rx="1.25" fill="#d4a017"/>
+  <path d="M13.25 19.5 16.75 12.25 20.5 17.75 24.5 10.5" stroke="#d4a017" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

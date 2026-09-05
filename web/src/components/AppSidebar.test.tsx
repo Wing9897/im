@@ -5,6 +5,7 @@ import { SIMPLE_MODE_STORAGE_KEY } from "../domain/ui/simpleMode";
 import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { MONITOR_MODE_KEY, MonitorModeProvider } from "../context/MonitorModeContext";
 import { SIDEBAR_COLLAPSED_KEY } from "../hooks/useSidebarCollapsed";
+import { SIDEBAR_PINNED_KEY } from "../hooks/useSidebarPinned";
 import { SIDEBAR_RAIL_MODE_KEY } from "../hooks/useSidebarRailMode";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../test/i18nHarness";
 import { setAppLocale } from "../i18n/locale";
@@ -111,6 +112,12 @@ describe("AppSidebar", () => {
     );
   }
 
+  function pinToggle() {
+    return document.body.querySelector<HTMLButtonElement>(
+      "[data-testid='sidebar-pin']",
+    );
+  }
+
   it("defaults to a closed overlay so pages stay full-bleed", () => {
     mountSidebar();
     expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
@@ -124,8 +131,10 @@ describe("AppSidebar", () => {
     const peek = document.body.querySelector("[data-testid='sidebar-edge-peek']");
     expect(peek).toBeTruthy();
     expect(peek?.className).toContain("im-sidebar-edge-peek");
-    expect(peek?.getAttribute("data-collapsed")).toBe("true");
+    expect(peek?.hasAttribute("data-collapsed")).toBe(false);
     expect(peek?.contains(edgeToggle())).toBe(true);
+    expect(pinToggle()).toBeNull();
+    expect(window.localStorage.getItem(SIDEBAR_PINNED_KEY)).toBeNull();
     expect(getLinks()).toHaveLength(0);
   });
 
@@ -138,6 +147,7 @@ describe("AppSidebar", () => {
     expect(nav?.className).toContain("im-material-panel");
     expect(nav?.className).toContain("im-sidebar-panel");
     expect(nav?.className).not.toContain("im-shell-sidebar");
+    expect(nav?.hasAttribute("data-collapsed")).toBe(false);
     expect(nav?.className).not.toMatch(/background-image/);
     expect(overlay?.className).not.toMatch(/background-image/);
   });
@@ -422,5 +432,69 @@ describe("AppSidebar", () => {
     expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
     expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
     expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("1");
+  });
+
+  it("pins the open overlay into a docked rail and ignores Esc", () => {
+    renderSidebar({ overlayOpen: true });
+    expect(pinToggle()).toBeTruthy();
+    expect(pinToggle()?.getAttribute("aria-label")).toBe("釘選側欄");
+    expect(pinToggle()?.getAttribute("aria-pressed")).toBe("false");
+
+    act(() => {
+      pinToggle()?.click();
+    });
+
+    const nav = document.body.querySelector("[data-testid='app-sidebar']");
+    expect(window.localStorage.getItem(SIDEBAR_PINNED_KEY)).toBe("1");
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='sidebar-edge-toggle']")).toBeNull();
+    expect(nav).toBeTruthy();
+    expect(nav?.className).toContain("im-sidebar-docked");
+    expect(nav?.className).toContain("im-sidebar-panel");
+    expect(nav?.getAttribute("data-pinned")).toBe("true");
+    expect(pinToggle()?.getAttribute("aria-label")).toBe("取消釘選側欄");
+    expect(pinToggle()?.getAttribute("aria-pressed")).toBe("true");
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeTruthy();
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(window.localStorage.getItem(SIDEBAR_PINNED_KEY)).toBe("1");
+  });
+
+  it("unpins back to the overlay drawer", () => {
+    window.localStorage.setItem(SIDEBAR_PINNED_KEY, "1");
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "0");
+    mountSidebar();
+
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")?.className).toContain(
+      "im-sidebar-docked",
+    );
+
+    act(() => {
+      pinToggle()?.click();
+    });
+
+    expect(window.localStorage.getItem(SIDEBAR_PINNED_KEY)).toBe("0");
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeTruthy();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")?.className).toContain(
+      "im-dialog-drawer",
+    );
+    expect(document.body.querySelector("[data-testid='app-sidebar']")?.className).not.toContain(
+      "im-sidebar-docked",
+    );
+    expect(edgeToggle()).toBeTruthy();
+  });
+
+  it("hides a pinned sidebar on ops board (canvas)", () => {
+    window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
+    window.localStorage.setItem(SIDEBAR_PINNED_KEY, "1");
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "0");
+    mountSidebar();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='sidebar-pin']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='sidebar-edge-toggle']")).toBeNull();
   });
 });

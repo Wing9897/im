@@ -262,6 +262,12 @@ describe("surface layer tokens", () => {
     expect(dialogShellCss).toMatch(
       /\.im-sidebar-edge-toggle\[aria-expanded="true"\]\s*\{[^}]*position:\s*absolute[^}]*left:\s*100%/s,
     );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-docked\s*\{[^}]*position:\s*absolute[^}]*width:\s*var\(--app-sidebar-width, 200px\)/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-shell-pages--sidebar-pinned\s*\{[^}]*padding-left:\s*var\(--app-sidebar-width, 200px\)/s,
+    );
   });
 
   it("sets early data-theme-bg from localStorage keys matching themeData", () => {

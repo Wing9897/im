@@ -102,6 +102,8 @@ describe("TimelineMonthCardsGrid", () => {
     expect(cards[0]?.className).toContain("im-split-month-card");
     expect(cards[0]?.getAttribute("data-card-kind")).toBe("workset");
     expect(cards[1]?.getAttribute("data-card-kind")).toBe("subscribe");
+    expect(cards[0]?.querySelector('[data-testid="timeline-month-card-subscribe-icon"]')).toBeNull();
+    expect(cards[1]?.querySelector('[data-testid="timeline-month-card-subscribe-icon"]')).not.toBeNull();
   });
 
   it("opens one in-card popover at a time and closes on Escape or outside click", async () => {

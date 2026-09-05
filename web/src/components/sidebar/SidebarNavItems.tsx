@@ -7,21 +7,7 @@ import { prefetchRoute } from "../../routing/prefetchRoute";
 import { CountBadge } from "../ui/CountBadge";
 import { sidebarNavLinkClass } from "./sidebarNavStyles";
 
-export function SidebarSectionLabel({
-  label,
-  collapsed,
-}: {
-  label: string;
-  collapsed: boolean;
-}) {
-  if (collapsed) {
-    return (
-      <div
-        className="mx-1 my-1.5 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]"
-        aria-hidden="true"
-      />
-    );
-  }
+export function SidebarSectionLabel({ label }: { label: string }) {
   return (
     <div
       className="mx-1 mb-1 mt-2 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted max-[780px]:hidden"
@@ -34,13 +20,7 @@ export function SidebarSectionLabel({
 }
 
 /** Isolated so SSE queue updates re-render only this nav item, not the whole rail. */
-export function TasksNavLink({
-  collapsed,
-  isActive,
-}: {
-  collapsed: boolean;
-  isActive: boolean;
-}) {
+export function TasksNavLink({ isActive }: { isActive: boolean }) {
   const { t } = useTranslation("nav");
   const { queueStatus } = useAnalysisStatus();
   const pendingCount = queueStatus?.pendingCount ?? 0;
@@ -53,7 +33,7 @@ export function TasksNavLink({
   return (
     <NavLink
       to={to}
-      className={() => sidebarNavLinkClass(isActive, collapsed)}
+      className={() => sidebarNavLinkClass(isActive)}
       aria-current={isActive ? "page" : false}
       onMouseEnter={() => prefetchRoute(to)}
       onFocus={() => prefetchRoute(to)}
@@ -75,25 +55,17 @@ export function TasksNavLink({
       ) : null}
       <span className="relative inline-flex shrink-0">
         <Icon size={16} strokeWidth={2} aria-hidden="true" />
-        {showPendingBadge && collapsed ? (
-          <span
-            className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-accent"
-            aria-hidden="true"
+      </span>
+      <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
+        <span className="truncate">{tasksLabel}</span>
+        {showPendingBadge ? (
+          <CountBadge
+            count={pendingCount > 99 ? 99 : pendingCount}
+            aria-label={t("pendingAnalysisBadge", { count: badgeLabel })}
+            className="min-w-[18px] px-1 text-[9px]"
           />
         ) : null}
       </span>
-      {!collapsed ? (
-        <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-          <span className="truncate">{tasksLabel}</span>
-          {showPendingBadge ? (
-            <CountBadge
-              count={pendingCount > 99 ? 99 : pendingCount}
-              aria-label={t("pendingAnalysisBadge", { count: badgeLabel })}
-              className="min-w-[18px] px-1 text-[9px]"
-            />
-          ) : null}
-        </span>
-      ) : null}
     </NavLink>
   );
 }
@@ -101,14 +73,12 @@ export function TasksNavLink({
 export function SidebarNavLink({
   to,
   label,
-  collapsed,
   isActive,
   Icon,
   compactLabel = false,
 }: {
   to: string;
   label: string;
-  collapsed: boolean;
   isActive: boolean;
   Icon: LucideIcon;
   /** Bottom settings links use a simpler label span. */
@@ -117,7 +87,7 @@ export function SidebarNavLink({
   return (
     <NavLink
       to={to}
-      className={() => sidebarNavLinkClass(isActive, collapsed)}
+      className={() => sidebarNavLinkClass(isActive)}
       aria-current={isActive ? "page" : false}
       onMouseEnter={() => prefetchRoute(to)}
       onFocus={() => prefetchRoute(to)}
@@ -138,15 +108,13 @@ export function SidebarNavLink({
           <Icon size={16} strokeWidth={2} aria-hidden="true" />
         </span>
       )}
-      {!collapsed ? (
-        compactLabel ? (
-          <span className="max-[780px]:hidden">{label}</span>
-        ) : (
-          <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-            <span className="truncate">{label}</span>
-          </span>
-        )
-      ) : null}
+      {compactLabel ? (
+        <span className="max-[780px]:hidden">{label}</span>
+      ) : (
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
+          <span className="truncate">{label}</span>
+        </span>
+      )}
     </NavLink>
   );
 }

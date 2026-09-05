@@ -80,6 +80,25 @@
 }
 
 /*
+ * Pinned dock: occupy --app-sidebar-width in the pages pane (no overlay scrim).
+ * Absolute inside the dual-shell relative container so it sits below title chrome.
+ */
+.im-sidebar-docked {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  width: var(--app-sidebar-width, 200px);
+  animation: none;
+  border-radius: 0;
+}
+
+.im-shell-pages--sidebar-pinned {
+  padding-left: var(--app-sidebar-width, 200px);
+}
+
+/*
  * Overlay sidebar open/close — the only chrome control (no title-bar collapse).
  * Collapsed: viewport left edge, vertically centered, above wallpaper/chrome
  * (title bar 1100) and below OverlayPortal modals (2000). The trapezoid `>`

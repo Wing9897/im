@@ -2,15 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   OVERVIEW_FETCH_DEBOUNCE_MS,
+  OVERVIEW_RANGE_PRESETS,
   clampOverviewWindow,
   overviewFetchWindow,
   overviewWindowEndMs,
   overviewWindowFromScale,
+  overviewWindowFromSpan,
   formatOverviewWindowLabel,
   panOverviewWindow,
+  parseOverviewRangeId,
   recenterOverviewWindow,
   type GanttOverviewWindow,
+  type OverviewRangePresetId,
 } from "../../domain/gantt/ganttOverviewWindow";
+import { TIMELINE_OVERVIEW_SPAN_STORAGE_KEY } from "../../domain/prefs";
+import { usePersistedState } from "../../hooks/usePersistedState";
 import type { TimelineScale } from "../../domain/timeline/dateUtils";
 
 function windowsEqual(a: GanttOverviewWindow, b: GanttOverviewWindow): boolean {
@@ -24,6 +30,9 @@ function windowsEqual(a: GanttOverviewWindow, b: GanttOverviewWindow): boolean {
  * Visible window updates on every pointer/wheel tick. Fetch window commits on
  * pointerup or after {@link OVERVIEW_FETCH_DEBOUNCE_MS} idle — `useTimelineData`
  * must subscribe to `fetchRange` only.
+ *
+ * Range-menu / now / date jumps set visible + committed windows together so a
+ * navigation click is one fetch, not a debounce burst.
  */
 export function useGanttOverviewSession(options: {
   overviewMode: boolean;
@@ -36,6 +45,10 @@ export function useGanttOverviewSession(options: {
   );
   const [committedFetchWindow, setCommittedFetchWindow] = useState<GanttOverviewWindow>(
     overviewWindow,
+  );
+  const [persistedRangeId, setPersistedRangeId] = usePersistedState(
+    TIMELINE_OVERVIEW_SPAN_STORAGE_KEY,
+    "",
   );
   const wasOverview = useRef(false);
   const visibleRef = useRef(overviewWindow);
@@ -57,6 +70,15 @@ export function useGanttOverviewSession(options: {
     setCommittedFetchWindow((prev) => (windowsEqual(prev, next) ? prev : next));
   }, []);
 
+  const applyNavigatedWindow = useCallback(
+    (next: GanttOverviewWindow) => {
+      const clamped = applyVisible(next);
+      setOverviewWindowState(clamped);
+      commitFetchWindow();
+    },
+    [applyVisible, commitFetchWindow],
+  );
+
   const scheduleFetchCommit = useCallback(() => {
     if (debounceRef.current != null) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -73,13 +95,16 @@ export function useGanttOverviewSession(options: {
 
   useEffect(() => {
     if (overviewMode && !wasOverview.current) {
-      const seeded = overviewWindowFromScale(timeScale, timeCursor);
+      const preset = parseOverviewRangeId(persistedRangeId);
+      const seeded = preset
+        ? overviewWindowFromSpan(OVERVIEW_RANGE_PRESETS[preset], Date.now())
+        : overviewWindowFromScale(timeScale, timeCursor);
       setOverviewWindowState(seeded);
       visibleRef.current = seeded;
       setCommittedFetchWindow(seeded);
     }
     wasOverview.current = overviewMode;
-  }, [overviewMode, timeScale, timeCursor]);
+  }, [overviewMode, persistedRangeId, timeScale, timeCursor]);
 
   const setOverviewWindow = useCallback(
     (next: GanttOverviewWindow | ((window: GanttOverviewWindow) => GanttOverviewWindow)) => {
@@ -112,18 +137,33 @@ export function useGanttOverviewSession(options: {
   const panByStep = useCallback(
     (delta: number) => {
       const current = visibleRef.current;
-      const next = applyVisible(panOverviewWindow(current, delta * current.spanMs * 0.8));
-      setOverviewWindowState(next);
-      commitFetchWindow();
+      applyNavigatedWindow(panOverviewWindow(current, delta * current.spanMs * 0.8));
     },
-    [applyVisible, commitFetchWindow],
+    [applyNavigatedWindow],
   );
 
   const recenterToday = useCallback(() => {
-    const next = applyVisible(recenterOverviewWindow(visibleRef.current, Date.now()));
-    setOverviewWindowState(next);
-    commitFetchWindow();
-  }, [applyVisible, commitFetchWindow]);
+    applyNavigatedWindow(recenterOverviewWindow(visibleRef.current, Date.now()));
+  }, [applyNavigatedWindow]);
+
+  const jumpToTimestamp = useCallback(
+    (centerMs: number) => {
+      applyNavigatedWindow(recenterOverviewWindow(visibleRef.current, centerMs));
+    },
+    [applyNavigatedWindow],
+  );
+
+  const applyRangeId = useCallback(
+    (id: OverviewRangePresetId | string) => {
+      const preset = parseOverviewRangeId(id);
+      if (!preset) return;
+      setPersistedRangeId(preset);
+      const current = visibleRef.current;
+      const center = current.startMs + current.spanMs / 2;
+      applyNavigatedWindow(overviewWindowFromSpan(OVERVIEW_RANGE_PRESETS[preset], center));
+    },
+    [applyNavigatedWindow, setPersistedRangeId],
+  );
 
   return {
     overviewWindow,
@@ -135,5 +175,7 @@ export function useGanttOverviewSession(options: {
     visibleRangeLabel,
     panByStep,
     recenterToday,
+    jumpToTimestamp,
+    applyRangeId,
   };
 }

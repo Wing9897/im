@@ -240,6 +240,28 @@ describe("TimelineSplitMonthCard", () => {
     expect([...days].every((day) => day.getAttribute("aria-pressed") === "false")).toBe(true);
   });
 
+  it("shows a subscribe icon on subscribed calendar cards, not worksets", async () => {
+    await ensureZhHantLocale();
+    const workset = renderCard({ title: "一般", kind: "workset" });
+    expect(workset.container.querySelector('[data-testid="timeline-month-card-subscribe-icon"]')).toBeNull();
+    expect(workset.container.querySelector('[data-card-kind="workset"]')).not.toBeNull();
+
+    act(() => lastRoot!.unmount());
+    lastRoot = null;
+    lastContainer?.remove();
+    lastContainer = null;
+
+    const subscribed = renderCard({ title: "DemoPub/Busy", kind: "subscribe" });
+    const icon = subscribed.container.querySelector('[data-testid="timeline-month-card-subscribe-icon"]');
+    expect(icon).not.toBeNull();
+    expect(icon?.getAttribute("aria-label")).toBe("訂閱日曆");
+    expect(icon?.getAttribute("title")).toBe("已訂閱");
+    const header = subscribed.container.querySelector(".im-split-month-header");
+    const title = subscribed.container.querySelector(".im-split-month-title");
+    expect(header?.contains(icon)).toBe(true);
+    expect(title?.nextElementSibling).toBe(icon);
+  });
+
   it("renders a cover strip between the title and weekday row", async () => {
     await ensureZhHantLocale();
     const { container } = renderCard({ cover: "data:image/jpeg;base64,cover-a" });

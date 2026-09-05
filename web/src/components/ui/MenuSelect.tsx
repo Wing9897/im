@@ -169,7 +169,9 @@ const optionStyle: CSSProperties = {
  *
  * Disabled options, group headers, and in-menu search are supported here.
  * Prefer {@link SelectField} only when native `<select>` form-submit quirks are required.
- * Use `menuPortal` to escape overflow clipping. Shared placement lives in `useAnchoredMenu`.
+ * Use `menuPortal` to escape overflow clipping; portaled menus also flip above
+ * the trigger when there is no room below (map LIVE window, bottom chrome).
+ * Shared placement lives in `useAnchoredMenu`.
  */
 export function MenuSelect({
   id,
@@ -200,6 +202,7 @@ export function MenuSelect({
     align: "start",
     gap: 4,
     edge: 8,
+    flip: menuPortal,
     contentKey: searchable ? `${options.length}:${query}` : options.length,
     dismissPointerEvent: "mousedown",
   });
@@ -257,6 +260,7 @@ export function MenuSelect({
     ? {
         ...anchoredMenuPortalStyle(menuPos),
         ...listBoxChromeStyle,
+        ...(menuPos?.maxHeight != null ? { maxHeight: menuPos.maxHeight } : {}),
       }
     : usesFormChrome
       ? {
