@@ -78,12 +78,12 @@ extend-immutable-calls = ["fastapi.Query", "fastapi.Depends", "server.api.query_
 "server/main.py" = ["E402"]
 "server/__main__.py" = ["E402"]
 "server/api/schemas/responses/__init__.py" = ["F401"]
-"scripts/_seed_common.py" = ["E402"]
 "scripts/_verify_common.py" = ["E402"]
-"scripts/seed_calendar_ui_fixtures.py" = ["E402"]
-"scripts/seed_dev_items_calendar.py" = ["E402"]
-"scripts/live_eval/*.py" = ["E402", "E501"]
-"scripts/live_eval_pipeline.py" = ["E402"]
+"scripts/dev/_seed_common.py" = ["E402"]
+"scripts/dev/seed_calendar_ui_fixtures.py" = ["E402"]
+"scripts/dev/seed_dev_items_calendar.py" = ["E402"]
+"scripts/dev/live_eval/*.py" = ["E402", "E501"]
+"scripts/dev/live_eval_pipeline.py" = ["E402"]
 
 [tool.uv]
 # App repo, not a library — skip setuptools rebuild on every `uv run` in dev.

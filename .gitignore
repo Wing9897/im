@@ -87,4 +87,5 @@ desktop/server-runtime/
 # Local operational eval runtime (tokens, scratch DB, helper scripts)
 .eval-runtime/
 scripts/.live_eval_state.json
+scripts/dev/.live_eval_state.json
 

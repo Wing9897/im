@@ -9,6 +9,19 @@ function readWorkflow(name: string): string {
 }
 
 describe("release safety gates", () => {
+  it("keeps quality.yml as a reusable workflow with parallel gates", () => {
+    const workflow = readWorkflow("quality.yml");
+    expect(workflow).toContain("workflow_call:");
+    expect(workflow).toMatch(/\n  lint:\n/);
+    expect(workflow).toMatch(/\n  i18n:\n/);
+    expect(workflow).toMatch(/\n  openapi:\n/);
+    expect(workflow).toMatch(/\n  typecheck:\n/);
+    expect(workflow).toContain("uses: ./.github/actions/setup-quality");
+    expect(workflow).not.toContain("workflow_dispatch:");
+    expect(workflow).not.toContain("pull_request:");
+    expect(workflow).not.toContain("ghcr.io");
+  });
+
   it("keeps PR CI as quality-only (no publish jobs)", () => {
     const workflow = readWorkflow("ci.yml");
     expect(workflow).toContain("pull_request:");
@@ -26,6 +39,9 @@ describe("release safety gates", () => {
     expect(workflow).toContain("branches: [main]");
     expect(workflow).not.toContain("workflow_run:");
     expect(workflow).toContain("Generate tag version");
+    expect(workflow).toContain("name: Sync VERSION to tag and commit");
+    expect(workflow).toContain("printf '%s\\n' \"$RELEASE_VERSION\" > VERSION");
+    expect(workflow).toContain("node scripts/sync-version.mjs");
     expect(workflow).toContain("name: Create and push tag");
     expect(workflow).toContain('git push origin "refs/tags/${TAG}"');
     expect(workflow).toMatch(/\n  web_dist:\n/);
@@ -53,8 +69,10 @@ describe("release safety gates", () => {
     expect(workflow).toContain("if: always() && needs.tag.result == 'success'");
     expect(workflow).toContain("if: needs.package.result == 'success'");
     expect(workflow).toContain("Keep web-dist for failed-job reruns");
-    expect(workflow).toContain("retry gh release upload");
+    expect(workflow).toContain("uses: ./.github/actions/gh-retry");
+    expect(workflow).toContain("gh release upload");
     expect(workflow).toContain("Upload attempt");
+    expect(workflow).not.toMatch(/retry\(\) \{/);
     expect(workflow).not.toMatch(
       /name: Delete staged web-dist\.tar\.gz\r?\n\s+if: always\(\)/,
     );
@@ -76,6 +94,8 @@ describe("release safety gates", () => {
     const pkg = JSON.parse(
       readFileSync(resolve(ROOT, "package.json"), "utf8"),
     ) as { scripts: Record<string, string> };
+    expect(pkg.scripts["check:fast"]).toBe("npm run lint && npm run typecheck");
+    expect(pkg.scripts.check).toContain("npm run test:all");
     expect(pkg.scripts["test:all"]).not.toContain("concurrently");
     expect(pkg.scripts["test:coverage"]).not.toContain("concurrently");
     expect(pkg.scripts["verify:desktop:fast"]).toMatch(/^npm run build && /);

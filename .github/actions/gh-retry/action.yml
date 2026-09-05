@@ -1,0 +1,38 @@
+name: Retry GitHub API command
+description: Retry a bash command with exponential backoff for api.github.com flake
+
+inputs:
+  run:
+    description: Bash command to retry
+    required: true
+  label:
+    description: Prefix for retry log lines
+    default: attempt
+
+runs:
+  using: composite
+  steps:
+    - name: Retry command
+      shell: bash
+      env:
+        RETRY_COMMAND: ${{ inputs.run }}
+        RETRY_LABEL: ${{ inputs.label }}
+      run: |
+        set -euo pipefail
+        retry() {
+          local attempt=1 max=8 delay=15
+          while true; do
+            if "$@"; then
+              return 0
+            fi
+            if (( attempt >= max )); then
+              echo "failed after ${max} attempts: $*" >&2
+              return 1
+            fi
+            echo "${RETRY_LABEL} ${attempt}/${max} failed; sleeping ${delay}s then retry (api.github.com flake)" >&2
+            sleep "$delay"
+            attempt=$((attempt + 1))
+            delay=$(( delay < 60 ? delay * 2 : 60 ))
+          done
+        }
+        retry bash -c "set -euo pipefail; $RETRY_COMMAND"

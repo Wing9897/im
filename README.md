@@ -56,7 +56,7 @@ uv run python scripts/reset_local_databases.py --apply
 
 | 場景 | 指令 |
 |------|------|
-| 本機關卡 | `npm run check`（lint → i18n／OpenAPI 漂移 → 型別 → 全部測試） |
+| 本機關卡 | `npm run check`（lint → i18n／OpenAPI 漂移 → 型別 → 全部測試）；`check:fast`＝lint + typecheck |
 | 測試 | `npm test`／`test:server`／`test:web`／`test:desktop`／`test:all` |
 | 建置 | `npm run build`（Web + Desktop） |
 | 打包 | `dist:win`／`dist:mac`／`dist:linux`／`dist:current` |
@@ -65,7 +65,7 @@ uv run python scripts/reset_local_databases.py --apply
 
 **CLI** 用源碼：`uv sync --locked` 後 `uv run python -m server`（或 `uv run intelligence-monitor`）。GitHub Release **不附** CLI zip。
 
-**CI：** PR 只跑 quality。`git push` 到 `main` → Release（quality → tag → 一次 Vite → 三平台 Desktop + GHCR）。產品 SemVer＝git tags；schema stamp **不必**等於產品 tag。根目錄 `VERSION` 可能落後。
+**CI：** PR 只跑 quality。`git push` 到 `main` → Release（quality → 寫回 `VERSION` 並 commit → tag → 一次 Vite → 三平台 Desktop + GHCR）。產品 SemVer＝git tags；schema stamp **不必**等於產品 tag。
 
 ## Schema
 

@@ -33,8 +33,9 @@ Empty DB reset: see [README §開發](./README.md)（`scripts/reset_local_databa
 
 ## The gate: `npm run check`
 
-Run it before opening a PR. It executes these steps in order and stops at the first
-failure:
+`npm run check:fast` is lint + typecheck only. The full gate still runs everything
+below. Run `npm run check` before opening a PR. It executes these steps in order
+and stops at the first failure:
 
 1. **`npm run lint`** — `ruff check` + `ruff format --check` on `server/` and `scripts/`,
    then ESLint on `web/src/`

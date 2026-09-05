@@ -10,8 +10,8 @@ Covers:
   - 「不是情報」/「從時間軸拿掉」: dated August 2026 intel events
   - Agent page 「收回最近一次調和」: completed agent batch + origin=agent user_events
 
-  uv run python scripts/seed_trace_correct_demo.py
-  uv run python scripts/seed_trace_correct_demo.py --clean   # remove [demo] rows only
+  uv run python scripts/dev/seed_trace_correct_demo.py
+  uv run python scripts/dev/seed_trace_correct_demo.py --clean   # remove [demo] rows only
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ AE_UNBOUND_DATED = f"{IDP}-ae-unbound-1"
 AE_UNBOUND_UNTIMED = f"{IDP}-ae-unbound-2"
 
 RESET_CMD = "uv run python scripts/reset_local_databases.py --apply"
-SEED_CMD = "uv run python scripts/seed_trace_correct_demo.py"
+SEED_CMD = "uv run python scripts/dev/seed_trace_correct_demo.py"
 
 
 def _iso(dt: datetime) -> str:

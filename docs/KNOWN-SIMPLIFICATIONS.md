@@ -183,7 +183,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
-- GitHub Actions: PR 跑 `ci.yml` quality；**push `main`** 跑 `release.yml`（quality → `git tag`／`git push` → win／mac／linux Desktop → GitHub Release → GHCR）。CLI 用該 tag 源碼。不 bot commit main。
+- GitHub Actions: PR 跑 `ci.yml` quality；**push `main`** 跑 `release.yml`（quality → 寫回 `VERSION` 並 commit → `git tag`／`git push` → win／mac／linux Desktop → GitHub Release → GHCR）。CLI 用該 tag 源碼。VERSION commit 走 GITHUB_TOKEN，不會重觸發 Release。
 
 ## Security (outbound requests)
 
@@ -194,7 +194,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 ## Release checklist (Desktop + source CLI + container)
 
 1. Merge／push to `main` and confirm `quality` + build pass
-2. Push `main`: Release runs quality, auto-bumps, `git tag`s, packages Desktop×3, and creates the GitHub Release. CLI is that tag's source (`uv sync --locked` + `uv run python -m server`). Does **not** push commits to main.
+2. Push `main`: Release runs quality, auto-bumps, writes `VERSION` back to `main`, `git tag`s, packages Desktop×3, and creates the GitHub Release. CLI is that tag's source (`uv sync --locked` + `uv run python -m server`).
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
 

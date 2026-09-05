@@ -6,7 +6,7 @@ Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `
 
 **Stamp 1–6 files do not upgrade.** Copy the database out of the data directory first, then run `python scripts/reset_local_databases.py --apply`. There is no 6→7 additive walk: published stamp-6 files still carry the auto-sync cache columns and hard-reject. Calendar-share JSON that lived only on stamps 1–4 is discarded. Retired numbers **27** and **45** are **future stamps** and hard-reject with “update the application” (reset is a last resort). Corrupt / lookalike fingerprints hard-reject with the same reset command. Startup never silently deletes or rebuilds a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
-**Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
+**Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other. After tagging, Release writes the tag version into root `VERSION` (and syncs manifests) and commits that back to `main` so the file does not lag; schema stamp still need not equal the product tag.
 
 ## Version support
 

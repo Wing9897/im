@@ -7,32 +7,62 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-quality
+      - name: Lint
+        run: npm run lint
+
+  i18n:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-quality
+        with:
+          python: "false"
+      - name: i18n parity
+        run: npm run i18n:check
+
+  openapi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-quality
+      - name: OpenAPI drift
+        run: npm run openapi:check
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-quality
+      - name: Typecheck
+        run: npm run typecheck
+
+  tests:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          activate-environment: true
-
-      - name: Install Python 3.11
-        run: uv python install 3.11
-
-      - name: Install dependencies
+      - uses: ./.github/actions/setup-quality
+      - name: Presets and tests
         run: |
-          uv sync --extra dev --locked
-          npm ci
+          npm run sync:presets:check
+          npm run test:all
 
-      - name: Run quality gates
-        run: npm run check
-
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-quality
+        with:
+          python: "false"
       - name: Build web and desktop
         run: npm run build

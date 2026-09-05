@@ -5,8 +5,8 @@ Run against the live app DB (default data dir) while the server may be running.
 Requires current stamp 7 (``SCHEMA_SEMVER`` ``1.6.0``); stamp 1–6 files
 reject (backup then reset). Reset first if the file is a future or corrupt stamp.
 
-  python scripts/seed_calendar_ui_fixtures.py
-  python scripts/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first
+  python scripts/dev/seed_calendar_ui_fixtures.py
+  python scripts/dev/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first
 """
 
 from __future__ import annotations
