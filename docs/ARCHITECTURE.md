@@ -235,7 +235,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Map markers UI | `components/intelligence/` | Map board embed + MapView |
 | Timed event merge | `domain/timeline/timedEventMerge` | Board calendar/gantt/events + timeline window projectors |
 | Source filter dialog | `components/SourceFilterDialog` | Board widgets + intelligence toolbar (workset/task tree only) |
-| Timeline source filter | `pages/timeline/components/TimelineSourceFilterDialog` | Timeline toolbar: same tree **plus** a subscribe column (`domain/calendarShare/SubscribeFilterGroup`); do not fold into `SourceFilterDialog` |
+| Timeline source filter | `pages/timeline/components/TimelineSourceFilterDialog` | Timeline toolbar: same tree **plus** a subscribe column (`components/subscriptions/SubscribeFilterGroup`); do not fold into `SourceFilterDialog` |
 
 **Forbidden**: `hooks/` and `components/` must not import from `pages/` (enforced by `tests/smoke/architecture-invariants.test.ts`). Shared helpers that hooks or components need belong in `domain/` (or lower), not under a page folder. `board/` must not deep-import `pages/*` (also ESLint).
 

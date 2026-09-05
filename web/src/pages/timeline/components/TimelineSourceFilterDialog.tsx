@@ -13,7 +13,7 @@ import { SourceFilterTrigger } from "../../../components/SourceFilterTrigger";
 import {
   SubscribeFilterGroup,
   type SubscribeCalendarOption,
-} from "../../../domain/calendarShare/SubscribeFilterGroup";
+} from "../../../components/subscriptions/SubscribeFilterGroup";
 import { Button, TextField } from "../../../components/ui";
 import { useSourceFilterDialogState } from "../../../components/useSourceFilterDialogState";
 import { useSourceFilterSubscribeDraft } from "../../../domain/calendarShare/useSourceFilterSubscribeDraft";
