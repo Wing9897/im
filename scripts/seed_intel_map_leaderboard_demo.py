@@ -20,6 +20,7 @@ import json
 from argparse import Namespace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import TypedDict
 
 from _seed_common import (
     ensure_completed_batch,
@@ -35,6 +36,18 @@ from server.util import utc_now_iso
 
 PREFIX = "[intel-demo]"
 IDP = "intel-demo"
+
+
+class EventSpec(TypedDict):
+    id: str
+    title: str
+    body: str
+    start: str | None
+    end: str | None
+    location: str
+    lat: float | None
+    lon: float | None
+    source_index: int | None
 
 SOURCE_ID = f"{IDP}-rss"
 RSS_FEED_URL = "https://demo.local/intelligence-monitor/intel-map-leaderboard.xml"
@@ -250,7 +263,7 @@ def _geo_event(
     hours: float = 1.5,
     location: str | None = None,
     source_index: int | None = None,
-) -> dict[str, object]:
+) -> EventSpec:
     lat0, lon0, city = _CLUSTERS[cluster]
     lat, lon = _jitter(lat0, lon0, slug)
     return {
@@ -275,8 +288,8 @@ def _plain_event(
     hours: float = 1.0,
     location: str = "N/A",
     source_index: int | None = None,
-) -> dict[str, object]:
-    spec: dict[str, object] = {
+) -> EventSpec:
+    spec: EventSpec = {
         "id": f"{IDP}-ae-{slug}",
         "title": f"{PREFIX} {title}",
         "body": body,
@@ -290,7 +303,7 @@ def _plain_event(
     return spec
 
 
-def _event_specs(now_dt: datetime) -> list[dict[str, object]]:
+def _event_specs(now_dt: datetime) -> list[EventSpec]:
     """Mix of geo clusters (live ±12h + 7–30d) and list-only rows without coords."""
     return [
         # ── live map default (±12h) — all major clusters ──
@@ -607,8 +620,8 @@ async def seed(db: Database) -> dict[str, int]:
     geo = 0
     plain = 0
     for spec in _event_specs(now_dt):
-        source_index = spec.get("source_index")
-        source_message_id = message_ids[int(source_index)] if isinstance(source_index, int) else None
+        source_index = spec["source_index"]
+        source_message_id = message_ids[source_index] if source_index is not None else None
         await insert_analysis_event(
             db,
             event_id=str(spec["id"]),
@@ -616,11 +629,11 @@ async def seed(db: Database) -> dict[str, int]:
             batch_id=INTEL_BATCH_ID,
             title=str(spec["title"]),
             body=str(spec["body"]),
-            start=spec["start"] if spec["start"] is not None else None,
-            end=spec["end"] if spec["end"] is not None else None,
-            location=str(spec.get("location") or ""),
-            lat=spec["lat"] if spec["lat"] is not None else None,
-            lon=spec["lon"] if spec["lon"] is not None else None,
+            start=spec["start"],
+            end=spec["end"],
+            location=spec["location"],
+            lat=spec["lat"],
+            lon=spec["lon"],
             source_message_id=source_message_id,
             channel_names=[f"{PREFIX} 示範頻道"],
         )
