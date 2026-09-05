@@ -9,7 +9,7 @@ import type {
 } from "../../api/calendarImports";
 import { Button } from "../ui";
 import { CheckboxField } from "../ui/CheckboxField";
-import { formatDateTime } from "../../utils/dateFormat";
+import { formatDateTime } from "../../domain/timeline/dateUtils";
 
 function isoDatePart(iso: string): string {
   return iso.slice(0, 10);

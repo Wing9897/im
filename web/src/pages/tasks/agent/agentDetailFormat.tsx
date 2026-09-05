@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatAnalysisErrorMessage } from "../../../domain/analysis/formatAnalysisError";
-import { formatDateTime } from "../../../utils/dateFormat";
+import { formatDateTime } from "../../../domain/timeline/dateUtils";
 
 const ERROR_CLAMP_CHARS = 220;
 

@@ -19,7 +19,7 @@ import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
 import { matchOverviewRangeId } from "../../domain/gantt/ganttOverviewWindow";
 import { calendarNoonMs } from "../../domain/intelligence/timelineSliderGestureGeometry";
-import { dateKey, formatDateOnly } from "../../utils/dateFormat";
+import { dateKey, formatDateOnly } from "../../domain/timeline/dateUtils";
 import { useGanttOverviewSession } from "./useGanttOverviewSession";
 import { useTimelineFiltering } from "./useTimelineFiltering";
 import { resolveSidebarFocusForWindow } from "./timelinePageUtils";

@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import { OverlayPortal } from "./common/OverlayPortal";
 import { dialogShellClass } from "./dialogs/dialogShellClasses";
+import { surfaceOverlayHover60Class } from "./ui/controlStyles";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ModalDialogProps {
@@ -221,7 +222,7 @@ export function ModalDialog({
             {hideCloseButton ? null : (
               <button
                 type="button"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-text-muted transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-text-muted transition-colors ${surfaceOverlayHover60Class} hover:text-text-primary`}
                 aria-label={resolvedCloseAria}
                 disabled={exiting || parked}
                 onClick={onClose}

@@ -34,7 +34,7 @@ import {
   dayCardTitleClass,
   dayEventCardClass,
 } from "./calendarCellClasses";
-import { dayCardTimeLabel } from "./dayCardTimeLabel";
+import { dayCardTimeLabel } from "../../../domain/timeline/dateUtils";
 import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
 import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
 

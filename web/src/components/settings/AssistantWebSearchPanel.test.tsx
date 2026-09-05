@@ -1,5 +1,6 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import {
   emptyKeyedWebSearchApiKeys,
   KEYED_WEB_SEARCH_TOOL_PROVIDERS,
@@ -250,7 +251,7 @@ describe("AssistantWebSearchPanel", () => {
     expect(modeList).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="web-search-mode-list"]')).toBeNull();
     expect(modeList?.parentElement).toBe(document.body);
-    expect(modeList?.style.zIndex).toBe("3000");
+    expect(modeList?.style.zIndex).toBe(String(zIndex.menu));
 
     await openMenu(harness, "web-search-provider");
     const providerList = document.body.querySelector(
@@ -259,6 +260,6 @@ describe("AssistantWebSearchPanel", () => {
     expect(providerList).toBeTruthy();
     expect(harness.container.querySelector('[data-testid="web-search-provider-list"]')).toBeNull();
     expect(providerList?.parentElement).toBe(document.body);
-    expect(providerList?.style.zIndex).toBe("3000");
+    expect(providerList?.style.zIndex).toBe(String(zIndex.menu));
   });
 });

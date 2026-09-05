@@ -13,6 +13,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import i18n from "../../i18n";
 
 const mockSettingsObject = vi.hoisted(() =>
@@ -171,7 +172,7 @@ describe("AnalysisSchedulingDialog", () => {
     ) as HTMLElement | null;
     expect(evidenceList).toBeTruthy();
     expect(evidenceList?.parentElement).toBe(document.body);
-    expect(evidenceList?.style.zIndex).toBe("3000");
+    expect(evidenceList?.style.zIndex).toBe(String(zIndex.menu));
   });
 
   it("renders advanced collapsible section headers collapsed by default without timeout", () => {

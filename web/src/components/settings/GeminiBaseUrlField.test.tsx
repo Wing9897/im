@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 
 import i18n from "../../i18n";
 import { GeminiBaseUrlField } from "./GeminiBaseUrlField";
@@ -58,7 +59,7 @@ describe("GeminiBaseUrlField", () => {
     expect(list).toBeTruthy();
     expect(container.querySelector('[data-testid="gemini-base-url-presets"]')).toBeNull();
     expect(list?.parentElement).toBe(document.body);
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
     expect(list?.textContent).toContain("Beta（預覽版，官方預設）");
     expect(list?.textContent).toContain("正式（穩定版）");
 

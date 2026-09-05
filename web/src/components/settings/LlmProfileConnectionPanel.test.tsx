@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 
 import i18n from "../../i18n";
 import type { LlmProvider } from "../../types";
@@ -101,7 +102,7 @@ describe("LlmProfileConnectionPanel", () => {
       expect(list).toBeTruthy();
       expect(container.querySelector('[data-testid="openai-json-mode-list"]')).toBeNull();
       expect(list?.parentElement).toBe(document.body);
-      expect(list?.style.zIndex).toBe("3000");
+      expect(list?.style.zIndex).toBe(String(zIndex.menu));
     });
 
     it("does not render JSON 輸出模式 when provider is not openai_compatible", () => {

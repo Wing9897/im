@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import type { TimeWindow } from "../../../types";
-import { formatDateOnly } from "../../../utils/dateFormat";
+import { formatDateOnly } from "../../../domain/timeline/dateUtils";
 import {
   applyDragMove,
   calendarNoonMs,

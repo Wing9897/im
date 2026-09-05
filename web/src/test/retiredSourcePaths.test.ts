@@ -133,6 +133,9 @@ const RETIRED_SOURCE_PATHS = [
   "pages/worksets/useWorksetPipelineGraphModel.ts",
   "pages/worksets/useWorksetPipelineGraphData.ts",
   "pages/worksets/worksetGraphPatches.ts",
+  "utils/dateFormat.ts",
+  "utils/dateFormat.test.ts",
+  "pages/timeline/calendar/dayCardTimeLabel.ts",
   // Notify — validate/buildConfiguration moved to domain/actions/
   "pages/notify/actionConfiguration.ts",
   "pages/notify/validateActionTypeFields.ts",

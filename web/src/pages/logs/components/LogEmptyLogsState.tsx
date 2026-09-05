@@ -1,5 +1,7 @@
+import { ScrollText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../../components/common/EmptyState";
+import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
 import type { AppLogEntry } from "../../../context/appRuntimeShared";
 import { Button } from "../../../components/ui";
 
@@ -50,6 +52,7 @@ export function EmptyLogsState({
       title={title}
       description={description}
       hint={hint}
+      illustration={<EmptyStateGlyph icon={ScrollText} />}
       actions={
         hasActiveFilters ? (
           <div className="flex flex-wrap gap-2.5">

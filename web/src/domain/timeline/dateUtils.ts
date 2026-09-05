@@ -4,6 +4,63 @@ import { formatOsDateTime } from "../../utils/time";
 
 export type TimelineScale = "day" | "week" | "month" | "quarter" | "year";
 
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** Local calendar date key `YYYY-MM-DD` from a `Date` (ignores time-of-day). */
+export function dateKey(day: Date): string {
+  return `${day.getFullYear()}-${pad2(day.getMonth() + 1)}-${pad2(day.getDate())}`;
+}
+
+/** Format timestamp as "YYYY-MM-DD HH:MM" in local time */
+export function formatDateTime(ts: number | null | undefined): string {
+  if (ts == null || !Number.isFinite(ts)) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** Format timestamp as "YYYY-MM-DD" in local time */
+export function formatDateOnly(ts: number | null | undefined): string {
+  if (ts == null || !Number.isFinite(ts)) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  return dateKey(d);
+}
+
+/** Format timestamp as tick label with date + time */
+export function formatTickLabel(ts: number | null | undefined): string {
+  if (ts == null || !Number.isFinite(ts)) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  const mo = d.getMonth() + 1;
+  const day = d.getDate();
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const s = d.getSeconds();
+  const datePart = `${mo}/${day}`;
+  if (h === 0 && m === 0 && s === 0) return datePart;
+  const timePart =
+    s !== 0 ? `${pad2(h)}:${pad2(m)}:${pad2(s)}` : `${pad2(h)}:${pad2(m)}`;
+  return `${datePart} ${timePart}`;
+}
+
+/** Day/week card time chip: all-day label, start-only, or start–end range. */
+export function dayCardTimeLabel(
+  event: TimelineItem,
+  allDayLabel: string,
+): string {
+  if (event.isAllDay) return allDayLabel;
+  const start = formatTimeLabel(new Date(event.startTime));
+  if (!event.endTime) return start;
+  const endDate = new Date(event.endTime);
+  if (Number.isNaN(endDate.getTime()) || endDate.getTime() <= new Date(event.startTime).getTime()) {
+    return start;
+  }
+  return `${start} – ${formatTimeLabel(endDate)}`;
+}
+
 export function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -193,10 +250,10 @@ export function toDateTimeLocalInput(value: string | null | undefined): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
   const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  const hour = String(parsed.getHours()).padStart(2, "0");
-  const minute = String(parsed.getMinutes()).padStart(2, "0");
+  const month = pad2(parsed.getMonth() + 1);
+  const day = pad2(parsed.getDate());
+  const hour = pad2(parsed.getHours());
+  const minute = pad2(parsed.getMinutes());
   return `${year}-${month}-${day}T${hour}:${minute}`;
 }
 
@@ -231,8 +288,8 @@ export function addDaysToDateInput(value: string, delta: number): string {
   const utcNoon = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
   const shifted = new Date(utcNoon + delta * 86_400_000);
   const year = shifted.getUTCFullYear();
-  const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(shifted.getUTCDate()).padStart(2, "0");
+  const month = pad2(shifted.getUTCMonth() + 1);
+  const day = pad2(shifted.getUTCDate());
   return `${year}-${month}-${day}`;
 }
 
@@ -244,8 +301,8 @@ export function inclusiveEndDateFromExclusive(exclusiveEnd: string): string {
 
 export function todayDateInput(now: Date = new Date()): string {
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+  const month = pad2(now.getMonth() + 1);
+  const day = pad2(now.getDate());
   return `${year}-${month}-${day}`;
 }
 

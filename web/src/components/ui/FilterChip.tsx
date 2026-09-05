@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { surfaceOverlayHover60Class } from "./controlStyles";
 
 type FilterChipSize = "sm" | "md" | "lg";
 
@@ -26,7 +27,7 @@ export function FilterChip({
     sizeClass[size],
     active
       ? "border-[color-mix(in_srgb,var(--accent)_45%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"
-      : "border-surface-border bg-transparent text-text-secondary hover:border-surface-overlay hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary",
+      : `border-surface-border bg-transparent text-text-secondary hover:border-surface-overlay ${surfaceOverlayHover60Class} hover:text-text-primary`,
     className ?? "",
   ]
     .filter(Boolean)

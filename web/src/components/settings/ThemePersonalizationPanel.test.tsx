@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { ThemePersonalizationPanel } from "./ThemePersonalizationPanel";
 
@@ -137,7 +138,7 @@ describe("ThemePersonalizationPanel", () => {
     expect(list).not.toBeNull();
     expect(container.querySelector('[data-testid="theme-focal-refresh-hours-list"]')).toBeNull();
     expect(list?.parentElement).toBe(document.body);
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
     const labels = Array.from(list!.querySelectorAll('[role="option"]')).map(
       (el) => el.textContent ?? "",
     );

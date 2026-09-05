@@ -1,5 +1,6 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { zIndex } from "../../styles/tokens";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 import { ensureZhHantLocale } from "../../test/i18nHarness";
 import { DEFAULT_PROVIDER_BASE_URLS } from "../../domain/settings/llmProviderConfig";
@@ -89,7 +90,7 @@ describe("LlmProfileEditorDialog", () => {
     ) as HTMLElement | null;
     expect(list).toBeTruthy();
     expect(list?.parentElement).toBe(document.body);
-    expect(list?.style.zIndex).toBe("3000");
+    expect(list?.style.zIndex).toBe(String(zIndex.menu));
 
     const staff = document.body.querySelector('[aria-label="任務員工綁定"]');
     expect(staff).toBeTruthy();

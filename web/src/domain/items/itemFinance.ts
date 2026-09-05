@@ -6,8 +6,7 @@
 
 import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
-import { formatDateOnly } from "../../utils/dateFormat";
-import { addDays, startOfDay, startOfMonth, startOfYear, todayDateInput } from "../timeline/dateUtils";
+import { addDays, formatDateOnly, startOfDay, startOfMonth, startOfYear, todayDateInput } from "../timeline/dateUtils";
 import { isPurchaseEffectiveCalendarEvent } from "../timeline/userEventCalendarKind";
 
 export type EventFinanceDirection = "expense" | "income";

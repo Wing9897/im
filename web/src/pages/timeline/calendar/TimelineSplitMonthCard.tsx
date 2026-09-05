@@ -9,12 +9,10 @@ import {
   type BlockCardColorChoice,
 } from "../../../domain/timeline/blockCardColors";
 import { eventShowsInMonthDayPreview } from "../../../domain/timeline/monthDaySpanIndicators";
-import { isSameDay, isToday } from "../../../domain/timeline/dateUtils";
+import { dateKey, dayCardTimeLabel, isSameDay, isToday } from "../../../domain/timeline/dateUtils";
 import { SPLIT_MONTH_DOT_LIMIT } from "../../../domain/timeline/monthCardSources";
 import { resolveWorksetCoverSrc } from "../../../domain/worksets/worksetCover";
-import { dateKey } from "../../../utils/dateFormat";
 import { preferActiveEvents, dismissedTitleClass } from "../timelineDismissUtils";
-import { dayCardTimeLabel } from "./dayCardTimeLabel";
 import { placeSplitDayPopover } from "./splitDayPopoverPlacement";
 import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
 import { TimelineSplitMonthColorControl } from "./TimelineSplitMonthColorControl";

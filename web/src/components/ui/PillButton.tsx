@@ -1,4 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { surfaceOverlayHover60Class } from "./controlStyles";
 
 type PillPadding = "default" | "square";
 
@@ -24,7 +25,7 @@ export const PillButton = forwardRef<HTMLButtonElement, PillButtonProps>(
       paddingClass[padding],
       active
         ? "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] text-accent"
-        : "border-surface-border bg-transparent text-text-secondary hover:border-[color-mix(in_srgb,var(--text-muted)_35%,var(--surface-border))] hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary",
+        : `border-surface-border bg-transparent text-text-secondary hover:border-[color-mix(in_srgb,var(--text-muted)_35%,var(--surface-border))] ${surfaceOverlayHover60Class} hover:text-text-primary`,
       className ?? "",
     ]
       .filter(Boolean)

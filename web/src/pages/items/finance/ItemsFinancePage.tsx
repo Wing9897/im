@@ -4,7 +4,7 @@ import { AlertBanner, Button, MenuSelect, TextField } from "../../../components/
 import { EmptyState } from "../../../components/common/EmptyState";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import { contentFadeClass } from "../../../components/ui/pageLayout";
-import { formatDateOnly } from "../../../utils/dateFormat";
+import { formatDateOnly } from "../../../domain/timeline/dateUtils";
 import { ItemsPageChrome } from "../ItemsPageChrome";
 import {
   itemsFormPageMaxWidthClass,
