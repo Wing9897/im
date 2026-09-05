@@ -52,6 +52,8 @@ uv run python scripts/reset_local_databases.py --apply
 
 腳本只刪已知 SQLite（含 `-wal`／`-shm`），不動 Telegram sessions、`secret.key`、`connection.json`。詳見 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)。
 
+可選示範種子與 live_eval 在 [`scripts/dev/`](scripts/dev/)，產品運行不需要。
+
 ## 指令
 
 | 場景 | 指令 |
