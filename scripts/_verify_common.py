@@ -21,7 +21,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from server.constants import SERVICE_PORT  # noqa: E402
+from server.constants import ACCESS_TOKEN_ENV, SERVICE_PORT  # noqa: E402
 
 FAILURES: list[str] = []
 
@@ -30,7 +30,7 @@ BASE = os.environ.get("VERIFY_BASE") or os.environ.get("DESKTOP_VERIFY_BASE") or
 
 # After admin register, localhost_auth_exempt is false — pass a device access
 # token or full-scope API key so live verify scripts can authenticate.
-VERIFY_BEARER = (os.environ.get("VERIFY_BEARER") or os.environ.get("IM_ACCESS_TOKEN") or "").strip()
+VERIFY_BEARER = (os.environ.get("VERIFY_BEARER") or os.environ.get(ACCESS_TOKEN_ENV) or "").strip()
 
 _MISSING_BEARER_HINT = (
     "\n[FATAL] Protected API returned 401 and VERIFY_BEARER / IM_ACCESS_TOKEN is not set.\n"

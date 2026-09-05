@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from hypothesis import settings
 
+from server.constants import SECRET_KEY_FILE_ENV
 from server.main import create_app
 from server.secrets import _fernet
 from server.tests.property_strategies import MIN_PROPERTY_EXAMPLES
@@ -22,10 +23,7 @@ settings.load_profile("property-invariants")
 
 @pytest.fixture(autouse=True)
 def isolated_secret_key(tmp_path, monkeypatch):
-    monkeypatch.setenv(
-        "INTELLIGENCE_MONITOR_SECRET_KEY_FILE",
-        str(tmp_path / "secret.key"),
-    )
+    monkeypatch.setenv(SECRET_KEY_FILE_ENV, str(tmp_path / "secret.key"))
     _fernet.cache_clear()
     yield
     _fernet.cache_clear()

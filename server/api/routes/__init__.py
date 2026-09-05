@@ -32,7 +32,8 @@ def all_routers() -> list[APIRouter]:
         results,
         setup,
         sources,
-        system,
+        system_ops,
+        system_reset,
         tasks,
         theme,
         ui_prefs,
@@ -56,9 +57,9 @@ def all_routers() -> list[APIRouter]:
             access_keys.router,
             a2a_agent.router,
             mcp.router,
-            # Public reset (conditional auth) before the authenticated system router.
-            system.public_reset_router,
-            system.router,
+            # Public recovery routes (conditional auth) before the authenticated system router.
+            system_reset.router,
+            system_ops.router,
             actions.router,
             calendar.router,
             calendar_share.router,
