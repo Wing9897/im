@@ -62,16 +62,24 @@ def test_handle_regex_and_max_len_match_ic() -> None:
     assert _assign_int(ic, "HANDLE_MAX_LEN") == HANDLE_MAX_LEN
 
 
+def _ic_rate_limit_family(source: str, key: str) -> tuple[int, float]:
+    """``GATEWAY_DEFAULTS["rateLimit"][key]`` → ``(n, windowSeconds)`` from IC ``app/defaults.py``."""
+    match = re.search(
+        rf"^\s*\"{re.escape(key)}\":\s*\{{\s*\"n\":\s*(\d+),\s*\"windowSeconds\":\s*(\d+)\s*\}},?\s*$",
+        source,
+        re.M,
+    )
+    assert match, f"rateLimit.{key} not found"
+    return int(match.group(1)), float(match.group(2))
+
+
 def test_rate_limit_numbers_match_ic() -> None:
-    ic = _source("app/config.py")
-    assert _assign_int(ic, "RATE_LIMIT_SEARCH_LIMIT") == SEARCH_LIMIT
-    assert float(_assign_int(ic, "RATE_LIMIT_SEARCH_WINDOW_SECONDS")) == SEARCH_WINDOW_SECONDS
-    assert _assign_int(ic, "RATE_LIMIT_AUTH_LIMIT") == AUTH_LIMIT
-    assert float(_assign_int(ic, "RATE_LIMIT_AUTH_WINDOW_SECONDS")) == AUTH_WINDOW_SECONDS
-    assert _assign_int(ic, "RATE_LIMIT_SUBSCRIBE_LIMIT") == SUBSCRIBE_LIMIT
-    assert float(_assign_int(ic, "RATE_LIMIT_SUBSCRIBE_WINDOW_SECONDS")) == SUBSCRIBE_WINDOW_SECONDS
-    assert _assign_int(ic, "RATE_LIMIT_PUBLIC_EVENTS_LIMIT") == PUBLIC_EVENTS_LIMIT
-    assert float(_assign_int(ic, "RATE_LIMIT_PUBLIC_EVENTS_WINDOW_SECONDS")) == PUBLIC_EVENTS_WINDOW_SECONDS
+    ic = _source("app/defaults.py")
+    assert _ic_rate_limit_family(ic, "search") == (SEARCH_LIMIT, SEARCH_WINDOW_SECONDS)
+    assert _ic_rate_limit_family(ic, "auth") == (AUTH_LIMIT, AUTH_WINDOW_SECONDS)
+    assert _ic_rate_limit_family(ic, "subscribe") == (SUBSCRIBE_LIMIT, SUBSCRIBE_WINDOW_SECONDS)
+    # IM's ``public_events`` proxy family fronts IC ``GET /me/subscriptions/events``.
+    assert _ic_rate_limit_family(ic, "subscriptionEvents") == (PUBLIC_EVENTS_LIMIT, PUBLIC_EVENTS_WINDOW_SECONDS)
 
 
 def _pydantic_field_names(source: str, class_name: str) -> set[str]:

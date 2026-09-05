@@ -25,14 +25,16 @@ from fastapi import Request
 
 from server.errors import RATE_LIMITED, http_error
 
-# Synced with IntelligenceCalendar compiled RATE_LIMIT_* defaults.
+# Synced with IntelligenceCalendar ``app/defaults.py`` ``GATEWAY_DEFAULTS["rateLimit"]``
+# (drift-tested in ``test_contract_calendar_share_ic``). IM's ``public_events`` family
+# fronts IC's ``GET /me/subscriptions/events`` → IC key ``subscriptionEvents``.
 SEARCH_LIMIT = 5
 SEARCH_WINDOW_SECONDS = 10.0
 AUTH_LIMIT = 5
 AUTH_WINDOW_SECONDS = 60.0
 SUBSCRIBE_LIMIT = 5
 SUBSCRIBE_WINDOW_SECONDS = 10.0
-PUBLIC_EVENTS_LIMIT = 30
+PUBLIC_EVENTS_LIMIT = 60
 PUBLIC_EVENTS_WINDOW_SECONDS = 60.0
 
 #: IM-only proxy families (not on the IC public table).
