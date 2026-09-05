@@ -4,13 +4,13 @@ import { AlertBanner, Button, FormActions, captionClass } from "../../components
 import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
 import { isAgentCalendarTask } from "../../domain/tasks/isAgentCalendarTask";
-import { useWorksetDetailData } from "../dashboard/hooks/useWorksetDetailData";
+import { useWorksetDetailData } from "../../components/worksets/useWorksetDetailData";
 import {
   WorksetEventsSummarySection,
   WorksetExpiringSummarySection,
   WorksetItemsSection,
   WorksetTasksSection,
-} from "../dashboard/components/WorksetDetailSections";
+} from "../../components/worksets/WorksetDetailSections";
 
 export type WorksetWorkspaceTarget = {
   id: string;

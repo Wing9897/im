@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { ModalDialog } from "../../components/ModalDialog";
-import { NotifyPrefField } from "../../components/notify/NotifyPrefField";
-import { WorksetPermissionToggles } from "../../components/WorksetPermissionToggles";
-import { Button, SelectTile, SelectTileGrid } from "../../components/ui";
+import { ModalDialog } from "../ModalDialog";
+import { NotifyPrefField } from "../notify/NotifyPrefField";
+import { WorksetPermissionToggles } from "../WorksetPermissionToggles";
+import { Button, SelectTile, SelectTileGrid } from "../ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
 import type { NotifyPref } from "../../domain/notify/notifyPref";

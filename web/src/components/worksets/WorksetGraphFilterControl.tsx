@@ -16,7 +16,7 @@ import {
   controlBaseClass,
   controlSizeClass,
   pageOpsControlClass,
-} from "../../components/ui/controlStyles";
+} from "../ui/controlStyles";
 import { spacing } from "../../styles/tokens";
 import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
 import { PIPELINE_MAX_VISIBLE_WORKSETS } from "../../domain/worksets/worksetPipelineGraph";

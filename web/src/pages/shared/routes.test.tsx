@@ -441,7 +441,7 @@ describe("Agent detail route contract", () => {
     expect(src).toContain('path="/tasks/:taskId/agent"');
     expect(src).toContain('path="/tasks"');
     expect(src).toContain('element={<LazyPage Page={DashboardViewer} />}');
-    expect(src).toContain("WorksetCatalogRoute");
+    expect(src).not.toContain("WorksetCatalogRoute");
     expect(src).toContain("WorksetWorkspacePage");
     expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
@@ -450,14 +450,14 @@ describe("Agent detail route contract", () => {
 });
 
 describe("Settings／AI page folders vs URLs", () => {
-  it("nests AI settings under /settings/ai/* with permanent /ai/* redirects", () => {
+  it("nests AI settings under /settings/ai/* without retired /ai/* redirects", () => {
     const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
     expect(src).toContain('path="settings/ai"');
     expect(src).toContain("<Navigate to=\"/settings/ai/provider\" replace />");
-    expect(src).toContain('path="/ai/provider"');
-    expect(src).toContain('path="/ai/voice"');
-    expect(src).toContain('path="/ai/staff"');
-    expect(src).toContain('path="/ai"');
+    expect(src).not.toContain('path="/ai/provider"');
+    expect(src).not.toContain('path="/ai/voice"');
+    expect(src).not.toContain('path="/ai/staff"');
+    expect(src).not.toContain('path="/ai/analysis-strategy"');
     expect(src).toContain('path="provider"');
     expect(src).toContain('path="voice"');
     expect(src).toContain('path="staff"');
@@ -469,9 +469,9 @@ describe("Settings／AI page folders vs URLs", () => {
     expect(src).toContain("NotFoundPage");
     expect(src).toContain('path="*"');
     expect(src).toContain('path="/tasks"');
-    expect(src).toContain("WorksetCatalogRoute");
-    expect(src).toContain("worksetTasksBookmarkPath");
-    expect(src).toContain("<Navigate to=\"/tasks?scheduling=open\" replace />");
+    expect(src).not.toContain("WorksetCatalogRoute");
+    expect(src).not.toContain("worksetTasksBookmarkPath");
+    expect(src).not.toContain("<Navigate to=\"/tasks?scheduling=open\" replace />");
     expect(src).not.toContain("TasksListRedirect");
     expect(src).not.toContain("../pages/ai/AiWorkspacePage");
     expect(src).not.toContain("../pages/ai/SettingsAiProviderPage");

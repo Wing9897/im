@@ -14,7 +14,7 @@ import {
   taskFormAnalysisModeOrder,
 } from "../../../components/task/taskFormAnalysisModeMeta";
 import type { TasksModeFilter } from "../../../domain/tasks/systemTaskCatalog";
-import { WorksetCatalogChrome } from "../../worksets/WorksetCatalogChrome";
+import { WorksetCatalogChrome } from "../../../components/worksets/WorksetCatalogChrome";
 
 function VisibilityEyeButton({
   visible,

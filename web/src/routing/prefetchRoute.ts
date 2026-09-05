@@ -81,13 +81,11 @@ export function prefetchRoute(to: string): void {
     resolveItemsPrefetch(path) ??
     (path.startsWith("/settings/ai")
       ? ROUTE_PREFETCHERS["/settings/ai"]
-      : path.startsWith("/ai")
-        ? ROUTE_PREFETCHERS["/settings/ai"]
-        : path.startsWith("/settings")
-          ? ROUTE_PREFETCHERS["/settings"]
-          : path.startsWith("/subscriptions")
-            ? ROUTE_PREFETCHERS["/subscriptions"]
-            : undefined);
+      : path.startsWith("/settings")
+        ? ROUTE_PREFETCHERS["/settings"]
+        : path.startsWith("/subscriptions")
+          ? ROUTE_PREFETCHERS["/subscriptions"]
+          : undefined);
   if (!loader || prefetched.has(path)) return;
   prefetched.add(path);
   void loader().catch(() => {

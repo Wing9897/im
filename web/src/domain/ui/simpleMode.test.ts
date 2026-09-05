@@ -1,9 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   homePathForMode,
-  isSimpleModeHiddenAiTab,
   isSimpleModeHiddenPath,
-  isSimpleModeHiddenWorksetTasksTab,
   readSimpleMode,
   SIMPLE_MODE_STORAGE_KEY,
   writeSimpleMode,
@@ -48,18 +46,10 @@ describe("simpleMode", () => {
     expect(isSimpleModeHiddenPath("/settings/general")).toBe(false);
   });
 
-  it("hides leftover /worksets?tab=tasks without hiding /worksets", () => {
-    expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "?tab=tasks")).toBe(true);
-    expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "tab=tasks")).toBe(true);
-    expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "?tab=graph")).toBe(false);
-    expect(isSimpleModeHiddenWorksetTasksTab("/worksets", "")).toBe(false);
-    expect(isSimpleModeHiddenWorksetTasksTab("/tasks", "?tab=tasks")).toBe(false);
-  });
-
-  it("hides the legacy analysis-strategy URL only", () => {
-    expect(isSimpleModeHiddenAiTab("/ai/analysis-strategy")).toBe(true);
-    expect(isSimpleModeHiddenAiTab("/ai/provider")).toBe(false);
-    expect(isSimpleModeHiddenAiTab("/settings/ai/provider")).toBe(false);
-    expect(isSimpleModeHiddenAiTab("/ai/staff")).toBe(false);
+  it("does not hide leftover /worksets?tab=tasks — catalog owns that URL", () => {
+    expect(isSimpleModeHiddenPath("/worksets")).toBe(false);
+    expect(isSimpleModeHiddenPath("/ai/analysis-strategy")).toBe(false);
+    expect(isSimpleModeHiddenPath("/ai/provider")).toBe(false);
+    expect(isSimpleModeHiddenPath("/settings/ai/provider")).toBe(false);
   });
 });

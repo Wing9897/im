@@ -18,7 +18,7 @@ import { useToast } from "../../context/ToastContext";
 import { WORKSETS_PATH } from "../../domain/worksets/worksetRoutes";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { toError } from "../../utils/errors";
-import { WorksetCatalogChrome } from "./WorksetCatalogChrome";
+import { WorksetCatalogChrome } from "../../components/worksets/WorksetCatalogChrome";
 import { WorksetContentsPanel } from "./WorksetContentsPanel";
 
 /** Full-page workset contents: tasks / items / events plus rename/delete / notify. */

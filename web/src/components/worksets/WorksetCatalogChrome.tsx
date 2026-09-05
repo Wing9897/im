@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
-import { SegmentedControl } from "../../components/ui";
+import { SegmentedControl } from "../ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import {
   parseWorksetCatalogTab,

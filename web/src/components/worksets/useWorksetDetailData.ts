@@ -6,16 +6,16 @@ import {
   listItems,
   type ItemCategory,
   type TrackableItem,
-} from "../../../api/items";
-import { listUserEventsPage, type UserEvent } from "../../../api/userEvents";
-import { formatItemsError } from "../../../domain/items/itemErrors";
-import { resolveItemEmoji } from "../../../domain/items/itemCalendarProjection";
-import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
+} from "../../api/items";
+import { listUserEventsPage, type UserEvent } from "../../api/userEvents";
+import { formatItemsError } from "../../domain/items/itemErrors";
+import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
+import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import {
   selectSummaryExpiringItems,
   selectSummaryUserEvents,
   worksetEventsQueryWindow,
-} from "../../../domain/worksets/worksetDetailSummary";
+} from "../../domain/worksets/worksetDetailSummary";
 
 /** Loads and projects the item/calendar data shown on the workset contents tab. */
 export function useWorksetDetailData(worksetId: string) {

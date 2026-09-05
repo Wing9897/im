@@ -22,21 +22,6 @@ export function parseWorksetCatalogTab(tab: string | null): WorksetCatalogTab {
   return DEFAULT_WORKSET_CATALOG_TAB;
 }
 
-/** Retired catalog tab — bookmarks redirect to `/tasks`. */
-export function isWorksetTasksTabQuery(tab: string | null): boolean {
-  return tab === "tasks";
-}
-
-/**
- * Full-mode bookmark: `/worksets?tab=tasks` → `/tasks`.
- * Keep `scheduling=open`; drop other leftover query keys.
- * Simple mode strips these onto `/worksets` in SimpleModeGate before this runs.
- */
-export function worksetTasksBookmarkPath(search: URLSearchParams): string | null {
-  if (!isWorksetTasksTabQuery(search.get("tab"))) return null;
-  return search.get("scheduling") === "open" ? "/tasks?scheduling=open" : "/tasks";
-}
-
 /** Query key for the graph-tab workset checklist (`?tab=graph&worksetId=`). */
 export const WORKSET_GRAPH_FILTER_PARAM = "worksetId";
 

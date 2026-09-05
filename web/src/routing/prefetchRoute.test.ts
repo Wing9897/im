@@ -17,7 +17,7 @@ describe("prefetchRoute", () => {
   it("accepts assistant and voice paths", () => {
     expect(() => prefetchRoute("/assistant")).not.toThrow();
     expect(() => prefetchRoute("/settings/ai/voice")).not.toThrow();
-    expect(() => prefetchRoute("/ai/voice")).not.toThrow();
+    expect(() => prefetchRoute("/ai/voice")).not.toThrow(); // retired path — ignore, do not prefetch settings
   });
 
   it("maps /tasks to DashboardViewer", () => {
