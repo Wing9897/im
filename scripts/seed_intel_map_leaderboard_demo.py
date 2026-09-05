@@ -49,6 +49,7 @@ class EventSpec(TypedDict):
     lon: float | None
     source_index: int | None
 
+
 SOURCE_ID = f"{IDP}-rss"
 RSS_FEED_URL = "https://demo.local/intelligence-monitor/intel-map-leaderboard.xml"
 LLM_PROFILE_ID = f"{IDP}-llm"
