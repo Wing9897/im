@@ -135,18 +135,8 @@ async def patch_recurring_series_endpoint(
         kwargs["emoji"] = body.emoji
     try:
         if "itemId" in fields:
-            await resolve_user_event_item_id(db, body.itemId)
-            # itemId changes go through a direct SQL update after patch for simplicity
+            kwargs["item_id"] = await resolve_user_event_item_id(db, body.itemId)
         row = await patch_recurring_series(db, **kwargs)
-        if "itemId" in fields:
-            clean_item = await resolve_user_event_item_id(db, body.itemId)
-            await db.execute(
-                "UPDATE recurring_schedules SET item_id = ?, updated_at = updated_at WHERE id = ?",
-                (clean_item, series_id),
-            )
-            row = await fetch_series_row(db, series_id)
-            if row is None:
-                raise TaskWriteError("recurring series not found after itemId update")
     except (TaskWriteError, UserEventItemIdError) as exc:
         status = 404 if "not found" in str(exc).lower() else 422
         raise http_error(status, str(exc), error_code=NOT_FOUND if status == 404 else VALIDATION_ERROR) from exc

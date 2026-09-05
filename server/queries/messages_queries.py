@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
-
 from server.analyzer.incremental import time_range_condition
-from server.api.channel_refs import parse_channel_key_csv
 from server.db.database import Database
+from server.domain.channel_keys import ChannelKeyError, parse_channel_key_csv
 from server.domain.workset_scope import bind_workset_ids_sql
 from server.queries.pagination import fetch_cursor_page
 from server.wire.serializers import serialize_message
@@ -63,9 +61,8 @@ def build_message_filters(
     if channel_ids:
         try:
             channel_pairs = parse_channel_key_csv(channel_ids, max_keys=MAX_FILTER_CHANNEL_IDS)
-        except HTTPException as exc:
-            detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
-            raise MessagesQueryError(detail) from exc
+        except ChannelKeyError as exc:
+            raise MessagesQueryError(str(exc)) from exc
         if channel_pairs:
             clauses.append("(" + " OR ".join("(m.platform = ? AND m.platform_id = ?)" for _ in channel_pairs) + ")")
             for channel_platform, platform_id in channel_pairs:
