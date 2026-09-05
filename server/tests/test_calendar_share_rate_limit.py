@@ -23,7 +23,7 @@ def test_calendar_share_limits_match_ic_public_table():
     assert AUTH_WINDOW_SECONDS == 60
     assert SUBSCRIBE_LIMIT == 5
     assert SUBSCRIBE_WINDOW_SECONDS == 10
-    assert PUBLIC_EVENTS_LIMIT == 30
+    assert PUBLIC_EVENTS_LIMIT == 60
     assert PUBLIC_EVENTS_WINDOW_SECONDS == 60
 
 
