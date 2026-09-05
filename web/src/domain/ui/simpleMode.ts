@@ -1,7 +1,6 @@
 /** UI basic-calendar product mode — hide collect/analyze surfaces and the Tasks page. */
 
 import { SIMPLE_MODE_STORAGE_KEY } from "../prefs";
-import { isWorksetTasksTabQuery, WORKSETS_PATH } from "../worksets/worksetRoutes";
 
 export { SIMPLE_MODE_STORAGE_KEY };
 
@@ -14,8 +13,6 @@ export const FULL_MODE_HOME = "/monitor";
 /**
  * Sidebar / deep-link prefixes that disappear in simple mode.
  * `/worksets` stays visible; `/tasks` (list + editors) is hidden.
- * Simple mode strips leftover `/worksets?tab=tasks` onto `/worksets` (do not bounce via `/tasks`).
- * Full mode redirects those bookmarks to `/tasks` in AppRoutes.
  */
 export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/monitor",
@@ -24,9 +21,6 @@ export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/sources",
   "/tasks",
 ] as const;
-
-/** Legacy analysis-strategy URL (now a redirect to Tasks scheduling). */
-export const SIMPLE_MODE_HIDDEN_AI_TABS = ["/ai/analysis-strategy"] as const;
 
 export function readSimpleMode(): boolean {
   if (typeof window === "undefined") return false;
@@ -58,15 +52,3 @@ export function isSimpleModeHiddenPath(pathname: string): boolean {
   );
 }
 
-/** Simple mode: leftover `/worksets?tab=tasks` stays on the catalog (full mode uses `/tasks`). */
-export function isSimpleModeHiddenWorksetTasksTab(pathname: string, search: string): boolean {
-  if (pathname !== WORKSETS_PATH) return false;
-  const raw = search.startsWith("?") ? search.slice(1) : search;
-  return isWorksetTasksTabQuery(new URLSearchParams(raw).get("tab"));
-}
-
-export function isSimpleModeHiddenAiTab(pathname: string): boolean {
-  return SIMPLE_MODE_HIDDEN_AI_TABS.some(
-    (tab) => pathname === tab || pathname.startsWith(`${tab}/`),
-  );
-}

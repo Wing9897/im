@@ -1,7 +1,6 @@
-import { Navigate, Outlet, Route, Routes, useSearchParams } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
-import { worksetTasksBookmarkPath } from "../domain/worksets/worksetRoutes";
 import { useSimpleMode } from "../context/SimpleModeContext";
 import { LazyPage, lazyNamed } from "./LazyPage";
 import { SimpleModeGate } from "./SimpleModeGate";
@@ -32,14 +31,6 @@ function DefaultHomeRedirect() {
     return <Navigate to={startupViewerRoute} replace />;
   }
   return <Navigate to={homePathForMode(simpleMode)} replace />;
-}
-
-/** `/worksets?tab=tasks` bookmarks → independent `/tasks` (keep scheduling=open). */
-export function WorksetCatalogRoute() {
-  const [searchParams] = useSearchParams();
-  const bookmark = worksetTasksBookmarkPath(searchParams);
-  if (bookmark) return <Navigate to={bookmark} replace />;
-  return <LazyPage Page={DashboardViewer} />;
 }
 
 // Module-level lazy registration — stable exotic types for the route tree lifetime.
@@ -145,7 +136,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultHomeRedirect />} />
         <Route path="/monitor" element={<LazyPage Page={MonitorPage} />} />
-        <Route path="/worksets" element={<WorksetCatalogRoute />} />
+        <Route path="/worksets" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/worksets/:worksetId" element={<LazyPage Page={WorksetWorkspacePage} />} />
         <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
@@ -180,11 +171,6 @@ export function AppRoutes() {
           <Route path="devices" element={<LazyPage Page={AccountDevicesPage} />} />
           <Route path="keys" element={<LazyPage Page={AccountKeysPage} />} />
         </Route>
-        <Route path="/ai/analysis-strategy" element={<Navigate to="/tasks?scheduling=open" replace />} />
-        <Route path="/ai/provider" element={<Navigate to="/settings/ai/provider" replace />} />
-        <Route path="/ai/voice" element={<Navigate to="/settings/ai/voice" replace />} />
-        <Route path="/ai/staff" element={<Navigate to="/settings/ai/staff" replace />} />
-        <Route path="/ai" element={<Navigate to="/settings/ai/provider" replace />} />
         <Route element={<SystemSettingsLayout />}>
           <Route path="settings/ai" element={<LazyPage Page={SettingsAiShellPage} />}>
             <Route index element={<Navigate to="/settings/ai/provider" replace />} />

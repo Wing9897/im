@@ -95,7 +95,7 @@ describe("SimpleModeGate", () => {
       expect(home()).toBeNull();
     });
 
-    it("renders the legacy analysis-strategy URL untouched in full mode", async () => {
+    it("lets leftover /ai/* fall through to the catch-all (404) in full mode", async () => {
       await renderAt("/ai/analysis-strategy");
 
       expect(gated()).toBeTruthy();
@@ -128,7 +128,7 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
-    it("strips leftover /worksets?tab=tasks onto /worksets in simple mode", async () => {
+    it("keeps leftover /worksets?tab=tasks on the catalog in simple mode", async () => {
       await renderAt("/worksets?tab=tasks");
 
       expect(container.querySelector('[data-testid="worksets"]')).toBeTruthy();
@@ -157,11 +157,11 @@ describe("SimpleModeGate", () => {
       expect(gated()).toBeNull();
     });
 
-    it("redirects the legacy analysis-strategy URL", async () => {
+    it("does not special-case leftover /ai/* — catch-all owns 404", async () => {
       await renderAt("/ai/analysis-strategy");
 
-      expect(home()).toBeTruthy();
-      expect(gated()).toBeNull();
+      expect(gated()).toBeTruthy();
+      expect(home()).toBeNull();
     });
 
     it("keeps sibling AI tabs reachable", async () => {

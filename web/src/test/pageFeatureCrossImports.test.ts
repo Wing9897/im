@@ -25,13 +25,8 @@ function featureDirs(): string[] {
 
 const FEATURES = featureDirs();
 
-/** Existing dashboard ↔ workset chrome; lock still fails on any new edge. */
-const ALLOWED_CROSS_FEATURE = new Set([
-  "pages/dashboard/components/DashboardViewerToolbar.tsx → ../../worksets/WorksetCatalogChrome (worksets)",
-  "pages/dashboard/DashboardViewer.tsx → ../worksets/WorksetPipelineGraphPanel (worksets)",
-  "pages/worksets/WorksetContentsPanel.tsx → ../dashboard/hooks/useWorksetDetailData (dashboard)",
-  "pages/worksets/WorksetContentsPanel.tsx → ../dashboard/components/WorksetDetailSections (dashboard)",
-]);
+/** Shared workset chrome lives in `components/worksets/` — no page-to-page exceptions. */
+const ALLOWED_CROSS_FEATURE = new Set<string>([]);
 
 const IMPORT_RE =
   /(?:from|import\()\s*['"]([^'"]+)['"]/g;

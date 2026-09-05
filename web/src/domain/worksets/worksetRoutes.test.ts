@@ -5,13 +5,11 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_WORKSET_CATALOG_TAB,
   isWorksetCatalogTab,
-  isWorksetTasksTabQuery,
   isWorksetsPath,
   parseWorksetCatalogTab,
   parseWorksetGraphFilter,
   serializeWorksetGraphFilter,
   worksetDetailPath,
-  worksetTasksBookmarkPath,
   worksetsCatalogPath,
   WORKSET_GRAPH_FILTER_PARAM,
   WORKSETS_PATH,
@@ -64,21 +62,12 @@ describe("worksetRoutes", () => {
     expect(parseWorksetCatalogTab("tasks")).toBe("catalog");
     expect(parseWorksetCatalogTab("flow")).toBe("graph");
     expect(parseWorksetCatalogTab("contents")).toBe("catalog");
-    expect(isWorksetTasksTabQuery("tasks")).toBe(true);
-    expect(isWorksetTasksTabQuery("catalog")).toBe(false);
-    expect(isWorksetTasksTabQuery(null)).toBe(false);
   });
 
-  it("redirects /worksets?tab=tasks bookmarks to /tasks and keeps scheduling=open", () => {
-    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks"))).toBe("/tasks");
-    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&scheduling=open"))).toBe(
-      "/tasks?scheduling=open",
-    );
-    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&scheduling=closed"))).toBe(
-      "/tasks",
-    );
-    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=tasks&foo=1"))).toBe("/tasks");
-    expect(worksetTasksBookmarkPath(new URLSearchParams("tab=graph"))).toBeNull();
-    expect(worksetTasksBookmarkPath(new URLSearchParams())).toBeNull();
+  it("treats leftover ?tab=tasks as the catalog — no bookmark redirect to /tasks", () => {
+    expect(parseWorksetCatalogTab("tasks")).toBe("catalog");
+    const src = readFileSync(resolve(__dirname, "./worksetRoutes.ts"), "utf8");
+    expect(src).not.toContain("worksetTasksBookmarkPath");
+    expect(src).not.toContain("isWorksetTasksTabQuery");
   });
 });

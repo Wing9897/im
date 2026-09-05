@@ -1,27 +1,27 @@
 import { CalendarDays, Clock, ListChecks, Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { SectionHeaderIcon } from "../../../components/common/EmptyStateGlyph";
+import { SectionHeaderIcon } from "../common/EmptyStateGlyph";
 import {
   AccentBarCard,
   Badge,
   CardGrid,
   PanelSection,
   captionClass,
-} from "../../../components/ui";
-import { cardBodyClass, cardTitleClass } from "../../../components/ui/pageTypography";
+} from "../ui";
+import { cardBodyClass, cardTitleClass } from "../ui/pageTypography";
 import {
   MODE_ACCENT_CLASS,
   MODE_BADGE_TONE,
-} from "../../../components/task/analysisModeBadgeTone";
+} from "../task/analysisModeBadgeTone";
 import {
   getTaskEmployeeDisplayName,
   getTaskEmployeeIdForMode,
-} from "../../../components/task/taskFormAnalysisModeMeta";
-import type { UserEvent } from "../../../api/userEvents";
-import type { TrackableItem } from "../../../api/items";
-import type { AnalysisTask } from "../../../types/tasks";
-import { formatOsDateTime } from "../../../utils/time";
-import { ItemsEntryCard } from "../../../components/items/ItemsEntryCard";
+} from "../task/taskFormAnalysisModeMeta";
+import type { UserEvent } from "../../api/userEvents";
+import type { TrackableItem } from "../../api/items";
+import type { AnalysisTask } from "../../types/tasks";
+import { formatOsDateTime } from "../../utils/time";
+import { ItemsEntryCard } from "../items/ItemsEntryCard";
 
 /** Fill the workset dashboard cell; never shrink into a hairline glass bar. */
 const WORKSET_PANEL_CLASS = "h-full min-h-fit !shadow-none";

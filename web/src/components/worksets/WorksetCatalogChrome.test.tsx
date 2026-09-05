@@ -89,7 +89,7 @@ describe("WorksetCatalogChrome", () => {
     expect(tabs[1]?.getAttribute("aria-selected")).toBe("true");
   });
 
-  it("falls back leftover ?tab=tasks onto the catalog pill (SPA redirect owns bookmarks)", async () => {
+  it("falls back leftover ?tab=tasks onto the catalog pill", async () => {
     harness = createTestHarness();
     await harness.render(ChromeAt, { entry: "/worksets?tab=tasks" });
 
