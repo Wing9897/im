@@ -1,7 +1,7 @@
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarShareConnectionStatusIcon } from "../../../domain/calendarShare/CalendarShareConnectionStatusIcon";
+import { CalendarShareConnectionStatusIcon } from "../../../components/subscriptions/CalendarShareConnectionStatusIcon";
 import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import {

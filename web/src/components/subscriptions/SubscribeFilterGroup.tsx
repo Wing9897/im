@@ -7,15 +7,15 @@ import {
   SourceFilterColumnShell,
   SourceFilterColumnActions,
   SourceFilterSectionHeading,
-} from "../../components/SourceFilterTree";
-import { IdentityAvatar } from "../user/IdentityAvatarView";
+} from "../SourceFilterTree";
+import { IdentityAvatar } from "../../domain/user/IdentityAvatarView";
 import {
   SUBSCRIBE_UNAVAILABLE_CLASS,
   matchesCalendarShareFilter,
   type SubscribeAvailability,
   type SubscribeCalendarIdentity,
   type SubscribedCalendarSelection,
-} from "./subscribedCalendars";
+} from "../../domain/calendarShare/subscribedCalendars";
 
 export type SubscribeCalendarOption = SubscribeCalendarIdentity;
 
