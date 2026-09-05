@@ -13,7 +13,6 @@ import {
   parseOverviewRangeId,
   recenterOverviewWindow,
   type GanttOverviewWindow,
-  type OverviewRangePresetId,
 } from "../../domain/gantt/ganttOverviewWindow";
 import { TIMELINE_OVERVIEW_SPAN_STORAGE_KEY } from "../../domain/prefs";
 import { usePersistedState } from "../../hooks/usePersistedState";
@@ -154,7 +153,7 @@ export function useGanttOverviewSession(options: {
   );
 
   const applyRangeId = useCallback(
-    (id: OverviewRangePresetId | string) => {
+    (id: string) => {
       const preset = parseOverviewRangeId(id);
       if (!preset) return;
       setPersistedRangeId(preset);
