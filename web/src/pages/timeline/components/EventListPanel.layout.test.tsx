@@ -1,19 +1,45 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { act } from "react";
+import type { Root } from "react-dom/client";
 import { ensureZhHantLocale } from "../../../test/i18nHarness";
 import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../../test/context-mocks";
+import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
-import { makeEvent, renderPanel } from "./eventListPanelTestUtils";
+import { makeEvent, renderPanel as renderPanelUntracked } from "./eventListPanelTestUtils";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
 );
 
+// Every mount is unmounted in afterEach so no React work (calendar-share
+// catalog emit, pending effects) can commit after jsdom is torn down.
+type PanelMount = { container: HTMLDivElement; root: Root };
+const panelMounts: PanelMount[] = [];
+
+function renderPanel(
+  ...args: Parameters<typeof renderPanelUntracked>
+): ReturnType<typeof renderPanelUntracked> {
+  const result = renderPanelUntracked(...args);
+  panelMounts.push({ container: result.container, root: result.root });
+  return result;
+}
+
+function cleanupPanelMounts() {
+  for (const { container, root } of panelMounts.splice(0)) {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  }
+}
+
 describe("EventListPanel", () => {
   beforeEach(async () => {
     await ensureZhHantLocale();
+    resetCalendarShareCatalogForTests();
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
@@ -28,6 +54,13 @@ describe("EventListPanel", () => {
   });
 
   afterEach(() => {
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    cleanupPanelMounts();
+    // Bump the catalog epoch and drop listeners so the in-flight session fetch
+    // started by useCalendarShareCatalog cannot emit into React later.
+    resetCalendarShareCatalogForTests();
     vi.useRealTimers();
   });
 
