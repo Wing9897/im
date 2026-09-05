@@ -1,8 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
+import { errorMatchesCode } from "../../../i18n/errorCodes";
 import { SourceAddFormCard } from "../board/SourceAddFormCard";
 import type { EmailFormFields, EmailProviderPreset } from "./emailFormModel";
 import { EmailMailboxFields } from "./EmailMailboxFields";
+
+const IMAP_AUTH_ERROR_CODE = "imap_auth_failed";
 
 interface EmailMailboxFormProps {
   form: EmailFormFields;
@@ -10,6 +13,7 @@ interface EmailMailboxFormProps {
   setPreset: (preset: EmailProviderPreset) => void;
   submitting: boolean;
   formError: string | null;
+  formErrorCode?: string | null;
   onSubmit?: () => void;
   submitLabel?: string;
   variant?: "standalone" | "embedded";
@@ -21,6 +25,7 @@ export function EmailMailboxForm({
   setPreset,
   submitting,
   formError,
+  formErrorCode,
   onSubmit,
   submitLabel,
   variant = "standalone",
@@ -38,8 +43,8 @@ export function EmailMailboxForm({
 
   if (variant === "embedded") {
     const showAuthHint =
-      formError != null &&
-      /登入失敗|認證|App Password|帳號或密碼|credentials/i.test(formError);
+      formErrorCode === IMAP_AUTH_ERROR_CODE ||
+      (formError != null && errorMatchesCode(formError, IMAP_AUTH_ERROR_CODE));
 
     return (
       <>

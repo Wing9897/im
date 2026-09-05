@@ -2,8 +2,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
-import { emptyKeyedWebSearchApiKeyFields } from "../../../domain/settings/assistantWebSearchRoute";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
+import { emptyKeyedWebSearchApiKeyFields } from "../../domain/settings/assistantWebSearchRoute";
 
 const {
   mockStreamAgentChat,
@@ -59,22 +59,23 @@ const defaultProfile = {
   updatedAt: null,
 };
 
-vi.mock("../../../api/agent", () => ({
+vi.mock("../../api/agent", () => ({
   streamAgentChat: mockStreamAgentChat,
   postAgentChat: vi.fn(),
 }));
 
-vi.mock("../../../api/llmProfiles", () => ({
+vi.mock("../../api/llmProfiles", () => ({
   listLlmProfiles: mockListLlmProfiles,
   listLlmGlobalSlots: mockListLlmGlobalSlots,
 }));
 
-vi.mock("../../../api/tasks", () => ({
+vi.mock("../../api/tasks", () => ({
   listTasks: vi.fn(async () => []),
 }));
 
-vi.mock("../../../context/TaskCatalogContext", async () =>
-  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
+vi.mock("../../context/TaskCatalogContext", async () =>
+  (await import("../../test/context-mocks")).taskCatalogModuleMock(),
+);
 
 const collectorStatusState = vi.hoisted(() => ({
   collectorStatus: "running" as string,
@@ -82,12 +83,13 @@ const collectorStatusState = vi.hoisted(() => ({
   requestAiStatusRefresh: vi.fn(),
 }));
 
-vi.mock("../../../context/CollectorStatusContext", () => ({
+vi.mock("../../context/CollectorStatusContext", () => ({
   useCollectorStatus: () => collectorStatusState,
 }));
 
-vi.mock("../../../speech", async () => {
-  const actual = await vi.importActual<typeof import("../../../speech")>("../../../speech");
+vi.mock("../../speech", async () => {
+  const actual =
+    await vi.importActual<typeof import("../../speech")>("../../speech");
   return {
     ...actual,
     createSpeechPorts: mockCreateSpeechPorts,
@@ -95,18 +97,25 @@ vi.mock("../../../speech", async () => {
 });
 
 import { AssistantPage } from "./AssistantPage";
-import { AssistantChatProvider } from "../../../hooks/useAssistantChat";
+import { AssistantChatProvider } from "../../hooks/useAssistantChat";
 
-function mockPorts(options?: { sttAvailable?: boolean; ttsAvailable?: boolean }) {
+function mockPorts(options?: {
+  sttAvailable?: boolean;
+  ttsAvailable?: boolean;
+}) {
   const sttAvailable = options?.sttAvailable ?? false;
   const ttsAvailable = options?.ttsAvailable ?? false;
-  const handlers = new Set<(ev: { type: string; text?: string; message?: string }) => void>();
+  const handlers = new Set<
+    (ev: { type: string; text?: string; message?: string }) => void
+  >();
   const stt = {
     providerId: "browser",
     isAvailable: () => sttAvailable,
     start: vi.fn(async () => undefined),
     stop: vi.fn(async () => undefined),
-    subscribe: (handler: (ev: { type: string; text?: string; message?: string }) => void) => {
+    subscribe: (
+      handler: (ev: { type: string; text?: string; message?: string }) => void,
+    ) => {
       handlers.add(handler);
       return () => handlers.delete(handler);
     },
@@ -164,11 +173,17 @@ describe("AssistantPage", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        wrapWithI18n(createElement(
+        wrapWithI18n(
+          createElement(
             MemoryRouter,
             null,
-            createElement(AssistantChatProvider, null, createElement(AssistantPage)),
-          )),
+            createElement(
+              AssistantChatProvider,
+              null,
+              createElement(AssistantPage),
+            ),
+          ),
+        ),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -178,19 +193,29 @@ describe("AssistantPage", () => {
   it("renders text chat UI and hides mic when STT unavailable", async () => {
     await renderPage();
 
-    expect(container.querySelector("[data-testid='assistant-page']")).toBeTruthy();
-    expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
-    expect(container.querySelector("[data-testid='assistant-send']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-page']"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-draft']"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-send']"),
+    ).toBeTruthy();
     expect(container.querySelector("[data-testid='assistant-ptt']")).toBeNull();
     expect(container.textContent).toContain("問本機情報、日程或物品");
-    expect(container.textContent).toContain("此環境無法語音辨識，請改用文字輸入。");
+    expect(container.textContent).toContain(
+      "此環境無法語音辨識，請改用文字輸入。",
+    );
   });
 
   it("links to AI provider settings when the engine is unavailable", async () => {
     collectorStatusState.aiEngineStatus = "unavailable";
     await renderPage();
 
-    const banner = container.querySelector("[data-testid='assistant-ai-unavailable']");
+    const banner = container.querySelector(
+      "[data-testid='assistant-ai-unavailable']",
+    );
     expect(banner).toBeTruthy();
     const link = container.querySelector(
       "[data-testid='assistant-ai-settings-link']",
@@ -211,7 +236,9 @@ describe("AssistantPage", () => {
       await Promise.resolve();
     });
 
-    const banner = container.querySelector("[data-testid='assistant-no-profile']");
+    const banner = container.querySelector(
+      "[data-testid='assistant-no-profile']",
+    );
     expect(banner).toBeTruthy();
     expect(banner?.textContent).toContain("尚未建立任何 AI 設定檔");
     const link = container.querySelector(
@@ -219,8 +246,12 @@ describe("AssistantPage", () => {
     ) as HTMLAnchorElement | null;
     expect(link?.getAttribute("href")).toBe("/settings/ai/provider");
     expect(container.textContent).toContain("請到 AI 供應商頁面建立設定檔");
-    expect(container.querySelector("[data-testid='assistant-ai-unavailable']")).toBeNull();
-    expect(container.querySelector("[data-testid='assistant-slot-unbound']")).toBeNull();
+    expect(
+      container.querySelector("[data-testid='assistant-ai-unavailable']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-testid='assistant-slot-unbound']"),
+    ).toBeNull();
     expect(container.textContent).not.toContain("error_code");
     expect(container.textContent).not.toContain("Ollama");
   });
@@ -228,10 +259,18 @@ describe("AssistantPage", () => {
   it("keeps composer usable and has no dedicated LLM profile section", async () => {
     await renderPage();
 
-    expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
-    expect(container.querySelector("[data-testid='assistant-llm-profile']")).toBeNull();
-    expect(container.querySelector("[data-testid='assistant-llm-profile-unbound']")).toBeNull();
-    expect(container.querySelector("[data-testid='assistant-session-llm-profile']")).toBeNull();
+    expect(
+      container.querySelector("[data-testid='assistant-draft']"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-llm-profile']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-testid='assistant-llm-profile-unbound']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-testid='assistant-session-llm-profile']"),
+    ).toBeNull();
     expect(container.textContent).not.toContain("LLM 設定檔");
     expect(container.textContent).not.toContain("前往 AI 設定檔");
     expect(container.textContent).not.toContain("跟隨助手槽位");
@@ -250,15 +289,21 @@ describe("AssistantPage", () => {
       await Promise.resolve();
     });
 
-    const banner = container.querySelector("[data-testid='assistant-slot-unbound']");
+    const banner = container.querySelector(
+      "[data-testid='assistant-slot-unbound']",
+    );
     expect(banner).toBeTruthy();
     const link = container.querySelector(
       "[data-testid='assistant-slot-settings-link']",
     ) as HTMLAnchorElement | null;
     expect(link?.getAttribute("href")).toBe("/settings/ai/provider");
-    expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-draft']"),
+    ).toBeTruthy();
 
-    const draft = container.querySelector<HTMLTextAreaElement>("[data-testid='assistant-draft']");
+    const draft = container.querySelector<HTMLTextAreaElement>(
+      "[data-testid='assistant-draft']",
+    );
     await act(async () => {
       const setter = Object.getOwnPropertyDescriptor(
         window.HTMLTextAreaElement.prototype,
@@ -269,14 +314,20 @@ describe("AssistantPage", () => {
       await Promise.resolve();
     });
 
-    const send = container.querySelector<HTMLButtonElement>("[data-testid='assistant-send']");
+    const send = container.querySelector<HTMLButtonElement>(
+      "[data-testid='assistant-send']",
+    );
     expect(send?.disabled).toBe(true);
     expect(send?.getAttribute("title")).toContain("AI 設定");
     expect(send?.getAttribute("aria-label")).toContain("AI 設定");
 
     await act(async () => {
       draft!.dispatchEvent(
-        new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }),
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+        }),
       );
       await Promise.resolve();
     });
@@ -286,14 +337,19 @@ describe("AssistantPage", () => {
   it("puts chrome inside the card and omits OpsControlBar", async () => {
     await renderPage();
 
-    expect(container.querySelector("[data-testid='assistant-card-header']")).toBeTruthy();
     expect(
-      container.querySelector("[data-testid='assistant-card-header'] [data-testid='ai-staff-avatar-assistant']"),
+      container.querySelector("[data-testid='assistant-card-header']"),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        "[data-testid='assistant-card-header'] [data-testid='ai-staff-avatar-assistant']",
+      ),
     ).toBeTruthy();
     expect(container.querySelector(".im-control-bar")).toBeNull();
-    expect(container.querySelector("[data-testid='assistant-card-header']")?.textContent).toContain(
-      "助手",
-    );
+    expect(
+      container.querySelector("[data-testid='assistant-card-header']")
+        ?.textContent,
+    ).toContain("助手");
   });
 
   it("shows custom display name from identity storage in the card header", async () => {
@@ -302,22 +358,27 @@ describe("AssistantPage", () => {
       JSON.stringify({ displayName: "測試助手", avatarDataUrl: null }),
     );
     await renderPage();
-    expect(container.querySelector("[data-testid='assistant-card-header']")?.textContent).toContain(
-      "測試助手",
-    );
+    expect(
+      container.querySelector("[data-testid='assistant-card-header']")
+        ?.textContent,
+    ).toContain("測試助手");
   });
 
   it("shows PTT when STT is available", async () => {
     mockPorts({ sttAvailable: true, ttsAvailable: true });
     await renderPage();
-    expect(container.querySelector("[data-testid='assistant-ptt']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-ptt']"),
+    ).toBeTruthy();
   });
 
   it("arms Space PTT when draft is unfocused and pauses while draft is focused", async () => {
     const { stt } = mockPorts({ sttAvailable: true, ttsAvailable: true });
     await renderPage();
 
-    const draft = container.querySelector<HTMLTextAreaElement>("[data-testid='assistant-draft']");
+    const draft = container.querySelector<HTMLTextAreaElement>(
+      "[data-testid='assistant-draft']",
+    );
     expect(draft).toBeTruthy();
 
     act(() => {
@@ -325,7 +386,12 @@ describe("AssistantPage", () => {
     });
     act(() => {
       window.dispatchEvent(
-        new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: " ", code: "Space" }),
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: " ",
+          code: "Space",
+        }),
       );
     });
     expect(stt.start).not.toHaveBeenCalled();
@@ -339,7 +405,12 @@ describe("AssistantPage", () => {
 
     act(() => {
       window.dispatchEvent(
-        new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: " ", code: "Space" }),
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: " ",
+          code: "Space",
+        }),
       );
     });
     expect(stt.start).toHaveBeenCalledTimes(1);
@@ -373,7 +444,9 @@ describe("AssistantPage", () => {
 
     await renderPage();
 
-    const draft = container.querySelector<HTMLTextAreaElement>("[data-testid='assistant-draft']");
+    const draft = container.querySelector<HTMLTextAreaElement>(
+      "[data-testid='assistant-draft']",
+    );
     expect(draft).toBeTruthy();
 
     await act(async () => {
@@ -386,7 +459,9 @@ describe("AssistantPage", () => {
       await Promise.resolve();
     });
 
-    const send = container.querySelector<HTMLButtonElement>("[data-testid='assistant-send']");
+    const send = container.querySelector<HTMLButtonElement>(
+      "[data-testid='assistant-send']",
+    );
     expect(send?.disabled).toBe(false);
 
     await act(async () => {
@@ -410,6 +485,8 @@ describe("AssistantPage", () => {
     expect(container.textContent).toContain("未來 7 天有 1 件家庭事務。");
     expect(container.textContent).toContain("查指定時段");
     expect(container.textContent).toContain("時段內 1 件");
-    expect(container.querySelector("[data-testid='assistant-tool-summary']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='assistant-tool-summary']"),
+    ).toBeTruthy();
   });
 });

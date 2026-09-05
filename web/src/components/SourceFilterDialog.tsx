@@ -6,7 +6,7 @@ import { SourceFilterTrigger } from "./SourceFilterTrigger";
 import {
   SubscribeFilterGroup,
   type SubscribeCalendarOption,
-} from "./calendarShare/SubscribeFilterGroup";
+} from "../domain/calendarShare/SubscribeFilterGroup";
 import { Button } from "./ui";
 import type { SourceFilterOption } from "../domain/timeline/sourceFilterOptions";
 import type { SourceFilterSelection } from "../domain/tasks/sourceFilterSelection";

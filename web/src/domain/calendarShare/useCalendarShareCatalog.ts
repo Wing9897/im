@@ -14,7 +14,6 @@ import {
 } from "../../api/calendarShare";
 import {
   consumeCalendarShareRateLimit,
-  resetCalendarShareRateLimitForTests,
 } from "./calendarShareRateLimit";
 import { toError, toErrorMessage } from "../../utils/errors";
 import {
@@ -186,14 +185,13 @@ export function applyCalendarShareCatalogItems(
   emit();
 }
 
-/** Test-only: clear cache, in-flight, and listeners. */
+/** Test-only: clear cache, in-flight, and listeners. Production builds drop the body. */
 export function resetCalendarShareCatalogForTests(): void {
   snapshot = { ...EMPTY };
   inFlight = null;
   epoch = 0;
   completed = false;
   listeners.clear();
-  resetCalendarShareRateLimitForTests();
 }
 
 export type CalendarShareCatalogHook = CalendarShareCatalog & {

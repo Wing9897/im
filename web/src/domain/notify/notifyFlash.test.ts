@@ -3,10 +3,9 @@ import {
   NOTIFY_FLASH_DURATION_MS,
   dismissNotifyFlash,
   loadNotifyFlashes,
-  resetNotifyFlashForTests,
   showNotifyFlash,
 } from "./notifyFlash";
-
+import { resetNotifyFlashForTests } from "./notifyFlash.testing";
 describe("notifyFlash", () => {
   afterEach(() => {
     resetNotifyFlashForTests();

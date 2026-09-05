@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   appendRecentInbox,
   loadRecentInbox,
-  resetRecentInboxForTests,
   setRecentInboxOpen,
   unreadRecentInboxCount,
 } from "../../domain/notify/recentInbox";
+import { resetRecentInboxForTests } from "../../domain/notify/recentInbox.testing";
 import { RecentDayInboxDrawer } from "./RecentDayInboxDrawer";
 
 vi.mock("react-i18next", () => ({
@@ -85,15 +85,24 @@ describe("RecentDayInboxDrawer", () => {
 
     await renderDrawer();
 
-    const drawer = document.body.querySelector('[data-testid="recent-day-inbox"]');
+    const drawer = document.body.querySelector(
+      '[data-testid="recent-day-inbox"]',
+    );
     expect(drawer).toBeTruthy();
     expect(drawer?.className).toContain("im-dialog-drawer");
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]')?.textContent).toContain(
-      "Standup",
-    );
-    expect(document.body.querySelector('[data-testid="drawer-channel-voice"]')).toBeTruthy();
-    expect(document.body.querySelector('[data-testid="drawer-channel-flash"]')).toBeTruthy();
-    expect(document.body.querySelector('[data-testid="recent-day-banner"]')).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]')
+        ?.textContent,
+    ).toContain("Standup");
+    expect(
+      document.body.querySelector('[data-testid="drawer-channel-voice"]'),
+    ).toBeTruthy();
+    expect(
+      document.body.querySelector('[data-testid="drawer-channel-flash"]'),
+    ).toBeTruthy();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-banner"]'),
+    ).toBeNull();
   });
 
   it("clears one row from the inbox without a confirm dialog", async () => {
@@ -102,8 +111,12 @@ describe("RecentDayInboxDrawer", () => {
     setRecentInboxOpen(true);
     await renderDrawer();
 
-    const row = document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]');
-    const clear = row?.querySelector<HTMLButtonElement>('[data-testid="recent-day-inbox-item-clear"]');
+    const row = document.body.querySelector(
+      '[data-testid="recent-day-inbox-item-e1"]',
+    );
+    const clear = row?.querySelector<HTMLButtonElement>(
+      '[data-testid="recent-day-inbox-item-clear"]',
+    );
     expect(clear).toBeTruthy();
     expect(document.body.querySelector('[role="alertdialog"]')).toBeNull();
 
@@ -111,10 +124,13 @@ describe("RecentDayInboxDrawer", () => {
       clear?.click();
     });
 
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]')).toBeNull();
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-item-e2"]')?.textContent).toContain(
-      "Retro",
-    );
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]'),
+    ).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-item-e2"]')
+        ?.textContent,
+    ).toContain("Retro");
     expect(loadRecentInbox(now).map((entry) => entry.eventId)).toEqual(["e2"]);
   });
 
@@ -128,15 +144,23 @@ describe("RecentDayInboxDrawer", () => {
       '[data-testid="recent-day-inbox-clear-all"]',
     );
     expect(clearAll).toBeTruthy();
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-toolbar"]')).toBeTruthy();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-toolbar"]'),
+    ).toBeTruthy();
 
     await act(async () => {
       clearAll?.click();
     });
 
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]')).toBeNull();
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-item-e2"]')).toBeNull();
-    expect(document.body.querySelector('[data-testid="recent-day-inbox-clear-all"]')).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-item-e1"]'),
+    ).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-item-e2"]'),
+    ).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="recent-day-inbox-clear-all"]'),
+    ).toBeNull();
     expect(document.body.textContent).toContain("notify.inboxEmpty");
     expect(loadRecentInbox(now)).toEqual([]);
     expect(unreadRecentInboxCount(now)).toBe(0);

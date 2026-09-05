@@ -13,30 +13,35 @@ import { MemoryRouter } from "react-router-dom";
 
 // --- Hoisted mocks ---
 
-const {
-  mockFetchCalendarWindow,
-  mockFetchTaskActivitySpans,
-} = vi.hoisted(() => ({
-  mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
-  mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
-}));
+const { mockFetchCalendarWindow, mockFetchTaskActivitySpans } = vi.hoisted(
+  () => ({
+    mockFetchCalendarWindow: vi.fn().mockResolvedValue([]),
+    mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
+  }),
+);
 
 vi.mock("../../api/calendarWindow", () => ({
   fetchCalendarWindow: (...args: unknown[]) => mockFetchCalendarWindow(...args),
 }));
 
 vi.mock("../../api/calendarShare", async () =>
-  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+  (
+    await import("../../test/calendarShareApiMock")
+  ).calendarShareApiModuleMock(),
+);
 
 vi.mock("../../api/tasks", () => ({
-  fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
+  fetchTaskActivitySpans: (...args: unknown[]) =>
+    mockFetchTaskActivitySpans(...args),
 }));
 
 vi.mock("../../context/TaskCatalogContext", async () =>
-  (await import("../../test/context-mocks")).taskCatalogModuleMock());
+  (await import("../../test/context-mocks")).taskCatalogModuleMock(),
+);
 
 vi.mock("../../context/ToastContext", async () =>
-  (await import("../../test/context-mocks")).toastContextModuleMock());
+  (await import("../../test/context-mocks")).toastContextModuleMock(),
+);
 
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
   useRefreshOnAnalysisEvent: vi.fn(),
@@ -52,7 +57,7 @@ import {
   taskCatalogState,
 } from "../../test/context-mocks";
 import { resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 // --- Test harness component ---
@@ -63,7 +68,11 @@ type HookResult = ReturnType<typeof useTimelinePageContainer>;
  * A wrapper component that calls the hook and exposes its result via a ref.
  * This allows tests to inspect and interact with the hook's return value.
  */
-function HookHarness({ resultRef }: { resultRef: React.MutableRefObject<HookResult | null> }) {
+function HookHarness({
+  resultRef,
+}: {
+  resultRef: React.MutableRefObject<HookResult | null>;
+}) {
   const result = useTimelinePageContainer();
   resultRef.current = result;
   return null;
@@ -140,7 +149,10 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
 
       // Now select a concrete task
       await act(async () => {
-        resultRef.current!.sources.setSelectedSources({ taskIds: ["task-b"], worksetIds: [] });
+        resultRef.current!.sources.setSelectedSources({
+          taskIds: ["task-b"],
+          worksetIds: [],
+        });
         await Promise.resolve();
         await Promise.resolve();
       });
@@ -179,7 +191,10 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
 
       // Select a different task
       await act(async () => {
-        resultRef.current!.sources.setSelectedSources({ taskIds: ["task-b"], worksetIds: [] });
+        resultRef.current!.sources.setSelectedSources({
+          taskIds: ["task-b"],
+          worksetIds: [],
+        });
         await Promise.resolve();
         await Promise.resolve();
       });

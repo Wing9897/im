@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../api/logs", () => ({
+vi.mock("./logs", () => ({
   appendAppLog: vi.fn(),
 }));
 
-import { appendAppLog } from "../api/logs";
+import { appendAppLog } from "./logs";
 import {
   APP_LOG_KIND,
   buildAppLogDetailsEnvelope,

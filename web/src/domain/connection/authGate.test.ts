@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  _resetConnectionStoreForTests,
   clearDeviceSession,
   hasDeviceSession,
   saveDeviceSession,
 } from "./connectionStore";
-
+import { _resetConnectionStoreForTests } from "./connectionStore.testing";
 const fetchSetupStatus = vi.fn();
 const fetchSetupDevices = vi.fn();
 
@@ -36,12 +35,12 @@ describe("classifySetupReason", () => {
   });
 
   it("returns session_expired when session was cleared and household still has devices", () => {
-    expect(
-      classifySetupReason(setupStatus, { sessionCleared: true }),
-    ).toBe("session_expired");
-    expect(
-      classifySetupReason(setupStatus, { fromSessionLoss: true }),
-    ).toBe("session_expired");
+    expect(classifySetupReason(setupStatus, { sessionCleared: true })).toBe(
+      "session_expired",
+    );
+    expect(classifySetupReason(setupStatus, { fromSessionLoss: true })).toBe(
+      "session_expired",
+    );
   });
 
   it("returns first_run for fresh install", () => {

@@ -1,12 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  __resetEmojiPickerLoaderForTests,
   loadEmojiPickerModule,
   preloadEmojiPickerModule,
   scheduleEmojiPickerPreload,
 } from "./emojiPickerLoader";
-
+import { __resetEmojiPickerLoaderForTests } from "./emojiPickerLoader.testing";
 vi.mock("emoji-picker-react", () => ({
   __esModule: true,
   default: () => null,

@@ -20,6 +20,7 @@ export function EmailTab() {
     setPreset,
     submitting,
     formError,
+    formErrorCode,
     removeTarget,
     setRemoveTarget,
     removing,
@@ -49,6 +50,7 @@ export function EmailTab() {
       setPreset={setPreset}
       submitting={submitting}
       formError={formError}
+      formErrorCode={formErrorCode}
       onSubmit={() => void handleAddMailbox().catch(() => {})}
     />
   );
@@ -77,7 +79,9 @@ export function EmailTab() {
         removeMessage={
           removeTarget
             ? t("email.removeMessage", {
-                name: formatSourceLabel(removeTarget.source) || removeTarget.username,
+                name:
+                  formatSourceLabel(removeTarget.source) ||
+                  removeTarget.username,
               })
             : null
         }

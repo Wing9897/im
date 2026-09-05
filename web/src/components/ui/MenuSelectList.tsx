@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement, RefObject } from "react";
+import type { CSSProperties, ReactElement, Ref, RefObject } from "react";
 import { controlBaseClass, controlSizeClass } from "./controlStyles";
 import type { MenuSelectOption } from "./useMenuSelectState";
 
@@ -64,7 +64,7 @@ export function MenuSelectList({
 }: Props) {
   return (
     <ul
-      ref={menuRef}
+      ref={menuRef as Ref<HTMLUListElement>}
       id={listId}
       role="listbox"
       aria-label={ariaLabel}

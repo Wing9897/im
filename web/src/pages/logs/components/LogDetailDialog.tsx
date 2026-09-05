@@ -15,7 +15,7 @@ import {
   logDetailShellClass,
   logLevelBarClass,
 } from "../../../components/detail/classes";
-import { parseAppLogDetails } from "../../../logging/appLogClient";
+import { parseAppLogDetails } from "../../../api/appLogClient";
 import { resolveLogDisplayMessage } from "../../../domain/logs/resolveLogDisplayMessage";
 
 interface LogDetailViewProps {

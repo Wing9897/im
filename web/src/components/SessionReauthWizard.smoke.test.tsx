@@ -2,7 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { SessionReauthWizard } from "./SessionReauthWizard";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
 import { wrapWithI18n } from "../test/i18nHarness";
 
 const loginWithPassword = vi.fn();
@@ -21,13 +21,15 @@ vi.mock("../electron/electronWindow", () => ({
 }));
 
 vi.mock("../electron/electronConnection", async () => {
-  const actual = await vi.importActual<typeof import("../electron/electronConnection")>(
-    "../electron/electronConnection",
-  );
+  const actual = await vi.importActual<
+    typeof import("../electron/electronConnection")
+  >("../electron/electronConnection");
   return {
     ...actual,
-    ensureDesktopHostMode: (...args: unknown[]) => ensureDesktopHostMode(...args),
-    ensureDesktopClientMode: (...args: unknown[]) => ensureDesktopClientMode(...args),
+    ensureDesktopHostMode: (...args: unknown[]) =>
+      ensureDesktopHostMode(...args),
+    ensureDesktopClientMode: (...args: unknown[]) =>
+      ensureDesktopClientMode(...args),
   };
 });
 
@@ -66,7 +68,13 @@ describe("SessionReauthWizard smoke", () => {
       refreshToken: "r",
       accessExpiresAt: "",
       refreshExpiresAt: "",
-      device: { id: "1", label: "Host", createdAt: "", lastSeenAt: "", expiresAt: "" },
+      device: {
+        id: "1",
+        label: "Host",
+        createdAt: "",
+        lastSeenAt: "",
+        expiresAt: "",
+      },
     });
 
     act(() => {
@@ -75,32 +83,62 @@ describe("SessionReauthWizard smoke", () => {
       );
     });
 
-    expect(container.querySelector('[data-testid="session-reauth-wizard"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="language-switcher"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="setup-step-indicator"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-toggle-remote"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-server-url"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-login"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="session-reauth-wizard"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="language-switcher"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="setup-step-indicator"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-toggle-remote"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-server-url"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-login"]'),
+    ).toBeTruthy();
     // Forgot-password stays hidden until connection.json arms resetPasswordForLocal.
-    expect(container.querySelector('[data-testid="reauth-forgot-password"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-forgot-arm-hint"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="reauth-pairing-code"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-show-api-key"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-login-api-key"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-forgot-password"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-forgot-arm-hint"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-pairing-code"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-show-api-key"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-login-api-key"]'),
+    ).toBeNull();
 
     await act(async () => {
       setNativeValue(
-        container.querySelector('[data-testid="reauth-username"]') as HTMLInputElement,
+        container.querySelector(
+          '[data-testid="reauth-username"]',
+        ) as HTMLInputElement,
         "admin",
       );
       setNativeValue(
-        container.querySelector('[data-testid="reauth-password"]') as HTMLInputElement,
+        container.querySelector(
+          '[data-testid="reauth-password"]',
+        ) as HTMLInputElement,
         "password1",
       );
     });
 
     await act(async () => {
-      (container.querySelector('[data-testid="reauth-login"]') as HTMLButtonElement).click();
+      (
+        container.querySelector(
+          '[data-testid="reauth-login"]',
+        ) as HTMLButtonElement
+      ).click();
       await Promise.resolve();
     });
 
@@ -114,30 +152,48 @@ describe("SessionReauthWizard smoke", () => {
 
     act(() => {
       root.render(
-        wrapWithI18n(createElement(SessionReauthWizard, {
+        wrapWithI18n(
+          createElement(SessionReauthWizard, {
             onComplete: () => {},
             allowLocalPasswordReset: true,
-          })),
+          }),
+        ),
       );
     });
 
-    expect(container.querySelector('[data-testid="reauth-toggle-remote"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="reauth-forgot-password"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="reauth-forgot-arm-hint"]')).toBeNull();
-    expect(container.querySelector('[data-testid="reauth-server-url"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-toggle-remote"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-forgot-password"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-forgot-arm-hint"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-server-url"]'),
+    ).toBeNull();
 
     await act(async () => {
       (
-        container.querySelector('[data-testid="reauth-forgot-password"]') as HTMLButtonElement
+        container.querySelector(
+          '[data-testid="reauth-forgot-password"]',
+        ) as HTMLButtonElement
       ).click();
     });
 
-    expect(container.querySelector('[data-testid="reauth-reset-password"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="reauth-confirm-password"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-reset-password"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-confirm-password"]'),
+    ).toBeTruthy();
 
     await act(async () => {
       (
-        container.querySelector('[data-testid="reauth-toggle-remote"]') as HTMLButtonElement
+        container.querySelector(
+          '[data-testid="reauth-toggle-remote"]',
+        ) as HTMLButtonElement
       )?.click();
     });
 
@@ -151,26 +207,36 @@ describe("SessionReauthWizard smoke", () => {
 
     await act(async () => {
       (
-        container.querySelector('[data-testid="reauth-toggle-remote"]') as HTMLButtonElement
+        container.querySelector(
+          '[data-testid="reauth-toggle-remote"]',
+        ) as HTMLButtonElement
       ).click();
     });
 
-    expect(container.querySelector('[data-testid="reauth-server-url"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="reauth-forgot-password"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="reauth-server-url"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-forgot-password"]'),
+    ).toBeNull();
   });
 
   it("tone=login with no active devices shows revoked help", () => {
     act(() => {
       root.render(
-        wrapWithI18n(createElement(SessionReauthWizard, {
+        wrapWithI18n(
+          createElement(SessionReauthWizard, {
             onComplete: () => {},
             tone: "login",
             hasActiveDevice: false,
-          })),
+          }),
+        ),
       );
     });
 
-    expect(container.querySelector('[data-testid="reauth-login"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="reauth-login"]'),
+    ).toBeTruthy();
     expect(container.textContent).toMatch(/revoked|撤销|撤銷/i);
   });
 });

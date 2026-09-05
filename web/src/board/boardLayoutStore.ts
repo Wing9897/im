@@ -5,7 +5,10 @@ import {
   type BoardWidgetItem,
   type BoardWidgetType,
 } from "./types";
-import { pickAllowedSizePreset, type BoardSizePresetId } from "./boardSizePresets";
+import {
+  pickAllowedSizePreset,
+  type BoardSizePresetId,
+} from "./boardSizePresets";
 import { getWidgetDefaultSizeId, getWidgetSizeOptions } from "./widgetRegistry";
 import {
   createDefaultBoardConfig,
@@ -18,16 +21,9 @@ import {
   saveBoardLayoutToApi,
 } from "./boardPrefsStore";
 
-export {
-  createDefaultBoardConfig,
-  parseBoardConfig,
-} from "./boardLayoutParse";
+export { createDefaultBoardConfig, parseBoardConfig } from "./boardLayoutParse";
 export { findFreePlacement, widgetDesignRect } from "./boardLayoutPlacement";
-export {
-  hydrateBoardPrefs,
-  resetBoardPrefsCacheForTests,
-  seedBoardPrefsCacheForTests,
-} from "./boardPrefsStore";
+export { hydrateBoardPrefs } from "./boardPrefsStore";
 
 /**
  * Sync read of the hydrated layout cache (default mosaic if not yet hydrated).
@@ -66,7 +62,11 @@ export function importBoardConfig(json: string): BoardConfig {
   } catch {
     throw new Error(String(i18n.t("board:shell.importInvalidJson")));
   }
-  if (!raw || typeof raw !== "object" || !Array.isArray((raw as { widgets?: unknown }).widgets)) {
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    !Array.isArray((raw as { widgets?: unknown }).widgets)
+  ) {
     throw new Error(String(i18n.t("board:shell.importMissingWidgets")));
   }
   const rawWidgets = (raw as { widgets: unknown[] }).widgets;
@@ -129,7 +129,10 @@ export function addWidget(
   return next;
 }
 
-export function removeWidget(config: BoardConfig, widgetId: string): BoardConfig {
+export function removeWidget(
+  config: BoardConfig,
+  widgetId: string,
+): BoardConfig {
   const next = {
     ...config,
     widgets: config.widgets.filter((w) => w.i !== widgetId),
@@ -171,7 +174,11 @@ export function updateWidgetSizeId(
         return widget;
       }
       const options = getWidgetSizeOptions(widget.type);
-      const resolved = pickAllowedSizePreset(sizeId, options, getWidgetDefaultSizeId(widget.type));
+      const resolved = pickAllowedSizePreset(
+        sizeId,
+        options,
+        getWidgetDefaultSizeId(widget.type),
+      );
       return { ...widget, sizeId: resolved.id as BoardSizePresetId };
     }),
   };
@@ -179,7 +186,10 @@ export function updateWidgetSizeId(
   return next;
 }
 
-export function bringWidgetToFront(config: BoardConfig, widgetId: string): BoardConfig {
+export function bringWidgetToFront(
+  config: BoardConfig,
+  widgetId: string,
+): BoardConfig {
   const z = nextZ(config.widgets);
   const next = {
     ...config,

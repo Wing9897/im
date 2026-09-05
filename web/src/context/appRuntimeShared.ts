@@ -11,7 +11,7 @@ import type {
 } from "../types";
 import i18n from "../i18n";
 import { messageForErrorCode } from "../i18n/errorCodes";
-import { APP_LOG_KIND } from "../logging/appLogClient";
+import { APP_LOG_KIND } from "../api/appLogClient";
 import { getOsTimeMs } from "../utils/time";
 
 export type { LogLevel, LogCategory, AppLogEntry, AppLogInput, ActiveAnalysisState, ActiveAnalysisInput };

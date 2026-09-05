@@ -22,9 +22,12 @@ import {
   type EmailProviderPreset,
 } from "./emailFormModel";
 
-const removeEmailMailbox = (target: EmailMailboxInfo) => deleteSource(target.source.id);
+const removeEmailMailbox = (target: EmailMailboxInfo) =>
+  deleteSource(target.source.id);
 const formatEditError = (error: unknown) =>
-  error instanceof Error ? error.message : String(i18n.t("sources:email.updateFailed"));
+  error instanceof Error
+    ? error.message
+    : String(i18n.t("sources:email.updateFailed"));
 
 export function useEmailTab() {
   const {
@@ -46,7 +49,12 @@ export function useEmailTab() {
 
   const [form, setForm] = useState<EmailFormFields>(INITIAL_EMAIL_FORM);
   const [formError, setFormError] = useState<string | null>(null);
-  const { submitting, error: submitError, handleSubmit } = useFormSubmit();
+  const {
+    submitting,
+    error: submitError,
+    errorCode: submitErrorCode,
+    handleSubmit,
+  } = useFormSubmit();
 
   const [editResetCursors, setEditResetCursors] = useState(false);
 
@@ -54,13 +62,21 @@ export function useEmailTab() {
     setForm((current) => applyEmailPreset(current, preset));
   }, []);
 
-  const validateForm = useCallback((fields: EmailFormFields, isEdit: boolean) => {
-    const result = validateEmailImapConfig(formToValidationInput(fields, isEdit));
-    if (!result.valid) {
-      return Object.values(result.errors)[0] ?? String(i18n.t("sources:email.validationFailed"));
-    }
-    return null;
-  }, []);
+  const validateForm = useCallback(
+    (fields: EmailFormFields, isEdit: boolean) => {
+      const result = validateEmailImapConfig(
+        formToValidationInput(fields, isEdit),
+      );
+      if (!result.valid) {
+        return (
+          Object.values(result.errors)[0] ??
+          String(i18n.t("sources:email.validationFailed"))
+        );
+      }
+      return null;
+    },
+    [],
+  );
 
   const saveEdit = useCallback(
     async (target: EmailMailboxInfo, fields: EmailFormFields) => {
@@ -103,10 +119,13 @@ export function useEmailTab() {
     });
   }, [form, fetchMailboxes, handleSubmit, validateForm]);
 
-  const openEditDialog = useCallback((mailbox: EmailMailboxInfo) => {
-    setEditResetCursors(false);
-    edit.openEditDialog(mailbox);
-  }, [edit]);
+  const openEditDialog = useCallback(
+    (mailbox: EmailMailboxInfo) => {
+      setEditResetCursors(false);
+      edit.openEditDialog(mailbox);
+    },
+    [edit],
+  );
 
   const closeEditDialog = useCallback(() => {
     setEditResetCursors(false);
@@ -126,6 +145,7 @@ export function useEmailTab() {
     setPreset,
     submitting,
     formError: formError || submitError,
+    formErrorCode: formError ? null : submitErrorCode,
     removeTarget,
     setRemoveTarget,
     removing,

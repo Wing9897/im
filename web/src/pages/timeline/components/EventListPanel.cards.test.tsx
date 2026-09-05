@@ -9,7 +9,8 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../../test/context-mocks";
-import { applyCalendarShareCatalogItems, resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog";
+import { applyCalendarShareCatalogItems } from "../../../domain/calendarShare/useCalendarShareCatalog";
+import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog.testing";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { TimelinePageProvider } from "../TimelinePageContext";
 import { makeContext, makeEvent, renderPanel } from "./eventListPanelTestUtils";
@@ -42,7 +43,11 @@ describe("EventListPanel", () => {
 
   it("shows workset + provenance and remind badge; never 購入 / short 结束", () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "task-ops", name: "Ops Task", worksetId: "ws-ops" }),
+      makeAnalysisTask({
+        id: "task-ops",
+        name: "Ops Task",
+        worksetId: "ws-ops",
+      }),
     ]);
     taskCatalogState.worksets = [
       { id: SYSTEM_WORKSET_ID, name: "一般", createdAt: null, updatedAt: null },
@@ -100,13 +105,7 @@ describe("EventListPanel", () => {
       endTime: new Date(2026, 6, 14, 19, 0, 0).toISOString(),
     });
     const { container } = renderPanel({
-      rangeEvents: [
-        remind,
-        userRemind,
-        assistant,
-        assistantRemind,
-        analysis,
-      ],
+      rangeEvents: [remind, userRemind, assistant, assistantRemind, analysis],
       focusedDay: new Date(2026, 6, 14),
     });
 
@@ -125,17 +124,26 @@ describe("EventListPanel", () => {
     expect(worksets.some((text) => text?.includes("工作集：營運"))).toBe(true);
 
     const provenances = Array.from(
-      container.querySelectorAll('[data-testid="timeline-event-list-provenance"]'),
+      container.querySelectorAll(
+        '[data-testid="timeline-event-list-provenance"]',
+      ),
     ).map((node) => node.textContent);
     expect(provenances).toContain("物品");
     expect(provenances).toContain("助手");
-    expect(provenances.some((text) => text?.includes("任務：Ops Task"))).toBe(true);
+    expect(provenances.some((text) => text?.includes("任務：Ops Task"))).toBe(
+      true,
+    );
 
-    const titleIcons = container.querySelectorAll('[data-testid="card-title-icon"]');
+    const titleIcons = container.querySelectorAll(
+      '[data-testid="card-title-icon"]',
+    );
     expect(titleIcons.length).toBe(3);
     expect(titleIcons[0]?.getAttribute("width")).toBe("20");
 
-    expect(container.querySelectorAll('[data-testid="intel-event-avatar-stack"]').length).toBe(1);
+    expect(
+      container.querySelectorAll('[data-testid="intel-event-avatar-stack"]')
+        .length,
+    ).toBe(1);
     const intelMark = container.querySelector(
       '[data-testid="intel-event-mark"]',
     ) as HTMLElement | null;
@@ -144,17 +152,33 @@ describe("EventListPanel", () => {
     ) as HTMLElement | null;
     expect(intelMark?.style.width).toBe("28px");
     expect(taskOverlay?.style.width).toBe("14px");
-    expect(intelMark?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
-    expect(taskOverlay?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(true);
+    expect(
+      intelMark?.querySelector("svg")?.classList.contains("lucide-radar"),
+    ).toBe(true);
+    expect(
+      taskOverlay
+        ?.querySelector("svg")
+        ?.classList.contains("lucide-list-checks"),
+    ).toBe(true);
     const taskProvenance = Array.from(
-      container.querySelectorAll('[data-testid="timeline-event-list-provenance"]'),
+      container.querySelectorAll(
+        '[data-testid="timeline-event-list-provenance"]',
+      ),
     ).find((node) => node.textContent?.includes("任務：Ops Task"));
-    expect(taskProvenance?.querySelector('[data-testid="intel-event-avatar-stack"]')).toBeNull();
-    expect(taskProvenance?.querySelector('[data-testid="intel-event-mark"]')).toBeNull();
-    expect(taskProvenance?.querySelector("svg")?.getAttribute("width")).toBe("14");
-    expect(taskProvenance?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(
-      true,
+    expect(
+      taskProvenance?.querySelector('[data-testid="intel-event-avatar-stack"]'),
+    ).toBeNull();
+    expect(
+      taskProvenance?.querySelector('[data-testid="intel-event-mark"]'),
+    ).toBeNull();
+    expect(taskProvenance?.querySelector("svg")?.getAttribute("width")).toBe(
+      "14",
     );
+    expect(
+      taskProvenance
+        ?.querySelector("svg")
+        ?.classList.contains("lucide-list-checks"),
+    ).toBe(true);
 
     // Single-day fixtures: ending day-phase tag is not shown (multi-day covered elsewhere).
     expect(
@@ -183,24 +207,36 @@ describe("EventListPanel", () => {
       rangeEvents: [analysis],
       focusedDay: new Date(2026, 6, 14),
     });
-    const stack = container.querySelector('[data-testid="intel-event-avatar-stack"]');
+    const stack = container.querySelector(
+      '[data-testid="intel-event-avatar-stack"]',
+    );
     const intel = container.querySelector('[data-testid="intel-event-mark"]');
-    const badge = container.querySelector('[data-testid="intel-event-task-badge"]');
+    const badge = container.querySelector(
+      '[data-testid="intel-event-task-badge"]',
+    );
     expect(stack).not.toBeNull();
-    expect(intel?.querySelector("svg")?.classList.contains("lucide-radar")).toBe(true);
+    expect(
+      intel?.querySelector("svg")?.classList.contains("lucide-radar"),
+    ).toBe(true);
     expect(intel?.textContent).not.toContain("🎯");
     expect(badge?.textContent).toContain("🎯");
-    expect(container.querySelector('[data-testid="task-avatar-stack"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="task-avatar-stack"]'),
+    ).toBeNull();
     const provenance = container.querySelector(
       '[data-testid="timeline-event-list-provenance"]',
     );
     expect(provenance?.textContent).toContain("任務：Ops Task");
     expect(provenance?.textContent).not.toContain("🎯");
-    expect(provenance?.querySelector('[data-testid="intel-event-avatar-stack"]')).toBeNull();
+    expect(
+      provenance?.querySelector('[data-testid="intel-event-avatar-stack"]'),
+    ).toBeNull();
     expect(provenance?.querySelector("svg")?.getAttribute("width")).toBe("14");
-    expect(provenance?.querySelector("svg")?.classList.contains("lucide-list-checks")).toBe(
-      true,
-    );
+    expect(
+      provenance
+        ?.querySelector("svg")
+        ?.classList.contains("lucide-list-checks"),
+    ).toBe(true);
   });
 
   it("shows location placeholder and status on sidebar cards", () => {
@@ -218,14 +254,17 @@ describe("EventListPanel", () => {
     });
 
     expect(
-      container.querySelector('[data-testid="timeline-event-list-location"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-location"]')
+        ?.textContent,
     ).toContain("地點：台北");
     expect(
-      container.querySelector('[data-testid="timeline-important-marker"]')?.textContent,
+      container.querySelector('[data-testid="timeline-important-marker"]')
+        ?.textContent,
     ).toBe("❗");
     expect(container.textContent).toContain("❗");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-status"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-status"]')
+        ?.textContent,
     ).toContain("狀態：");
 
     const emptyLoc = makeTimelineItem({
@@ -264,13 +303,16 @@ describe("EventListPanel", () => {
     });
 
     expect(
-      container.querySelector('[data-testid="timeline-event-list-location"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-location"]')
+        ?.textContent,
     ).toContain("地點：N/A");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-notes"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-notes"]')
+        ?.textContent,
     ).toContain("說明：N/A");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-meta"]')?.className,
+      container.querySelector('[data-testid="timeline-event-list-meta"]')
+        ?.className,
     ).toContain("flex-col");
   });
 
@@ -290,9 +332,12 @@ describe("EventListPanel", () => {
     });
 
     expect(
-      container.querySelector('[data-testid="timeline-important-marker"]')?.textContent,
+      container.querySelector('[data-testid="timeline-important-marker"]')
+        ?.textContent,
     ).toBe("❗");
-    expect(container.querySelector('[data-testid="timeline-item-kind-marker"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-item-kind-marker"]'),
+    ).toBeNull();
     expect(container.textContent).toContain("milk");
     expect(container.textContent).not.toContain("⚠️");
   });
@@ -349,10 +394,13 @@ describe("EventListPanel", () => {
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
     });
-    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
-    expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
-      "🎂",
-    );
+    expect(
+      container.querySelector('[data-testid="card-title-icon"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="schedule-event-emoji"]')
+        ?.textContent,
+    ).toContain("🎂");
   });
 
   it("shows the series emoji from the occurrence payload", () => {
@@ -369,10 +417,13 @@ describe("EventListPanel", () => {
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
     });
-    expect(container.querySelector('[data-testid="schedule-event-emoji"]')?.textContent).toContain(
-      "🔁",
-    );
-    expect(container.querySelector('[data-testid="card-title-icon"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="schedule-event-emoji"]')
+        ?.textContent,
+    ).toContain("🔁");
+    expect(
+      container.querySelector('[data-testid="card-title-icon"]'),
+    ).toBeNull();
   });
 
   it("shows calendar affiliation on separate rows and hides dismiss", () => {
@@ -398,18 +449,26 @@ describe("EventListPanel", () => {
     );
     expect(statusWorkset?.className).toContain("flex-col");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-status"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-status"]')
+        ?.textContent,
     ).toContain("狀態：");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-workset"]')?.textContent,
+      container.querySelector('[data-testid="timeline-event-list-workset"]')
+        ?.textContent,
     ).toContain("日曆：DemoPub/Open");
     expect(statusWorkset?.textContent).not.toContain("工作集");
     expect(statusWorkset?.textContent).not.toContain("訂閱");
     expect(provenance).toBeNull();
-    expect(container.querySelector('[data-testid="timeline-event-list-dismiss"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-dismiss"]'),
+    ).toBeNull();
     expect(container.textContent).not.toContain("從時間軸拿掉");
-    expect(container.querySelector('[data-testid="subscribed-event-avatar"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="subscribed-event-icon"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="subscribed-event-avatar"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="subscribed-event-icon"]'),
+    ).toBeTruthy();
   });
 
   it("shows subscribed publisher avatar from catalog ownerAvatar", () => {
@@ -432,13 +491,21 @@ describe("EventListPanel", () => {
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
     });
-    const avatar = container.querySelector('[data-testid="subscribed-event-avatar"]');
+    const avatar = container.querySelector(
+      '[data-testid="subscribed-event-avatar"]',
+    );
     expect(avatar).toBeTruthy();
     expect(avatar?.getAttribute("data-custom-src")).toBe("true");
     expect(avatar?.style.width).toBe("28px");
-    expect(container.querySelector('[data-testid="subscribed-event-fallback-icon"]')).toBeNull();
-    expect(container.querySelector('[data-testid="subscribed-event-emoji"]')).toBeNull();
-    expect(container.querySelector('[data-testid="subscribed-event-icon"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="subscribed-event-fallback-icon"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="subscribed-event-emoji"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="subscribed-event-icon"]'),
+    ).toBeTruthy();
   });
 
   it("keeps dismiss on local user events", () => {
@@ -454,13 +521,17 @@ describe("EventListPanel", () => {
       rangeEvents: [event],
       focusedDay: new Date(2026, 6, 14),
     });
-    const dismiss = container.querySelector('[data-testid="timeline-event-list-dismiss"]');
+    const dismiss = container.querySelector(
+      '[data-testid="timeline-event-list-dismiss"]',
+    );
     expect(dismiss).not.toBeNull();
     expect(dismiss?.getAttribute("aria-label")).toBe("從時間軸拿掉");
     expect(dismiss?.getAttribute("title")).toBe("從時間軸拿掉");
     expect(dismiss?.className).toContain("text-error");
     expect(container.textContent).not.toContain("從時間軸拿掉");
-    const selectButton = container.querySelector(".im-timeline-event-list-item button");
+    const selectButton = container.querySelector(
+      ".im-timeline-event-list-item button",
+    );
     expect(selectButton?.parentElement).toBe(dismiss?.parentElement);
     expect(dismiss?.parentElement?.className).toContain("items-start");
   });

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  _resetConnectionStoreForTests,
   clearConnection,
   getAccessToken,
   getConnectionSnapshot,
@@ -9,7 +8,7 @@ import {
   setConnectionMode,
   setServerBaseUrl,
 } from "./connectionStore";
-
+import { _resetConnectionStoreForTests } from "./connectionStore.testing";
 describe("connectionStore", () => {
   beforeEach(() => {
     localStorage.clear();

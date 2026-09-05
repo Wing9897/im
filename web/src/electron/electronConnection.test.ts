@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  _resetConnectionStoreForTests,
   getAccessToken,
   getConnectionSnapshot,
   saveDeviceSession,
   setConnectionMode,
   setServerBaseUrl,
 } from "../domain/connection/connectionStore";
+import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
 import {
   applyLocalWebConnectionDefaults,
   applyRemoteWebConnection,
@@ -47,7 +47,9 @@ describe("electronConnection bridge", () => {
 
   it("ensureDesktopHostMode / clientMode no-op without preload", async () => {
     expect(await ensureDesktopHostMode()).toBe(false);
-    expect(await ensureDesktopClientMode("http://192.168.1.10:18820")).toBe(false);
+    expect(await ensureDesktopClientMode("http://192.168.1.10:18820")).toBe(
+      false,
+    );
     await expect(resetDesktopConnectionAfterLogout()).resolves.toBeUndefined();
   });
 
@@ -70,29 +72,40 @@ describe("electronConnection bridge", () => {
     window.electronConnection = {
       getConnection: vi
         .fn()
-        .mockResolvedValue({ mode: "client", serverUrl: "http://192.168.1.10:18820" }),
+        .mockResolvedValue({
+          mode: "client",
+          serverUrl: "http://192.168.1.10:18820",
+        }),
       setConnection: vi.fn(),
       restartShell: vi.fn(),
     };
     await syncDesktopConnectionOnBoot();
     expect(getConnectionSnapshot().connectionMode).toBe("remote");
-    expect(getConnectionSnapshot().serverBaseUrl).toBe("http://192.168.1.10:18820");
+    expect(getConnectionSnapshot().serverBaseUrl).toBe(
+      "http://192.168.1.10:18820",
+    );
   });
 
   it("syncDesktopConnectionOnBoot retries then surfaces IPC failures", async () => {
     setConnectionMode("remote");
     setServerBaseUrl("http://192.168.1.10:18820");
-    const getConnection = vi.fn().mockRejectedValue(new Error("IPC unavailable"));
+    const getConnection = vi
+      .fn()
+      .mockRejectedValue(new Error("IPC unavailable"));
     window.electronConnection = {
       getConnection,
       setConnection: vi.fn(),
       restartShell: vi.fn(),
     };
-    await expect(syncDesktopConnectionOnBoot()).rejects.toThrow("IPC unavailable");
+    await expect(syncDesktopConnectionOnBoot()).rejects.toThrow(
+      "IPC unavailable",
+    );
     expect(getConnection.mock.calls.length).toBeGreaterThanOrEqual(2);
     // Must not silently leave a poisoned remote baseUrl as if sync succeeded.
     expect(getConnectionSnapshot().connectionMode).toBe("remote");
-    expect(getConnectionSnapshot().serverBaseUrl).toBe("http://192.168.1.10:18820");
+    expect(getConnectionSnapshot().serverBaseUrl).toBe(
+      "http://192.168.1.10:18820",
+    );
   });
 
   it("syncDesktopConnectionOnBoot recovers after a transient IPC failure", async () => {
@@ -116,7 +129,9 @@ describe("electronConnection bridge", () => {
   it("applyLocal / applyRemote Web helpers are the store write entry", () => {
     applyRemoteWebConnection("http://192.168.1.10:18820/");
     expect(getConnectionSnapshot().connectionMode).toBe("remote");
-    expect(getConnectionSnapshot().serverBaseUrl).toBe("http://192.168.1.10:18820");
+    expect(getConnectionSnapshot().serverBaseUrl).toBe(
+      "http://192.168.1.10:18820",
+    );
     applyLocalWebConnectionDefaults();
     expect(getConnectionSnapshot().connectionMode).toBe("local");
     expect(getConnectionSnapshot().serverBaseUrl).toBeNull();
@@ -141,7 +156,10 @@ describe("electronConnection bridge", () => {
     window.electronConnection = {
       getConnection: vi
         .fn()
-        .mockResolvedValue({ mode: "client", serverUrl: "http://192.168.1.10:18820" }),
+        .mockResolvedValue({
+          mode: "client",
+          serverUrl: "http://192.168.1.10:18820",
+        }),
       setConnection,
       restartShell,
     };
@@ -161,7 +179,9 @@ describe("electronConnection bridge", () => {
       setConnection,
       restartShell,
     };
-    expect(await ensureDesktopClientMode("http://192.168.1.10:18820/")).toBe(true);
+    expect(await ensureDesktopClientMode("http://192.168.1.10:18820/")).toBe(
+      true,
+    );
     expect(setConnection).toHaveBeenCalledWith({
       mode: "client",
       serverUrl: "http://192.168.1.10:18820",
@@ -180,7 +200,9 @@ describe("electronConnection bridge", () => {
       setConnection,
       restartShell,
     };
-    expect(await ensureDesktopClientMode("http://192.168.1.10:18820/")).toBe(false);
+    expect(await ensureDesktopClientMode("http://192.168.1.10:18820/")).toBe(
+      false,
+    );
     expect(setConnection).not.toHaveBeenCalled();
     expect(restartShell).not.toHaveBeenCalled();
   });
@@ -191,7 +213,10 @@ describe("electronConnection bridge", () => {
     window.electronConnection = {
       getConnection: vi
         .fn()
-        .mockResolvedValue({ mode: "client", serverUrl: "http://192.168.1.10:18820" }),
+        .mockResolvedValue({
+          mode: "client",
+          serverUrl: "http://192.168.1.10:18820",
+        }),
       setConnection,
       restartShell,
     };
@@ -228,7 +253,10 @@ describe("electronConnection bridge", () => {
     window.electronConnection = {
       getConnection: vi
         .fn()
-        .mockResolvedValue({ mode: "client", serverUrl: "http://192.168.1.10:18820" }),
+        .mockResolvedValue({
+          mode: "client",
+          serverUrl: "http://192.168.1.10:18820",
+        }),
       setConnection,
       restartShell,
     };
@@ -255,9 +283,9 @@ describe("electronConnection bridge", () => {
       setConnection: vi.fn().mockRejectedValue(new Error("disk full")),
       restartShell: vi.fn(),
     };
-    await expect(ensureDesktopClientMode("http://192.168.1.10:18820")).rejects.toThrow(
-      "disk full",
-    );
+    await expect(
+      ensureDesktopClientMode("http://192.168.1.10:18820"),
+    ).rejects.toThrow("disk full");
   });
 
   it("subscribeDesktopNotificationLocale applies tray preference and pushes current preference", async () => {

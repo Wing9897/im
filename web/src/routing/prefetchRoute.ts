@@ -1,40 +1,15 @@
-/** Map primary nav paths → lazy page modules (matches AppRoutes). */
-const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
-  "/monitor": () => import("../pages/monitor/MonitorPage"),
-  "/tasks": () => import("../pages/dashboard/DashboardViewer"),
-  "/worksets": () => import("../pages/dashboard/DashboardViewer"),
-  "/worksets/:id": () => import("../pages/worksets/WorksetWorkspacePage"),
-  "/schedule": () => import("../pages/schedule/SchedulePage"),
-  "/leaderboard": () => import("../pages/leaderboard/LeaderboardPage"),
-  "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
-  "/timeline": () => import("../pages/timeline/TimelinePage"),
-  "/subscriptions": () => import("../pages/subscriptions/SubscriptionsShell"),
-  "/subscriptions/mine": () => import("../pages/subscriptions/SubscriptionsMinePage"),
-  "/subscriptions/published": () => import("../pages/subscriptions/SubscriptionsPublishedPage"),
-  "/subscriptions/account": () => import("../pages/subscriptions/SubscriptionsAccountPage"),
-  "/subscriptions/search": () => import("../pages/subscriptions/SubscriptionsSearchPage"),
-  "/items": () => import("../pages/items/ItemsPage"),
-  "/notify": () => import("../pages/notify/NotifyWorkspacePage"),
-  "/sources": () => import("../pages/sources/SourceManagementPage"),
-  "/assistant": () => import("../pages/ai/assistant/AssistantPage"),
-  "/account": () => import("../pages/account/AccountShell"),
-  "/settings/ai": () => import("../pages/settings/SettingsShared"),
-  "/settings/ai/provider": () => import("../pages/settings/ai/SettingsAiProviderPage"),
-  "/settings/ai/voice": () => import("../pages/settings/ai/SettingsVoicePage"),
-  "/settings/ai/staff": () => import("../pages/settings/ai/SettingsAiStaffPage"),
-  "/settings": () => import("../pages/settings/SettingsShared"),
-  "/settings/integrations": () => import("../pages/settings/SettingsIntegrationsPage"),
-  "/settings/logs": () => import("../pages/logs/LogPage"),
-};
+import { ROUTE_PAGES, ROUTE_PREFETCHERS } from "./routeModules";
 
 const prefetched = new Set<string>();
 
-function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefined {
+function resolveTasksPrefetch(
+  path: string,
+): (() => Promise<unknown>) | undefined {
   if (path === "/tasks/new" || /\/tasks\/[^/]+\/edit$/.test(path)) {
-    return () => import("../pages/tasks/chat-editor/ChatEditorPage");
+    return ROUTE_PAGES.ChatEditorPage;
   }
   if (/\/tasks\/[^/]+\/agent$/.test(path)) {
-    return () => import("../pages/tasks/agent/AgentDetailPage");
+    return ROUTE_PAGES.AgentDetailPage;
   }
   if (/^\/worksets\/.+/.test(path)) {
     return ROUTE_PREFETCHERS["/worksets/:id"];
@@ -45,9 +20,11 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   return undefined;
 }
 
-function resolveSchedulePrefetch(path: string): (() => Promise<unknown>) | undefined {
+function resolveSchedulePrefetch(
+  path: string,
+): (() => Promise<unknown>) | undefined {
   if (/\/schedule\/recurring\/[^/]+\/edit$/.test(path)) {
-    return () => import("../pages/schedule/RecurringSeriesEditor");
+    return ROUTE_PAGES.RecurringSeriesEditor;
   }
   if (path.startsWith("/schedule")) {
     return ROUTE_PREFETCHERS["/schedule"];
@@ -55,12 +32,14 @@ function resolveSchedulePrefetch(path: string): (() => Promise<unknown>) | undef
   return undefined;
 }
 
-function resolveItemsPrefetch(path: string): (() => Promise<unknown>) | undefined {
+function resolveItemsPrefetch(
+  path: string,
+): (() => Promise<unknown>) | undefined {
   if (path === "/items/finance") {
-    return () => import("../pages/items/finance/ItemsFinancePage");
+    return ROUTE_PAGES.ItemsFinancePage;
   }
   if (path === "/items/new" || /\/items\/[^/]+\/edit$/.test(path)) {
-    return () => import("../pages/items/form/ItemFormPage");
+    return ROUTE_PAGES.ItemFormPage;
   }
   if (path === "/items" || path.startsWith("/items/")) {
     return ROUTE_PREFETCHERS["/items"];

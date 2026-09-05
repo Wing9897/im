@@ -56,7 +56,7 @@ export async function refreshAccessTokenOnce(): Promise<boolean> {
   return refreshInFlight;
 }
 
-/** Test helper — clear the in-flight refresh promise between cases. */
+/** Test helper — clear the in-flight refresh promise between cases. Production builds drop the body. */
 export function _resetAuthRefreshForTests(): void {
   refreshInFlight = null;
 }

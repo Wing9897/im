@@ -125,8 +125,8 @@ webcal／CalDAV／OAuth 双向同步（Desktop 一次性 ICS 除外）；OpenCla
 
 ## 相关代码
 
-`server/api/routes/agent.py` · `server/agent/{runtime,tools_*}` · `server/prompts/assistant.py` · `server/web_search/` · `web/src/api/agent.ts` · `web/src/speech/` · `web/src/pages/ai/assistant/`。
+`server/api/routes/agent.py` · `server/agent/{runtime,tools_*}` · `server/prompts/assistant.py` · `server/web_search/` · `web/src/api/agent.ts` · `web/src/speech/` · `web/src/pages/assistant/`。
 
 ## 测试
 
-Gate：`npm run check`。聚焦：`test_agent_*.py`、`test_web_search*.py`、`test_calendar_*.py`、`test_user_events.py`；FE `web/src/api/agent.test.ts`、`pages/ai/assistant/`、speech／PTT。
+Gate：`npm run check`。聚焦：`test_agent_*.py`、`test_web_search*.py`、`test_calendar_*.py`、`test_user_events.py`；FE `web/src/api/agent.test.ts`、`pages/assistant/`、speech／PTT。

@@ -38,7 +38,7 @@ export function scheduleEmojiPickerPreload(timeoutMs = 2000): () => void {
   return () => window.clearTimeout(timer);
 }
 
-/** Test-only: clear the cached promise between cases. */
+/** Test-only: clear the cached promise between cases. Production builds drop the body. */
 export function __resetEmojiPickerLoaderForTests(): void {
   loadPromise = null;
 }

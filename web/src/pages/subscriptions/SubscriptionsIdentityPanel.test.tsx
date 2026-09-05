@@ -3,25 +3,33 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/calendarShare", async () =>
-  (await import("../../test/calendarShareApiMock")).calendarShareApiModuleMock());
+  (
+    await import("../../test/calendarShareApiMock")
+  ).calendarShareApiModuleMock(),
+);
 
 vi.mock("../../context/ToastContext", async () =>
-  (await import("../../test/context-mocks")).toastContextModuleMock());
+  (await import("../../test/context-mocks")).toastContextModuleMock(),
+);
 
 vi.mock("../../domain/user/userProfile", () => ({
   useUserProfile: () => ({
     profile: { displayName: "Wing", avatarDataUrl: null, background: "" },
     setProfile: vi.fn(),
   }),
-  resolveUserDisplayName: (profile: { displayName: string }, fallback: string) =>
-    profile.displayName.trim() || fallback,
+  resolveUserDisplayName: (
+    profile: { displayName: string },
+    fallback: string,
+  ) => profile.displayName.trim() || fallback,
 }));
 
 import { SubscriptionsIdentityPanel } from "./SubscriptionsIdentityPanel";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
-import { calendarShareApiMocks, resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog";
-
+import {
+  calendarShareApiMocks,
+  resetCalendarShareApiMocks,
+} from "../../test/calendarShareApiMock";
+import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
 const PUBLIC_URL = "https://subscribe.devents.tech";
 
 const DISCONNECTED = {
@@ -46,7 +54,9 @@ describe("SubscriptionsIdentityPanel", () => {
     await ensureZhHantLocale();
     resetCalendarShareCatalogForTests();
     resetCalendarShareApiMocks();
-    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(DISCONNECTED);
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(
+      DISCONNECTED,
+    );
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
       items: [],
       ownHandle: "",
@@ -80,15 +90,27 @@ describe("SubscriptionsIdentityPanel", () => {
       lastPublicTimezone: "Asia/Taipei",
     });
     await renderPanel();
-    expect(container.querySelector('[data-testid="subscriptions-identity-panel"]')?.getAttribute("data-connected")).toBe(
-      "false",
-    );
-    expect(container.querySelector('[data-testid="calendar-share-login"]')).toBeTruthy();
-    const urlInput = container.querySelector('[data-testid="calendar-share-url"]') as HTMLInputElement;
+    expect(
+      container
+        .querySelector('[data-testid="subscriptions-identity-panel"]')
+        ?.getAttribute("data-connected"),
+    ).toBe("false");
+    expect(
+      container.querySelector('[data-testid="calendar-share-login"]'),
+    ).toBeTruthy();
+    const urlInput = container.querySelector(
+      '[data-testid="calendar-share-url"]',
+    ) as HTMLInputElement;
     expect(urlInput?.value).toBe(PUBLIC_URL);
     expect(urlInput?.placeholder).toBe(PUBLIC_URL);
-    expect(container.querySelector('[data-testid="subscriptions-identity-avatar-initials"]')?.textContent).toBe("WI");
-    expect(calendarShareApiMocks.fetchCalendarShareSession).toHaveBeenCalledTimes(1);
+    expect(
+      container.querySelector(
+        '[data-testid="subscriptions-identity-avatar-initials"]',
+      )?.textContent,
+    ).toBe("WI");
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSession,
+    ).toHaveBeenCalledTimes(1);
     expect(calendarShareApiMocks.fetchCalendarShareTimezone).toHaveBeenCalled();
   });
 
@@ -104,7 +126,9 @@ describe("SubscriptionsIdentityPanel", () => {
       lastPublicTimezone: "Asia/Taipei",
     });
     await renderPanel();
-    const urlInput = container.querySelector('[data-testid="calendar-share-url"]') as HTMLInputElement;
+    const urlInput = container.querySelector(
+      '[data-testid="calendar-share-url"]',
+    ) as HTMLInputElement;
     expect(urlInput?.value).toBe(PUBLIC_URL);
   });
 
@@ -116,8 +140,14 @@ describe("SubscriptionsIdentityPanel", () => {
       lastPublicTimezone: "",
     });
     await renderPanel();
-    expect(container.querySelector('[data-testid="calendar-share-timezone-pending"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="calendar-share-timezone"]')).toBeTruthy();
+    expect(
+      container.querySelector(
+        '[data-testid="calendar-share-timezone-pending"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="calendar-share-timezone"]'),
+    ).toBeTruthy();
   });
 
   it("hides the reminder when the public replica is current", async () => {
@@ -128,7 +158,11 @@ describe("SubscriptionsIdentityPanel", () => {
       lastPublicTimezone: "Asia/Taipei",
     });
     await renderPanel();
-    expect(container.querySelector('[data-testid="calendar-share-timezone-pending"]')).toBeNull();
+    expect(
+      container.querySelector(
+        '[data-testid="calendar-share-timezone-pending"]',
+      ),
+    ).toBeNull();
   });
 
   it("invalidates the shared catalog after login and logout", async () => {
@@ -139,18 +173,29 @@ describe("SubscriptionsIdentityPanel", () => {
       lastPublicTimezone: "Asia/Taipei",
     });
     calendarShareApiMocks.loginCalendarShare.mockImplementation(async () => {
-      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(CONNECTED);
+      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(
+        CONNECTED,
+      );
       return CONNECTED;
     });
     calendarShareApiMocks.logoutCalendarShare.mockImplementation(async () => {
-      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(DISCONNECTED);
+      calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(
+        DISCONNECTED,
+      );
       return DISCONNECTED;
     });
     await renderPanel();
 
-    const handle = container.querySelector('[data-testid="calendar-share-handle"]') as HTMLInputElement;
-    const password = container.querySelector('[data-testid="calendar-share-password"]') as HTMLInputElement;
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    const handle = container.querySelector(
+      '[data-testid="calendar-share-handle"]',
+    ) as HTMLInputElement;
+    const password = container.querySelector(
+      '[data-testid="calendar-share-password"]',
+    ) as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!;
     await act(async () => {
       setter.call(handle, "Wing");
       handle.dispatchEvent(new Event("input", { bubbles: true }));
@@ -158,26 +203,45 @@ describe("SubscriptionsIdentityPanel", () => {
       password.dispatchEvent(new Event("input", { bubbles: true }));
     });
     await act(async () => {
-      (container.querySelector('[data-testid="calendar-share-login"]') as HTMLButtonElement).click();
+      (
+        container.querySelector(
+          '[data-testid="calendar-share-login"]',
+        ) as HTMLButtonElement
+      ).click();
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
     });
     expect(calendarShareApiMocks.loginCalendarShare).toHaveBeenCalled();
-    expect(calendarShareApiMocks.putCalendarShareProfile).toHaveBeenCalledWith("");
-    expect(calendarShareApiMocks.fetchCalendarShareSession.mock.calls.length).toBeGreaterThan(1);
-    expect(container.querySelector('[data-testid="subscriptions-identity-handle"]')?.textContent).toContain("Wing");
-    expect(container.querySelector('[data-testid="calendar-share-logout"]')).toBeTruthy();
+    expect(calendarShareApiMocks.putCalendarShareProfile).toHaveBeenCalledWith(
+      "",
+    );
+    expect(
+      calendarShareApiMocks.fetchCalendarShareSession.mock.calls.length,
+    ).toBeGreaterThan(1);
+    expect(
+      container.querySelector('[data-testid="subscriptions-identity-handle"]')
+        ?.textContent,
+    ).toContain("Wing");
+    expect(
+      container.querySelector('[data-testid="calendar-share-logout"]'),
+    ).toBeTruthy();
 
     await act(async () => {
-      (container.querySelector('[data-testid="calendar-share-logout"]') as HTMLButtonElement).click();
+      (
+        container.querySelector(
+          '[data-testid="calendar-share-logout"]',
+        ) as HTMLButtonElement
+      ).click();
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
     });
     expect(calendarShareApiMocks.logoutCalendarShare).toHaveBeenCalled();
-    expect(container.querySelector('[data-testid="calendar-share-login"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="calendar-share-login"]'),
+    ).toBeTruthy();
   });
 });

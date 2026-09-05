@@ -1,0 +1,1 @@
+export { resetFiredKeysCacheForTests } from "./scannerFiredStore";

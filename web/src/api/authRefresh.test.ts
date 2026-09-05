@@ -6,11 +6,11 @@ import {
 } from "../domain/connection/connectionStore";
 import { refreshDeviceSession } from "./setupSession";
 import {
-  _resetAuthRefreshForTests,
   isSetupAuthPath,
   isStoredAccessExpired,
   refreshAccessTokenOnce,
 } from "./authRefresh";
+import { _resetAuthRefreshForTests } from "./authRefresh.testing";
 
 vi.mock("../domain/connection/connectionStore", () => ({
   clearDeviceSession: vi.fn(),
@@ -66,7 +66,9 @@ describe("authRefresh", () => {
 
   it("clears the stored session when refresh fails", async () => {
     vi.mocked(getRefreshToken).mockReturnValue("expired-refresh");
-    vi.mocked(refreshDeviceSession).mockRejectedValue(new Error("unauthorized"));
+    vi.mocked(refreshDeviceSession).mockRejectedValue(
+      new Error("unauthorized"),
+    );
 
     await expect(refreshAccessTokenOnce()).resolves.toBe(false);
 

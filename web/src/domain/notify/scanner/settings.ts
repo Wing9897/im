@@ -255,7 +255,7 @@ export async function saveNotifySettings(
   }
 }
 
-/** Test helper: reset in-memory cache between cases. */
+/** Test helper: reset in-memory cache between cases. Production builds drop the body. */
 export function resetNotifySettingsCacheForTests(): void {
   cachedSettings = null;
   hydratePromise = null;

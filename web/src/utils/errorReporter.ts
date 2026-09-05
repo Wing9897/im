@@ -5,7 +5,7 @@
  * Critical errors are persisted via recordAppLog.
  */
 
-import { APP_LOG_KIND, recordAppLog } from "../logging/appLogClient";
+import { APP_LOG_KIND, recordAppLog } from "../api/appLogClient";
 import { toErrorMessage } from "./errors";
 
 // ---------------------------------------------------------------------------

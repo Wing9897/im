@@ -11,7 +11,7 @@ import type {
 } from "../../types";
 import type { ActiveAnalysisState, AppLogInput } from "../appRuntimeShared";
 import i18n from "../../i18n";
-import { APP_LOG_KIND } from "../../logging/appLogClient";
+import { APP_LOG_KIND } from "../../api/appLogClient";
 
 // ---------------------------------------------------------------------------
 // Public types

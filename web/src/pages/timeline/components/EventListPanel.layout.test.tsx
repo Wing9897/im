@@ -6,9 +6,12 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../../test/context-mocks";
-import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog";
+import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog.testing";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
-import { makeEvent, renderPanel as renderPanelUntracked } from "./eventListPanelTestUtils";
+import {
+  makeEvent,
+  renderPanel as renderPanelUntracked,
+} from "./eventListPanelTestUtils";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
@@ -118,10 +121,11 @@ describe("EventListPanel", () => {
     });
     expect(container.textContent).toContain("不在當前視圖");
     expect(
-      container.querySelector('[data-testid="timeline-event-list-out-of-view"]'),
+      container.querySelector(
+        '[data-testid="timeline-event-list-out-of-view"]',
+      ),
     ).not.toBeNull();
   });
-
 
   it("renders multiline body as a single truncated preview line", () => {
     const event = makeEvent(
@@ -157,7 +161,9 @@ describe("EventListPanel", () => {
     expect(scroll?.className).toContain("overflow-y-auto");
     expect(scroll?.className).toContain("im-timeline-event-list");
     expect(container.textContent).toContain("Event 19");
-    expect(container.querySelectorAll(".im-timeline-event-list-item").length).toBe(20);
+    expect(
+      container.querySelectorAll(".im-timeline-event-list-item").length,
+    ).toBe(20);
     expect(
       container.querySelector(".im-timeline-event-list-item")?.className,
     ).toContain("shrink-0");
@@ -165,5 +171,4 @@ describe("EventListPanel", () => {
       container.querySelector(".im-timeline-event-list-item")?.className,
     ).toContain("im-card-hover");
   });
-
 });

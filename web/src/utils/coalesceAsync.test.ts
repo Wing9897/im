@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { coalesceAsync, resetCoalesceAsyncForTests } from "./coalesceAsync";
-
+import { coalesceAsync } from "./coalesceAsync";
+import { resetCoalesceAsyncForTests } from "./coalesceAsync.testing";
 describe("coalesceAsync", () => {
   beforeEach(() => {
     resetCoalesceAsyncForTests();

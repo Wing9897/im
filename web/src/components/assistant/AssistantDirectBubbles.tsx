@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Mic } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { assistantChatBubbleClass } from "../chat/chatBubbleClasses";
+import { assistantChatBubbleClass } from "./chatBubbleClasses";
 import { AssistantMarkdown } from "./AssistantMarkdown";
 import {
   resolveAssistantDisplayName,

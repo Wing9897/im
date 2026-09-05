@@ -2,7 +2,7 @@
  * Runtime API origin resolution (supports thin-client custom server URL).
  */
 
-import { defaultApiBaseUrl } from "../config/serviceEndpoints";
+import { defaultApiBaseUrl } from "./serviceEndpoints";
 import { getConnectionSnapshot } from "../domain/connection/connectionStore";
 
 /**

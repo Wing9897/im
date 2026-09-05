@@ -48,7 +48,7 @@ export function consumeCalendarShareRateLimit(
   stamps.set(family, prev);
 }
 
-/** Test-only: clear sliding windows. */
+/** Test-only: clear sliding windows. Production builds drop the body. */
 export function resetCalendarShareRateLimitForTests(): void {
   stamps.clear();
 }

@@ -10,12 +10,12 @@ import {
   loadBoardMapViewFromCache,
   loadSourceFilterFromCache,
   loadBoardGanttViewModeFromCache,
-  resetBoardPrefsCacheForTests,
   saveBoardLayoutToApi,
   saveBoardMapViewToApi,
   saveBoardGanttViewModeToApi,
   saveSourceFilterToApi,
 } from "./boardPrefsStore";
+import { resetBoardPrefsCacheForTests } from "./boardPrefsStore.testing";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 
 /** A client-only LS key — hydrate must ignore it (no LS→server bridge). */
@@ -53,7 +53,10 @@ describe("boardPrefsStore hydrate / save", () => {
 
     const loaded = await hydrateBoardPrefs();
     expect(loaded.widgets).toHaveLength(8);
-    expect(loadBoardMapViewFromCache("w-map")).toEqual({ center: [25, 121], zoom: 7 });
+    expect(loadBoardMapViewFromCache("w-map")).toEqual({
+      center: [25, 121],
+      zoom: 7,
+    });
     // Flat legacy sourceFilters are dropped; hydrate write-backs the cleaned blob.
     expect(loadSourceFilterFromCache("w-gantt")).toEqual(null);
     expect(putBoardPrefs).toHaveBeenCalledWith({
@@ -79,12 +82,18 @@ describe("boardPrefsStore hydrate / save", () => {
     vi.mocked(putBoardPrefs).mockImplementation(async (body) => ({
       configured: true,
       layout: body.layout ?? null,
-      widgetState: body.widgetState ?? { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
+      widgetState: body.widgetState ?? {
+        mapViews: {},
+        sourceFilters: {},
+        ganttViewModes: {},
+      },
     }));
 
     const loaded = await hydrateBoardPrefs();
     expect(loaded.version).toBe(BOARD_LAYOUT_VERSION);
-    expect(loaded.widgets.length).toBe(createDefaultBoardConfig().widgets.length);
+    expect(loaded.widgets.length).toBe(
+      createDefaultBoardConfig().widgets.length,
+    );
     expect(putBoardPrefs).toHaveBeenCalledWith({
       layout: expect.objectContaining({ version: BOARD_LAYOUT_VERSION }),
       widgetState: { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
@@ -128,7 +137,9 @@ describe("boardPrefsStore hydrate / save", () => {
       expect(putBoardPrefs).toHaveBeenLastCalledWith({
         widgetState: {
           mapViews: { "w-map": { center: [25, 121], zoom: 6 } },
-          sourceFilters: { "w-gantt": { taskIds: ["t1"], worksetIds: ["ws-1"] } },
+          sourceFilters: {
+            "w-gantt": { taskIds: ["t1"], worksetIds: ["ws-1"] },
+          },
           ganttViewModes: {},
         },
       });
@@ -253,7 +264,7 @@ describe("boardPrefsStore hydrate / save", () => {
       widgetState: {
         mapViews: {},
         sourceFilters: {},
-        ganttViewModes: { "g1": "month", "g2": "invalid", "g3": "day" },
+        ganttViewModes: { g1: "month", g2: "invalid", g3: "day" },
       },
     });
     vi.mocked(putBoardPrefs).mockResolvedValue({
@@ -270,7 +281,7 @@ describe("boardPrefsStore hydrate / save", () => {
       widgetState: {
         mapViews: {},
         sourceFilters: {},
-        ganttViewModes: { "g1": "month", "g3": "day" },
+        ganttViewModes: { g1: "month", g3: "day" },
       },
     });
   });
@@ -282,7 +293,9 @@ describe("boardPrefsStore hydrate / save", () => {
     vi.mocked(fetchBoardPrefs).mockRejectedValue(new Error("offline"));
 
     const loaded = await hydrateBoardPrefs();
-    expect(loaded.widgets.length).toBe(createDefaultBoardConfig().widgets.length);
+    expect(loaded.widgets.length).toBe(
+      createDefaultBoardConfig().widgets.length,
+    );
     expect(putBoardPrefs).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeTruthy();
   });

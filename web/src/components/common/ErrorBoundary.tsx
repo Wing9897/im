@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import i18n from "../../i18n";
-import { APP_LOG_KIND, recordAppLog } from "../../logging/appLogClient";
+import { APP_LOG_KIND, recordAppLog } from "../../api/appLogClient";
 import { Button } from "../ui";
 import { logError, logWarn } from "../../utils/logger";
 

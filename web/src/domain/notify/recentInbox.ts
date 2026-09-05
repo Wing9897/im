@@ -267,7 +267,7 @@ export function setRecentInboxOpen(open: boolean): void {
   }
 }
 
-/** Test helper. */
+/** Test helper. Production builds drop the body. */
 export function resetRecentInboxForTests(): void {
   cached = null;
   inboxOpen = false;
