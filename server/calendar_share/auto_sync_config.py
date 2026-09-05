@@ -46,7 +46,11 @@ async def apply_unified_auto_sync(
     auto_sync: bool | None = None,
     interval_seconds: int | None = None,
 ) -> tuple[bool, int]:
-    """Persist unified settings and mirror them onto every publish row."""
+    """Persist unified settings in ``system_config`` (the only SoT).
+
+    Turning auto-sync off also clears every dirty flag so a later re-enable does
+    not replay stale edits.
+    """
     current_on, current_interval = await read_unified_auto_sync(db)
     next_on = current_on if auto_sync is None else bool(auto_sync)
     next_interval = (
@@ -59,17 +63,6 @@ async def apply_unified_auto_sync(
             KEY_AUTO_SYNC_INTERVAL: str(next_interval),
         },
     )
-    if next_on:
-        await db.execute(
-            "UPDATE calendar_share_publish SET auto_sync = 1, auto_sync_interval_seconds = ?",
-            (next_interval,),
-        )
-    else:
-        await db.execute(
-            """
-            UPDATE calendar_share_publish
-            SET auto_sync = 0, pending_sync = 0, auto_sync_interval_seconds = ?
-            """,
-            (next_interval,),
-        )
+    if not next_on:
+        await db.execute("UPDATE calendar_share_publish SET pending_sync = 0")
     return next_on, next_interval

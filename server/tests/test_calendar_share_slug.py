@@ -34,10 +34,10 @@ def test_normalize_slug_rejects_invalid():
         assert detail["message"] == INVALID_SLUG_MESSAGE
 
 
-def test_normalize_slug_accepts_write_valid_and_legacy_read():
+def test_normalize_slug_accepts_write_valid_only():
+    """No legacy read path: underscore-leading slugs (``__general__``) are rejected everywhere."""
     assert normalize_slug("general") == "general"
     assert normalize_slug("A_B") == "A_B"
     assert normalize_slug("foo-bar.baz") == "foo-bar.baz"
-    assert normalize_slug(SYSTEM_WORKSET_ID, allow_legacy=True) == SYSTEM_WORKSET_ID
     with pytest.raises(HTTPException):
         normalize_slug(SYSTEM_WORKSET_ID)

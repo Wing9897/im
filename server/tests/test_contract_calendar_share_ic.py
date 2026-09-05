@@ -49,7 +49,8 @@ def test_slug_regex_and_max_len_match_ic() -> None:
     im_normalize = Path(__file__).resolve().parents[1] / "calendar_share" / "store" / "normalize.py"
     im = im_normalize.read_text(encoding="utf-8")
     assert _compile_pattern(im, "_SLUG_RE") == _compile_pattern(ic, "_SLUG_RE")
-    assert _compile_pattern(im, "_LEGACY_SLUG_RE") == _compile_pattern(ic, "_LEGACY_SLUG_RE")
+    # IM dropped its legacy read regex at stamp 7; IC's ``_LEGACY_SLUG_RE`` is IC-internal only.
+    assert "_LEGACY_SLUG_RE" not in im
     assert _assign_int(ic, "SLUG_MAX_LEN") == SLUG_MAX_LEN
 
 

@@ -22,16 +22,17 @@ from server.db.schema_fingerprint import (
     _quoted_identifier,
 )
 
-CURRENT_SCHEMA_VERSION = 6
-SCHEMA_FLOOR = 6
+CURRENT_SCHEMA_VERSION = 7
+SCHEMA_FLOOR = 7
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
-#: Stamp 6 is floor and current: household calendar-share auto-sync columns on
-#: ``calendar_share_publish`` (cache of ``system_config``), plus stamp-5 shape
-#: (``worksets.cover_data_url``, publish table, ``schema_meta``, no workset emoji).
-#: Stamp 1–5 files hard-reject — backup then reset. Retired stamps 27/45 still
-#: hard-reject as future. Production ``SCHEMA_MIGRATIONS`` stays empty.
-SCHEMA_SEMVER = "1.5.0"
+#: Stamp 7 is floor and current: ``calendar_share_publish`` without the stamp-6
+#: household auto-sync cache columns (``system_config`` is the only SoT), plus
+#: stamp-5 shape (``worksets.cover_data_url``, publish table, ``schema_meta``,
+#: no workset emoji). Stamp 1–6 files hard-reject — backup then reset. Retired
+#: stamps 27/45 still hard-reject as future. Production ``SCHEMA_MIGRATIONS``
+#: stays empty.
+SCHEMA_SEMVER = "1.6.0"
 
 
 class SchemaEvolutionError(RuntimeError):

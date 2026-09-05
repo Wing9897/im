@@ -18,7 +18,7 @@
 - **物品／工作集** — 庫存與歸屬標籤；不是主導航重做
 - **助手／通知／畫布** — 自然語言助手、本機通知、可排版儀表
 - **日曆分享** — 可選；公開日曆來源預設 **https://subscribe.devents.tech**。自架 IntelligenceCalendar sidecar（不在本倉庫）仍用本機 `http://127.0.0.1:8787`。IM 只經 `/api/v1/calendar-share/*` 代理，前端不直連
-- **本地優先** — SQLite **schema stamp 6**（`SCHEMA_FLOOR`＝current；生產 `SCHEMA_MIGRATIONS` 為空）
+- **本地優先** — SQLite **schema stamp 7**（`SCHEMA_FLOOR`＝current；生產 `SCHEMA_MIGRATIONS` 為空）
 
 任務是通用接口（`analysis_tasks`）；**週期任務**走獨立 `recurring_schedules`，**RRULE 僅於查詢時展開**、**不會觸發 AI 分析**。AI 排程支援 10 秒、每小時、每日、每週、自訂秒數。見 [Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
 
@@ -43,7 +43,7 @@ npm run dev          # Server + Vite HMR + Electron
 | `npm run dev:web` | Server + Vite（不開 Electron） |
 | `npm run dev:server` | 僅 Python server（`18820`） |
 
-**Schema 不符／升級後無法啟動？** 空庫直接建當前 DDL。**stamp 1–5** 硬拒絕：先備份再 reset。**未來 stamp** 請先升級應用。停掉 dev／Electron／獨立 server 後：
+**Schema 不符／升級後無法啟動？** 空庫直接建當前 DDL。**stamp 1–6** 硬拒絕：先備份再 reset。**未來 stamp** 請先升級應用。停掉 dev／Electron／獨立 server 後：
 
 ```bash
 uv run python scripts/reset_local_databases.py          # dry-run
@@ -71,9 +71,9 @@ uv run python scripts/reset_local_databases.py --apply
 
 | | |
 |--|--|
-| Stamp | **6**（`SCHEMA_FLOOR`＝current；`SCHEMA_SEMVER` `1.5.0`） |
+| Stamp | **7**（`SCHEMA_FLOOR`＝current；`SCHEMA_SEMVER` `1.6.0`） |
 | 遷移 | 生產 `SCHEMA_MIGRATIONS` **為空**（無 5→6 原地升級） |
-| 舊庫 | stamp 1–5 hard-reject → 備份後 reset |
+| 舊庫 | stamp 1–6 hard-reject → 備份後 reset |
 | 未來 | 升級應用；壞庫／fingerprint 不符才 reset。**絕不**靜默刪庫 |
 
 SoT：[`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)。
@@ -108,7 +108,7 @@ SoT：[`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)。
 | 文件 | 內容 |
 |------|------|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架構；Timeline 日曆／甘特／**全局**；calendar-share sidecar |
-| [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md) | Stamp 6／空遷移／reset |
+| [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md) | Stamp 7／空遷移／reset |
 | [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md) | 用語（含 **全局** / Overview、**塊** / Block） |
 | [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md) | 有意差異 |
 | [`docs/AUTH.md`](docs/AUTH.md) | 登入／金鑰 |

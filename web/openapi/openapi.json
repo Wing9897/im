@@ -12914,18 +12914,6 @@
             ],
             "title": "Timestamp"
           },
-          "messageTime": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 64
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Messagetime"
-          },
           "metadata": {
             "anyOf": [
               {

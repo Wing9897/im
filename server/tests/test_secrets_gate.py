@@ -11,12 +11,11 @@ from httpx import ASGITransport, AsyncClient
 from server.auth.admin_auth import create_admin_account
 from server.config import set_configs
 from server.db.database import Database
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.main import create_app
 from server.secrets import _fernet, protect_text
 from server.secrets_probe import probe_stored_secrets, scrub_undecryptable_secrets
 from server.tests.db_helpers import insert_direct_analysis_task, insert_minimal_source
-from server.tests.seed import ensure_default_llm_profile
+from server.tests.seed import SEED_LLM_PROFILE_ID, ensure_default_llm_profile
 from server.util import utc_now_iso
 
 
@@ -40,7 +39,7 @@ async def _set_fixture_profile_api_key(db: Database, api_key: str) -> None:
     await ensure_default_llm_profile(db)
     await db.execute(
         "UPDATE llm_profiles SET api_key = ?, updated_at = ? WHERE id = ?",
-        (protect_text(api_key), utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+        (protect_text(api_key), utc_now_iso(), SEED_LLM_PROFILE_ID),
     )
 
 
@@ -68,7 +67,7 @@ async def test_probe_fails_when_ciphertext_cannot_decrypt(tmp_path, monkeypatch)
     await db.ensure_schema()
     try:
         await _set_fixture_profile_api_key(db, "sk-real")
-        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,))
+        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (SEED_LLM_PROFILE_ID,))
         assert str(raw).startswith("enc:v1:")
 
         # Replace key file with a different Fernet key (plain: format for non-DPAPI path).
@@ -116,7 +115,7 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
         assert counts["stale_connected"] == 1
         assert counts["actions"] == 1
 
-        assert await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,)) == ""
+        assert await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (SEED_LLM_PROFILE_ID,)) == ""
         assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'ui_locale'") == "zh-Hans"
         assert await db.fetch_value("SELECT credentials FROM sources WHERE id = 'a1'") is None
         assert await db.fetch_value("SELECT status FROM sources WHERE id = 'a1'") == "disconnected"
@@ -200,7 +199,7 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
             assert admin == "admin"
             cipher = await app2.state.db.fetch_value(
                 "SELECT api_key FROM llm_profiles WHERE id = ?",
-                (DEFAULT_LLM_PROFILE_ID,),
+                (SEED_LLM_PROFILE_ID,),
             )
             assert cipher == ""
 

@@ -62,7 +62,7 @@ async def _insert_agent_task(
             policy["cap_read_items"],
             policy["output_calendar"],
             policy["output_analysis_events"],
-            "__default__",
+            seed.SEED_LLM_PROFILE_ID,
             now,
             now,
         ),
@@ -245,7 +245,7 @@ async def test_agent_tick_forces_web_search_via_channel(
     now = utc_now_iso()
     await db.execute(
         "UPDATE llm_profiles SET web_search_enabled = 0, updated_at = ? WHERE id = ?",
-        (now, "__default__"),
+        (now, seed.SEED_LLM_PROFILE_ID),
     )
 
     capture: dict[str, Any] = {}

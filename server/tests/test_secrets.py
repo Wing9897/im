@@ -6,9 +6,8 @@ import json
 
 import server.secrets as secret_store
 from server.db.database import Database
-from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.secrets import protect_text
-from server.tests.seed import ensure_default_llm_profile
+from server.tests.seed import SEED_LLM_PROFILE_ID, ensure_default_llm_profile
 from server.util import utc_now_iso
 
 
@@ -29,9 +28,9 @@ async def test_llm_profile_secrets_are_encrypted_transparently(tmp_path):
         await ensure_default_llm_profile(db)
         await db.execute(
             "UPDATE llm_profiles SET api_key = ?, updated_at = ? WHERE id = ?",
-            (protect_text("sk-test"), utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+            (protect_text("sk-test"), utc_now_iso(), SEED_LLM_PROFILE_ID),
         )
-        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,))
+        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (SEED_LLM_PROFILE_ID,))
         assert str(raw).startswith("enc:v1:")
         assert secret_store.unprotect_text(raw) == "sk-test"
     finally:

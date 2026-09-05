@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS schema_meta (
 """
 
 # Keep the literal in sync with ``SCHEMA_SEMVER`` in schema_inspect.py (drift-tested).
-SCHEMA_META_SEED_SQL = "INSERT OR IGNORE INTO schema_meta (id, schema_semver) VALUES (1, '1.5.0');\n"
+SCHEMA_META_SEED_SQL = "INSERT OR IGNORE INTO schema_meta (id, schema_semver) VALUES (1, '1.6.0');\n"
 
 CALENDAR_SHARE_PUBLISH_DDL = """
 CREATE TABLE IF NOT EXISTS calendar_share_publish (
@@ -26,9 +26,7 @@ CREATE TABLE IF NOT EXISTS calendar_share_publish (
     last_public_visibility TEXT,
     last_description TEXT NOT NULL DEFAULT '',
     last_cover TEXT NOT NULL DEFAULT '',
-    last_fingerprints_json TEXT NOT NULL DEFAULT '{"events":{},"series":{}}',
-    auto_sync INTEGER NOT NULL DEFAULT 1,
-    auto_sync_interval_seconds INTEGER NOT NULL DEFAULT 60
+    last_fingerprints_json TEXT NOT NULL DEFAULT '{"events":{},"series":{}}'
 );
 """
 

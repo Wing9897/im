@@ -399,7 +399,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 6 / SemVer 1.5.0 (SCHEMA_FLOOR 6; SCHEMA_MIGRATIONS is empty. Stamp 1–5: back up, then reset). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 7 / SemVer 1.6.0 (SCHEMA_FLOOR 7; SCHEMA_MIGRATIONS is empty. Stamp 1–6: back up, then reset). Future stamps: update the application. Corrupt databases: back up, then run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

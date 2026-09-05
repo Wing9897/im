@@ -28,8 +28,8 @@ from server.tests.schema_fixtures import (
 
 def test_production_registry_is_empty() -> None:
     assert SCHEMA_MIGRATIONS == ()
-    assert CURRENT_SCHEMA_VERSION == 6
-    assert SCHEMA_SEMVER == "1.5.0"
+    assert CURRENT_SCHEMA_VERSION == 7
+    assert SCHEMA_SEMVER == "1.6.0"
 
 
 def _backup_files(directory: Path) -> list[Path]:
@@ -189,30 +189,3 @@ async def test_empty_db_skips_injected_fake_chain(tmp_path) -> None:
         await db.close()
 
     assert _backup_files(tmp_path) == []
-
-
-@pytest.mark.asyncio
-async def test_startup_remaps_leftover_listing_strings(tmp_path) -> None:
-    path = str(tmp_path / "listing-remap.db")
-    db = Database(path)
-    await db.connect()
-    try:
-        await ensure_supported_schema(db.conn, db.path)
-        await db.execute(
-            """
-            INSERT INTO calendar_share_publish (
-                workset_id, slug, public_visibility, grants_json, last_public_visibility
-            ) VALUES (?, ?, ?, ?, ?)
-            """,
-            ("ws-legacy", "Work", "off", "[]", "busy"),
-        )
-        await ensure_supported_schema(db.conn, db.path)
-        row = await db.fetch_one(
-            "SELECT public_visibility, last_public_visibility FROM calendar_share_publish WHERE workset_id = ?",
-            ("ws-legacy",),
-        )
-        assert row is not None
-        assert str(row["public_visibility"]) == "private_group"
-        assert str(row["last_public_visibility"]) == "public_busy"
-    finally:
-        await db.close()

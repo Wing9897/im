@@ -4,7 +4,7 @@
 |-----|----------------|
 | [../README.md](../README.md) | Install, run, ports, desktop host/client, product overview |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, Timeline 日曆／甘特／全局, calendar-share sidecar, API contract |
-| [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema contract: stamp 6 / semver 1.5.0, floor＝current, support matrix, explicit reset |
+| [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema contract: stamp 7 / semver 1.6.0, floor＝current, support matrix, explicit reset |
 | [AUTH.md](AUTH.md) | Authentication: device sessions, API keys, setup routes, manual checklist |
 | [DESKTOP-ICS.md](DESKTOP-ICS.md) | Desktop one-shot ICS import: supported subset, limits, remote-URL policy |
 | [RETIRED-API.md](RETIRED-API.md) | Index of retired HTTP paths; lock is `test_dead_endpoints` |
