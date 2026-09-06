@@ -1,6 +1,6 @@
 {
   "name": "intelligence-monitor-desktop",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "license": "MIT",
   "description": "Intelligence Monitor desktop shell - Electron wrapper for the Python FastAPI server",
   "author": {
