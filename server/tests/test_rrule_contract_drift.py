@@ -18,7 +18,6 @@ _CHECKED_CONTRACT_PATHS = (
     "web/src/types/analysisEvent.ts",
     "web/src/pages/schedule/RecurringSeriesEditor.tsx",
     "README.md",
-    "docs/ARCHITECTURE.md",
 )
 
 _AFFIRMATIVE_RRULE_ANALYSIS_CLAIMS = (
@@ -107,11 +106,6 @@ _CALENDAR_ONLY_REQUIREMENTS = {
         r"RRULE 僅於查詢時展開",
         r"不會觸發 AI 分析",
     ),
-    "docs/ARCHITECTURE.md": (
-        r"Standalone recurring series do not create scheduler jobs or run LLM analysis",
-        r"calendar RRULE never triggers AI analysis",
-        r"AI schedules never calendar-expand",
-    ),
 }
 
 
@@ -153,13 +147,6 @@ def _frontend_schedule_types() -> set[str]:
     return set(re.findall(r"[\"\']([a-z0-9_]+)[\"\']", match.group("body")))
 
 
-def _architecture_schedule_types() -> set[str]:
-    relative_path = "docs/ARCHITECTURE.md"
-    match = re.search(r"each non-recurring analysis task uses one of (?P<values>[^\n]+)", _read(relative_path))
-    assert match is not None, f"{relative_path}: missing Supported Schedule declaration"
-    return set(re.findall(r"`([a-z0-9_]+)`", match.group("values")))
-
-
 def test_rrule_analysis_capability_claims_do_not_drift() -> None:
     paths = tuple(_REPO_ROOT / relative_path for relative_path in _CHECKED_CONTRACT_PATHS)
     conflicts = _find_rrule_analysis_conflicts(paths)
@@ -185,7 +172,6 @@ def test_supported_schedule_vocabulary_is_consistent_across_layers() -> None:
         "server/domain/schedule.py:ALLOWED_SCHEDULE_PRESETS": _scheduler_schedule_types(),
         "web/src/types/taskFormFields.ts:ScheduleType": _frontend_schedule_type_union(),
         "web/src/pages/tasks/ScheduleInput.tsx:SCHEDULE_TYPES": _frontend_schedule_types(),
-        "docs/ARCHITECTURE.md:Scheduler": _architecture_schedule_types(),
     }
     drift = [
         f"{location}: expected {sorted(_SUPPORTED_SCHEDULES)}, found {sorted(actual)}"

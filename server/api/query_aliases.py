@@ -2,7 +2,7 @@
 
 OpenAPI / FE use camelCase (``alias=``). HTTP snake_case dual-read was
 removed; clients must send camelCase only. Agent ``tool_args`` snake
-tolerance remains a separate permanent boundary (see KNOWN-SIMPLIFICATIONS).
+tolerance remains a separate permanent boundary.
 """
 
 from __future__ import annotations

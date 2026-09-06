@@ -53,7 +53,7 @@
     "title": "API 金鑰（Webhook／自動化）",
     "intro": "Bearer 金鑰，用於 Webhook、A2A、MCP；不能登入 UI。",
     "baseUrlTitle": "API 基底網址",
-    "baseUrlBody": "客戶端與 OpenClaw 請用此 origin（與「設定 → 外部接口」相同）：",
+    "baseUrlBody": "Webhook、A2A、MCP 等客戶端請用此 origin（與「設定 → 外部接口」相同）：",
     "defaultLabel": "存取金鑰",
     "newLabel": "新金鑰名稱",
     "newPlaceholder": "例如：Webhook、CI 腳本",

@@ -459,7 +459,7 @@
       "exampleUrlComment": "遠端 ICS：",
       "exampleInlineComment": "Inline 事件（無 ICS）：",
       "exampleBlockTitle": "連結範例",
-      "docsHint": "細節見倉庫 docs/ARCHITECTURE.md（Desktop calendar import）與 docs/KNOWN-SIMPLIFICATIONS.md。"
+      "docsHint": "一次性 ICS 匯入；不支援 webcal／CalDAV／雙向同步。"
     }
   },
   "a2aDocs": {
@@ -470,7 +470,7 @@
     }
   },
   "mcpDocs": {
-    "intro": "外部 Agent 的工具連線（非對話）。用下方開關控制能力；端點需存取金鑰。",
+    "intro": "通用 Streamable HTTP MCP 端點，供任何相容的外部 Agent 呼叫工具（非對話）。用下方開關控制能力；端點需存取金鑰。",
     "endpoint": {
       "title": "端點",
       "body": "以 Streamable HTTP 連線下列 URL（與目前 API base 同源）："
@@ -489,8 +489,8 @@
       "capsInactive": "MCP 關閉時，能力群組不會套用到 MCP；A2A 仍會套用。"
     },
     "openClaw": {
-      "title": "OpenClaw 設定",
-      "body": "寫入 `~/.openclaw/openclaw.json` 的 `mcp.servers`。Bearer 使用完整存取金鑰（`*`）。金鑰在「帳戶 → 存取金鑰」建立。OpenClaw 也可用 `mcp probe`／設定檢查連到此 URL。",
+      "title": "設定範例（OpenClaw）",
+      "body": "任何支援 Streamable HTTP MCP 的客戶端（例如 OpenClaw）都可用同一 URL 與 Bearer。下方為 OpenClaw 寫入 `~/.openclaw/openclaw.json` 的 `mcp.servers` 範例。Bearer 使用完整存取金鑰（`*`）。金鑰在「帳戶 → 存取金鑰」建立。OpenClaw 也可用 `mcp probe`／設定檢查連到此 URL。",
       "exampleTitle": "設定範例"
     },
     "referenceSectionTitle": "參考說明",

@@ -97,7 +97,7 @@ describe("SettingsIntegrationsMcpPanel", () => {
     expect(container.querySelector('[data-testid="mcp-workset-hub"]')).toBeNull();
     expect(container.querySelector('[data-testid="workset-hub-link"]')).toBeNull();
 
-    expect(container.textContent).toContain("OpenClaw 設定");
+    expect(container.textContent).toContain("設定範例（OpenClaw）");
     expect(container.textContent).toContain("參考說明");
     expect(container.querySelector('[data-testid="mcp-docs-example"]')).toBeNull();
     expect(container.querySelector('[data-testid="mcp-link-keys"]')?.getAttribute("href")).toBe(
@@ -106,14 +106,15 @@ describe("SettingsIntegrationsMcpPanel", () => {
     expect(container.querySelector('[data-testid="mcp-link-a2a"]')).toBeNull();
     expect(container.textContent).not.toContain("Allowlist 總覽");
     expect(container.textContent).not.toContain("不會暴露");
-    expect(container.textContent).toContain("外部 Agent 的工具連線");
+    expect(container.textContent).toContain("通用 Streamable HTTP MCP 端點");
     expect(container.textContent).not.toContain("不做自然語言 loop");
   });
 
   it("reveals OpenClaw example and reference lists after expanding collapsed sections", () => {
     renderPage(root);
 
-    expandSection(container, "OpenClaw 設定");
+    expandSection(container, "設定範例（OpenClaw）");
+    expect(container.textContent).toContain("任何支援 Streamable HTTP MCP 的客戶端（例如 OpenClaw）");
     const example = container.querySelector('[data-testid="mcp-docs-example"]');
     expect(example?.textContent).toContain('"transport": "streamable-http"');
     expect(example?.textContent).toContain("Authorization");
@@ -235,7 +236,7 @@ describe("SettingsIntegrationsMcpPanel", () => {
     });
 
     renderPage(root);
-    expandSection(container, "OpenClaw 設定");
+    expandSection(container, "設定範例（OpenClaw）");
 
     const button = container.querySelector<HTMLButtonElement>('[data-testid="mcp-copy-config"]');
     expect(button).toBeTruthy();

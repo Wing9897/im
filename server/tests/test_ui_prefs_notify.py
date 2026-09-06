@@ -210,7 +210,7 @@ async def test_notify_history_oversized_payload_422(client) -> None:
 
 
 async def test_retired_voice_reminder_paths_are_404(client) -> None:
-    """``/ui-prefs/voice-reminder/*`` is gone; SoT is ``/ui-prefs/notify/*`` (docs/RETIRED-API.md)."""
+    """``/ui-prefs/voice-reminder/*`` is gone; SoT is ``/ui-prefs/notify/*``."""
     for path in (
         "/api/v1/ui-prefs/voice-reminder/settings",
         "/api/v1/ui-prefs/voice-reminder/fired",

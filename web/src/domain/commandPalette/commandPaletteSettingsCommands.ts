@@ -98,6 +98,8 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
       "model context protocol",
       "工具",
       "控制面",
+      "外部",
+      "agent",
     ],
   },
   {

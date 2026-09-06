@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     cap_read_analysis_events  INTEGER NOT NULL DEFAULT 1,
     cap_read_items            INTEGER NOT NULL DEFAULT 1,
     output_calendar           INTEGER NOT NULL DEFAULT 0,
-    -- All-mode intelligence hard gate (see docs/SCHEMA-BASELINE.md). Agent still writes explicit 0/1.
+    -- All-mode intelligence hard gate. Agent still writes explicit 0/1.
     output_analysis_events    INTEGER NOT NULL DEFAULT 1,
     -- LLM connection profile; tasks always bind a profile.
     llm_profile_id       TEXT NOT NULL

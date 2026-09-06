@@ -74,8 +74,10 @@ intelligencemonitor://calendar/import?title=${title}&start=2026-07-29T10%3A00%3A
 }
 
 /**
- * OpenClaw `~/.openclaw/openclaw.json` MCP server snippet.
- * Protocol keys stay English; `mcpUrl` is the resolved Streamable HTTP endpoint.
+ * Documented OpenClaw `~/.openclaw/openclaw.json` MCP server snippet.
+ * The URL and Bearer are the same contract for any Streamable HTTP MCP client;
+ * this JSON shape is OpenClaw-specific. Protocol keys stay English; `mcpUrl`
+ * is the resolved Streamable HTTP endpoint.
  */
 export function openClawMcpExample(mcpUrl: string): string {
   return JSON.stringify(

@@ -59,4 +59,4 @@ loopback-only or exposed, reproduction steps, and the impact you observed.
 
 This is a small project maintained in spare time, so responses are best-effort — there is
 no guaranteed response or fix window. Reports that turn out to be real issues will be
-fixed in the next release and credited in `CHANGELOG.md` if you want the credit.
+fixed in the next release and credited in the GitHub Release notes if you want the credit.

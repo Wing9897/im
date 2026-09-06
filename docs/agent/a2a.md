@@ -2,7 +2,7 @@
 
 對外只暴露 **一條自然語言 Agent API**。OpenClaw、Hermes 等第三方只需在 prompt 裡說明「可呼叫本機這個 agent」，用日常語言交辦即可——**不必**為本產品設計專用 events CRUD。
 
-人類通道：`POST /api/v1/agent/chat`（見 [`assistant.md`](assistant.md)）。  
+人類通道：`POST /api/v1/agent/chat`。  
 A2A 通道：`POST /api/v1/a2a/agent`（本文件）。  
 結構化工具門面（無本機 LLM）：Streamable HTTP `/api/v1/mcp`（見 [`mcp.md`](mcp.md)）。
 
@@ -64,7 +64,7 @@ A2A 只有一條 HTTP 方法（`POST /api/v1/a2a/agent`）。細粒度門檻是�
 
 ### Response（單次）
 
-與 `/agent/chat` **final** 同形（`message`／`sessionId`／`toolCalls`）；契約見 [`assistant.md`](./assistant.md)。`toolCalls` 僅供說明／除錯，不是逐步重放協議。無串流進度要求。
+與 `/agent/chat` **final** 同形（`message`／`sessionId`／`toolCalls`）。`toolCalls` 僅供說明／除錯，不是逐步重放協議。無串流進度要求。
 
 需要本機已設定可用的 **AI 供應商**。
 
