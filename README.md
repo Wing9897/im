@@ -17,7 +17,7 @@
   ![甘特全局視窗與底欄地圖式時間軸](docs/images/schedule_gantt_global.png)
 - **物品／工作集** — 庫存與歸屬標籤；不是主導航重做
 - **助手／通知／畫布** — 自然語言助手、本機通知、可排版儀表
-- **日曆分享** — 可選；公開日曆來源預設 **https://subscribe.devents.tech**。自架 IntelligenceCalendar sidecar（不在本倉庫）仍用本機 `http://127.0.0.1:8787`。IM 只經 `/api/v1/calendar-share/*` 代理，前端不直連
+- **日曆分享** — 可選；公開來源 **https://subscribe.devents.tech**。IM 經 `/api/v1/calendar-share/*` 連公開 hub，前端不直連
 - **本地優先** — SQLite **schema stamp 7**（`SCHEMA_FLOOR`＝current；生產 `SCHEMA_MIGRATIONS` 為空）
 
 任務是通用接口（`analysis_tasks`）；**週期任務**走獨立 `recurring_schedules`，**RRULE 僅於查詢時展開**、**不會觸發 AI 分析**。AI 排程支援 10 秒、每小時、每日、每週、自訂秒數。見 [Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
@@ -84,7 +84,7 @@ SoT：[`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)。
 
 執行期設定在 SQLite `system_config`。LLM／保留策略走 **Settings**；API 金鑰在 **帳戶 → API 金鑰**。
 
-訂閱／發佈的公開日曆分享來源是 **https://subscribe.devents.tech**（訂閱頁「服務網址」預設；含 `https`、無尾斜線）。本機自架 sidecar 請改填 `http://127.0.0.1:8787`。
+訂閱／發佈的公開日曆分享來源是 **https://subscribe.devents.tech**（訂閱頁「服務網址」；含 `https`、無尾斜線）。
 
 | 變數 | 用途 |
 |------|------|
