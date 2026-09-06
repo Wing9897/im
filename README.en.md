@@ -6,7 +6,7 @@ Intelligence Monitor is a **single-household** intelligence workstation you run 
 
 You can connect Telegram, Discord, RSS, MQTT, Email, and more; run analysis tasks to produce intel events and leaderboards; use **Timeline** for month / Gantt, **Tasks** for monitor and analysis schedules, and **Items** for inventory and expiry. The intel page can switch to a map. The assistant can answer questions or update the schedule.
 
-Data stays in local SQLite by default; you bring your own AI provider and keys. Optionally publish the household calendar to the public hub [https://subscribe.devents.tech](https://subscribe.devents.tech) so others can subscribe — this app talks to the hub only through the local API; the UI never calls it directly.
+Data stays in local SQLite by default; you bring your own AI provider and keys. Optionally publish a workset calendar to the public source [https://subscribe.devents.tech](https://subscribe.devents.tech) so others can subscribe.
 
 ## Screenshots
 
@@ -66,7 +66,11 @@ For one-shot natural-language assign (the local runtime picks tools), use A2A (`
 
 ## Calendar share (optional)
 
-Public hub: **https://subscribe.devents.tech**. This app talks to it only through `/api/v1/calendar-share/*`; the UI never calls the hub directly.
+Calendar share is optional: publish a workset calendar to the public source so others can subscribe with a link or account.
+
+- Public source: [https://subscribe.devents.tech](https://subscribe.devents.tech)
+- In this app: sidebar **Subscriptions** → **Calendar share**, enter the **Server URL** (that address is the default) and sign in, then **My published** → **Publish a workset**.
+- Subscribers open the hub with a link or account to browse the public catalog, or add calendars under **Find calendars**. This app does not talk to the hub from the browser.
 
 ## Developers
 

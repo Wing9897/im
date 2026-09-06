@@ -6,7 +6,7 @@ Intelligence Monitor 是给**单一家庭**在自己电脑上用的情报工作�
 
 你可以接 Telegram、Discord、RSS、MQTT、Email 等来源；用分析任务把讯息做成情报事件与排行；在「时间规划」看月历与甘特、「任务设定」管监控与分析排程、「物品」管库存与到期。情报事件页可切地图。助手可随时查问或代为改行程。
 
-资料预设留在本机 SQLite；AI 供应商与密钥由你自己接。可选把家庭日程发到公开 hub [https://subscribe.devents.tech](https://subscribe.devents.tech) 让别人订阅——本应用只经本机 API 代理，前端不直连 hub。
+资料预设留在本机 SQLite；AI 供应商与密钥由你自己接。可选把工作集日历发到公开来源 [https://subscribe.devents.tech](https://subscribe.devents.tech) 让别人订阅。
 
 ## 画面
 
@@ -66,7 +66,11 @@ Intelligence Monitor 是给**单一家庭**在自己电脑上用的情报工作�
 
 ## 日历分享（可选）
 
-公开 hub：**https://subscribe.devents.tech**。本应用只经 `/api/v1/calendar-share/*` 代理，前端不直连。
+日历分享是可选功能：把工作集日历发到公开来源，别人用链接或账号订阅。
+
+- 公开来源：[https://subscribe.devents.tech](https://subscribe.devents.tech)
+- 在本应用：侧栏「订阅」→「日历分享」，填「服务网址」（默认就是上面这个）并登录，再到「我的发布」按「发布工作集」。
+- 订阅者到 hub 用链接或账号看公开目录；也可在「搜索订阅」加入。本应用不会在浏览器里直连 hub。
 
 ## 开发者
 
