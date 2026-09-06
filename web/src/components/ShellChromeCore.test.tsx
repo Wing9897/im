@@ -3,6 +3,7 @@ import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { MonitorModeProvider } from "../context/MonitorModeContext";
+import { PRODUCT_MARK_SRC } from "./ProductMark";
 
 vi.mock("../context/CollectorStatusContext", () => ({
   useCollectorStatus: () => ({
@@ -72,7 +73,11 @@ describe("ShellChromeCore", () => {
         ),
       );
     });
-    expect(container.querySelector('[data-testid="shell-chrome-brand"]')).not.toBeNull();
+    const brand = container.querySelector('[data-testid="shell-chrome-brand"]');
+    expect(brand).not.toBeNull();
+    expect(brand?.querySelector('[data-testid="product-mark"]')?.getAttribute("src")).toBe(
+      PRODUCT_MARK_SRC,
+    );
     expect(container.querySelector('[data-testid="sidebar-collapse"]')).toBeNull();
     expect(container.querySelector('[data-testid="monitor-mode-switch"]')).not.toBeNull();
     const actions = container.querySelector('[data-testid="shell-chrome-actions"]');

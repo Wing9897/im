@@ -2,6 +2,7 @@ import { TopBarStatusActions } from "./AppTopBar/TopBarStatusActions";
 import { CommandPaletteTrigger } from "./CommandPaletteTrigger";
 import { AssistantQuickTrigger } from "./AssistantQuickTrigger";
 import { MonitorModeSwitch } from "./MonitorModeSwitch";
+import { ProductMark } from "./ProductMark";
 
 export type ShellChromeLayout = "web" | "desktop";
 
@@ -20,7 +21,7 @@ type ShellChromeCoreProps = {
 };
 
 const DEFAULT_BRAND_CLASS =
-  "mr-sm whitespace-nowrap text-[14px] font-semibold tracking-[-0.02em] text-text-primary";
+  "mr-sm inline-flex items-center gap-1.5 whitespace-nowrap text-[14px] font-semibold tracking-[-0.02em] text-text-primary";
 
 const DEFAULT_WEB_ACTIONS_CLASS =
   "ml-auto flex min-w-0 flex-1 items-center gap-sm";
@@ -37,6 +38,7 @@ export function ShellChromeCore({
 }: ShellChromeCoreProps) {
   const brand = (
     <span className={brandClassName} data-testid="shell-chrome-brand">
+      <ProductMark sizePx={18} />
       Intelligence Monitor
     </span>
   );
