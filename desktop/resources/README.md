@@ -2,20 +2,15 @@
 
 ## Icons
 
-- `icon.png` — 512x512 placeholder for macOS/Linux (and default `icon`; mac requires ≥512)
-- `icon.ico` — Windows placeholder (tray + NSIS)
+Generated from `docs/images/logo.png` (product mark):
 
-Both are a minimal blue square with white border.
+- `icon.png` — 512x512 for macOS/Linux (and default `icon`; mac requires ≥512)
+- `icon.ico` — Windows multi-size ICO (16…256) for tray + NSIS
 
-### Replacing with a production icon
+Regenerate from the source PNG (system Pillow, not a project dependency):
 
-For the final release, replace both with proper multi-resolution assets:
-- PNG/ICNS for macOS (and PNG set for Linux)
-- Multi-size ICO for Windows (16…256)
+```powershell
+python -c "from PIL import Image; src=Image.open('../docs/images/logo.png').convert('RGBA'); src.resize((512,512), Image.Resampling.LANCZOS).save('icon.png'); src.save('icon.ico', format='ICO', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
+```
 
-You can generate an ICO from a PNG source using tools like:
-- [ImageMagick](https://imagemagick.org/): `magick convert icon-256.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico`
-- [RealFaviconGenerator](https://realfavicongenerator.net/)
-- [IcoFX](https://icofx.ro/)
-
-Referenced in `electron-builder.yml` (`icon` / `win.icon` / `mac.icon` / `linux.icon`).
+Referenced in `electron-builder.yml` (`icon` / `win.icon` / `mac.icon` / `linux.icon`) and `desktop/main.ts` (tray + window icon).

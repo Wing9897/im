@@ -59,6 +59,12 @@ const APP_CONFIG = {
   windowMinWidth: 900,
   windowMinHeight: 600,
   trayIconPath: path.join(__dirname, '..', 'resources', 'icon.ico'),
+  windowIconPath: path.join(
+    __dirname,
+    '..',
+    'resources',
+    process.platform === 'win32' ? 'icon.ico' : 'icon.png',
+  ),
 };
 
 // --- Parse --dev flag from process.argv ---
@@ -131,6 +137,7 @@ function createShellWindow(): BrowserWindow {
     minWidth: APP_CONFIG.windowMinWidth,
     minHeight: APP_CONFIG.windowMinHeight,
     show: false,
+    icon: APP_CONFIG.windowIconPath,
     ...FRAMELESS_WINDOW_OPTS,
     webPreferences: sharedWebPreferences(),
   });

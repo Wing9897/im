@@ -1,4 +1,4 @@
-# <img src="docs/images/im-mark.svg" width="32" height="32" alt=""> Intelligence Monitor
+# <img src="docs/images/logo.png" width="32" height="32" alt=""> Intelligence Monitor
 
 自託管的多源情報監控與 AI 分析桌面工作站：採集 → 排程分析 → 時間規劃／畫布 → 通知與動作，全在本機完成。
 

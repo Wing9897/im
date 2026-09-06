@@ -5,6 +5,7 @@
 
 import { NavLink, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ProductMark } from "../../components/ProductMark";
 
 function navLinkClass(isActive: boolean): string {
   return [
@@ -26,10 +27,13 @@ export function ViewerLayout() {
         className="im-surface-chrome flex items-center gap-lg border-b border-surface-border px-2xl py-md"
         aria-label={t("viewer:navAria")}
       >
-        <span className="mr-lg flex min-w-0 flex-col leading-tight">
-          <span className="text-body text-text-primary">{t("viewer:brand")}</span>
-          <span className="text-[10px] font-normal text-text-muted">
-            {t("viewer:brandHint")}
+        <span className="mr-lg flex min-w-0 items-center gap-sm">
+          <ProductMark sizePx={22} />
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="text-body text-text-primary">{t("viewer:brand")}</span>
+            <span className="text-[10px] font-normal text-text-muted">
+              {t("viewer:brandHint")}
+            </span>
           </span>
         </span>
         <div className="flex flex-1 gap-sm">

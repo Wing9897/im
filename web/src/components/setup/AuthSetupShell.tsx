@@ -5,6 +5,7 @@ import {
   SettingsFieldGroup,
 } from "../settings/SettingsFormLayout";
 import { LanguageSwitcher } from "../settings/LanguageSwitcher";
+import { ProductMark } from "../ProductMark";
 
 interface AuthSetupShellProps {
   /** Root test id (e.g. first-run-wizard / session-reauth-wizard). */
@@ -70,6 +71,7 @@ export function AuthSetupShell({
               </div>
 
               <header className="flex flex-col items-center gap-xs px-sm text-center">
+                <ProductMark sizePx={56} alt="Intelligence Monitor" />
                 <h1 className={`${pageTitleClass} m-0`}>{title}</h1>
                 <p className={`mb-0 ${formHelpClass} mx-auto max-w-[36ch] text-center`}>
                   {intro}
