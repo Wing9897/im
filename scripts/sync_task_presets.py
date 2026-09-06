@@ -12,7 +12,7 @@ Usage::
     uv run python scripts/sync_task_presets.py           # write fixes (if any)
     uv run python scripts/sync_task_presets.py --check    # CI: fail on drift, no write
 
-See ``docs/I18N-GLOSSARY.md`` and ``docs/ARCHITECTURE.md``.
+See ``scripts/check-i18n-parity.mjs`` (zh-Hant is the display-text source of truth).
 """
 
 from __future__ import annotations

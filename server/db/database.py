@@ -3,7 +3,7 @@
 Schema create／migrate／reject is delegated to ``server.db.schema_bootstrap``
 (single entry: ``ensure_schema`` → ``ensure_supported_schema``). Destructive
 rebuild remains an explicit reset operation (no demo-data auto-seed, never silent wipe).
-See ``docs/SCHEMA-BASELINE.md`` for the supported schema matrix.
+See README.md for the current schema stamp / floor / reset policy.
 """
 
 from __future__ import annotations

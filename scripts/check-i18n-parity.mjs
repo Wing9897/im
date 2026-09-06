@@ -1,7 +1,7 @@
 /**
  * Compare leaf i18n keys across zh-Hant / zh-Hans / en for every namespace JSON,
  * then fail if zh-Hant keys have no t() / quoted-literal reference (unless allowlisted).
- * zh-Hant is the source of truth (see docs/I18N-GLOSSARY.md).
+ * zh-Hant is the source of truth.
  *
  * Usage: node scripts/check-i18n-parity.mjs
  */

@@ -524,7 +524,7 @@
       "exampleUrlComment": "Remote ICS:",
       "exampleInlineComment": "Inline event (no ICS):",
       "exampleBlockTitle": "Link examples",
-      "docsHint": "Details: docs/ARCHITECTURE.md (Desktop calendar import) and docs/KNOWN-SIMPLIFICATIONS.md in the repo."
+      "docsHint": "One-shot ICS import; no webcal / CalDAV / bidirectional sync."
     }
   },
   "a2aDocs": {
@@ -535,7 +535,7 @@
     }
   },
   "mcpDocs": {
-    "intro": "Tool connection for external agents (not chat). Use the switches below; the endpoint needs an access key.",
+    "intro": "Generic Streamable HTTP MCP endpoint for any compatible external agent (not chat). Use the switches below; the endpoint needs an access key.",
     "endpoint": {
       "title": "Endpoint",
       "body": "Connect with Streamable HTTP at this URL (same origin as your API base):"
@@ -554,8 +554,8 @@
       "capsInactive": "MCP is off, so these groups do not apply to MCP. A2A still uses them."
     },
     "openClaw": {
-      "title": "OpenClaw config",
-      "body": "Add under `mcp.servers` in `~/.openclaw/openclaw.json`. Use a full access key (`*`) as Bearer. Paste the key from Account → Access keys. OpenClaw may also expose an `mcp probe` / config check against this URL.",
+      "title": "Config example (OpenClaw)",
+      "body": "Any Streamable HTTP MCP client (for example OpenClaw) can use the same URL and Bearer. The snippet below goes under `mcp.servers` in `~/.openclaw/openclaw.json`. Use a full access key (`*`) as Bearer. Paste the key from Account → Access keys. OpenClaw may also expose an `mcp probe` / config check against this URL.",
       "exampleTitle": "Config example"
     },
     "referenceSectionTitle": "Reference",

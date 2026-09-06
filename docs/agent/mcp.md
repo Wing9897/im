@@ -1,8 +1,8 @@
 # MCP 控制面（Streamable HTTP）
 
-對外暴露 **結構化工具面**（Model Context Protocol），供 OpenClaw 等外部 Agent **直接**呼叫本機日曆／訊息／情報／物品工具。本機 **不**在此通道跑 LLM tool loop——呼叫方自己選工具、傳參數。
+對外暴露 **結構化工具面**（Model Context Protocol），供任何支援 Streamable HTTP MCP 的外部 Agent（例如 OpenClaw）**直接**呼叫本機日曆／訊息／情報／物品工具。本機 **不**在此通道跑 LLM tool loop——呼叫方自己選工具、傳參數。
 
-人類助手：`POST /api/v1/agent/chat`（見 [`assistant.md`](assistant.md)）。  
+人類助手：`POST /api/v1/agent/chat`。  
 A2A 自然語言門面：`POST /api/v1/a2a/agent`（見 [`a2a.md`](a2a.md)）。  
 MCP 工具門面：`/api/v1/mcp`（本文件；Streamable HTTP）。
 
@@ -15,7 +15,7 @@ MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）�
 | | A2A | MCP |
 |--|-----|-----|
 | 介面 | 自然語言 `input`／`messages` | MCP `list_tools`／`call_tool` |
-| 誰跑 tool loop | **本機** `AgentRuntime` + LLM | **外部** Agent（OpenClaw 等） |
+| 誰跑 tool loop | **本機** `AgentRuntime` + LLM | **外部** Agent（任何相容客戶端） |
 | 是否需本機 LLM | 需要 | **不需要** |
 | 傳輸 | JSON `POST /api/v1/a2a/agent` | Streamable HTTP `/api/v1/mcp` |
 | 寫入溯源 | `user_events.origin=a2a` | `user_events.origin=mcp` |
@@ -43,11 +43,14 @@ MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）�
 - 家庭層 **能力群組**（`system_config` `mcp_cap_*`）可過濾 MCP 暴露的工具，並在 A2A tool loop 省略／攔截同一批工具；這**不是**金鑰 scope。
 - 家庭層 **工作集權限**（`worksets.external_enabled`；工作集頁「外部接口」）過濾情報／訊息／物品等以工作集為鍵的工具資料；**不是**金鑰 scope。預設開。全關 = fail closed。日曆「我的日程」為家庭層，不套用。內建助手不受約束。
 
-## 傳輸 / OpenClaw
+## 傳輸
 
 - **只做** Streamable HTTP。入口前綴：`/api/v1/mcp`（完整 URL 形如 `{apiOrigin}/api/v1/mcp`）。
 - Streamable HTTP 協議流量是 **ASGI mount**，**不**進入 OpenAPI；OpenAPI 僅收錄 session-auth 的 `GET /api/v1/mcp/status`。
 - **不做** stdio／SSE-only 舊傳輸／本機子行程 MCP server。
+- 任何支援 Streamable HTTP MCP 的客戶端（例如 OpenClaw）都可用同一 URL 與 Bearer；握手與每次 tool call 都須帶完整 `*` 金鑰。
+
+### 設定範例（OpenClaw）
 
 OpenClaw 側概念配置（寫入 `~/.openclaw/openclaw.json` 的 `mcp.servers`；金鑰請換成 `/account/keys` 建立的完整 `*` 金鑰）。預設 API origin 為 `http://127.0.0.1:18820`（SoT：`server/constants.py` 的 `SERVICE_PORT`）：
 
@@ -143,7 +146,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 含 `mcp`。當前基線為 stamp **7**／`SCHEMA_SEMVER` `1.6.0`（`SCHEMA_FLOOR` 7；stamp 1–6 須備份後 reset）。未來 stamp 硬拒絕 → 升級應用；壞庫 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`。
+**Schema：** `user_events.origin` 含 `mcp`。當前基線為 stamp **7**／`SCHEMA_SEMVER` `1.6.0`（`SCHEMA_FLOOR` 7；stamp 1–6 須備份後 reset）。未來 stamp 硬拒絕 → 升級應用；壞庫 → `python scripts/reset_local_databases.py --apply`。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`。
 
 ## 非目標
 

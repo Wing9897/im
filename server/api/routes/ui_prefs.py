@@ -5,7 +5,7 @@ on hydrate). Local notify is split into three resources so the scanner can
 rewrite fired/history without touching settings.
 
 SoT paths are ``/api/v1/ui-prefs/notify/{settings,fired,history}``.
-Retired ``/api/v1/ui-prefs/voice-reminder/*`` is 404 — see docs/RETIRED-API.md.
+Retired ``/api/v1/ui-prefs/voice-reminder/*`` is 404.
 """
 
 from __future__ import annotations

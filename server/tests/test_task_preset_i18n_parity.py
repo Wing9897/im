@@ -2,7 +2,7 @@
 
 Display text source of truth is the zh-Hant UI locale; ``BUILTIN_PRESETS``
 (loaded from ``shared/task_presets.json``) is the API fallback
-(see docs/I18N-GLOSSARY.md#任務模板-presets顯示文案-sot).
+(zh-Hant display-text SoT; see scripts/check-i18n-parity.mjs).
 This test fails if either side drifts — fix with
 ``uv run python scripts/sync_task_presets.py``.
 """

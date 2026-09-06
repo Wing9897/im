@@ -267,25 +267,6 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     return Array.from({ length: current - floor }, (_, i) => floor + 1 + i);
   }
 
-  it("ARCHITECTURE.md states the current baseline (not an older one)", () => {
-    const current = readCurrentSchemaVersion();
-    const archPath = path.resolve(ROOT_DIR, "docs", "ARCHITECTURE.md");
-    expect(fs.existsSync(archPath)).toBe(true);
-    const content = fs.readFileSync(archPath, "utf-8");
-    for (let older = 1; older < current; older += 1) {
-      expect(
-        content,
-        `ARCHITECTURE.md must not advertise v${older} as the current baseline`,
-      ).not.toMatch(new RegExp(String.raw`current baseline\s+\*?\*?v${older}\b`, "i"));
-    }
-    expect(content).toMatch(
-      new RegExp(
-        String.raw`baseline\s+\*\*v${current}\*\*|baseline\s+v${current}\b|CURRENT.*v${current}|schema v${current}\b|stamp\s+\*\*?v?${current}\*\*?`,
-        "i",
-      ),
-    );
-  });
-
   it("README.md states the floor, schema registry, and future-stamp reject", () => {
     const current = readCurrentSchemaVersion();
     const floor = readSchemaFloor();

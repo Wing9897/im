@@ -63,7 +63,7 @@ const RETIRED_CONFIG_KEYS = new Set([
   "batch_overlap_count",
   "agent_project_wave_interval_seconds",
   "intelligence_rules_version",
-  // LLM connection slots live on llm_profiles (see docs/SCHEMA-BASELINE.md).
+  // LLM connection slots live on llm_profiles.
   "llm_provider",
   "ollama_base_url",
   "ollama_model",

@@ -169,6 +169,10 @@ describe("commandPaletteCommands", () => {
     expect(mcp.some((item) => item.to === "/settings/integrations?tab=mcp")).toBe(true);
     expect(mcp.some((item) => item.to === "/settings/mcp")).toBe(false);
     expect(mcp.some((item) => item.label === "外部接口 · MCP")).toBe(true);
+    const mcpOpenClaw = filterCommandPaletteItems("openclaw");
+    expect(mcpOpenClaw.some((item) => item.to === "/settings/integrations?tab=mcp")).toBe(true);
+    const mcpAgent = filterCommandPaletteItems("agent");
+    expect(mcpAgent.some((item) => item.to === "/settings/integrations?tab=mcp")).toBe(true);
     const systemApis = filterCommandPaletteItems("CARTO");
     expect(systemApis.some((item) => item.to === "/settings/integrations?tab=system")).toBe(true);
     expect(systemApis.some((item) => item.label === "外部接口 · 系統 API 及網址")).toBe(true);
