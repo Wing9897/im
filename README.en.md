@@ -2,11 +2,12 @@
 
 # <img src="docs/images/logo.png" width="32" height="32" alt=""> Intelligence Monitor
 
-Intelligence Monitor is a **single-household** intelligence workstation you run on your own computer: ingest the channels and inboxes you already watch, turn them into searchable intel and events, then place them on the calendar, tasks, items, and map. It is not a multi-tenant cloud service.
+Intelligence Monitor is a **single-household** intelligence workstation you run on your own computer: ingest Telegram, Discord, RSS, MQTT, Email, and more, turn them into filterable intel and events, then place them on the calendar, tasks, items, and map. It is not a multi-tenant cloud service.
 
-You can connect Telegram, Discord, RSS, MQTT, Email, and more; run analysis tasks to produce intel events and leaderboards; use **Timeline** for month / Gantt, **Tasks** for monitor and analysis schedules, and **Items** for inventory and expiry. The intel page can switch to a map. The assistant can answer questions or update the schedule.
-
-Data stays in local SQLite by default; you bring your own AI provider and keys. Optionally publish a workset calendar to the public source [https://subscribe.devents.tech](https://subscribe.devents.tech) so others can subscribe.
+- **Personal intel filtering** — Filter intel events by workset, analysis task, keyword, and time window; switch list / cards / map. The map can overlay live info and events, show either alone, and use a LIVE time window. The assistant can query the same local intel.
+- **Multi-task management and output** — **Tasks** is its own nav (`/tasks`); tasks belong to worksets. Intel, leaderboard, project-manager, and recurring tasks run independently. Results land on intel events and the leaderboard; **Timeline** has month / Gantt. Outbound sharing is optional workset calendar publish ([https://subscribe.devents.tech](https://subscribe.devents.tech)), not a one-click report export.
+- **Local-first household worksets** — Data stays in local SQLite by default. Worksets group intel, schedule, and items. You bring your own AI provider and keys.
+- **Assistant on demand** — `Ctrl+J` (macOS `⌘+J`) opens the text composer; without it, **Flash** bubbles show voice / quick replies. Full chat lives on **Assistant**.
 
 ## Screenshots
 
