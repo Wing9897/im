@@ -1,7 +1,7 @@
 {
   "name": "intelligence-monitor-web",
   "private": true,
-  "version": "1.0.30",
+  "version": "1.0.31",
   "license": "MIT",
   "type": "module",
   "engines": {
