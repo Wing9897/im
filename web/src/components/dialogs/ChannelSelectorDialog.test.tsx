@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 
 import type { ChannelWithSource } from "../../types";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
@@ -28,14 +29,18 @@ describe("ChannelSelectorDialog", () => {
 
     act(() => {
       createRoot(container).render(
-        wrapWithI18n(
-          createElement(ChannelSelectorDialog, {
-            open: true,
-            channels,
-            selectedChannelIds: [],
-            onConfirm,
-            onClose,
-          }),
+        createElement(
+          MemoryRouter,
+          null,
+          wrapWithI18n(
+            createElement(ChannelSelectorDialog, {
+              open: true,
+              channels,
+              selectedChannelIds: [],
+              onConfirm,
+              onClose,
+            }),
+          ),
         ),
       );
     });

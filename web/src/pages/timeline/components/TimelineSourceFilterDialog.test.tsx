@@ -77,11 +77,7 @@ describe("TimelineSourceFilterDialog", () => {
     });
     act(() => {
       root.render(
-        wrapWithI18n(
-          extra.subscribeAvailability === "loggedOut"
-            ? createElement(MemoryRouter, null, dialog)
-            : dialog,
-        ),
+        wrapWithI18n(createElement(MemoryRouter, null, dialog)),
       );
     });
     return { onChange, onChangeSubscribeKeys };
@@ -321,7 +317,7 @@ describe("TimelineSourceFilterDialog", () => {
     const status = document.querySelector('[data-testid="timeline-subscribe-disabled"]');
     expect(status?.textContent).toMatch(/sign in/i);
     expect(status?.textContent).not.toMatch(/unreachable/i);
-    expect(status?.querySelector('a[href="/subscriptions/account"]')).toBeTruthy();
+    expect(status?.querySelector('a[href="/timeline?sheet=subscriptions&tab=account"]')).toBeTruthy();
     act(() => {
       (document.querySelector('[data-testid="timeline-filter-local-clear"]') as HTMLButtonElement).click();
     });

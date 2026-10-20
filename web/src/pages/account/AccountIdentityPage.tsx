@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { CALENDAR_SHARE_ACCOUNT_PATH } from "../../components/subscriptions/CalendarShareConnectionStatusIcon";
 import { Button, SettingsRow, TextArea, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
@@ -170,7 +171,7 @@ export function AccountIdentityPage() {
 
       <p className={`mb-0 mt-lg max-w-[56ch] ${formHelpClass}`} data-testid="account-calendar-share-hint">
         {t("account:calendarShareMoved")}{" "}
-        <Link to="/subscriptions/account" className="font-medium text-accent no-underline hover:underline">
+        <Link to={CALENDAR_SHARE_ACCOUNT_PATH} className="font-medium text-accent no-underline hover:underline">
           {t("account:calendarShareMovedLink")}
         </Link>
       </p>

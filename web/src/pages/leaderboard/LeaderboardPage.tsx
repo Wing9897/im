@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
@@ -9,7 +9,13 @@ import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { LeaderboardTaskTable } from "./LeaderboardTaskTable";
 import { useLeaderboardPage } from "./useLeaderboardPage";
 
-export function LeaderboardPage() {
+export function LeaderboardPage({
+  leading,
+  embedded = false,
+}: {
+  leading?: ReactNode;
+  embedded?: boolean;
+}) {
   const { t } = useTranslation("common");
   const [isRetrying, setIsRetrying] = useState(false);
   const {
@@ -34,8 +40,8 @@ export function LeaderboardPage() {
   const emptyVariant =
     leaderboardTasks.length === 0 ? "noTasks" : selectedTaskId ? "filtered" : "noResults";
 
-  return (
-    <AppPageShell>
+  const body = (
+    <>
       {pageError ? (
         <ErrorRetryBanner
           error={pageError}
@@ -47,12 +53,13 @@ export function LeaderboardPage() {
         />
       ) : null}
 
-      {leaderboardTasks.length > 0 || isRefreshing ? (
+      {leading != null || leaderboardTasks.length > 0 || isRefreshing ? (
         <OpsControlBar
           sticky
           ariaLabel={t("leaderboard:toolbarAria")}
           data-testid="leaderboard-toolbar"
         >
+          {leading}
           {leaderboardTasks.length > 0 ? (
             <MenuSelect
               variant="toolbar"
@@ -118,6 +125,12 @@ export function LeaderboardPage() {
           ))}
         </div>
       )}
-    </AppPageShell>
+    </>
   );
+
+  if (embedded) {
+    return <div className="flex flex-col gap-md">{body}</div>;
+  }
+
+  return <AppPageShell>{body}</AppPageShell>;
 }

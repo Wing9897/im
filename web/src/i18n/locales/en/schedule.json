@@ -19,11 +19,11 @@
     "typeAll": "All",
     "typeOneOff": "One-off",
     "typeRecurring": "Recurring",
-    "worksetAria": "Workset",
-    "worksetAll": "All worksets",
-    "worksetSearchPlaceholder": "Search worksets",
-    "worksetSearchAria": "Search worksets",
-    "worksetEmpty": "No matching worksets",
+    "worksetAria": "Space",
+    "worksetAll": "All spaces",
+    "worksetSearchPlaceholder": "Search spaces",
+    "worksetSearchAria": "Search spaces",
+    "worksetEmpty": "No matching spaces",
     "dateRange": "Date",
     "dateFromAria": "Start date",
     "dateToAria": "End date",
@@ -49,7 +49,7 @@
   },
   "emptyFiltered": {
     "title": "No matching schedule events",
-    "hint": "Try adjusting type, workset, or date range."
+    "hint": "Try adjusting type, space, or date range."
   },
   "card": {
     "edit": "Edit",
@@ -57,7 +57,7 @@
     "delete": "Delete",
     "deleteAria": "Delete {title}",
     "allDay": "All day",
-    "workset": "Workset",
+    "workset": "Space",
     "item": "Linked item",
     "rrule": "Recurrence",
     "noRrule": "No recurrence rule",

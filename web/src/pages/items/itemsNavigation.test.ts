@@ -52,6 +52,26 @@ describe("buildItemsEditPath", () => {
 });
 
 describe("resolveItemFormBackPath", () => {
+  it("prefers a safe returnTo over the origin category", () => {
+    expect(
+      resolveItemFormBackPath({
+        returnTo: "/timeline",
+        categoryIdParam: "food",
+        itemCategoryId: "docs",
+        itemKnown: true,
+      }),
+    ).toBe("/timeline");
+  });
+
+  it("ignores an unsafe returnTo and uses the origin category", () => {
+    expect(
+      resolveItemFormBackPath({
+        returnTo: "//evil.example",
+        categoryIdParam: "food",
+      }),
+    ).toBe("/items/category/food");
+  });
+
   it("prefers explicit origin category over item category", () => {
     expect(
       resolveItemFormBackPath({

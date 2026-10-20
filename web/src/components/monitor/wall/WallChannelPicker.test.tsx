@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 
 import type { ChannelWithSource } from "../../../types";
 import { WallChannelPicker } from "./WallChannelPicker";
@@ -37,7 +38,9 @@ function renderPicker(props: {
   const container = document.createElement("div");
   root = createRoot(container);
   act(() => {
-    root!.render(wrapWithI18n(createElement(WallChannelPicker, props)));
+    root!.render(
+      createElement(MemoryRouter, null, wrapWithI18n(createElement(WallChannelPicker, props))),
+    );
   });
   return container;
 }

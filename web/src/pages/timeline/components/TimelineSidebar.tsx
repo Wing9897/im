@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ChevronLeft, ListChecks, Trash2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge, Button, CardFieldIcon, PillButton, TextField } from "../../../components/ui";
@@ -30,6 +31,7 @@ import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
 import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 import { resolveCalendarLeadingGlyph } from "../../../domain/timeline/importantEventDisplay";
 import { useEventListMetaLookups } from "../../../domain/timeline/useEventListMetaLookups";
+import { RecurringSeriesDialog } from "../../schedule/RecurringSeriesDialog";
 
 const asideClass =
   "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";
@@ -48,6 +50,7 @@ export function TimelineSidebar({
   outOfView = false,
 }: TimelineSidebarProps) {
   const { t } = useTranslation("timeline");
+  const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
   const {
     selectedEvent,
     onSelectEvent,
@@ -64,13 +67,15 @@ export function TimelineSidebar({
     onDismissTimelineEvent,
     onRestoreTimelineEvent,
     onToggleImportantEvent,
+    onRetryTimelineEvents,
     userEventActionBusy,
   } = useTimelinePageContext();
-  const { t: ti } = useTranslation("items");
   const metaLookups = useEventListMetaLookups();
 
   const isUserEvent = selectedEvent?.source === "user";
   const isItemEvent = selectedEvent?.source === "item_remind";
+  const recurringSeriesId =
+    selectedEvent?.source === "recurring" ? selectedEvent.seriesId?.trim() || "" : "";
   const isSubscribed = isSubscribedTimelineSource(selectedEvent?.source);
   const isDismissed = Boolean(selectedEvent?.dismissed);
   const isImportant = Boolean(selectedEvent?.important);
@@ -253,13 +258,24 @@ export function TimelineSidebar({
                   {t("sidebar.edit")}
                 </PillButton>
               ) : null}
+              {recurringSeriesId ? (
+                <PillButton
+                  type="button"
+                  disabled={userEventActionBusy}
+                  data-testid="timeline-sidebar-edit-series"
+                  onClick={() => setEditingSeriesId(recurringSeriesId)}
+                >
+                  {t("sidebar.editSeries")}
+                </PillButton>
+              ) : null}
               {isItemEvent && selectedEvent.itemId ? (
                 <PillButton
                   type="button"
                   disabled={userEventActionBusy}
+                  data-testid="timeline-sidebar-edit-item"
                   onClick={() => onEditItemEvent?.(selectedEvent)}
                 >
-                  {ti("editItem")}
+                  {t("sidebar.edit")}
                 </PillButton>
               ) : null}
               {isSubscribed ? null : (
@@ -340,6 +356,16 @@ export function TimelineSidebar({
           onSelectEvent={onSelectEvent}
         />
       )}
+      {editingSeriesId ? (
+        <RecurringSeriesDialog
+          seriesId={editingSeriesId}
+          open
+          onClose={() => {
+            setEditingSeriesId(null);
+            onRetryTimelineEvents();
+          }}
+        />
+      ) : null}
     </aside>
   );
 }

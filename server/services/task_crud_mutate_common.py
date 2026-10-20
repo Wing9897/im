@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from server.api.schemas.requests import TaskConfigBody
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE, ALL_ANALYSIS_MODES
 from server.domain.analysis_time_ranges import ALLOWED_ANALYSIS_TIME_RANGES
@@ -24,6 +23,7 @@ from server.scheduler.task_schedule_overrides import (
 )
 from server.services.task_policy import require_task_row
 from server.services.task_writes import TaskWriteError
+from server.services.tasks.write_input import TaskWriteInput
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ class TaskMutationResult:
     register: bool = False
     unregister: bool = False
     #: After update, optional active toggle may need a second register/unregister.
-    active_after: int | None = None
+    active_after: bool | int | None = None
 
 
 async def require_task_row_or_lookup(db: Database, task_id: str) -> dict[str, Any]:
@@ -65,7 +65,7 @@ def _validate_optional_int_in_range(
         raise TaskWriteError(f"{label} must be between {minimum} and {maximum}")
 
 
-def task_emoji_from_body(body: TaskConfigBody, *, existing: dict[str, Any] | None) -> str | None:
+def task_emoji_from_body(body: TaskWriteInput, *, existing: dict[str, Any] | None) -> str | None:
     """Create: omitted → NULL. Update: omitted → keep existing. Empty string clears."""
     if "emoji" not in body.model_fields_set:
         return emoji_from_row(existing) if existing is not None else None
@@ -75,8 +75,8 @@ def task_emoji_from_body(body: TaskConfigBody, *, existing: dict[str, Any] | Non
         raise TaskWriteError(str(exc)) from exc
 
 
-def validate_task_config_body(body: TaskConfigBody) -> None:
-    """HTTP-agnostic TaskConfigBody checks; raises ``TaskWriteError`` (routes map to 422)."""
+def validate_task_config_body(body: TaskWriteInput) -> None:
+    """HTTP-agnostic write-input checks; raises ``TaskWriteError`` (routes map to 422)."""
     if not body.name.strip():
         raise TaskWriteError("Task name is required")
     if body.analysisMode is not None and body.analysisMode not in ALL_ANALYSIS_MODES:

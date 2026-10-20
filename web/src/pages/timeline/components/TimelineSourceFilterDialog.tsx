@@ -6,6 +6,7 @@
 
 import { Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { ModalDialog } from "../../../components/ModalDialog";
 import { SourceFilterColumnShell, SourceFilterTree } from "../../../components/SourceFilterTree";
@@ -17,6 +18,7 @@ import {
 import { Button, TextField } from "../../../components/ui";
 import { useSourceFilterDialogState } from "../../../components/useSourceFilterDialogState";
 import { useSourceFilterSubscribeDraft } from "../../../domain/calendarShare/useSourceFilterSubscribeDraft";
+import { worksetsListPath } from "../../../domain/worksets/worksetRoutes";
 import type { SourceFilterOption } from "../../../domain/timeline/sourceFilterOptions";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import type { SourceFilterExpandTask, WorksetFilterOption } from "../../../components/SourceFilterDialog";
@@ -54,7 +56,8 @@ export function TimelineSourceFilterDialog({
   onChangeSubscribeKeys,
   subscribeAvailability = "ok",
 }: TimelineSourceFilterDialogProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common", "workset"]);
+  const navigate = useNavigate();
   const prefix = ariaLabelPrefix ?? t("board:shell.sourceFilterPrefix");
   const state = useSourceFilterDialogState({
     tasks,
@@ -138,6 +141,17 @@ export function TimelineSourceFilterDialog({
               selectTestId="timeline-filter-local-select-all"
               clearTestId="timeline-filter-local-clear"
             >
+              <button
+                type="button"
+                className="mb-1 text-left text-caption text-accent"
+                data-testid="timeline-filter-manage-worksets"
+                onClick={() => {
+                  state.setOpen(false);
+                  navigate(worksetsListPath());
+                }}
+              >
+                {t("workset:label")}
+              </button>
               <SourceFilterTree
                 rows={state.visibleRows}
                 query={state.query}

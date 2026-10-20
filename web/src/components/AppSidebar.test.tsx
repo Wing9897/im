@@ -238,17 +238,12 @@ describe("AppSidebar", () => {
     renderSidebar();
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
-      "/monitor",
-      "/worksets",
-      "/tasks",
-      "/schedule",
-      "/items",
-      "/sources",
-      "/leaderboard",
-      "/intelligence",
       "/timeline",
-      "/subscriptions",
+      "/intelligence",
+      "/items",
+      "/tasks",
       "/notify",
+      "/monitor",
       "/assistant",
       "/settings/ai/provider",
       "/settings",
@@ -258,9 +253,8 @@ describe("AppSidebar", () => {
 
   it("renders visual nav group labels in zh-Hant", () => {
     renderSidebar();
-    expect(document.body.textContent).toContain("管理");
-    expect(document.body.textContent).toContain("情報");
     expect(document.body.textContent).toContain("時間");
+    expect(document.body.textContent).toContain("管理");
     expect(document.body.textContent).toContain("互動");
     expect(
       document.body.querySelectorAll("[data-testid='sidebar-nav-group']").length,
@@ -271,9 +265,8 @@ describe("AppSidebar", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     renderSidebar();
-    expect(document.body.textContent).toContain("Management");
-    expect(document.body.textContent).toContain("Intelligence");
     expect(document.body.textContent).toContain("Time");
+    expect(document.body.textContent).toContain("Management");
     expect(document.body.textContent).toContain("Interact");
   });
 
@@ -281,14 +274,10 @@ describe("AppSidebar", () => {
     renderSidebar();
     const expectedLabels = [
       "實時監控",
-      "工作集",
-      "任務設定",
-      "物品",
-      "來源",
-      "排行榜",
       "情報事件",
       "時間規劃",
-      "訂閱",
+      "物品",
+      "任務與來源",
       "通知與動作",
       "助手",
       "AI 設定",
@@ -306,7 +295,6 @@ describe("AppSidebar", () => {
     renderSidebar();
     expect(document.body.textContent).toContain("Intel events");
     expect(document.body.textContent).toContain("Live Monitor");
-    expect(document.body.textContent).toContain("Worksets");
     expect(document.body.textContent).toContain("Tasks");
     expect(document.body.textContent).toContain("Notify & actions");
   });
@@ -319,22 +307,22 @@ describe("AppSidebar", () => {
     expect(active[0].getAttribute("href")).toBe("/monitor");
   });
 
-  it("marks 任務設定 active on task editor paths, not 工作集", () => {
+  it("marks 任務與來源 active on task editor paths, not 專區", () => {
     mockPathname = "/tasks/42/edit";
     renderSidebar();
     const active = getLinks().filter(isActiveSidebarLink);
     expect(active).toHaveLength(1);
-    expect(active[0].getAttribute("aria-label")).toBe("任務設定");
+    expect(active[0].getAttribute("aria-label")).toBe("任務與來源");
     expect(active[0].getAttribute("href")).toBe("/tasks");
-    const worksets = getLinks().find((link) => link.getAttribute("aria-label") === "工作集");
-    expect(worksets?.getAttribute("aria-current")).toBe("false");
+    const worksets = getLinks().find((link) => link.getAttribute("aria-label") === "專區");
+    expect(worksets).toBeUndefined();
   });
 
-  it("sends 任務設定 to the list even while an editor or agent page is open", () => {
-    for (const pathname of ["/tasks/42/edit", "/tasks/new", "/tasks/9/agent"] as const) {
+  it("sends 任務與來源 to the list even while an editor or agent page is open", () => {
+    for (const pathname of ["/tasks/42/edit", "/tasks/new", "/tasks/9/agent", "/sources"] as const) {
       mockPathname = pathname;
       renderSidebar();
-      const tasks = getLinks().find((link) => link.getAttribute("aria-label") === "任務設定");
+      const tasks = getLinks().find((link) => link.getAttribute("aria-label") === "任務與來源");
       expect(tasks?.getAttribute("href"), pathname).toBe("/tasks");
     }
   });
@@ -393,11 +381,8 @@ describe("AppSidebar", () => {
     renderSidebar();
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
-      "/worksets",
-      "/schedule",
-      "/items",
       "/timeline",
-      "/subscriptions",
+      "/items",
       "/notify",
       "/assistant",
       "/settings/ai/provider",
@@ -410,7 +395,9 @@ describe("AppSidebar", () => {
     expect(hrefs).not.toContain("/tasks");
     expect(hrefs).toContain("/notify");
     expect(hrefs).toContain("/items");
-    expect(hrefs).toContain("/schedule");
+    expect(hrefs).toContain("/timeline");
+    expect(hrefs).not.toContain("/schedule");
+    expect(hrefs).not.toContain("/subscriptions");
   });
 
   it("persists overlay open/closed via the edge chevron, not a layout rail", () => {

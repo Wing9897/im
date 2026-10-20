@@ -15,213 +15,76 @@ import {
   Trophy,
   MessageSquare,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  appDestinationsInPaletteOrder,
+  resolveAppDestinationHref,
+  type AppDestination,
+} from "../navigation/appDestinations";
 import type { CommandPaletteItemDef } from "./commandPaletteTypes";
 
-export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] = [
-  { id: "monitor", labelKey: "monitor", labelNs: "nav", to: "/monitor", icon: Radio, groupId: "navigation", keywords: ["monitor", "stream"] },
-  {
-    id: "board",
-    labelKey: "commandPalette.openOpsBoard",
-    action: "open-board",
-    icon: LayoutGrid,
+const PALETTE_NAV_ICONS: Record<string, LucideIcon> = {
+  monitor: Radio,
+  "monitor-wall": Radio,
+  tasks: ListChecks,
+  worksets: Layers,
+  schedule: CalendarClock,
+  leaderboard: Trophy,
+  intelligence: MapPin,
+  "intelligence-map": Map,
+  "intelligence-list": MapPin,
+  "intelligence-card": MapPin,
+  timeline: CalendarDays,
+  subscriptions: Bookmark,
+  "subscriptions-published": Bookmark,
+  "subscriptions-search": Bookmark,
+  "subscriptions-account": Bookmark,
+  notify: BellRing,
+  "notify-voice": BellRing,
+  "notify-history": History,
+  sources: Database,
+  assistant: MessageSquare,
+  "sources-rss": Rss,
+  "sources-telegram": Database,
+  "sources-discord": Database,
+  "sources-http": Database,
+  "sources-http-webhook": Database,
+  "sources-mqtt": Database,
+  "sources-email": Database,
+};
+
+const OPEN_OPS_BOARD: CommandPaletteItemDef = {
+  id: "board",
+  labelKey: "commandPalette.openOpsBoard",
+  action: "open-board",
+  icon: LayoutGrid,
+  groupId: "navigation",
+  hintKey: "commandPalette.openOpsBoardHint",
+  keywords: ["ops", "board", "canvas", "畫布", "画布", "ops board"],
+};
+
+function paletteIcon(id: string): LucideIcon {
+  const icon = PALETTE_NAV_ICONS[id];
+  if (!icon) {
+    throw new Error(`Missing command palette icon for ${id}`);
+  }
+  return icon;
+}
+
+function toNavigationCommand(dest: AppDestination): CommandPaletteItemDef {
+  return {
+    id: dest.id,
+    labelKey: dest.labelKey,
+    ...(dest.labelNs ? { labelNs: dest.labelNs } : {}),
+    to: resolveAppDestinationHref(dest.paths[0]),
+    icon: paletteIcon(dest.id),
     groupId: "navigation",
-    hintKey: "commandPalette.openOpsBoardHint",
-    keywords: ["ops", "board", "canvas", "畫布", "画布", "ops board"],
-  },
-  { id: "monitor-wall", labelKey: "commandPalette.monitorWall", to: "/monitor?view=wall", icon: Radio, groupId: "navigation", keywords: ["wall", "看板"] },
-  { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
-  {
-    id: "worksets",
-    labelKey: "worksets",
-    labelNs: "nav",
-    to: "/worksets",
-    icon: Layers,
-    groupId: "navigation",
-    keywords: ["workset", "工作集"],
-  },
-  {
-    id: "schedule",
-    labelKey: "schedule",
-    labelNs: "nav",
-    to: "/schedule",
-    icon: CalendarClock,
-    groupId: "navigation",
-    keywords: ["schedule", "calendar", "日程", "循环"],
-  },
-  { id: "leaderboard", labelKey: "leaderboard", labelNs: "nav", to: "/leaderboard", icon: Trophy, groupId: "navigation" },
-  { id: "intelligence", labelKey: "keyEvents", labelNs: "nav", to: "/intelligence", icon: MapPin, groupId: "navigation", keywords: ["intel"] },
-  {
-    id: "intelligence-map",
-    labelKey: "commandPalette.keyEventsMap",
-    to: "/intelligence?view=map",
-    icon: Map,
-    groupId: "navigation",
-    keywords: ["map", "地圖"],
-  },
-  {
-    id: "intelligence-list",
-    labelKey: "commandPalette.keyEventsList",
-    to: "/intelligence?view=list",
-    icon: MapPin,
-    groupId: "navigation",
-    keywords: ["list"],
-  },
-  {
-    id: "intelligence-card",
-    labelKey: "commandPalette.keyEventsCard",
-    to: "/intelligence?view=card",
-    icon: MapPin,
-    groupId: "navigation",
-    keywords: ["card"],
-  },
-  { id: "timeline", labelKey: "timeline", labelNs: "nav", to: "/timeline", icon: CalendarDays, groupId: "navigation" },
-  {
-    id: "subscriptions",
-    labelKey: "subscriptions",
-    labelNs: "nav",
-    to: "/subscriptions/mine",
-    icon: Bookmark,
-    groupId: "navigation",
-    keywords: ["subscribe", "calendar", "訂閱", "订阅"],
-  },
-  {
-    id: "subscriptions-published",
-    labelKey: "commandPalette.subscriptionsPublished",
-    to: "/subscriptions/published",
-    icon: Bookmark,
-    groupId: "navigation",
-    keywords: [
-      "publish",
-      "unpublish",
-      "發佈",
-      "发布",
-      "上載",
-      "上传",
-      "私人群組",
-      "私人群组",
-      "公開閒忙",
-      "公开闲忙",
-      "private group",
-      "public busy",
-    ],
-  },
-  {
-    id: "subscriptions-search",
-    labelKey: "commandPalette.subscriptionsSearch",
-    to: "/subscriptions/search",
-    icon: Bookmark,
-    groupId: "navigation",
-    keywords: ["search", "搜尋", "搜索"],
-  },
-  {
-    id: "subscriptions-account",
-    labelKey: "commandPalette.subscriptionsAccount",
-    to: "/subscriptions/account",
-    icon: Bookmark,
-    groupId: "navigation",
-    keywords: ["login", "sign in", "calendar share", "timezone", "登入", "登录", "日曆分享", "日历分享", "帳戶", "账户"],
-  },
-  {
-    id: "notify",
-    labelKey: "notify",
-    labelNs: "nav",
-    to: "/notify",
-    icon: BellRing,
-    groupId: "navigation",
-    keywords: ["動作", "动作", "actions", "外發通知", "外发通知", "outbound"],
-  },
-  {
-    id: "notify-voice",
-    labelKey: "commandPalette.notifyVoice",
-    to: "/notify?tab=notify",
-    icon: BellRing,
-    groupId: "navigation",
-    keywords: [
-      "voice",
-      "語音",
-      "語音提醒",
-      "语音提醒",
-      "本機通知",
-      "本机通知",
-      "local notify",
-      "通知",
-      "提醒",
-      "閃現",
-      "闪现",
-    ],
-  },
-  {
-    id: "notify-history",
-    labelKey: "commandPalette.notifyHistory",
-    to: "/notify?tab=history",
-    icon: History,
-    groupId: "navigation",
-    keywords: ["history", "紀錄", "觸發"],
-  },
-  { id: "sources", labelKey: "sources", labelNs: "nav", to: "/sources", icon: Database, groupId: "navigation", keywords: ["source"] },
-  {
-    id: "assistant",
-    labelKey: "assistant",
-    labelNs: "nav",
-    to: "/assistant",
-    icon: MessageSquare,
-    groupId: "navigation",
-    keywords: ["assistant", "語音", "chat", "日程", "AI 助手"],
-  },
-  {
-    id: "sources-rss",
-    labelKey: "commandPalette.sourcesRss",
-    to: "/sources?tab=rss",
-    icon: Rss,
-    groupId: "navigation",
-    keywords: ["rss", "folo"],
-  },
-  {
-    id: "sources-telegram",
-    labelKey: "commandPalette.sourcesTelegram",
-    to: "/sources?tab=telegram",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["telegram"],
-  },
-  {
-    id: "sources-discord",
-    labelKey: "commandPalette.sourcesDiscord",
-    to: "/sources?tab=discord",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["discord"],
-  },
-  {
-    id: "sources-http",
-    labelKey: "commandPalette.sourcesHttp",
-    to: "/sources?tab=http",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["http", "抓取", "poll"],
-  },
-  {
-    id: "sources-http-webhook",
-    labelKey: "commandPalette.sourcesHttpWebhook",
-    to: "/sources?tab=http&mode=webhook",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["webhook", "api key", "ingestion"],
-  },
-  {
-    id: "sources-mqtt",
-    labelKey: "commandPalette.sourcesMqtt",
-    to: "/sources?tab=mqtt",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["mqtt", "broker"],
-  },
-  {
-    id: "sources-email",
-    labelKey: "commandPalette.sourcesEmail",
-    to: "/sources?tab=email",
-    icon: Database,
-    groupId: "navigation",
-    keywords: ["email", "imap", "郵件"],
-  },
-];
+    ...(dest.paletteKeywords ? { keywords: [...dest.paletteKeywords] } : {}),
+  };
+}
+
+export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
+  appDestinationsInPaletteOrder().flatMap((dest) => {
+    const command = toNavigationCommand(dest);
+    return dest.id === "monitor" ? [command, OPEN_OPS_BOARD] : [command];
+  });

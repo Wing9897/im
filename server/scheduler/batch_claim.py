@@ -10,11 +10,12 @@ from server.analyzer.incremental import (
     marker_rows,
 )
 from server.db.database import Database
+from server.queries.tasks_queries import fetch_task_row
 from server.util import new_id, utc_now_iso
 
 
 async def load_task(db: Database, task_id: str) -> dict[str, Any] | None:
-    return await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
+    return await fetch_task_row(db, task_id)
 
 
 async def task_has_channels(db: Database, task_id: str) -> bool:

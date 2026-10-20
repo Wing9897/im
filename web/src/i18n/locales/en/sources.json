@@ -9,6 +9,11 @@
     "expandForm": "Expand add form",
     "collapseForm": "Collapse add form"
   },
+  "drawer": {
+    "title": "Add source",
+    "closeAria": "Close add source",
+    "back": "Back"
+  },
   "sources": {
     "listTitle": "Connected sources",
     "refreshing": "Refreshing sources",

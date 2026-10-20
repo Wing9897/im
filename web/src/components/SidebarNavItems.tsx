@@ -10,7 +10,7 @@ import { sidebarNavLinkClass } from "./sidebarNavStyles";
 export function SidebarSectionLabel({ label }: { label: string }) {
   return (
     <div
-      className="mx-1 mb-1 mt-2 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted max-[780px]:hidden"
+      className="mx-1 mb-1 mt-2.5 px-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted/85 first:mt-1 max-[780px]:hidden"
       aria-hidden="true"
       data-testid="sidebar-nav-group"
     >
@@ -27,7 +27,7 @@ export function TasksNavLink({ isActive }: { isActive: boolean }) {
   const showPendingBadge = pendingCount > 0;
   const badgeLabel = pendingCount > 99 ? "99+" : String(pendingCount);
   const Icon = ListChecks;
-  const tasksLabel = t("tasks");
+  const tasksLabel = t("tasksAndSources");
   const to = "/tasks";
 
   return (

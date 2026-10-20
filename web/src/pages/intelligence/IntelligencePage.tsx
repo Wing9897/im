@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import type { AnalysisEvent } from "../../types";
+import { SegmentedControl } from "../../components/ui";
+import { LeaderboardPage } from "../leaderboard/LeaderboardPage";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import { useIntelligenceFeed } from "./useIntelligenceFeed";
 import { useIntelligenceUrlState } from "./useIntelligenceUrlState";
@@ -30,8 +33,34 @@ import { handleCommandError } from "../../utils/errors";
 /** Shared shell padding / toolbar height (same in map mode). */
 const intelligencePageClass = "im-intelligence-page";
 
+function IntelligenceSectionSwitch({
+  section,
+  onChange,
+}: {
+  section: "events" | "topics";
+  onChange: (next: "events" | "topics") => void;
+}) {
+  const { t } = useTranslation("intelligence");
+  return (
+    <div className="shrink-0" data-testid="intelligence-section-tabs">
+      <SegmentedControl
+        layout="inline"
+        ariaLabel={t("tabs.aria")}
+        value={section}
+        onChange={(id) => onChange(id === "topics" ? "topics" : "events")}
+        items={[
+          { id: "events", label: t("tabs.events") },
+          { id: "topics", label: t("tabs.topics") },
+        ]}
+      />
+    </div>
+  );
+}
+
 export function IntelligencePage() {
   const { t } = useTranslation("intelligence");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const section = searchParams.get("tab") === "topics" ? "topics" : "events";
   const feed = useIntelligenceFeed();
   const { worksets, tasks } = useTaskCatalog();
   const { showToast } = useToast();
@@ -107,6 +136,21 @@ export function IntelligencePage() {
     };
   }, [feed.isMapMode]);
 
+  const setSection = useCallback(
+    (next: "events" | "topics") => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          if (next === "topics") params.set("tab", "topics");
+          else params.delete("tab");
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const handleResetView = useCallback(() => {
     setResetViewTrigger((n) => n + 1);
   }, []);
@@ -128,9 +172,20 @@ export function IntelligencePage() {
     [feed, selectedItem, showToast, t],
   );
 
+  const sectionSwitch = (
+    <IntelligenceSectionSwitch section={section} onChange={setSection} />
+  );
+
   return (
     <div className={intelligencePageClass}>
+      {section === "topics" ? (
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-testid="intelligence-topics-tab">
+          <LeaderboardPage leading={sectionSwitch} embedded />
+        </div>
+      ) : (
+        <>
       <IntelligenceToolbar
+        sectionSwitch={sectionSwitch}
         isBusy={feed.isBusy}
         search={feed.search}
         setSearch={feed.setSearch}
@@ -165,6 +220,8 @@ export function IntelligencePage() {
           }}
         />
       </div>
+        </>
+      )}
     </div>
   );
 }

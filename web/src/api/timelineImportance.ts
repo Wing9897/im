@@ -25,15 +25,6 @@ export function unmarkTimelineImportant(
   return apiClient.delete<void>(`/api/v1/calendar/importance?${params.toString()}`);
 }
 
-export function listTimelineImportance(
-  source?: TimelineImportanceSource,
-): Promise<TimelineImportance[]> {
-  return apiClient.get<TimelineImportance[]>(
-    "/api/v1/calendar/importance",
-    source != null ? { source } : undefined,
-  );
-}
-
 /** Map TimelineItem.source to the importance table source. */
 export function timelineItemImportanceSource(
   source: string | undefined,

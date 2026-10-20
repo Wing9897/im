@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import Request
 
 from server.api.deps import get_db
-from server.api.routes.task_helpers import TaskConfigBody
+from server.api.routes.task_helpers import TaskConfigBody, task_write_http_error, to_task_write_input
 from server.api.routes.tasks._common import notify, register_task, unregister_task
 from server.api.routes.tasks._router import router
 from server.api.schemas.requests import TaskPatchBody
@@ -23,11 +23,11 @@ from server.services.task_writes import TaskWriteError
 @router.put("/{task_id}", response_model=TaskResponse)
 async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> TaskResponse:
     try:
-        result = await update_task_record(get_db(request), task_id, body)
+        result = await update_task_record(get_db(request), task_id, to_task_write_input(body))
     except LookupError as exc:
         raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
     except TaskWriteError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+        raise task_write_http_error(exc) from exc
 
     if result.active_after is not None:
         if result.active_after:
@@ -77,6 +77,8 @@ async def toggle_task_active(request: Request, task_id: str) -> TaskResponse:
         payload, new_active = await toggle_task_active_record(get_db(request), task_id)
     except LookupError as exc:
         raise http_error(404, str(exc), error_code=NOT_FOUND) from exc
+    except TaskWriteError as exc:
+        raise task_write_http_error(exc) from exc
     if new_active:
         await register_task(request, task_id)
     else:

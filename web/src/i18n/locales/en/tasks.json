@@ -440,8 +440,8 @@
     },
     "agent-project-schedule": {
       "name": "Project schedule",
-      "description": "Write engineering/project milestones in the same workset (e.g. foundation, fit-out) into My schedule; update that event when the source changes the date, or create if none exists. No web search.",
-      "promptTemplate": "Write engineering/project milestones in the same workset into My schedule, such as foundation, fit-out, inspection, and handover. Rules: 1) if the source changes a date, update that event; create only when unmatched; 2) cancel means deactivate or delete; 3) record only the milestone's date and content — do not claim or invent Gantt dependencies or predecessor/successor links; 4) write only when the date is explicit or reasonably convertible; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
+      "description": "Write engineering/project milestones in the same space (e.g. foundation, fit-out) into My schedule; update that event when the source changes the date, or create if none exists. No web search.",
+      "promptTemplate": "Write engineering/project milestones in the same space into My schedule, such as foundation, fit-out, inspection, and handover. Rules: 1) if the source changes a date, update that event; create only when unmatched; 2) cancel means deactivate or delete; 3) record only the milestone's date and content — do not claim or invent Gantt dependencies or predecessor/successor links; 4) write only when the date is explicit or reasonably convertible; 5) do not search the web; 6) ignore unrelated chatter. Finish with a short summary of this turn's changes."
     },
     "agent-source-verify": {
       "name": "Source verification",

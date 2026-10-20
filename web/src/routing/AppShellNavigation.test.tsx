@@ -171,19 +171,15 @@ describe("App shell navigation", () => {
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/monitor");
     expect(container.querySelector("[data-testid='stub-page-monitor']")).toBeTruthy();
 
-    clickSidebarLink("工作集");
-    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/worksets");
-    expect(container.querySelector("[data-testid='stub-page-worksets']")).toBeTruthy();
+    clickSidebarLink("任務與來源");
+    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/tasks");
+    expect(container.querySelector("[data-testid='stub-page-tasks']")).toBeTruthy();
 
     clickSidebarLink("情報事件");
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe(
       "/intelligence",
     );
     expect(container.querySelector("[data-testid='stub-page-intelligence']")).toBeTruthy();
-
-    clickSidebarLink("來源");
-    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/sources");
-    expect(container.querySelector("[data-testid='stub-page-sources']")).toBeTruthy();
 
     clickSidebarLink("AI 設定");
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe(

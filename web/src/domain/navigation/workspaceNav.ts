@@ -16,9 +16,12 @@ export const aiWorkspaceNavItems = [
   { to: "/settings/ai/staff", labelKey: "tabs.aiStaff" },
 ] as const satisfies readonly WorkspaceNavItem[];
 
+/** Tab ids for the subscriptions sheet. Paths stay in `legacyPaths.ts`. */
 export const subscriptionsWorkspaceNavItems = [
-  { to: "/subscriptions/mine", labelKey: "tabs.mine" },
-  { to: "/subscriptions/published", labelKey: "tabs.published" },
-  { to: "/subscriptions/account", labelKey: "tabs.account" },
-  { to: "/subscriptions/search", labelKey: "tabs.search" },
-] as const satisfies readonly WorkspaceNavItem[];
+  { id: "mine", labelKey: "tabs.mine" },
+  { id: "published", labelKey: "tabs.published" },
+  { id: "account", labelKey: "tabs.account" },
+  { id: "search", labelKey: "tabs.search" },
+] as const;
+
+export type SubscriptionsWorkspaceTabId = (typeof subscriptionsWorkspaceNavItems)[number]["id"];

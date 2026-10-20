@@ -16,7 +16,7 @@ _CHECKED_CONTRACT_PATHS = (
     "server/calendar/rrule.py",
     "web/src/types/tasks.ts",
     "web/src/types/analysisEvent.ts",
-    "web/src/pages/schedule/RecurringSeriesEditor.tsx",
+    "web/src/pages/schedule/RecurringSeriesDialog.tsx",
     "README.md",
 )
 

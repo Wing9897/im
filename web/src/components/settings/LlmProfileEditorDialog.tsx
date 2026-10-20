@@ -37,7 +37,7 @@ import type {
 import {
   LLM_TASK_STAFF_CLASSES,
   isMaskedSecret,
-  normalizeTaskStaffClasses,
+  normalizeLlmStaffClasses,
 } from "../../types/llmProfiles";
 
 type LlmProfileDraftCore = {
@@ -91,7 +91,7 @@ export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
     webSearchEnabled: profile.webSearchEnabled,
     webSearchProvider: normalizeWebSearchProviderSetting(webProvider),
     ...searchKeys,
-    staffClasses: normalizeTaskStaffClasses(profile.staffClasses),
+    staffClasses: normalizeLlmStaffClasses(profile.staffClasses),
   };
 }
 

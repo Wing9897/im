@@ -32,8 +32,24 @@ describe("recurring create FE contract", () => {
     expect(timeline).toMatch(/createRecurringSeries\s*\(/);
     expect(timeline).not.toMatch(/createTask\s*\(/);
 
-    const scheduleEditor = readSrc("pages/schedule/RecurringSeriesEditor.tsx");
-    expect(scheduleEditor).toMatch(/patchRecurringSeries|getRecurringSeries/);
+    const scheduleDialog = readSrc("pages/schedule/RecurringSeriesDialog.tsx");
+    expect(scheduleDialog).toMatch(/patchRecurringSeries|getRecurringSeries/);
+
+    const routes = readSrc("routing/AppRoutes.tsx");
+    expect(routes).toMatch(
+      /path="\/schedule\/recurring\/:id\/edit" element=\{<LegacyRedirect \/>\}/,
+    );
+    expect(routes).not.toMatch(/RecurringSeriesEditor/);
+
+    for (const rel of [
+      "pages/schedule/SchedulePage.tsx",
+      "pages/timeline/components/TimelineSidebar.tsx",
+      "pages/tasks/agent/AgentDetailPage.tsx",
+    ]) {
+      const host = readSrc(rel);
+      expect(host).toMatch(/RecurringSeriesDialog/);
+      expect(host).not.toMatch(/createRecurringTask/);
+    }
   });
 
   it("removes task recurring and schedule clients", () => {

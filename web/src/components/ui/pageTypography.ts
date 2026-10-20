@@ -11,7 +11,7 @@ export const formLabelClass = "text-caption font-medium text-text-primary";
 export const formHelpClass =
   "max-w-[56ch] text-caption leading-normal text-text-secondary mt-xs";
 
-export const formGridClass = "grid grid-cols-1 gap-md md:grid-cols-2";
+export const formGridClass = "grid min-w-0 w-full grid-cols-1 gap-md md:grid-cols-2";
 
 export const captionClass = "text-caption leading-normal text-text-muted";
 

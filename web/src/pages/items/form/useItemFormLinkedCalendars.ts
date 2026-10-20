@@ -18,35 +18,10 @@ import {
   type LinkedCalendarFormInitial,
   type LinkedCalendarQuickKind,
 } from "../../../domain/items/linkedCalendarQuickCreate";
+import { linkedOneOffWriteParams } from "../../../domain/items/linkedOneOffWriteParams";
 import { parseRemindBeforeDays } from "../../../domain/timeline/parseRemindBeforeDays";
 import { toUserEventFormWorksetId } from "../../../domain/timeline/userEvents";
-import { parseOptionalNumberInput } from "../../../domain/items/itemInventoryDisplay";
 import { handleCommandError } from "../../../utils/errors";
-
-function linkedOneOffWriteParams(
-  values: UserEventFormValues,
-  itemId: string,
-  worksetId: string,
-  remindBeforeDays: number | null,
-) {
-  const isPurchase = values.calendarKind === "purchase_effective";
-  const amount = isPurchase ? parseOptionalNumberInput(values.amountInput) : null;
-  return {
-    title: values.title,
-    startTime: values.startTime,
-    endTime: values.endTime || null,
-    body: values.body,
-    location: values.location,
-    isAllDay: values.isAllDay,
-    remindBeforeDays,
-    itemId,
-    worksetId,
-    kind: values.calendarKind,
-    amount,
-    direction: amount == null ? null : values.direction,
-    notifyPref: values.notifyPref,
-  };
-}
 
 type Options = {
   item: TrackableItem | null;

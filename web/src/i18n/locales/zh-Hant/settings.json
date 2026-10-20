@@ -287,7 +287,7 @@
     "disclaimer": "語音只作輸入／朗讀。桌面版不支援瀏覽器辨識，請改用文字。",
     "sttSectionTitle": "聽寫 STT",
     "ttsSectionTitle": "朗讀 TTS",
-    "sessionSectionTitle": "語言／PTT／工作集",
+    "sessionSectionTitle": "語言／PTT／專區",
     "sttLabel": "語音辨識（STT）",
     "sttHelp": "不可用時隱藏麥克風，仍可打字。",
     "sttHelpDesktopBlocked": "桌面版不支援瀏覽器語音辨識，請改用文字輸入。",
@@ -327,8 +327,8 @@
     "ttsPreviewing": "播放中…",
     "ttsPreviewFailed": "試聽失敗，請檢查瀏覽器語音或系統音量。",
     "ttsPreviewSample": "這是語音試聽，你好。",
-    "defaultWorksetLabel": "預設歸屬工作集",
-    "defaultWorksetHelp": "助手寫入日程的預設工作集（完整頁、系統欄對話、空格鍵語音共用）。預設為內建「一般」。"
+    "defaultWorksetLabel": "預設歸屬專區",
+    "defaultWorksetHelp": "助手寫入日程的必填歸屬。預設內建「一般」。完整頁、系統欄與空格鍵語音共用。"
   },
   "analysis": {
     "loading": "載入分析調度設定中…",

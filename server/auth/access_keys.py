@@ -79,12 +79,6 @@ def _scopes_from_row(raw: Any) -> list[str]:
     )
 
 
-def scopes_allow(scopes: list[str], capability: str) -> bool:
-    if FULL_SCOPE in scopes:
-        return True
-    return capability in scopes
-
-
 def scopes_allow_full(scopes: list[str]) -> bool:
     """Full household key (writes + A2A)."""
     return FULL_SCOPE in scopes

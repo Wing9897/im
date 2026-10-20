@@ -63,7 +63,7 @@ const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
   wide: "box-border w-[480px] max-w-[min(92vw,480px)] max-h-[min(78vh,640px)]",
   xl: "box-border w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
   tall: "box-border h-[min(86vh,780px)] w-[720px] max-w-[min(94vw,720px)] overflow-hidden",
-  form: "box-border w-[720px] max-w-[min(94vw,720px)] h-[min(86vh,780px)]",
+  form: "box-border w-[640px] max-w-[min(94vw,640px)] max-h-[min(86vh,780px)]",
 };
 
 function prefersReducedMotion(): boolean {
@@ -174,8 +174,8 @@ export function ModalDialog({
     bodyClassName?.split(/\s+/).some((token) => token.startsWith("overflow-")),
   );
   const bodyCls = [
-    "im-dialog-body box-border min-h-[7.5rem] flex-1",
-    bodyHasOverflow ? "" : "overflow-auto",
+    "im-auto-scrollbar im-dialog-body box-border min-h-[7.5rem] min-w-0 flex-1",
+    bodyHasOverflow ? "" : "overflow-x-hidden overflow-y-auto",
     bodyPadding === "none" ? "" : "px-lg py-md",
     bodyClassName ?? "",
   ]

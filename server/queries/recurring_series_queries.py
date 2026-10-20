@@ -144,5 +144,68 @@ async def insert_series(
     )
 
 
+async def update_series_row(
+    tx: TransactionDb,
+    *,
+    series_id: str,
+    name: str,
+    description: str | None,
+    workset_id: str,
+    rrule: str,
+    dtstart: str,
+    dtend: str | None,
+    is_all_day: bool,
+    location: str | None,
+    notify_pref: str,
+    emoji: str | None,
+    now: str,
+    is_active: bool | None = None,
+    item_id: str | None | Any = ...,
+) -> None:
+    active_sql = ""
+    active_params: tuple[Any, ...] = ()
+    if is_active is not None:
+        active_sql = ", is_active = ?"
+        active_params = (1 if is_active else 0,)
+    item_sql = ""
+    item_params: tuple[Any, ...] = ()
+    if item_id is not ...:
+        item_sql = ", item_id = ?"
+        item_params = (item_id,)
+    await tx.execute(
+        "UPDATE recurring_schedules SET name = ?, description = ?, workset_id = ?, rrule = ?, "
+        f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, emoji = ?, "
+        f"updated_at = ?{active_sql}{item_sql} WHERE id = ?",
+        (
+            name,
+            description,
+            workset_id,
+            rrule,
+            dtstart,
+            dtend,
+            1 if is_all_day else 0,
+            location,
+            notify_pref,
+            emoji,
+            now,
+            *active_params,
+            *item_params,
+            series_id,
+        ),
+    )
+
+
+async def delete_series_occurrence_markers(tx: TransactionDb, series_id: str) -> None:
+    occurrence_pattern = f"{series_id}:%"
+    await tx.execute(
+        "DELETE FROM timeline_dismissals WHERE source = 'recurring' AND event_id LIKE ?",
+        (occurrence_pattern,),
+    )
+    await tx.execute(
+        "DELETE FROM timeline_importance WHERE source = 'recurring' AND event_id LIKE ?",
+        (occurrence_pattern,),
+    )
+
+
 async def delete_series(tx: TransactionDb, series_id: str) -> None:
     await tx.execute("DELETE FROM recurring_schedules WHERE id = ?", (series_id,))

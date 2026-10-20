@@ -174,7 +174,7 @@ describe("CalendarSharePublishForm", () => {
   it("explains confirm-to-upload and does not offer an enable toggle or auto-sync", async () => {
     mockConnectedSession();
     await renderForm();
-    expect(container.textContent).toContain("確定會把目前工作集上載到遠端");
+    expect(container.textContent).toContain("確定會把目前專區上載到遠端");
     expect(container.textContent).toContain("取消上載用垃圾桶圖示");
     expect(container.textContent).toContain("工具列「自動更新」統一間隔推送");
     expect(container.textContent).not.toContain("內容不會自動同步");

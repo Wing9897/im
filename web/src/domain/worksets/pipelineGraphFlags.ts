@@ -35,14 +35,6 @@ export function taskCalendarWriteEnabled(task: PipelineTaskInput): boolean {
   return task.analysisMode === "agent" && task.outputCalendar === true;
 }
 
-export function taskNotifyEnabled(
-  task: PipelineTaskInput,
-  worksetNotifyEnabled: boolean | null | undefined,
-): boolean {
-  if (normalizeNotifyPref(task.notifyPref) === "off") return false;
-  return worksetNotifyEnabled !== false;
-}
-
 /** Task-point notify icon: the task's own pref, not AND-ed with the workset gate. */
 export function taskNotifyPrefOn(task: PipelineTaskInput): boolean {
   return normalizeNotifyPref(task.notifyPref) !== "off";

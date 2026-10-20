@@ -1,4 +1,9 @@
 {
+  "tabs": {
+    "aria": "Intelligence sections",
+    "events": "Events",
+    "topics": "Hot topics"
+  },
   "toolbar": {
     "aria": "Intel events toolbar",
     "taskSelectAria": "Intel events tasks",
@@ -126,7 +131,7 @@
     "filteredTimeTitle": "No matching intelligence in this time range",
     "filteredTimeDescription": "Try adjusting the time filter, or clear filters and browse again.",
     "filteredSourceTitle": "No intelligence for the selected sources",
-    "filteredSourceDescription": "Try adjusting the source (task / workset) filter, or clear filters and browse again.",
+    "filteredSourceDescription": "Try adjusting the source (task / space) filter, or clear filters and browse again.",
     "filteredHint": "Clear filters to see whether there is no data, or it is just filtered out.",
     "noneTitle": "No intelligence yet",
     "noneDescription": "Data loaded, but there are no intelligence results to show.",

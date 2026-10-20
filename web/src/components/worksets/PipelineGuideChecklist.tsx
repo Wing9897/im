@@ -161,6 +161,16 @@ export function PipelineGuideChecklist({
           <p className="mt-xs text-caption leading-relaxed text-text-secondary">
             {t("pipelineGuide.stepEventsBody")}
           </p>
+          <div className="mt-sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              data-testid="pipeline-guide-view-results"
+              onClick={() => navigate("/intelligence")}
+            >
+              {t("pipelineGuide.viewResults")}
+            </Button>
+          </div>
         </div>
       </li>
       <li className="flex min-w-0 items-start gap-sm">

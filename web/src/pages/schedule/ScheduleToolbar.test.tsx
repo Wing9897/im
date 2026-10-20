@@ -108,7 +108,7 @@ describe("ScheduleToolbar", () => {
     expect(dialog.querySelector('[data-testid="schedule-workset-search"]')).toBeTruthy();
     expect(dialog.querySelector('[data-testid="schedule-workset-filter"]')).toBeTruthy();
     expect(dialog.querySelector('[data-testid="schedule-workset-option-all"]')?.textContent).toBe(
-      "全部工作集",
+      "全部專區",
     );
     expect(dialog.querySelector('[data-testid="schedule-workset-option-ws-ops"]')?.textContent).toBe(
       "營運",

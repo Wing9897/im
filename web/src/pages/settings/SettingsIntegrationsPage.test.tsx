@@ -281,7 +281,7 @@ describe("SettingsIntegrationsPage", () => {
     expect(
       container.querySelector('[data-testid="mcp-capability-toggles"]'),
     ).not.toBeNull();
-    expect(container.textContent).not.toContain("到工作集設定");
+    expect(container.textContent).not.toContain("到專區設定");
 
     const a2a = tabButton("A2A");
     expect(a2a).toBeTruthy();
@@ -298,7 +298,7 @@ describe("SettingsIntegrationsPage", () => {
     expect(
       container.querySelector('[data-testid="mcp-capability-toggles"]'),
     ).not.toBeNull();
-    expect(container.textContent).not.toContain("到工作集設定");
+    expect(container.textContent).not.toContain("到專區設定");
   });
 
   it("does not show capability toggles on Webhook or Calendar link tabs", () => {

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import APIRouter, Request, Response
@@ -17,7 +16,6 @@ from server.api.deps import API_DEPS, get_collector, get_db
 from server.api.routes.sources.helpers import (
     add_source_response,
     get_source_row,
-    list_source_channels_batch,
 )
 from server.api.schemas.responses import (
     AddSourceResponse,
@@ -29,8 +27,10 @@ from server.api.schemas.responses import (
     RssFeedInfoResponse,
     SourceResponse,
 )
+from server.domain.collector_platforms import COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT
 from server.errors import COLLECTOR_UNAVAILABLE, NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries import sources_queries
+from server.services.sources.presenters import present_sources
 from server.source_status import mark_source_connected, set_source_error
 from server.wire.serializers import serialize_source
 
@@ -56,56 +56,6 @@ __all__ = [
 
 # ── listing / deletion / reconnect ────────────────────────────────────────
 
-_PlatformInfoFn = Callable[[Any, list[dict[str, Any]]], Awaitable[list[dict[str, Any]]]]
-_PLATFORM_INFO_FNS: dict[str, _PlatformInfoFn] | None = None
-
-
-def _platform_info_fns() -> dict[str, _PlatformInfoFn]:
-    """Lazy registry to avoid import cycles with platform route modules."""
-    global _PLATFORM_INFO_FNS
-    if _PLATFORM_INFO_FNS is not None:
-        return _PLATFORM_INFO_FNS
-
-    from server.api.routes.sources.discord import discord_bot_info_batch
-    from server.api.routes.sources.email import email_mailbox_info
-    from server.api.routes.sources.feeds import mqtt_broker_info, rss_feed_info
-    from server.api.routes.sources.http import http_source_info
-    from server.domain.collector_platforms import COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT
-
-    async def _discord_info(db: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return await discord_bot_info_batch(db, rows)
-
-    async def _rss_info(db: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        channels_by_source = await list_source_channels_batch(db, [str(row["id"]) for row in rows], "rss")
-        return [await rss_feed_info(db, row, channels=channels_by_source.get(str(row["id"]), [])) for row in rows]
-
-    async def _http_info(db: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        channels_by_source = await list_source_channels_batch(db, [str(row["id"]) for row in rows], "http")
-        return [await http_source_info(db, row, channels=channels_by_source.get(str(row["id"]), [])) for row in rows]
-
-    async def _email_info(db: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        channels_by_source = await list_source_channels_batch(db, [str(row["id"]) for row in rows], "email")
-        return [email_mailbox_info(row, channels_by_source.get(str(row["id"]), [])) for row in rows]
-
-    async def _mqtt_info(db: Any, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        return [mqtt_broker_info(row) for row in rows]
-
-    _PLATFORM_INFO_FNS = {
-        "discord": _discord_info,
-        "rss": _rss_info,
-        "http": _http_info,
-        "mqtt": _mqtt_info,
-        "email": _email_info,
-    }
-    if set(_PLATFORM_INFO_FNS) != COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT:
-        raise RuntimeError(
-            "sources list enrichment map must match "
-            "COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT "
-            f"({sorted(_PLATFORM_INFO_FNS)!r} != "
-            f"{sorted(COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT)!r})"
-        )
-    return _PLATFORM_INFO_FNS
-
 
 @router.get("", response_model=list[SourceResponse])
 async def list_sources(request: Request) -> list[dict]:
@@ -126,13 +76,11 @@ async def list_sources(request: Request) -> list[dict]:
 async def _list_sources_for_platform(request: Request, platform: str | None) -> list[dict]:
     """Internal helper for typed platform list handlers (and unfiltered GET /sources)."""
     db = get_db(request)
-    info_fn = _platform_info_fns().get(platform) if platform else None
     # Typed platform paths that decrypt credentials keep SELECT *; serialize-only paths
     # project explicit columns without the credentials blob.
-    if info_fn is not None:
-        assert platform is not None
+    if platform in COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT:
         rows = await sources_queries.fetch_source_rows_for_platform(db, platform, include_credentials=True)
-        return await info_fn(db, rows)
+        return await present_sources(db, platform, rows)
     if platform:
         rows = await sources_queries.fetch_source_rows_for_platform(db, platform, include_credentials=False)
     else:

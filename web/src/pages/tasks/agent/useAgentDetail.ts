@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { listRecurringSeries } from "../../../api/recurringSeries";
 import { listUserEventsPage, type UserEvent } from "../../../api/userEvents";
@@ -25,10 +25,13 @@ import {
   findActivitySpan,
   isAgentCalendarTask,
 } from "../../../domain/tasks/agentTaskSelectors";
+import { readReturnTo, withReturnTo } from "../../../routing/returnTo";
 
 export function useAgentDetail() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { taskId = "" } = useParams<{ taskId: string }>();
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const { tasks, tasksLoading, taskLoadError, refreshTasks } = useTaskCatalog();
   const { channels } = useChannelsWithSources();
   const { activeAnalyses, queueStatus, analysisPaused } = useAnalysisStatus();
@@ -140,20 +143,27 @@ export function useAgentDetail() {
     !tasksLoading && Boolean(taskId) && (!project || !isAgentCalendarTask(project));
 
   const goBack = useCallback(() => {
-    navigate("/tasks");
-  }, [navigate]);
+    navigate(readReturnTo(location.search, "/tasks"));
+  }, [location.search, navigate]);
 
   const goEdit = useCallback(() => {
     if (!taskId) return;
-    navigate(`/tasks/${taskId}/edit`);
-  }, [navigate, taskId]);
+    const path = `/tasks/${encodeURIComponent(taskId)}/edit`;
+    const back = readReturnTo(location.search, "");
+    navigate(back ? withReturnTo(path, back) : path);
+  }, [location.search, navigate, taskId]);
 
-  const goEditChild = useCallback(
-    (child: RecurringSeries) => {
-      navigate(`/schedule/recurring/${child.id}/edit`);
-    },
-    [navigate],
-  );
+  const goEditChild = useCallback((child: RecurringSeries) => {
+    setEditingChildId(child.id);
+  }, []);
+
+  const closeEditChild = useCallback(() => {
+    setEditingChildId(null);
+    if (!taskId) return;
+    void loadSideData(taskId).catch((error) => {
+      logWarn("[agentDetail] side-data refresh after series edit failed", error);
+    });
+  }, [loadSideData, taskId]);
 
   const goTimeline = useCallback(() => {
     navigate("/timeline");
@@ -186,6 +196,8 @@ export function useAgentDetail() {
     goBack,
     goEdit,
     goEditChild,
+    editingChildId,
+    closeEditChild,
     goTimeline,
   };
 }

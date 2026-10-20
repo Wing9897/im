@@ -492,9 +492,9 @@ describe("Agent detail route contract", () => {
     );
     expect(src).toContain('path="/tasks/:taskId/agent"');
     expect(src).toContain('path="/tasks"');
-    expect(src).toContain("element={<LazyPage Page={DashboardViewer} />}");
+    expect(src).toContain("element={<LazyPage Page={WorkspaceShell} />}");
     expect(src).not.toContain("WorksetCatalogRoute");
-    expect(src).toContain("WorksetWorkspacePage");
+    expect(src).toContain('path="/worksets/:worksetId" element={<LegacyRedirect />}');
     expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
     expect(src).not.toContain("AgentDetailLegacyRedirect");
@@ -542,7 +542,8 @@ describe("Settings／AI page folders vs URLs", () => {
     expect(modules).toContain("../pages/settings/ai/SettingsAiProviderPage");
     expect(modules).toContain("../pages/settings/ai/SettingsVoicePage");
     expect(modules).toContain("../pages/settings/ai/SettingsAiStaffPage");
-    expect(modules).toContain('"/tasks": ROUTE_PAGES.DashboardViewer');
+    expect(modules).toContain('"/tasks": ROUTE_PAGES.WorkspaceShell');
+    expect(modules).toContain('"/sources": ROUTE_PAGES.WorkspaceShell');
     expect(modules).not.toContain("../pages/ai/SettingsAiProviderPage");
     expect(modules).not.toContain('"/ai/analysis-strategy"');
 

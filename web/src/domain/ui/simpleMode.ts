@@ -7,8 +7,8 @@ export { SIMPLE_MODE_STORAGE_KEY };
 /** Landing path when simple mode is on (and for redirects off hidden routes). */
 export const SIMPLE_MODE_HOME = "/timeline";
 
-/** Full-product default home (monitor wall). */
-export const FULL_MODE_HOME = "/monitor";
+/** Full-product default home (timeline command center). */
+export const FULL_MODE_HOME = "/timeline";
 
 /**
  * Sidebar / deep-link prefixes that disappear in simple mode.

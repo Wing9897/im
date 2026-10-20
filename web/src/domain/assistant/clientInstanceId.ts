@@ -1,4 +1,4 @@
-const CLIENT_INSTANCE_STORAGE_KEY = "im:assistant:client-instance-id";
+import { ASSISTANT_CLIENT_INSTANCE_STORAGE_KEY } from "../prefs/keys";
 
 function newClientInstanceId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -13,24 +13,14 @@ export function getClientInstanceId(): string {
     return newClientInstanceId();
   }
   try {
-    const existing = window.localStorage.getItem(CLIENT_INSTANCE_STORAGE_KEY);
+    const existing = window.localStorage.getItem(ASSISTANT_CLIENT_INSTANCE_STORAGE_KEY);
     if (existing?.trim()) {
       return existing.trim();
     }
     const created = newClientInstanceId();
-    window.localStorage.setItem(CLIENT_INSTANCE_STORAGE_KEY, created);
+    window.localStorage.setItem(ASSISTANT_CLIENT_INSTANCE_STORAGE_KEY, created);
     return created;
   } catch {
     return newClientInstanceId();
-  }
-}
-
-/** Test helper — clears stored id so the next read generates a fresh one. */
-export function resetClientInstanceIdForTests(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(CLIENT_INSTANCE_STORAGE_KEY);
-  } catch {
-    /* ignore */
   }
 }

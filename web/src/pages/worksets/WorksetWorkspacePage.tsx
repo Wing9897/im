@@ -15,7 +15,7 @@ import { AppPageShell, Badge, Button, OpsControlBar, pageTitleClass } from "../.
 import { deleteWorkset, updateWorkset } from "../../api/worksets";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
-import { WORKSETS_PATH } from "../../domain/worksets/worksetRoutes";
+import { worksetsListPath } from "../../domain/worksets/worksetRoutes";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { toError } from "../../utils/errors";
 import { WorksetCatalogChrome } from "../../components/worksets/WorksetCatalogChrome";
@@ -53,7 +53,7 @@ export function WorksetWorkspacePage() {
   );
 
   const goCatalog = useCallback(() => {
-    navigate(WORKSETS_PATH);
+    navigate(worksetsListPath());
   }, [navigate]);
 
   const handleSave = useCallback(
@@ -90,7 +90,7 @@ export function WorksetWorkspacePage() {
       await refreshWorksets();
       showToast(t("workset:deletedToast", { name: title }), "success");
       setDeleteOpen(false);
-      navigate(WORKSETS_PATH, { replace: true });
+      navigate(worksetsListPath(), { replace: true });
     } catch (error) {
       showToast(toError(error).message, "error");
     } finally {

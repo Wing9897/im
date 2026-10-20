@@ -183,6 +183,27 @@ describe("IntelligencePage", () => {
     expect(isMapMounted()).toBe(true);
   }
 
+  it("keeps the events/topics switch inside the intelligence toolbar", async () => {
+    window.localStorage.setItem("im:view-mode:intelligence", JSON.stringify("card"));
+    await act(async () => {
+      root = createRoot(container);
+      root.render(createElement(IntelligencePage));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const toolbar = container.querySelector(".im-intelligence-toolbar");
+    const tabs = toolbar?.querySelector('[data-testid="intelligence-section-tabs"]');
+    expect(toolbar).not.toBeNull();
+    expect(tabs).not.toBeNull();
+    expect(toolbar!.contains(tabs!)).toBe(true);
+    expect(tabs!.querySelector("nav")?.getAttribute("aria-label")).toBe("情報分頁");
+    expect(tabs!.textContent).toContain("事件");
+    expect(tabs!.textContent).toContain("熱點排行");
+    expect(container.querySelectorAll('[data-testid="intelligence-section-tabs"]')).toHaveLength(1);
+    expect(container.querySelectorAll(".im-control-bar")).toHaveLength(1);
+  });
+
   it("refetches items when an event analysis completes", async () => {
     await act(async () => {
       root = createRoot(container);

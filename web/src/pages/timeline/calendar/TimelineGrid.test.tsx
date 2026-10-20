@@ -2,7 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { makeEvent, makeDayColumns } from "../../../test/timelineTestHelpers";
-import { TimelinePageProvider, type TimelinePageContextValue } from "../TimelinePageContext";
+import {
+  makeTimelinePageContext,
+  type TimelinePageContextOverrides,
+} from "../../../test/timelinePageContextFixtures";
+import { TimelinePageProvider } from "../TimelinePageContext";
 
 vi.mock("../../../domain/timeline/useEventListMetaLookups", () => ({
   useEventListMetaLookups: () => ({
@@ -35,41 +39,14 @@ vi.mock("../gantt/TimelineGanttView", () => ({
 const { TimelineGrid } = await import("./TimelineGrid");
 
 type GridProps = Parameters<typeof TimelineGrid>[0];
-type ContextOverrides = Partial<TimelinePageContextValue>;
+type ContextOverrides = TimelinePageContextOverrides;
 
-function makeContextValue(overrides: ContextOverrides = {}): TimelinePageContextValue {
-  return {
-    selectedEvent: null,
-    onSelectEvent: vi.fn(),
-    editStartTime: "",
-    editEndTime: "",
-    setEditStartTime: vi.fn(),
-    setEditEndTime: vi.fn(),
-    onSaveTimeOverride: vi.fn(),
-    onResetTimeOverride: vi.fn(),
-    onSetEventStatus: vi.fn(),
-    eventStatuses: {},
-    taskSpans: [],
-    selectedGanttTaskId: null,
-    onSelectGanttTask: vi.fn(),
-    spansInitialLoading: false,
-    spansIsRefreshing: false,
-    spansError: null,
-    onRetrySpans: vi.fn(),
-    selectedGanttSpan: null,
-    onCloseGanttPanel: vi.fn(),
+function makeContextValue(overrides: ContextOverrides = {}) {
+  return makeTimelinePageContext({
     ganttColumns: makeDayColumns(),
-    timelineEvents: [],
-    timelineEventsInitialLoading: false,
-    timelineEventsIsRefreshing: false,
-    timelineEventsError: null,
-    onRetryTimelineEvents: vi.fn(),
     showDismissed: false,
-    showOngoing: true,
-    showEnding: true,
-    monthDatesRevealed: false,
     ...overrides,
-  };
+  });
 }
 
 function makeProps(overrides: Partial<GridProps> = {}): GridProps {

@@ -3,34 +3,11 @@ import { makeEvent } from "../../../test/timelineTestHelpers";
 import {
   buildCalendarDays,
   buildWeekDays,
-  makeTimelineCalendarViewProps,
+  makeProps,
+  mockUseErrorToast,
   prepareTimelineCalendarViewTests,
-  renderTimelineCalendarView,
+  render,
 } from "./timelineCalendarViewTestHarness";
-
-const { mockUseErrorToast } = vi.hoisted(() => ({
-  mockUseErrorToast: vi.fn(),
-}));
-
-vi.mock("../../../hooks/useMonthWeather", () => ({
-  weatherIcon: () => "☀️",
-}));
-
-vi.mock("../../../hooks/useErrorToast", () => ({
-  useErrorToast: mockUseErrorToast,
-}));
-
-const { TimelineCalendarView } = await import("./TimelineCalendarView");
-
-type Props = Parameters<typeof TimelineCalendarView>[0];
-
-function makeProps(overrides: Partial<Props> = {}): Props {
-  return makeTimelineCalendarViewProps<Props>(overrides);
-}
-
-function render(props: Props) {
-  return renderTimelineCalendarView(TimelineCalendarView, props);
-}
 
 describe("TimelineCalendarView markers", () => {
   beforeEach(async () => {

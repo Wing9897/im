@@ -9,6 +9,11 @@
     "expandForm": "展开新增表单",
     "collapseForm": "收起新增表单"
   },
+  "drawer": {
+    "title": "新增来源",
+    "closeAria": "关闭新增来源",
+    "back": "返回"
+  },
   "sources": {
     "listTitle": "已新增来源",
     "refreshing": "正在更新来源列表",

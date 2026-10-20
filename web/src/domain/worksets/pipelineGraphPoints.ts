@@ -1,6 +1,7 @@
 /** Point / block construction, including overflow collapse (`capPoints`). */
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { worksetDetailPath, worksetsListPath } from "./worksetRoutes";
 import { PIPELINE_BLOCK_COLUMN, PIPELINE_MAX_POINTS, type PipelineColumn } from "./pipelineConstants";
 import {
   PIPELINE_BLOCK,
@@ -128,7 +129,7 @@ export function buildPipelinePointLayer(input: PipelineGraphInput): PipelinePoin
     kind: "workset",
     entityId: row.id,
     label: worksetLabel(row, labels),
-    href: `/worksets/${encodeURIComponent(row.id)}`,
+    href: worksetDetailPath(row.id),
     gates: worksetGates(row),
   }));
 
@@ -207,7 +208,7 @@ export function buildPipelinePointLayer(input: PipelineGraphInput): PipelinePoin
       kind: "worksets",
       titleKey: "graphBlockWorksets",
       column: PIPELINE_BLOCK_COLUMN.worksets,
-      points: capPoints(worksetPoints, "/worksets", labels.more),
+      points: capPoints(worksetPoints, worksetsListPath(), labels.more),
     },
     ...PIPELINE_OUTPUT_DEFS.map((row) =>
       singletonBlock(

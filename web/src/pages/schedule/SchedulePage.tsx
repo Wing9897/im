@@ -23,6 +23,7 @@ import { useErrorToast } from "../../hooks/useErrorToast";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
+import { RecurringSeriesDialog } from "./RecurringSeriesDialog";
 import { ScheduleOneOffCard, ScheduleRecurringCard } from "./ScheduleEventCard";
 import {
   DEFAULT_SCHEDULE_FILTERS,
@@ -41,7 +42,7 @@ import { updateUserEvent } from "../../api/userEvents";
 import { patchRecurringSeries } from "../../api/recurringSeries";
 import { lookupScheduleEmoji } from "../../domain/schedule/scheduleEmoji";
 
-export function SchedulePage() {
+export function SchedulePage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation("schedule");
   const { t: tCommon } = useTranslation("common");
   const { worksets } = useTaskCatalog();
@@ -137,132 +138,146 @@ export function SchedulePage() {
       : t("loadMoreHint", { shown: shownCount, total: totalCount });
   }, [hasMore, shownCount, t, totalCount]);
 
+  const content = (
+    <>
+      <ScheduleToolbar
+        t={t}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        filters={normalizedFilters}
+        onFiltersChange={setFilters}
+        worksets={worksets}
+        onCreate={dialogs.openCreate}
+      />
+
+      {loading ? <SkeletonScreen variant="card-grid" /> : null}
+
+      {!loading && itemsEmpty ? (
+        <EmptyState
+          illustration={<EmptyStateGlyph icon={CalendarClock} />}
+          title={filtersActive ? t("emptyFiltered.title") : t("empty.title")}
+          description={filtersActive ? t("emptyFiltered.hint") : t("empty.hint")}
+          actions={
+            filtersActive ? (
+              <Button
+                variant="secondary"
+                onClick={() => setFilters(DEFAULT_SCHEDULE_FILTERS)}
+                data-testid="schedule-empty-clear-filters"
+              >
+                {t("filter.clear")}
+              </Button>
+            ) : (
+              <Button variant="primary" onClick={dialogs.openCreate} data-testid="schedule-empty-create">
+                {t("create")}
+              </Button>
+            )
+          }
+        />
+      ) : null}
+
+      {!loading && !itemsEmpty ? (
+        <>
+          <div aria-label={t("gridAria")} data-testid="schedule-grid">
+            <CardGrid>
+              {entries.map((entry) =>
+                entry.kind === "oneOff" ? (
+                  <ScheduleOneOffCard
+                    key={`oneOff:${entry.event.id}`}
+                    event={entry.event}
+                    emoji={lookupScheduleEmoji({ source: "user", emoji: entry.event.emoji })}
+                    worksetName={
+                      entry.event.worksetId
+                        ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
+                        : null
+                    }
+                    onEdit={() => dialogs.openEditOneOff(entry.event)}
+                    onDelete={() => dialogs.requestDeleteOneOff(entry.event)}
+                    onEmojiChange={async (glyph) => {
+                      await updateUserEvent(entry.event.id, { emoji: glyph.trim() || null });
+                      await oneOff.reload();
+                    }}
+                  />
+                ) : (
+                  <ScheduleRecurringCard
+                    key={`recurring:${entry.series.id}`}
+                    task={entry.series}
+                    emoji={lookupScheduleEmoji({ source: "recurring", emoji: entry.series.emoji })}
+                    worksetName={
+                      entry.series.worksetId
+                        ? dialogs.worksetNameById.get(entry.series.worksetId) ?? null
+                        : null
+                    }
+                    onEdit={() => dialogs.openEditRecurring(entry.series)}
+                    onDelete={() => dialogs.requestDeleteRecurring(entry.series)}
+                    onToggleActive={() => dialogs.toggleRecurringActive(entry.series)}
+                    onEmojiChange={async (glyph) => {
+                      await patchRecurringSeries(entry.series.id, { emoji: glyph.trim() || null });
+                      await recurring.reload();
+                    }}
+                  />
+                ),
+              )}
+            </CardGrid>
+          </div>
+          <LoadMoreFooter
+            ref={setLoadMoreNode}
+            hint={loadMoreHint}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+            asDataListFooter={false}
+          />
+        </>
+      ) : null}
+
+      <RecurringSeriesDialog
+        seriesId={dialogs.editingSeriesId ?? ""}
+        open={Boolean(dialogs.editingSeriesId)}
+        onClose={dialogs.closeEditRecurring}
+      />
+
+      <UserEventDialog
+        open={dialogs.dialogOpen}
+        mode={dialogs.dialogMode}
+        initial={dialogs.dialogInitial}
+        worksetOptions={dialogs.worksetOptions}
+        busy={dialogs.dialogBusy}
+        error={dialogs.dialogError}
+        onClose={dialogs.closeDialog}
+        onSubmit={(values) => {
+          void dialogs.handleSubmit(values);
+        }}
+      />
+
+      {dialogs.deleteTarget ? (
+        <ConfirmDialog
+          title={
+            dialogs.deleteTarget.kind === "oneOff"
+              ? t("deleteOneOffTitle")
+              : t("deleteRecurringTitle")
+          }
+          body={
+            dialogs.deleteTarget.kind === "oneOff"
+              ? t("deleteOneOffMessage", { title: dialogs.deleteTarget.title })
+              : t("deleteRecurringMessage", { title: dialogs.deleteTarget.title })
+          }
+          confirmLabel={t("card.delete")}
+          confirmBusyLabel={tCommon("dialog.deleting")}
+          busy={dialogs.deleting}
+          onCancel={dialogs.cancelDelete}
+          onConfirm={() => dialogs.confirmDelete()}
+        />
+      ) : null}
+    </>
+  );
+
   return (
     <div className="im-schedule-page" data-testid="schedule-page">
-      <AppPageShell width="fluid">
-        <ScheduleToolbar
-          t={t}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          filters={normalizedFilters}
-          onFiltersChange={setFilters}
-          worksets={worksets}
-          onCreate={dialogs.openCreate}
-        />
-
-        {loading ? <SkeletonScreen variant="card-grid" /> : null}
-
-        {!loading && itemsEmpty ? (
-          <EmptyState
-            illustration={<EmptyStateGlyph icon={CalendarClock} />}
-            title={filtersActive ? t("emptyFiltered.title") : t("empty.title")}
-            description={filtersActive ? t("emptyFiltered.hint") : t("empty.hint")}
-            actions={
-              filtersActive ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => setFilters(DEFAULT_SCHEDULE_FILTERS)}
-                  data-testid="schedule-empty-clear-filters"
-                >
-                  {t("filter.clear")}
-                </Button>
-              ) : (
-                <Button variant="primary" onClick={dialogs.openCreate} data-testid="schedule-empty-create">
-                  {t("create")}
-                </Button>
-              )
-            }
-          />
-        ) : null}
-
-        {!loading && !itemsEmpty ? (
-          <>
-            <div aria-label={t("gridAria")} data-testid="schedule-grid">
-              <CardGrid>
-                {entries.map((entry) =>
-                  entry.kind === "oneOff" ? (
-                    <ScheduleOneOffCard
-                      key={`oneOff:${entry.event.id}`}
-                      event={entry.event}
-                      emoji={lookupScheduleEmoji({ source: "user", emoji: entry.event.emoji })}
-                      worksetName={
-                        entry.event.worksetId
-                          ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
-                          : null
-                      }
-                      onEdit={() => dialogs.openEditOneOff(entry.event)}
-                      onDelete={() => dialogs.requestDeleteOneOff(entry.event)}
-                      onEmojiChange={async (glyph) => {
-                        await updateUserEvent(entry.event.id, { emoji: glyph.trim() || null });
-                        await oneOff.reload();
-                      }}
-                    />
-                  ) : (
-                    <ScheduleRecurringCard
-                      key={`recurring:${entry.series.id}`}
-                      task={entry.series}
-                      emoji={lookupScheduleEmoji({ source: "recurring", emoji: entry.series.emoji })}
-                      worksetName={
-                        entry.series.worksetId
-                          ? dialogs.worksetNameById.get(entry.series.worksetId) ?? null
-                          : null
-                      }
-                      onEdit={() => dialogs.openEditRecurring(entry.series)}
-                      onDelete={() => dialogs.requestDeleteRecurring(entry.series)}
-                      onToggleActive={() => dialogs.toggleRecurringActive(entry.series)}
-                      onEmojiChange={async (glyph) => {
-                        await patchRecurringSeries(entry.series.id, { emoji: glyph.trim() || null });
-                        await recurring.reload();
-                      }}
-                    />
-                  ),
-                )}
-              </CardGrid>
-            </div>
-            <LoadMoreFooter
-              ref={setLoadMoreNode}
-              hint={loadMoreHint}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={loadMore}
-              asDataListFooter={false}
-            />
-          </>
-        ) : null}
-
-        <UserEventDialog
-          open={dialogs.dialogOpen}
-          mode={dialogs.dialogMode}
-          initial={dialogs.dialogInitial}
-          worksetOptions={dialogs.worksetOptions}
-          busy={dialogs.dialogBusy}
-          error={dialogs.dialogError}
-          onClose={dialogs.closeDialog}
-          onSubmit={(values) => {
-            void dialogs.handleSubmit(values);
-          }}
-        />
-
-        {dialogs.deleteTarget ? (
-          <ConfirmDialog
-            title={
-              dialogs.deleteTarget.kind === "oneOff"
-                ? t("deleteOneOffTitle")
-                : t("deleteRecurringTitle")
-            }
-            body={
-              dialogs.deleteTarget.kind === "oneOff"
-                ? t("deleteOneOffMessage", { title: dialogs.deleteTarget.title })
-                : t("deleteRecurringMessage", { title: dialogs.deleteTarget.title })
-            }
-            confirmLabel={t("card.delete")}
-            confirmBusyLabel={tCommon("dialog.deleting")}
-            busy={dialogs.deleting}
-            onCancel={dialogs.cancelDelete}
-            onConfirm={() => dialogs.confirmDelete()}
-          />
-        ) : null}
-      </AppPageShell>
+      {embedded ? (
+        <div className="flex w-full min-w-0 flex-col gap-md">{content}</div>
+      ) : (
+        <AppPageShell width="fluid">{content}</AppPageShell>
+      )}
     </div>
   );
 }

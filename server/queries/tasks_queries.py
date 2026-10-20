@@ -27,11 +27,35 @@ async def fetch_task_row(db: Any, task_id: str) -> dict[str, Any] | None:
     return await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
 
 
+async def fetch_task_id_mode_workset(db: Any, task_id: str) -> dict[str, Any] | None:
+    return await db.fetch_one(
+        "SELECT id, analysis_mode, workset_id FROM analysis_tasks WHERE id = ?",
+        (task_id,),
+    )
+
+
 async def fetch_task_workset_id(db: Any, task_id: str) -> str | None:
     row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (task_id,))
     if row is None or not row.get("workset_id"):
         return None
     return str(row["workset_id"])
+
+
+async def clear_recurring_parent_links(db: Any, parent_task_id: str, *, now: str) -> int:
+    return int(
+        await db.execute(
+            "UPDATE recurring_schedules SET parent_task_id = NULL, updated_at = ? WHERE parent_task_id = ?",
+            (now, parent_task_id),
+        )
+        or 0
+    )
+
+
+async def delete_agent_message_cursor(db: Any, task_id: str) -> None:
+    await db.execute(
+        "DELETE FROM agent_message_cursors WHERE task_id = ?",
+        (task_id,),
+    )
 
 
 async def fetch_all_task_channel_rows(db: Any) -> list[dict[str, Any]]:
@@ -152,6 +176,7 @@ async def insert_analysis_task(
     analysis_mode: str,
     analysis_time_range: str,
     schedule_rrule: str | None,
+    is_active: int = 1,
     include_in_timeline: int = 1,
     workset_id: str = SYSTEM_WORKSET_ID,
     agent_wave_interval_seconds: int | None = None,
@@ -184,7 +209,7 @@ async def insert_analysis_task(
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
         "output_calendar, output_analysis_events, llm_profile_id, notify_pref, "
         "emoji, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -192,6 +217,7 @@ async def insert_analysis_task(
             prompt_template,
             analysis_mode,
             analysis_time_range,
+            1 if is_active else 0,
             schedule_rrule,
             include_in_timeline,
             workset_id,
@@ -216,6 +242,9 @@ async def insert_analysis_task(
             now,
         ),
     )
+
+
+insert_analysis_task_row = insert_analysis_task
 
 
 async def update_analysis_task(

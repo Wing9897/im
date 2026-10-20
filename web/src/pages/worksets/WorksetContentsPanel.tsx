@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSimpleMode } from "../../context/SimpleModeContext";
 import { AlertBanner, Button, FormActions, captionClass } from "../../components/ui";
 import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
@@ -27,6 +28,7 @@ type Props = {
 export function WorksetContentsPanel({ workset }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { simpleMode } = useSimpleMode();
   const {
     loadingItems,
     loadingEvents,
@@ -97,7 +99,9 @@ export function WorksetContentsPanel({ workset }: Props) {
           onOpenEvent={openEvent}
         />
 
-        <WorksetTasksSection tasks={workset.tasks} onOpenTask={openTask} />
+        {simpleMode ? null : (
+          <WorksetTasksSection tasks={workset.tasks} onOpenTask={openTask} />
+        )}
 
         <WorksetItemsSection
           loading={loadingItems}
@@ -127,14 +131,16 @@ export function WorksetContentsPanel({ workset }: Props) {
         <Button variant="secondary" size="sm" onClick={() => navigate("/items")}>
           {t("workset:openItems")}
         </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => navigate(`/tasks/new?worksetId=${encodeURIComponent(workset.id)}`)}
-          data-testid="workset-detail-add-task"
-        >
-          {t("tasks:addTask")}
-        </Button>
+        {simpleMode ? null : (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate(`/tasks/new?worksetId=${encodeURIComponent(workset.id)}`)}
+            data-testid="workset-detail-add-task"
+          >
+            {t("tasks:addTask")}
+          </Button>
+        )}
       </FormActions>
     </div>
   );

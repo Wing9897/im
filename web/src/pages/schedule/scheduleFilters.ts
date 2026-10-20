@@ -101,30 +101,39 @@ function rangesOverlap(
   return seriesStart <= rangeEnd && seriesEnd >= rangeStart;
 }
 
+/** Inclusive day window. A missing side stays open. `null` means no date filter. */
+function inclusiveDayWindow(
+  startDay: string,
+  endDay: string,
+): { rangeStart: string; rangeEnd: string } | null {
+  if (!startDay && !endDay) return null;
+  const range = orderedRange(startDay, endDay);
+  return {
+    rangeStart: range.startDay || "0000-01-01",
+    rangeEnd: range.endDay || "9999-12-31",
+  };
+}
+
 /** Recurring series with no list-API date params — overlap dtstart..dtend (open-ended if no end). */
 export function recurringSeriesInDateRange(
   series: ScheduleRecurringItem,
   startDay: string,
   endDay: string,
 ): boolean {
-  if (!startDay && !endDay) return true;
-  const range = orderedRange(startDay, endDay);
-  const rangeStart = range.startDay || "0000-01-01";
-  const rangeEnd = range.endDay || "9999-12-31";
+  const window = inclusiveDayWindow(startDay, endDay);
+  if (!window) return true;
   const seriesStart =
     dayFromIso(series.eventStartTime) || dayFromIso(series.createdAt) || "0000-01-01";
   const seriesEnd = dayFromIso(series.eventEndTime) || "9999-12-31";
-  return rangesOverlap(seriesStart, seriesEnd, rangeStart, rangeEnd);
+  return rangesOverlap(seriesStart, seriesEnd, window.rangeStart, window.rangeEnd);
 }
 
 export function userEventInDateRange(event: UserEvent, startDay: string, endDay: string): boolean {
-  if (!startDay && !endDay) return true;
-  const range = orderedRange(startDay, endDay);
-  const rangeStart = range.startDay || "0000-01-01";
-  const rangeEnd = range.endDay || "9999-12-31";
+  const window = inclusiveDayWindow(startDay, endDay);
+  if (!window) return true;
   const eventStart = dayFromIso(event.startTime) || dayFromIso(event.createdAt) || "0000-01-01";
   const eventEnd = dayFromIso(event.endTime) || eventStart;
-  return rangesOverlap(eventStart, eventEnd, rangeStart, rangeEnd);
+  return rangesOverlap(eventStart, eventEnd, window.rangeStart, window.rangeEnd);
 }
 
 /** Client-side date filter for recurring rows (one-offs already use list `startTime`/`endTime`). */

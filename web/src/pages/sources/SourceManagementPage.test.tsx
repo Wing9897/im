@@ -99,7 +99,11 @@ vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
 }));
 
-import { MemoryRouter } from "react-router-dom";
+vi.mock("../../context/SimpleModeContext", () => ({
+  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
+}));
+
+import { MemoryRouter, useSearchParams } from "react-router-dom";
 import { SourceManagementPage } from "./SourceManagementPage";
 
 /* ------------------------------------------------------------------ */
@@ -213,8 +217,13 @@ describe("SourceManagementPage smoke test", () => {
       await Promise.resolve();
     });
 
-    const activeTab = container.querySelector('[role="tab"][aria-selected="true"]');
+    const activeTab = container.querySelector(
+      '[data-testid="source-platform-tabs"] [role="tab"][aria-selected="true"]',
+    );
     expect(activeTab?.textContent).toContain("Telegram");
+    const bar = container.querySelector('[data-testid="sources-toolbar"]');
+    expect(bar?.querySelector('[data-testid="workspace-section-tabs"]')).not.toBeNull();
+    expect(bar?.querySelectorAll('[data-testid="source-platform-tabs"] [role="tab"]')).toHaveLength(6);
   });
 
   it("renders MQTT tab content without throwing", async () => {
@@ -582,5 +591,144 @@ describe("SourceManagementPage visual updates", () => {
         expect(label.className).toContain("text-text-primary");
       }
     });
+  });
+});
+
+function SearchParamsProbe({ onParams }: { onParams: (params: URLSearchParams) => void }) {
+  const [searchParams] = useSearchParams();
+  onParams(searchParams);
+  return null;
+}
+
+function clickTab(container: HTMLElement, label: string) {
+  const tab = Array.from(container.querySelectorAll('[role="tab"]')).find((el) =>
+    (el.textContent || "").includes(label),
+  );
+  if (!tab) throw new Error(`missing tab ${label}`);
+  (tab as HTMLButtonElement).click();
+}
+
+describe("SourceManagementPage drawer query", () => {
+  let container: HTMLDivElement;
+  let root: Root | null = null;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    setupDefaultMocks();
+  });
+
+  afterEach(() => {
+    if (root) {
+      act(() => {
+        root!.unmount();
+      });
+    }
+    root = null;
+    container.remove();
+  });
+
+  async function renderAt(path: string, embedded = false) {
+    let latest = new URLSearchParams();
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        createElement(
+          MemoryRouter,
+          { initialEntries: [path] },
+          createElement(
+            "div",
+            null,
+            createElement(SearchParamsProbe, {
+              onParams: (params) => {
+                latest = params;
+              },
+            }),
+            createElement(SourceManagementPage, { embedded }),
+          ),
+        ),
+      );
+      await Promise.resolve();
+    });
+    return {
+      params: () => latest,
+    };
+  }
+
+  it("keeps the task graph tab when the drawer switches platform", async () => {
+    const view = await renderAt("/tasks?tab=graph&source=new", true);
+
+    await act(async () => {
+      clickTab(container, "Discord");
+      await Promise.resolve();
+    });
+
+    expect(view.params().get("tab")).toBe("graph");
+    expect(view.params().get("sourceTab")).toBe("discord");
+    expect(view.params().get("mode")).toBeNull();
+    expect(view.params().get("sourceMode")).toBeNull();
+  });
+
+  it("does not overwrite a subscriptions sheet tab with a source platform", async () => {
+    const view = await renderAt(
+      "/timeline?sheet=subscriptions&tab=published&source=new",
+      true,
+    );
+
+    await act(async () => {
+      clickTab(container, "Discord");
+      await Promise.resolve();
+    });
+
+    expect(view.params().get("tab")).toBe("published");
+    expect(view.params().get("sourceTab")).toBe("discord");
+  });
+
+  it("writes webhook mode on sourceMode while the page tab stays graph", async () => {
+    const view = await renderAt("/tasks?tab=graph&source=new", true);
+
+    await act(async () => {
+      clickTab(container, "HTTP");
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(view.params().get("tab")).toBe("graph");
+    expect(view.params().get("sourceTab")).toBe("http");
+    expect(view.params().get("mode")).toBeNull();
+
+    const webhook = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "Webhook",
+    );
+    expect(webhook).toBeTruthy();
+
+    await act(async () => {
+      webhook!.click();
+      await Promise.resolve();
+    });
+
+    expect(view.params().get("tab")).toBe("graph");
+    expect(view.params().get("mode")).toBeNull();
+    expect(view.params().get("sourceTab")).toBe("http");
+    expect(view.params().get("sourceMode")).toBe("webhook");
+  });
+
+  it("returns to returnTo when the sources page leaves the webhook form", async () => {
+    const view = await renderAt(
+      "/sources?tab=http&mode=webhook&returnTo=%2Ftasks%3Ftab%3Dgraph",
+    );
+
+    const back = container.querySelector("[data-testid='sources-return']") as HTMLButtonElement;
+    expect(back).not.toBeNull();
+    expect(back.textContent).toBe("返回");
+
+    await act(async () => {
+      back.click();
+      await Promise.resolve();
+    });
+
+    expect(view.params().get("tab")).toBe("graph");
+    expect(view.params().get("returnTo")).toBeNull();
+    expect(view.params().get("mode")).toBeNull();
   });
 });

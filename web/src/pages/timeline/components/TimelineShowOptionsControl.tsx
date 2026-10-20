@@ -21,6 +21,9 @@ type TimelineShowOptionsControlProps = {
   setShowOngoing: (value: boolean) => void;
   showEnding: boolean;
   setShowEnding: (value: boolean) => void;
+  /** Item-reminder rows (`source === "item_remind"`). Default on. */
+  showItemRemind?: boolean;
+  setShowItemRemind?: (value: boolean) => void;
   /** Month calendar: hover previews dates; 篩選 checkbox persists. */
   monthDateReveal?: MonthDateRevealChrome | null;
 };
@@ -49,6 +52,8 @@ export function TimelineShowOptionsControl({
   setShowOngoing,
   showEnding,
   setShowEnding,
+  showItemRemind = true,
+  setShowItemRemind,
   monthDateReveal = null,
 }: TimelineShowOptionsControlProps) {
   const { t } = useTranslation("timeline");
@@ -127,7 +132,7 @@ export function TimelineShowOptionsControl({
     }
   };
 
-  const isFiltering = !showDismissed || !showOngoing || !showEnding;
+  const isFiltering = !showDismissed || !showOngoing || !showEnding || !showItemRemind;
   const datesPersisted = Boolean(monthDateReveal?.persisted);
   const chromeActive = open || isFiltering || datesPersisted;
 
@@ -155,6 +160,14 @@ export function TimelineShowOptionsControl({
       label: t("filter.showEnding"),
       help: t("filter.showEndingHelp"),
       testId: "timeline-show-options-ending",
+    },
+    {
+      id: "itemRemind" as const,
+      checked: showItemRemind,
+      onChange: setShowItemRemind ?? (() => {}),
+      label: t("filter.showItemRemind"),
+      help: t("filter.showItemRemindHelp"),
+      testId: "timeline-show-options-item-remind",
     },
     ...(monthDateReveal
       ? [

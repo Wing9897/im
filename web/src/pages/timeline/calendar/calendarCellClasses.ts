@@ -50,9 +50,6 @@ export const weekEventChipTitleClass =
 export const weekEventChipTimeClass =
   "mt-0.5 truncate text-[10px] font-medium tabular-nums leading-none text-text-muted";
 
-export const weekCellOverflowClass =
-  "mt-0.5 w-full border-none bg-transparent p-0 text-left text-[10px] font-medium text-accent";
-
 /** Day-view event card shell (left accent rail + hover lift). */
 export function dayEventCardClass(hovered: boolean): string {
   return [

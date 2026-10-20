@@ -1,7 +1,7 @@
 {
   "monitor": "Live Monitor",
   "tasks": "Tasks",
-  "worksets": "Worksets",
+  "worksets": "Spaces",
   "schedule": "My schedule",
   "leaderboard": "Leaderboard",
   "keyEvents": "Intel events",
@@ -10,6 +10,11 @@
   "items": "Items",
   "notify": "Notify & actions",
   "sources": "Sources",
+  "tasksAndSources": "Tasks and sources",
+  "workspaceTasks": "Tasks",
+  "workspaceSources": "Sources",
+  "workspaceGraph": "Flow",
+  "workspaceTabsAria": "Workspace tabs",
   "assistant": "Assistant",
   "aiSettings": "AI Settings",
   "systemSettings": "System Settings",
@@ -24,8 +29,8 @@
   "history": "History",
   "mainNav": "Main navigation",
   "railMode": "Sidebar mode",
-  "tasksPendingAria": "Tasks ({count} pending analysis)",
-  "tasksPendingTitle": "Tasks · {count} pending analysis",
+  "tasksPendingAria": "Tasks and sources ({count} pending analysis)",
+  "tasksPendingTitle": "Tasks and sources · {count} pending analysis",
   "pendingAnalysisBadge": "{count} pending analysis",
   "appVersionTitle": "App version (shared frontend/backend semver)"
 }

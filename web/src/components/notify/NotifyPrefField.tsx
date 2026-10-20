@@ -46,8 +46,11 @@ export function NotifyPrefField({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-xs" title={t("notify.prefHelp")}>
-      <div className="flex min-w-0 items-center gap-md">
+    <div
+      className="flex min-w-0 w-full flex-col gap-xs rounded-lg border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-overlay)_25%,transparent)] px-md py-sm"
+      title={t("notify.prefHelp")}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-md">
         <FieldLabel className="mb-0 min-w-0 flex-1">{t("notify.prefLabel")}</FieldLabel>
         <ToggleSwitch
           checked={checked}
@@ -58,7 +61,7 @@ export function NotifyPrefField({
           data-testid={testId}
         />
       </div>
-      <p className={`m-0 ${formHelpClass}`}>{t("notify.prefHelp")}</p>
+      <p className={`m-0 min-w-0 break-words ${formHelpClass}`}>{t("notify.prefHelp")}</p>
     </div>
   );
 }

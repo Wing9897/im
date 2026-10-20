@@ -134,6 +134,7 @@ export function UserEventDialog({
   return (
     <ModalDialog
       open={open}
+      size="form"
       title={
         titleOverride ??
         (mode === "create" ? t("userEvent.createTitle") : t("userEvent.editTitle"))
@@ -154,17 +155,18 @@ export function UserEventDialog({
     >
       <FormStack gap="lg">
         {allowKindSwitch ? (
-          <div data-testid="user-event-kind-tabs">
+          <div className="min-w-0 w-full" data-testid="user-event-kind-tabs">
             <SegmentedControl
               items={kindItems}
               value={values.kind}
               onChange={handleKindChange}
               ariaLabel={t("userEvent.kindAria")}
-              layout="inline"
+              layout="full"
+              className="!mb-0"
             />
           </div>
         ) : null}
-        <p className="m-0 text-caption text-text-muted">{introText}</p>
+        <p className="m-0 min-w-0 break-words text-caption text-text-muted">{introText}</p>
         {calendarKindBadge ? (
           <div
             className="flex flex-wrap items-center gap-sm"

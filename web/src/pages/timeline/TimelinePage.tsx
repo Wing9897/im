@@ -21,6 +21,7 @@ import { AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { isCalendarShareUnreachable } from "../../domain/calendarShare/subscribedCalendars";
+import { TimelineCalendarSheet } from "./components/TimelineCalendarSheet";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
@@ -50,7 +51,6 @@ export function TimelinePage() {
   const { t } = useTranslation(["timeline", "subscriptions"]);
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks } = useTaskCatalog();
-  const subscribeAvailability = sources.subscribeAvailability ?? "ok";
   useErrorToast(isCalendarShareUnreachable(data.pageError) ? null : data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
   const dialogs = useTimelinePageDialogs({
@@ -73,6 +73,8 @@ export function TimelinePage() {
     gantt,
     dialogs,
     overlays,
+    worksets,
+    expandTasks: tasks,
   });
 
   return (
@@ -88,43 +90,10 @@ export function TimelinePage() {
         >
           <div className="shrink-0">
             <TimelineControlBar
-              selectedSources={sources.selectedSources}
-              setSelectedSources={sources.setSelectedSources}
-              subscribeCalendars={sources.subscribeCalendars}
-              selectedSubscribeKeys={sources.selectedSubscribeKeys}
-              onChangeSubscribeKeys={sources.setSelectedSubscribeKeys}
-              subscribeAvailability={subscribeAvailability}
-              timelineTasks={sources.timelineTasks}
-              worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
-              expandTasks={tasks.map((row) => ({
-                id: row.id,
-                name: row.name,
-                worksetId: row.worksetId ?? null,
-                analysisMode: row.analysisMode ?? null,
-              }))}
-              viewMode={sources.viewMode}
-              setViewMode={sources.setViewMode}
-              timeScale={navigation.timeScale}
-              monthLayout={sources.monthLayout}
-              onMonthLayoutChange={sources.setMonthLayout}
-              onJumpTo={navigation.jumpTo}
-              onMoveCursor={navigation.moveCursor}
-              visibleRangeLabel={navigation.visibleRangeLabel}
-              overviewMode={sources.overviewMode}
-              onOverviewModeChange={sources.setOverviewMode}
-              overviewRangeId={navigation.overviewRangeId}
-              onOverviewRangeChange={navigation.applyOverviewRange}
-              jumpDateValue={navigation.jumpDateValue}
-              onJumpDate={navigation.jumpToDate}
-              onAddEvent={() => dialogs.openCreateDialog()}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => {
                 void toggleFullscreen();
               }}
-              showLoadingIndicator={data.initialLoading || data.isRefreshing}
-              loadingLabel={
-                data.initialLoading ? t("view.loading") : t("view.refreshing")
-              }
             >
               {overlays.weatherEnabled ? (
                 <PillButton
@@ -153,6 +122,8 @@ export function TimelinePage() {
                 setShowOngoing={filters.setShowOngoing}
                 showEnding={filters.showEnding}
                 setShowEnding={filters.setShowEnding}
+                showItemRemind={filters.showItemRemind}
+                setShowItemRemind={filters.setShowItemRemind}
                 monthDateReveal={
                   overlays.showMonthDatesReveal
                     ? {
@@ -168,31 +139,12 @@ export function TimelinePage() {
           </div>
 
           <div className={scrollAreaClass}>
-            <TimelineViewSwitch
-              initialLoading={data.initialLoading}
-              isRefreshing={data.isRefreshing}
-              events={data.events}
-              filteredEvents={filters.filteredEvents}
-              emptyState={sources.emptyState}
-              viewMode={sources.viewMode}
-              timeScale={navigation.timeScale}
-              rangeStart={navigation.rangeStart}
-              rangeEvents={navigation.rangeEvents}
-              sidebarEvents={filters.sidebarEvents}
-              weekDays={navigation.weekDays}
-              timeCursor={navigation.timeCursor}
-              monthCursor={navigation.monthCursor}
-              monthDays={navigation.monthDays}
-              monthEvents={navigation.monthEvents}
-              focusedDay={navigation.focusedDay}
-              onFocusDay={sources.focusDay}
-              sidebarDay={filters.sidebarDay}
-              sidebarOutOfView={filters.sidebarOutOfView}
-            />
+            <TimelineViewSwitch />
           </div>
         </AppPageShell>
       </div>
 
+      <TimelineCalendarSheet />
       <TimelinePageDialogs
         dialogOpen={dialogs.dialogOpen}
         dialogMode={dialogs.dialogMode}

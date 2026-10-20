@@ -3,10 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import {
-  createUserEvent,
-  updateUserEvent,
-} from "../../api/userEvents";
-import {
   dismissTimelineEvent,
   restoreTimelineEvent,
   timelineItemDismissalSource,
@@ -17,12 +13,11 @@ import {
   timelineItemImportanceSource,
 } from "../../api/timelineImportance";
 import { useToast } from "../../context/ToastContext";
-import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
 import {
   createTimedRangeOnDay,
   defaultCreateTimedRange,
 } from "../../domain/timeline/dateUtils";
-import { parseRemindBeforeDays } from "../../domain/timeline/parseRemindBeforeDays";
+import { submitStandardUserEvent } from "../../domain/timeline/submitUserEventForm";
 import {
   normalizeOptionalWorksetId,
   toUserEventFormWorksetId,
@@ -32,6 +27,7 @@ import type { AnalysisTask } from "../../types/tasks";
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
 import { handleCommandError } from "../../utils/errors";
 import { isSubscribedTimelineSource } from "../../domain/calendarShare/subscribedCalendars";
+import { withReturnTo } from "../../routing/returnTo";
 import {
   markSubscribedEventDismissed,
   restoreSubscribedEventDismissed,
@@ -121,7 +117,7 @@ export function useTimelinePageDialogs({
     (event: TimelineItem) => {
       const itemId = event.itemId?.trim();
       if (!itemId) return;
-      void navigate(`/items/${encodeURIComponent(itemId)}/edit`);
+      void navigate(withReturnTo(`/items/${encodeURIComponent(itemId)}/edit`, "/timeline"));
     },
     [navigate],
   );
@@ -139,57 +135,17 @@ export function useTimelinePageDialogs({
       setDialogBusy(true);
       setDialogError(null);
       try {
-        const worksetId = toUserEventFormWorksetId(values.worksetId);
-        let remindBeforeDays: number | null = null;
-        try {
-          remindBeforeDays = parseRemindBeforeDays(values.remindBeforeDays);
-        } catch {
+        const status = await submitStandardUserEvent({
+          mode: dialogMode,
+          values,
+          editingEventId: editingEvent?.id ?? null,
+        });
+        if (status === "remindInvalid") {
           setDialogError(t("userEvent.errors.remindInvalid"));
           return;
         }
-        const itemId = (values.itemId ?? "").trim() || null;
-        if (dialogMode === "create" && values.kind === "recurring") {
-          await createRecurringTimelineEvent({
-            title: values.title,
-            worksetId,
-            isAllDay: values.isAllDay,
-            eventStartTime: values.eventStartTime,
-            eventEndTime: values.eventEndTime,
-            location: values.location,
-            body: values.body,
-            rrule: values.rrule,
-            itemId,
-            notifyPref: values.notifyPref,
-          });
+        if (status === "recurringCreated") {
           showToast(t("messages.recurringCreated"), "success");
-        } else if (dialogMode === "create") {
-          await createUserEvent({
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            remindBeforeDays,
-            itemId,
-            worksetId,
-            kind: "normal",
-            notifyPref: values.notifyPref,
-          });
-        } else if (editingEvent) {
-          await updateUserEvent(editingEvent.id, {
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            remindBeforeDays,
-            itemId,
-            worksetId,
-            // Omit kind/amount — preserve special kinds; title-only edits stay non-finance.
-            notifyPref: values.notifyPref,
-          });
         }
         await refreshEvents();
         setDialogOpen(false);

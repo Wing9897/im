@@ -13,10 +13,3 @@ export const COLLECTOR_PLATFORM_ORDER = [
 ] as const;
 
 export type CollectorPlatform = (typeof COLLECTOR_PLATFORM_ORDER)[number];
-
-export function isCollectorPlatform(value: string | null | undefined): value is CollectorPlatform {
-  return (
-    value != null &&
-    (COLLECTOR_PLATFORM_ORDER as readonly string[]).includes(value)
-  );
-}

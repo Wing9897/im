@@ -139,13 +139,8 @@ import {
   getSystemTasksSectionTitle,
 } from "../../domain/tasks/taskPageCopy";
 import { DashboardViewer } from "./DashboardViewer";
-import type { AnalysisTask } from "../../types";
 
 const mockCreateWorkset = vi.mocked(createWorkset);
-
-function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
-  return makeAnalysisTask({ name: "Test Task", description: null, ...overrides });
-}
 
 function typeInput(input: HTMLInputElement, value: string) {
   const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -216,10 +211,11 @@ describe("DashboardViewer", () => {
       loading: false,
     };
     taskCatalogState.tasks = [
-      createMockTask({
+      makeAnalysisTask({
         id: "demo-intel",
         name: "[demo] 情報事件任務",
         isActive: false,
+        description: null,
       }),
     ];
 
@@ -247,8 +243,8 @@ describe("DashboardViewer", () => {
 
   it("renders toolbar and task cards when tasks exist", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "t1", name: "Task Alpha" }),
-      createMockTask({ id: "t2", name: "Task Beta" }),
+      makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null }),
+      makeAnalysisTask({ id: "t2", name: "Task Beta", description: null }),
     ];
 
     act(() => {
@@ -268,15 +264,20 @@ describe("DashboardViewer", () => {
     expect(container.textContent).toContain("Task Beta");
     expect(toolbar!.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
     expect(toolbar!.textContent).not.toContain("目錄");
-    expect(toolbar!.textContent).not.toContain("流程圖");
+    const section = toolbar!.querySelector('[data-testid="workspace-section-tabs"]');
+    expect(section).not.toBeNull();
+    expect(section!.textContent).toContain("任務");
+    expect(section!.textContent).toContain("來源");
+    expect(section!.textContent).toContain("流程圖");
+    expect(container.querySelectorAll(".im-control-bar")).toHaveLength(1);
   });
 
   it("keeps a visible search TextField in the tasks toolbar on /tasks", () => {
     mockPathname = "/tasks";
     mockSearch = "";
     taskCatalogState.tasks = [
-      createMockTask({ id: "t1", name: "Task Alpha" }),
-      createMockTask({ id: "t2", name: "Task Beta" }),
+      makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null }),
+      makeAnalysisTask({ id: "t2", name: "Task Beta", description: null }),
     ];
 
     act(() => {
@@ -298,13 +299,53 @@ describe("DashboardViewer", () => {
     expect(toolbar.textContent).toContain("新增任務");
     expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
     expect(toolbar.textContent).not.toContain("目錄");
-    expect(toolbar.textContent).not.toContain("流程圖");
+    expect(toolbar.querySelector('[data-testid="workspace-section-tabs"]')?.textContent).toContain(
+      "流程圖",
+    );
+  });
+
+  it("keeps workspace tabs inside the graph page toolbar and navigates to the same URLs", () => {
+    mockPathname = "/tasks";
+    mockSearch = "?tab=graph";
+    taskCatalogState.tasks = [
+      makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    const bars = container.querySelectorAll(".im-control-bar");
+    expect(bars).toHaveLength(1);
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    const section = toolbar.querySelector('[data-testid="workspace-section-tabs"]');
+    expect(section).not.toBeNull();
+    expect(toolbar.contains(section)).toBe(true);
+    const graphTab = Array.from(section!.querySelectorAll('[role="tab"]')).find(
+      (tab) => tab.textContent === "流程圖",
+    ) as HTMLButtonElement;
+    const sourcesTab = Array.from(section!.querySelectorAll('[role="tab"]')).find(
+      (tab) => tab.textContent === "來源",
+    ) as HTMLButtonElement;
+    expect(graphTab.getAttribute("aria-selected")).toBe("true");
+    expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeNull();
+    expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
+    expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).not.toBeNull();
+    act(() => {
+      sourcesTab.click();
+    });
+    expect(mockNavigate).toHaveBeenCalledWith("/sources");
+    act(() => {
+      graphTab.click();
+    });
+    expect(mockNavigate).toHaveBeenCalledWith("/tasks?tab=graph");
   });
 
   it("opens the global scheduling dialog from the tasks toolbar icon", () => {
     mockPathname = "/tasks";
     mockSearch = "";
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -325,7 +366,7 @@ describe("DashboardViewer", () => {
   it("opens the scheduling dialog from ?scheduling=open then clears the query", () => {
     mockPathname = "/tasks";
     mockSearch = "?scheduling=open";
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Task Alpha" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -359,8 +400,8 @@ describe("DashboardViewer", () => {
 
   it("filters tasks by name from the toolbar search", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "t1", name: "Task Alpha" }),
-      createMockTask({ id: "t2", name: "Task Beta" }),
+      makeAnalysisTask({ id: "t1", name: "Task Alpha", description: null }),
+      makeAnalysisTask({ id: "t2", name: "Task Beta", description: null }),
     ];
 
     act(() => {
@@ -380,8 +421,8 @@ describe("DashboardViewer", () => {
 
   it("filters tasks by description from the toolbar search", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "t1", name: "Task Alpha", description: "weekly digest" }),
-      createMockTask({ id: "t2", name: "Task Beta", description: "hourly scan" }),
+      makeAnalysisTask({ id: "t1", name: "Task Alpha", description: "weekly digest" }),
+      makeAnalysisTask({ id: "t2", name: "Task Beta", description: "hourly scan" }),
     ];
 
     act(() => {
@@ -399,7 +440,7 @@ describe("DashboardViewer", () => {
   });
 
   it("does not show empty state when tasks exist", () => {
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Active Task" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Active Task", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -411,7 +452,7 @@ describe("DashboardViewer", () => {
   });
 
   it("shows create task button when tasks exist", () => {
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Active Task" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Active Task", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -424,7 +465,7 @@ describe("DashboardViewer", () => {
   });
 
   it("does not show error banner when no error", () => {
-    taskCatalogState.tasks = [createMockTask()];
+    taskCatalogState.tasks = [makeAnalysisTask({ name: "Test Task", description: null })];
     taskCatalogState.taskLoadError = null;
 
     act(() => {
@@ -437,7 +478,7 @@ describe("DashboardViewer", () => {
   });
 
   it("hides system task cards by default", () => {
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Active Task" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Active Task", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -449,11 +490,11 @@ describe("DashboardViewer", () => {
     expect(
       container.querySelector('[data-testid="toggle-system-tasks"]')?.getAttribute("aria-label"),
     ).toBe(getShowSystemTasksLabel());
-    expect(container.textContent).not.toContain("新建工作集");
+    expect(container.textContent).not.toContain("新建專區");
   });
 
   it("shows system and virtual cards after toggling, without edit or delete controls", () => {
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Active Task" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Active Task", description: null })];
 
     act(() => {
       root = createRoot(container);
@@ -498,9 +539,9 @@ describe("DashboardViewer", () => {
     expect(toggle?.getAttribute("aria-label")).toBe(getShowSystemTasksLabel());
     const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
     expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeInstanceOf(HTMLInputElement);
-    expect(container.textContent).not.toContain("新建工作集");
+    expect(container.textContent).not.toContain("新建專區");
     expect(
-      [...container.querySelectorAll('[role="tab"]')].some((tab) => tab.textContent === "工作集"),
+      [...container.querySelectorAll('[role="tab"]')].some((tab) => tab.textContent === "專區"),
     ).toBe(false);
 
     act(() => {
@@ -572,22 +613,22 @@ describe("DashboardViewer", () => {
     expect(container.querySelector('[data-testid="worksets-search"]')).toBeTruthy();
     expect(container.textContent).toContain("一般");
     expect(container.textContent).toContain("Ops");
-    expect(container.textContent).toContain("新建工作集");
+    expect(container.textContent).toContain("新建專區");
     expect(container.textContent).not.toContain("建立新任務");
     expect(container.querySelector('[data-testid="workset-card-__general__"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
     expect(container.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
     expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
-    expect(container.textContent).not.toContain("顯示系統工作集");
-    expect(container.textContent).not.toContain("隱藏系統工作集");
+    expect(container.textContent).not.toContain("顯示系統專區");
+    expect(container.textContent).not.toContain("隱藏系統專區");
     expect(container.querySelector('[data-testid="system-task-card-user-or-assistant"]')).toBeNull();
   });
 
   it("does not hang member task cards under the workset catalog", () => {
     mockPathname = "/worksets";
     mockSearch = "";
-    taskCatalogState.tasks = [createMockTask({ id: "t1", name: "Nested Alpha", worksetId: "ws-1" })];
+    taskCatalogState.tasks = [makeAnalysisTask({ id: "t1", name: "Nested Alpha", worksetId: "ws-1", description: null })];
     taskCatalogState.worksets = [
       { id: "__general__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
@@ -628,8 +669,8 @@ describe("DashboardViewer", () => {
   it("restores mode filter from localStorage", () => {
     window.localStorage.setItem(TASKS_MODE_FILTER_STORAGE_KEY, JSON.stringify("leaderboard"));
     taskCatalogState.tasks = [
-      createMockTask({ id: "t1", name: "Leaderboard Task", analysisMode: "leaderboard" }),
-      createMockTask({ id: "t2", name: "Intel Task", analysisMode: "intel_event" }),
+      makeAnalysisTask({ id: "t1", name: "Leaderboard Task", analysisMode: "leaderboard", description: null }),
+      makeAnalysisTask({ id: "t2", name: "Intel Task", analysisMode: "intel_event", description: null }),
     ];
 
     act(() => {
@@ -643,7 +684,7 @@ describe("DashboardViewer", () => {
 
   it("opens project detail route when a project card is selected", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true }),
+      makeAnalysisTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true, description: null }),
     ];
 
     act(() => {
@@ -669,8 +710,8 @@ describe("DashboardViewer", () => {
         { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       ];
       taskCatalogState.tasks = [
-        createMockTask({ id: "t1", name: "Assigned Task", worksetId: "ws-1" }),
-        createMockTask({ id: "t2", name: "Unassigned Task", worksetId: "" }),
+        makeAnalysisTask({ id: "t1", name: "Assigned Task", worksetId: "ws-1", description: null }),
+        makeAnalysisTask({ id: "t2", name: "Unassigned Task", worksetId: "", description: null }),
       ];
     });
 
@@ -706,6 +747,7 @@ describe("DashboardViewer", () => {
       expect(tabs?.textContent).toContain("目錄");
       expect(tabs?.textContent).toContain("流程圖");
       expect(tabs?.textContent).not.toContain("任務");
+      expect(toolbar?.querySelector('[data-testid="workspace-section-tabs"]')).toBeNull();
       expect(toolbar?.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
       expect(container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-by-workset"]')).toBeTruthy();
@@ -744,7 +786,7 @@ describe("DashboardViewer", () => {
         card.click();
       });
 
-      expect(mockNavigate).toHaveBeenCalledWith("/worksets/ws-1", { replace: false });
+      expect(mockNavigate).toHaveBeenCalledWith("/timeline?workset=ws-1", { replace: false });
       expect(container.querySelector('[data-testid="workset-detail-dialog"]')).toBeNull();
     });
 

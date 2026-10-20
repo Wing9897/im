@@ -352,7 +352,7 @@
     "disclaimer": "Voice is input/read-aloud only. Desktop has no browser STT — type instead.",
     "sttSectionTitle": "Dictation STT",
     "ttsSectionTitle": "Read-aloud TTS",
-    "sessionSectionTitle": "Language / PTT / workset",
+    "sessionSectionTitle": "Language / PTT / Space",
     "sttLabel": "Speech recognition (STT)",
     "sttHelp": "Hides the mic when unavailable; typing still works.",
     "sttHelpDesktopBlocked": "Desktop does not support browser speech recognition—please type instead.",
@@ -392,8 +392,8 @@
     "ttsPreviewing": "Playing…",
     "ttsPreviewFailed": "Preview failed. Check browser speech or system volume.",
     "ttsPreviewSample": "This is a voice preview. Hello.",
-    "defaultWorksetLabel": "Default ownership workset",
-    "defaultWorksetHelp": "Default workset for assistant-created events (full page, quick dialog, and Space PTT share this). Default is the builtin General workset."
+    "defaultWorksetLabel": "Default space",
+    "defaultWorksetHelp": "Required space for events the assistant creates. Starts as built-in General. Shared by the full page, quick dialog, and space-bar voice."
   },
   "analysis": {
     "loading": "Loading analysis scheduling settings…",

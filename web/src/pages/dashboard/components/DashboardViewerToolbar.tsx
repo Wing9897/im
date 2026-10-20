@@ -13,8 +13,11 @@ import {
   getTaskFormAnalysisModeMeta,
   taskFormAnalysisModeOrder,
 } from "../../../components/task/taskFormAnalysisModeMeta";
+import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import type { TasksModeFilter } from "../../../domain/tasks/systemTaskCatalog";
 import { WorksetCatalogChrome } from "../../../components/worksets/WorksetCatalogChrome";
+import { WorksetGraphFilterControl } from "../../../components/worksets/WorksetGraphFilterControl";
+import { WorkspaceSectionSwitch } from "../../workspace/WorkspaceSectionSwitch";
 
 function VisibilityEyeButton({
   visible,
@@ -48,6 +51,7 @@ function VisibilityEyeButton({
 interface DashboardViewerToolbarProps {
   t: TFunction;
   isWorksetView: boolean;
+  isTaskGraph?: boolean;
   modeFilter: TasksModeFilter;
   taskCount: number;
   searchQuery: string;
@@ -72,6 +76,7 @@ const catalogSearchClass = `${pageOpsControlClass} !w-[clamp(10rem,22vw,16rem)] 
 export function DashboardViewerToolbar({
   t,
   isWorksetView,
+  isTaskGraph = false,
   modeFilter,
   taskCount,
   searchQuery,
@@ -89,6 +94,7 @@ export function DashboardViewerToolbar({
   hideCreateWorkset = false,
 }: DashboardViewerToolbarProps) {
   const isTaskView = !isWorksetView;
+  const { worksets } = useTaskCatalog();
 
   return (
     <OpsControlBar
@@ -98,8 +104,10 @@ export function DashboardViewerToolbar({
       className="!flex-wrap"
     >
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+        {isTaskView ? <WorkspaceSectionSwitch /> : null}
         {isWorksetView ? <WorksetCatalogChrome /> : null}
-        {isTaskView && taskCount > 0 ? (
+        {isTaskView && isTaskGraph ? <WorksetGraphFilterControl worksets={worksets} /> : null}
+        {isTaskView && !isTaskGraph && taskCount > 0 ? (
           <>
             <FilterChip
               size="md"
@@ -122,7 +130,7 @@ export function DashboardViewerToolbar({
         ) : null}
       </div>
       <div className="ml-auto flex shrink-0 flex-wrap items-center gap-sm">
-        {hideSearch ? null : (
+        {hideSearch || isTaskGraph ? null : (
           <TextField
             type="search"
             value={searchQuery}
@@ -148,13 +156,15 @@ export function DashboardViewerToolbar({
             >
               <Gauge size={16} aria-hidden="true" />
             </Button>
-            <VisibilityEyeButton
-              visible={showSystemTasks}
-              showLabel={showSystemTasksLabel}
-              hideLabel={hideSystemTasksLabel}
-              testId="toggle-system-tasks"
-              onToggle={onToggleSystemTasks}
-            />
+            {isTaskGraph ? null : (
+              <VisibilityEyeButton
+                visible={showSystemTasks}
+                showLabel={showSystemTasksLabel}
+                hideLabel={hideSystemTasksLabel}
+                testId="toggle-system-tasks"
+                onToggle={onToggleSystemTasks}
+              />
+            )}
             <Button
               variant="primary"
               size="md"

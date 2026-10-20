@@ -78,6 +78,6 @@ describe("CalendarShareConnectionStatusIcon", () => {
     renderIcon("loggedOut");
     const btn = mount.querySelector('[data-testid="calendar-share-connection-status"]') as HTMLButtonElement;
     act(() => btn.click());
-    expect(mockNavigate).toHaveBeenCalledWith("/subscriptions/account");
+    expect(mockNavigate).toHaveBeenCalledWith("/timeline?sheet=subscriptions&tab=account");
   });
 });

@@ -17,6 +17,9 @@ import { CommandPalette } from "./components/CommandPalette";
 import { ShortcutHelpDialog } from "./components/ShortcutHelpDialog";
 import { AssistantQuickDialog } from "./components/AssistantQuickDialog";
 import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
+import { SourceDrawerHost } from "./pages/sources/SourceDrawerHost";
+import { UserEventEditorHost } from "./pages/timeline/UserEventEditorHost";
+import { WorksetDrawerHost } from "./pages/worksets/WorksetDrawerHost";
 import { DesktopTrayAnalysisBridge } from "./components/analysis/DesktopTrayAnalysisBridge";
 import { RecentDayInboxDrawer } from "./components/notify/RecentDayInboxDrawer";
 import { NotifyFlashHost } from "./components/notify/NotifyFlashHost";
@@ -211,6 +214,9 @@ function AppShell() {
                       <AssistantQuickDialog />
                       <DesktopTrayAnalysisBridge />
                       <CalendarImportHost />
+                      <SourceDrawerHost />
+                      <WorksetDrawerHost />
+                      <UserEventEditorHost />
                       <RecentDayInboxDrawer />
                       <NotifyFlashHost />
                     </CommandPaletteProvider>

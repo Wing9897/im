@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
+import { SIMPLE_MODE_STORAGE_KEY } from "../domain/ui/simpleMode";
 import { MonitorModeProvider } from "../context/MonitorModeContext";
+import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { mockShowToast } from "../test/context-mocks";
 
 vi.mock("../context/CollectorStatusContext", () => ({
@@ -80,13 +82,17 @@ describe("AppTopBar", () => {
     window.history.replaceState({}, "", "/");
   });
 
-  function renderBar() {
+  function renderBar(path = "/") {
     act(() => {
       createRoot(container).render(
         createElement(
           MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(AppTopBar)),
+          { initialEntries: [path] },
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(SimpleModeProvider, null, createElement(AppTopBar)),
+          ),
         ),
       );
     });
@@ -188,5 +194,40 @@ describe("AppTopBar", () => {
     });
     expect(mockShowToast).toHaveBeenCalledWith("blocked", "error");
     openSpy.mockRestore();
+  });
+
+  it("opens ＋新增 with events, items, tasks, and sources", () => {
+    renderBar();
+    const trigger = container.querySelector("[data-testid='topbar-create']") as HTMLButtonElement;
+    expect(trigger.textContent).toContain("新增");
+    act(() => {
+      trigger.click();
+    });
+    expect(container.querySelector("[data-testid='topbar-create-event']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-recurring']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-item']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-task']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-source']")).not.toBeNull();
+  });
+
+  it("hides 新增來源 on the sources page", () => {
+    renderBar("/sources");
+    act(() => {
+      (container.querySelector("[data-testid='topbar-create']") as HTMLButtonElement).click();
+    });
+    expect(container.querySelector("[data-testid='topbar-create-source']")).toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-task']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-event']")).not.toBeNull();
+  });
+
+  it("hides tasks and sources from ＋新增 in simple mode", () => {
+    window.localStorage.setItem(SIMPLE_MODE_STORAGE_KEY, "true");
+    renderBar();
+    act(() => {
+      (container.querySelector("[data-testid='topbar-create']") as HTMLButtonElement).click();
+    });
+    expect(container.querySelector("[data-testid='topbar-create-task']")).toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-source']")).toBeNull();
+    expect(container.querySelector("[data-testid='topbar-create-event']")).not.toBeNull();
   });
 });

@@ -8,12 +8,43 @@ import {
 import type { DiscordBotInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../board/useSourceListTab";
+import { useSourceEditController } from "../board/useSourceEditController";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { toErrorMessage } from "../../../utils/errors";
 import { MASKED_SECRET } from "../../../utils/configValidation";
 import i18n from "../../../i18n";
 
 const removeDiscordBot = (target: DiscordBotInfo) => deleteSource(target.source.id);
+
+interface DiscordEditForm {
+  name: string;
+  botToken: string;
+}
+
+function discordBotToForm(bot: DiscordBotInfo): DiscordEditForm {
+  return {
+    name: formatSourceLabel(bot.source) || String(i18n.t("sources:discord.fallbackName")),
+    botToken: MASKED_SECRET,
+  };
+}
+
+function validateDiscordEdit(form: DiscordEditForm): string | null {
+  if (!form.name.trim()) {
+    return String(i18n.t("sources:discord.displayNameRequired"));
+  }
+  return null;
+}
+
+async function saveDiscordEdit(target: DiscordBotInfo, form: DiscordEditForm) {
+  const patch: { name: string; botToken?: string } = { name: form.name.trim() };
+  if (form.botToken && form.botToken !== MASKED_SECRET) {
+    patch.botToken = form.botToken.trim();
+  }
+  const resp = await updateDiscordBot(target.source.id, patch);
+  if (resp.status === "error" && resp.errorMessage) {
+    throw new Error(resp.errorMessage);
+  }
+}
 
 export function useDiscordTab() {
   const {
@@ -30,16 +61,33 @@ export function useDiscordTab() {
     confirmRemove: handleRemoveBot,
   } = useSourceListTab<DiscordBotInfo>({ listFn: listDiscordBots, removeFn: removeDiscordBot });
 
-  // Add form state
   const [botToken, setBotToken] = useState("");
   const { submitting, error: formError, handleSubmit } = useFormSubmit();
 
-  // Edit dialog state
-  const [editTarget, setEditTarget] = useState<DiscordBotInfo | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editToken, setEditToken] = useState(MASKED_SECRET);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  const {
+    editTarget,
+    editForm,
+    setEditForm,
+    editSubmitting,
+    editError,
+    openEditDialog,
+    closeEditDialog,
+    handleSaveEdit,
+  } = useSourceEditController<DiscordBotInfo, DiscordEditForm>({
+    toForm: discordBotToForm,
+    validate: validateDiscordEdit,
+    save: saveDiscordEdit,
+    refresh: fetchBots,
+    formatError: toErrorMessage,
+  });
+
+  const setEditName = useCallback((name: string) => {
+    setEditForm((current) => (current ? { ...current, name } : current));
+  }, [setEditForm]);
+
+  const setEditToken = useCallback((token: string) => {
+    setEditForm((current) => (current ? { ...current, botToken: token } : current));
+  }, [setEditForm]);
 
   const handleAddBot = useCallback(async () => {
     await handleSubmit(async () => {
@@ -56,47 +104,6 @@ export function useDiscordTab() {
       await fetchBots();
     });
   }, [botToken, fetchBots, handleSubmit]);
-
-  const openEditDialog = useCallback((bot: DiscordBotInfo) => {
-    setEditTarget(bot);
-    setEditName(formatSourceLabel(bot.source) || String(i18n.t("sources:discord.fallbackName")));
-    setEditToken(MASKED_SECRET);
-    setEditError(null);
-  }, []);
-
-  const closeEditDialog = useCallback(() => {
-    setEditTarget(null);
-    setEditName("");
-    setEditToken(MASKED_SECRET);
-    setEditError(null);
-  }, []);
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!editTarget) return;
-    const trimmedName = editName.trim();
-    if (!trimmedName) {
-      setEditError(String(i18n.t("sources:discord.displayNameRequired")));
-      return;
-    }
-    setEditSubmitting(true);
-    setEditError(null);
-    try {
-      const patch: { name: string; botToken?: string } = { name: trimmedName };
-      if (editToken && editToken !== MASKED_SECRET) {
-        patch.botToken = editToken.trim();
-      }
-      const resp = await updateDiscordBot(editTarget.source.id, patch);
-      if (resp.status === "error" && resp.errorMessage) {
-        throw new Error(resp.errorMessage);
-      }
-      closeEditDialog();
-      await fetchBots();
-    } catch (e) {
-      setEditError(toErrorMessage(e));
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [editTarget, editName, editToken, closeEditDialog, fetchBots]);
 
   return {
     bots,
@@ -116,9 +123,9 @@ export function useDiscordTab() {
     handleAddBot,
     handleRemoveBot,
     editTarget,
-    editName,
+    editName: editForm?.name ?? "",
     setEditName,
-    editToken,
+    editToken: editForm?.botToken ?? MASKED_SECRET,
     setEditToken,
     editSubmitting,
     editError,

@@ -133,12 +133,6 @@ class TelegramAdapter(BasePlatformAdapter):
         """Long-poll until QR is scanned, expires (recreate), needs 2FA, or times out."""
         return await telegram_adapter_login.wait_qr_login(self, timeout)
 
-    def _qr_expires_in_seconds(self) -> float:
-        return telegram_adapter_login.qr_expires_in_seconds(self)
-
-    def _qr_login_payload(self) -> dict:
-        return telegram_adapter_login.qr_login_payload(self)
-
     async def sync_dialog_channels(self) -> int:
         """Persist joined Telegram groups/channels from ``iter_dialogs()``."""
         return await telegram_ingest.sync_dialog_channels(self)

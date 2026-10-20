@@ -639,6 +639,32 @@ describe("Wire serializers facade: serializer_domains stays internal", () => {
       ).toEqual([]);
     }
   });
+
+  it("server/services/ and server/queries/ must not import server.api.routes", () => {
+    const routeImport = /(?:from\s+|import\s+)server\.api\.routes\b/;
+    const offenders: string[] = [];
+    for (const file of allProductFiles()) {
+      const rel = relFromRoot(file);
+      if (!rel.startsWith("server/services/") && !rel.startsWith("server/queries/")) {
+        continue;
+      }
+      const content = fs.readFileSync(file, "utf-8");
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("#")) continue;
+        if (routeImport.test(line)) {
+          offenders.push(`${rel} :: ${trimmed}`);
+        }
+      }
+    }
+    if (offenders.length > 0) {
+      const report = offenders.map((f) => `  - ${f}`).join("\n");
+      expect(
+        offenders,
+        `server/services/ and server/queries/ must not import server.api.routes:\n${report}`,
+      ).toEqual([]);
+    }
+  });
 });
 
 describe("LLM profiles + recurring series invariants", () => {

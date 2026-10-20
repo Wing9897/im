@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../components/SourceFilterDialog";
@@ -35,6 +35,8 @@ type ExpandTaskOption = {
 };
 
 interface IntelligenceToolbarProps {
+  /** 事件 | 熱點排行 — sits in this bar, not a row above it. */
+  sectionSwitch?: ReactNode;
   isBusy?: boolean;
   search: string;
   setSearch: (value: string) => void;
@@ -57,6 +59,7 @@ interface IntelligenceToolbarProps {
  * Map hides sort/time (own LIVE window).
  */
 export function IntelligenceToolbar({
+  sectionSwitch,
   isBusy = false,
   search,
   setSearch,
@@ -93,6 +96,7 @@ export function IntelligenceToolbar({
 
   return (
     <OpsControlBar sticky ariaLabel={t("toolbar.aria")} className="im-intelligence-toolbar">
+      {sectionSwitch}
       <div className="shrink-0" data-testid="intelligence-source-filter">
         <SourceFilterDialog
           tasks={intelligenceTasks}

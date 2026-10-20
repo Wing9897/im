@@ -3,6 +3,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { MonitorModeProvider } from "../context/MonitorModeContext";
+import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { DesktopTitleBar } from "./DesktopTitleBar";
 
 vi.mock("../context/CollectorStatusContext", () => ({
@@ -56,7 +57,11 @@ function renderTitleBar() {
   return createElement(
     MemoryRouter,
     null,
-    createElement(MonitorModeProvider, null, createElement(DesktopTitleBar)),
+    createElement(
+      MonitorModeProvider,
+      null,
+      createElement(SimpleModeProvider, null, createElement(DesktopTitleBar)),
+    ),
   );
 }
 

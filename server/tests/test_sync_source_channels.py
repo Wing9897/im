@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from fastapi import Request
 
-from server.api.routes.sources.helpers import finalize_source_setup, sync_source_channels
+from server.api.routes.sources.helpers import sync_source_channels
 from server.queries import sources_queries
+from server.services.sources.connect import finalize_source_setup
 from server.util import new_id, utc_now_iso
 
 
@@ -90,7 +90,7 @@ async def test_sync_source_channels_rolls_back_entire_replacement_on_failure(db,
     assert int(await db.fetch_value("SELECT COUNT(*) FROM channels WHERE platform_id LIKE 'new-%'") or 0) == 0
 
 
-async def test_finalize_source_setup_compensates_post_connect_failure(app, monkeypatch):
+async def test_finalize_source_setup_compensates_post_connect_failure(app):
     source_id = new_id()
     now = utc_now_iso()
     await app.state.db.execute(
@@ -107,14 +107,12 @@ async def test_finalize_source_setup_compensates_post_connect_failure(app, monke
             self.stopped.append(stopped_source_id)
 
     collector = _Collector()
-    monkeypatch.setattr(app.state, "collector", collector)
-    request = Request({"type": "http", "app": app, "method": "POST", "path": "/"})
 
     async def fail_finalize() -> None:
         raise RuntimeError("post-connect DB failure")
 
     with pytest.raises(RuntimeError, match="post-connect DB failure"):
-        await finalize_source_setup(request, source_id, fail_finalize)
+        await finalize_source_setup(app.state.db, collector, source_id, fail_finalize)
 
     assert collector.stopped == [source_id]
     row = await app.state.db.fetch_one("SELECT status, last_error FROM sources WHERE id = ?", (source_id,))

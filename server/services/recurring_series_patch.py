@@ -8,7 +8,12 @@ from typing import Any
 from server.db.database import Database, TransactionDb
 from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.notify_prefs import DEFAULT_NOTIFY_PREF, normalize_notify_pref
-from server.queries.recurring_series_queries import delete_series, fetch_series_row
+from server.queries.recurring_series_queries import (
+    delete_series,
+    delete_series_occurrence_markers,
+    fetch_series_row,
+    update_series_row,
+)
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
 from server.services.task_writes import TaskWriteError, normalize_event_clock, normalize_rrule
 from server.util import utc_now_iso
@@ -114,39 +119,25 @@ async def patch_recurring_series(
             raise TaskWriteError(str(exc)) from exc
 
     now = utc_now_iso()
-    active_sql = ""
-    active_params: tuple[Any, ...] = ()
-    if is_active is not None:
-        active_sql = ", is_active = ?"
-        active_params = (1 if is_active else 0,)
-    item_sql = ""
-    item_params: tuple[Any, ...] = ()
-    if item_id is not ...:
-        item_sql = ", item_id = ?"
-        item_params = (item_id,)
 
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        await tx.execute(
-            "UPDATE recurring_schedules SET name = ?, description = ?, workset_id = ?, rrule = ?, "
-            f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, emoji = ?, "
-            f"updated_at = ?{active_sql}{item_sql} WHERE id = ?",
-            (
-                new_name,
-                new_description,
-                resolved_workset,
-                new_rrule,
-                dtstart,
-                dtend,
-                1 if all_day else 0,
-                location,
-                resolved_notify,
-                resolved_emoji,
-                now,
-                *active_params,
-                *item_params,
-                sid,
-            ),
+        await update_series_row(
+            tx,
+            series_id=sid,
+            name=new_name,
+            description=new_description,
+            workset_id=resolved_workset,
+            rrule=new_rrule,
+            dtstart=dtstart,
+            dtend=dtend,
+            is_all_day=all_day,
+            location=location,
+            notify_pref=resolved_notify,
+            emoji=resolved_emoji,
+            now=now,
+            is_active=is_active,
+            item_id=item_id,
         )
 
     updated = await fetch_series_row(db, sid)
@@ -176,15 +167,7 @@ async def hard_delete_recurring_series(
         )
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        occurrence_pattern = f"{sid}:%"
-        await tx.execute(
-            "DELETE FROM timeline_dismissals WHERE source = 'recurring' AND event_id LIKE ?",
-            (occurrence_pattern,),
-        )
-        await tx.execute(
-            "DELETE FROM timeline_importance WHERE source = 'recurring' AND event_id LIKE ?",
-            (occurrence_pattern,),
-        )
+        await delete_series_occurrence_markers(tx, sid)
         await delete_series(tx, sid)
     from server.calendar_share.dirty import mark_published_workset_dirty
 

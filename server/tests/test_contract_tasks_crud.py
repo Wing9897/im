@@ -110,7 +110,10 @@ async def test_create_update_delete_task_roundtrip(client):
 
     toggle = await client.patch(f"/api/v1/tasks/{task_id}/active")
     assert toggle.status_code == 200
-    assert toggle.json()["isActive"] is False
+    toggle_body = toggle.json()
+    assert toggle_body["isActive"] is False
+    assert "channelIds" in toggle_body
+    assert toggle_body["channelIds"] == []
 
     delete = await client.delete(f"/api/v1/tasks/{task_id}")
     assert delete.status_code == 200
@@ -119,8 +122,57 @@ async def test_create_update_delete_task_roundtrip(client):
     assert isinstance(delete_body["deletedBatchCount"], int)
 
 
+async def test_create_inactive_task_skips_scheduler_registration(client, app):
+    calls: list[tuple[str, str]] = []
+
+    class RecordingScheduler:
+        async def register_task(self, task_id: str) -> None:
+            calls.append(("register", task_id))
+
+        async def unregister_task(self, task_id: str) -> None:
+            calls.append(("unregister", task_id))
+
+    app.state.scheduler = RecordingScheduler()
+
+    create = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "created inactive",
+            "promptTemplate": "x",
+            "analysisMode": "intel_event",
+            "analysisTimeRange": "1d",
+            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+            "scheduleRrule": "FREQ=HOURLY",
+            "isActive": False,
+        },
+    )
+    assert create.status_code == 201
+    created = create.json()
+    task_id = created["id"]
+    assert created["isActive"] is False
+    assert calls == []
+
+    toggle = await client.patch(f"/api/v1/tasks/{task_id}/active")
+    assert toggle.status_code == 200
+    toggled = toggle.json()
+    assert toggled["isActive"] is True
+    assert len(toggled["channelIds"]) == 1
+    assert calls == [("register", task_id)]
+
+
 async def test_put_task_applies_optional_is_active(client, app):
-    """PUT may include isActive; toggle goes through set_task_active (DB + response)."""
+    """PUT may include isActive; toggle goes through set_task_active (DB + response + scheduler)."""
+    calls: list[tuple[str, str]] = []
+
+    class RecordingScheduler:
+        async def register_task(self, task_id: str) -> None:
+            calls.append(("register", task_id))
+
+        async def unregister_task(self, task_id: str) -> None:
+            calls.append(("unregister", task_id))
+
+    app.state.scheduler = RecordingScheduler()
+
     create = await client.post(
         "/api/v1/tasks",
         json={
@@ -136,6 +188,7 @@ async def test_put_task_applies_optional_is_active(client, app):
     task_id = create.json()["id"]
     assert create.json()["isActive"] is True
     version_before = create.json()["version"]
+    assert calls == [("register", task_id)]
 
     update = await client.put(
         f"/api/v1/tasks/{task_id}",
@@ -154,6 +207,7 @@ async def test_put_task_applies_optional_is_active(client, app):
     assert body["isActive"] is False
     # Content PUT still bumps version; the isActive toggle itself does not add another bump.
     assert body["version"] == version_before + 1
+    assert calls == [("register", task_id), ("unregister", task_id)]
 
     row = await app.state.db.fetch_one(
         "SELECT is_active, version FROM analysis_tasks WHERE id = ?",

@@ -13,8 +13,8 @@ import {
 } from "../../../test/context-mocks";
 import {
   TimelinePageProvider,
-  type TimelinePageContextValue,
 } from "../TimelinePageContext";
+import { makeTimelinePageContext } from "../../../test/timelinePageContextFixtures";
 import { TimelineSidebar } from "./TimelineSidebar";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
@@ -52,38 +52,11 @@ function makeUserEvent(overrides: Partial<TimelineItem> = {}): TimelineItem {
   };
 }
 
-function makeContext(selectedEvent: TimelineItem | null): TimelinePageContextValue {
-  return {
+function makeContext(selectedEvent: TimelineItem | null) {
+  return makeTimelinePageContext({
     selectedEvent,
-    onSelectEvent: vi.fn(),
-    editStartTime: "",
-    editEndTime: "",
-    setEditStartTime: vi.fn(),
-    setEditEndTime: vi.fn(),
-    onSaveTimeOverride: vi.fn(),
-    onResetTimeOverride: vi.fn(),
-    onSetEventStatus: vi.fn(),
-    eventStatuses: {},
     showDismissed: true,
-    showOngoing: true,
-    showEnding: true,
-    monthDatesRevealed: false,
-    taskSpans: [],
-    selectedGanttTaskId: null,
-    onSelectGanttTask: vi.fn(),
-    spansInitialLoading: false,
-    spansIsRefreshing: false,
-    spansError: null,
-    onRetrySpans: vi.fn(),
-    selectedGanttSpan: null,
-    onCloseGanttPanel: vi.fn(),
-    ganttColumns: [],
-    timelineEvents: [],
-    timelineEventsInitialLoading: false,
-    timelineEventsIsRefreshing: false,
-    timelineEventsError: null,
-    onRetryTimelineEvents: vi.fn(),
-  };
+  });
 }
 
 describe("TimelineSidebar detail provenance", () => {
@@ -138,7 +111,7 @@ describe("TimelineSidebar detail provenance", () => {
     renderSidebar(makeUserEvent());
     expect(
       container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
-    ).toBe("工作集：一般");
+    ).toBe("專區：一般");
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
     ).toBe("助手");
@@ -156,7 +129,7 @@ describe("TimelineSidebar detail provenance", () => {
     );
     expect(
       container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
-    ).toBe("工作集：一般");
+    ).toBe("專區：一般");
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
     ).toBe("代理");
@@ -183,7 +156,7 @@ describe("TimelineSidebar detail provenance", () => {
     );
     expect(
       container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
-    ).toBe("工作集：營運");
+    ).toBe("專區：營運");
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
     ).toBe("任務：Ops Task");

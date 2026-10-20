@@ -14,9 +14,6 @@ export const TIMELINE_CALENDAR_RESOURCE_TYPES = [
   "item_category",
 ] as const;
 
-export type TimelineCalendarResourceType =
-  (typeof TIMELINE_CALENDAR_RESOURCE_TYPES)[number];
-
 const TIMELINE_CALENDAR_RESOURCE_TYPE_SET = new Set<string>(
   TIMELINE_CALENDAR_RESOURCE_TYPES,
 );

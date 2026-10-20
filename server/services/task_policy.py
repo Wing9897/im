@@ -8,18 +8,18 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from server.api.schemas.requests import TaskConfigBody
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
 from server.queries.tasks_queries import fetch_task_row, fetch_task_workset_id
 from server.queries.worksets_queries import workset_exists
 from server.services.task_writes import TaskWriteError
+from server.services.tasks.write_input import TaskWriteInput
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 ALLOWED_MODES = ALL_ANALYSIS_MODES
 
 
-def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
-    """Map optional TaskConfigBody scheduling overrides to DB column kwargs."""
+def schedule_override_write_fields(body: TaskWriteInput) -> dict[str, Any]:
+    """Map optional write-input scheduling overrides to DB column kwargs."""
     return {
         "agent_wave_interval_seconds": body.agentWaveIntervalSeconds,
         "batch_overlap_count": body.batchOverlapCount,
@@ -32,7 +32,7 @@ def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
 def agent_policy_write_fields(
     *,
     effective_mode: str,
-    body: TaskConfigBody,
+    body: TaskWriteInput,
     existing: dict[str, Any] | None = None,
     has_channels: bool | None = None,
 ) -> dict[str, Any]:

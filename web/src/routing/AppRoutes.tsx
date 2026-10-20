@@ -1,9 +1,10 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
 import { LazyPage, lazyNamed } from "./LazyPage";
 import { ROUTE_PAGES } from "./routeModules";
+import { applyLegacyRedirect } from "./legacyPaths";
 import { SimpleModeGate } from "./SimpleModeGate";
 
 /** Shared settings state for /settings and /settings/ai (unsaved drafts survive tab switches). */
@@ -26,6 +27,13 @@ const startupViewerRoute = (() => {
   return route.startsWith("/") ? route : `/${route}`;
 })();
 
+/** Retired URL → current location. Keeps the original query and hash. */
+function LegacyRedirect() {
+  const location = useLocation();
+  const target = applyLegacyRedirect(location.pathname, location.search, location.hash);
+  return <Navigate to={target ?? "/"} replace />;
+}
+
 function DefaultHomeRedirect() {
   const { simpleMode } = useSimpleMode();
   if (startupViewerRoute) {
@@ -36,62 +44,22 @@ function DefaultHomeRedirect() {
 
 // Module-level lazy registration — same loaders as prefetchRoute (routeModules).
 const MonitorPage = lazyNamed(ROUTE_PAGES.MonitorPage, "MonitorPage");
-const DashboardViewer = lazyNamed(
-  ROUTE_PAGES.DashboardViewer,
-  "DashboardViewer",
-);
-const WorksetWorkspacePage = lazyNamed(
-  ROUTE_PAGES.WorksetWorkspacePage,
-  "WorksetWorkspacePage",
-);
-const SchedulePage = lazyNamed(ROUTE_PAGES.SchedulePage, "SchedulePage");
-const RecurringSeriesEditor = lazyNamed(
-  ROUTE_PAGES.RecurringSeriesEditor,
-  "RecurringSeriesEditor",
-);
+const WorkspaceShell = lazyNamed(ROUTE_PAGES.WorkspaceShell, "WorkspaceShell");
 const ChatEditorPage = lazyNamed(ROUTE_PAGES.ChatEditorPage, "ChatEditorPage");
 const AgentDetailPage = lazyNamed(
   ROUTE_PAGES.AgentDetailPage,
   "AgentDetailPage",
-);
-const LeaderboardPage = lazyNamed(
-  ROUTE_PAGES.LeaderboardPage,
-  "LeaderboardPage",
 );
 const IntelligencePage = lazyNamed(
   ROUTE_PAGES.IntelligencePage,
   "IntelligencePage",
 );
 const TimelinePage = lazyNamed(ROUTE_PAGES.TimelinePage, "TimelinePage");
-const SubscriptionsShell = lazyNamed(
-  ROUTE_PAGES.SubscriptionsShell,
-  "SubscriptionsShell",
-);
-const SubscriptionsMinePage = lazyNamed(
-  ROUTE_PAGES.SubscriptionsMinePage,
-  "SubscriptionsMinePage",
-);
-const SubscriptionsSearchPage = lazyNamed(
-  ROUTE_PAGES.SubscriptionsSearchPage,
-  "SubscriptionsSearchPage",
-);
-const SubscriptionsPublishedPage = lazyNamed(
-  ROUTE_PAGES.SubscriptionsPublishedPage,
-  "SubscriptionsPublishedPage",
-);
-const SubscriptionsAccountPage = lazyNamed(
-  ROUTE_PAGES.SubscriptionsIdentityPanel,
-  "SubscriptionsIdentityPanel",
-);
 const ItemsPage = lazyNamed(ROUTE_PAGES.ItemsPage, "ItemsPage");
 const ItemFormPage = lazyNamed(ROUTE_PAGES.ItemFormPage, "ItemFormPage");
 const ItemsFinancePage = lazyNamed(
   ROUTE_PAGES.ItemsFinancePage,
   "ItemsFinancePage",
-);
-const SourceManagementPage = lazyNamed(
-  ROUTE_PAGES.SourceManagementPage,
-  "SourceManagementPage",
 );
 const NotifyWorkspacePage = lazyNamed(
   ROUTE_PAGES.NotifyWorkspacePage,
@@ -170,12 +138,9 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultHomeRedirect />} />
         <Route path="/monitor" element={<LazyPage Page={MonitorPage} />} />
-        <Route path="/worksets" element={<LazyPage Page={DashboardViewer} />} />
-        <Route
-          path="/worksets/:worksetId"
-          element={<LazyPage Page={WorksetWorkspacePage} />}
-        />
-        <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
+        <Route path="/worksets" element={<LegacyRedirect />} />
+        <Route path="/worksets/:worksetId" element={<LegacyRedirect />} />
+        <Route path="/tasks" element={<LazyPage Page={WorkspaceShell} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
         <Route
           path="/tasks/:taskId/edit"
@@ -185,45 +150,16 @@ export function AppRoutes() {
           path="/tasks/:taskId/agent"
           element={<LazyPage Page={AgentDetailPage} />}
         />
-        <Route path="/schedule" element={<LazyPage Page={SchedulePage} />} />
-        <Route
-          path="/schedule/recurring/:id/edit"
-          element={<LazyPage Page={RecurringSeriesEditor} />}
-        />
-        <Route
-          path="/leaderboard"
-          element={<LazyPage Page={LeaderboardPage} />}
-        />
+        <Route path="/schedule" element={<LegacyRedirect />} />
+        <Route path="/schedule/recurring/:id/edit" element={<LegacyRedirect />} />
+        <Route path="/leaderboard" element={<LegacyRedirect />} />
         <Route
           path="/intelligence"
           element={<LazyPage Page={IntelligencePage} />}
         />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />
-        <Route
-          path="/subscriptions"
-          element={<LazyPage Page={SubscriptionsShell} />}
-        >
-          <Route
-            index
-            element={<Navigate to="/subscriptions/mine" replace />}
-          />
-          <Route
-            path="mine"
-            element={<LazyPage Page={SubscriptionsMinePage} />}
-          />
-          <Route
-            path="published"
-            element={<LazyPage Page={SubscriptionsPublishedPage} />}
-          />
-          <Route
-            path="account"
-            element={<LazyPage Page={SubscriptionsAccountPage} />}
-          />
-          <Route
-            path="search"
-            element={<LazyPage Page={SubscriptionsSearchPage} />}
-          />
-        </Route>
+        <Route path="/subscriptions" element={<LegacyRedirect />} />
+        <Route path="/subscriptions/*" element={<LegacyRedirect />} />
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
         <Route
           path="/items/finance"
@@ -238,10 +174,7 @@ export function AppRoutes() {
           path="/items/category/:categoryId"
           element={<LazyPage Page={ItemsPage} />}
         />
-        <Route
-          path="/sources"
-          element={<LazyPage Page={SourceManagementPage} />}
-        />
+        <Route path="/sources" element={<LazyPage Page={WorkspaceShell} />} />
         <Route
           path="/notify"
           element={<LazyPage Page={NotifyWorkspacePage} />}

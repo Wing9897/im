@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.calendar.timeline_dismissals import attach_dismissed_flag
-from server.calendar.timeline_importance import attach_important_flag
+from server.calendar.timeline_markers import attach_timeline_flags
 from server.calendar.user_events_normalize import build_user_event_list_filters
 from server.db.database import Database
 from server.queries.calendar_queries import fetch_user_event
@@ -29,8 +28,7 @@ async def _serialize_user_event_rows(
 ) -> list[dict[str, Any]]:
     """Apply the one canonical row → wire → dismissal path."""
     items = [serialize_user_event(row) for row in rows]
-    await attach_dismissed_flag(db, source="user", items=items)
-    return await attach_important_flag(db, source="user", items=items)
+    return await attach_timeline_flags(db, source="user", items=items)
 
 
 async def get_user_event(db: Database, event_id: str) -> dict[str, Any] | None:

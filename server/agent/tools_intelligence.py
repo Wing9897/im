@@ -12,14 +12,11 @@ from server.agent.tool_limits import (
     INTELLIGENCE_RESULT_HARD_CAP,
 )
 from server.analyzer.incremental import time_range_lower_bound
-from server.calendar.timeline_dismissals import attach_dismissed_flag
-from server.calendar.timeline_importance import attach_important_flag
 from server.db.database import Database
 from server.domain.message_time_ranges import BOUNDED_MESSAGE_TIME_RANGES
 from server.domain.workset_scope import allowed_workset_ids_from_args
-from server.queries.results_queries import query_analysis_events
+from server.services.analysis_events_read import list_analysis_events
 from server.time_iso import to_iso_z
-from server.wire.serializers import serialize_analysis_event
 
 # Alias retained for tests and external imports.
 HARD_CAP = INTELLIGENCE_RESULT_HARD_CAP
@@ -103,11 +100,6 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
     except ValueError as exc:
         return {"error": str(exc), "items": [], "count": 0}
 
-    limit = min(
-        max(as_int(args.get("limit"), INTELLIGENCE_DEFAULT_RESULT_LIMIT), 1),
-        INTELLIGENCE_RESULT_HARD_CAP,
-    )
-    offset = max(as_int(args.get("offset"), 0), 0)
     task_id = as_optional_str(arg(args, "taskId", "task_id"))
     start_date = as_optional_str(arg(args, "startDate", "start_date"))
     end_date = as_optional_str(arg(args, "endDate", "end_date"))
@@ -123,37 +115,32 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
             start_date = _default_start_date()
     has_time = as_optional_bool(arg(args, "hasTime", "has_time"))
     search_location = bool(as_optional_bool(arg(args, "searchLocation", "search_location")) or False)
-    sort_raw = (as_optional_str(args.get("sort")) or "analyzed_at").strip().lower()
-    sort = sort_raw if sort_raw in ("event_time", "analyzed_at") else "analyzed_at"
-
-    rows, total_count = await query_analysis_events(
+    page = await list_analysis_events(
         db,
         task_id=task_id,
         search=query_text,
         start_date=start_date,
         end_date=end_date,
-        sort=sort,
-        limit=limit,
-        offset=offset,
+        sort=as_optional_str(args.get("sort")),
+        limit=as_int(args.get("limit"), INTELLIGENCE_DEFAULT_RESULT_LIMIT),
+        offset=as_int(args.get("offset"), 0),
         has_time=has_time,
-        has_coords=None,
         search_location=search_location,
-        ascending=False,
         include_total=True,
         workset_ids=allowed_workset_ids_from_args(args),
+        max_limit=INTELLIGENCE_RESULT_HARD_CAP,
+        default_sort="analyzed_at",
+        strict_sort=False,
     )
-    items = [serialize_analysis_event(row) for row in rows]
-    await attach_dismissed_flag(db, source="analysis", items=items)
-    await attach_important_flag(db, source="analysis", items=items)
-    compact = [_compact_event(item) for item in items]
+    compact = [_compact_event(item) for item in page["items"]]
     return {
         "items": compact,
         "count": len(compact),
-        "totalCount": total_count,
-        "hasMore": offset + len(compact) < total_count,
-        "limit": limit,
-        "offset": offset,
-        "sort": sort,
+        "totalCount": page["totalCount"],
+        "hasMore": page["hasMore"],
+        "limit": page["limit"],
+        "offset": page["offset"],
+        "sort": page["sort"],
         "startDate": start_date,
         "endDate": end_date,
         "allTime": all_time,

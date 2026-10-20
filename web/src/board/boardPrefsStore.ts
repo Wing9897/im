@@ -54,14 +54,6 @@ export function resetBoardPrefsCacheForTests(): void {
   hydratePromise = null;
 }
 
-export function getCachedBoardLayout(): BoardConfig | null {
-  return layoutCache;
-}
-
-export function getCachedWidgetState(): BoardWidgetStatePref {
-  return cloneWidgetState(widgetStateCache);
-}
-
 function normalizeWidgetState(raw: {
   mapViews?: BoardWidgetStatePref["mapViews"];
   sourceFilters?: Record<string, unknown>;

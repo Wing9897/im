@@ -35,23 +35,24 @@ async def delete_task_record(db: Database, task_id: str) -> dict[str, Any]:
 
 
 async def toggle_task_active_record(db: Database, task_id: str) -> tuple[dict[str, Any], int]:
-    from server.analyzer.llm_config import require_complete_profile_row
-    from server.errors import VALIDATION_ERROR, http_error
+    from server.services.task_writes import TaskWriteError
+    from server.services.tasks.channel_refs import channel_refs_for
+    from server.services.tasks.llm_profile import ensure_complete_llm_profile
 
     existing = await require_task_row_or_lookup(db, task_id)
     new_active = 0 if existing.get("is_active") else 1
     if new_active:
         profile_id = str(existing.get("llm_profile_id") or "").strip()
         if not profile_id:
-            raise http_error(
-                400,
+            raise TaskWriteError(
                 "Cannot activate task without a complete LLM profile",
-                error_code=VALIDATION_ERROR,
+                http_status=400,
             )
-        await require_complete_profile_row(db, profile_id)
+        await ensure_complete_llm_profile(db, profile_id)
     await set_task_active(db, task_id, new_active, utc_now_iso())
     row = await require_task_row_or_lookup(db, task_id)
-    return serialize_task(row, channel_refs=None), new_active
+    channel_refs = await channel_refs_for(db, task_id)
+    return serialize_task(row, channel_refs=channel_refs), new_active
 
 
 __all__ = [

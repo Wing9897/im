@@ -11,8 +11,10 @@ import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock());
 
+const simpleModeState = vi.hoisted(() => ({ simpleMode: false }));
+
 vi.mock("../../../context/SimpleModeContext", () => ({
-  useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
+  useSimpleMode: () => ({ simpleMode: simpleModeState.simpleMode, setSimpleMode: vi.fn() }),
 }));
 
 function renderToolbar(
@@ -56,6 +58,7 @@ describe("DashboardViewerToolbar", () => {
 
   beforeEach(async () => {
     await ensureZhHantLocale();
+    simpleModeState.simpleMode = false;
     resetTaskCatalogState();
     taskCatalogState.worksets = [
       {
@@ -124,7 +127,9 @@ describe("DashboardViewerToolbar", () => {
     expect(actions!.textContent).toContain("新增任務");
     expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
     expect(toolbar.textContent).not.toContain("目錄");
-    expect(toolbar.textContent).not.toContain("流程圖");
+    expect(toolbar.querySelector('[data-testid="workspace-section-tabs"]')?.textContent).toContain(
+      "流程圖",
+    );
   });
 
   it("keeps the tasks search field in the toolbar when the catalog is empty", () => {
@@ -136,7 +141,9 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
-    expect(toolbar.textContent).not.toContain("流程圖");
+    expect(toolbar.querySelector('[data-testid="workspace-section-tabs"]')?.textContent).toContain(
+      "流程圖",
+    );
   });
 
   it("keeps workset search in the worksets catalog toolbar", () => {
@@ -146,7 +153,7 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar).not.toBeNull();
     const search = toolbar.querySelector('[data-testid="worksets-search"]') as HTMLInputElement;
     expect(search).toBeInstanceOf(HTMLInputElement);
-    expect(search.placeholder).toBe("搜尋工作集…");
+    expect(search.placeholder).toBe("搜尋專區…");
     expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeNull();
     expect(toolbar.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
     expect(toolbar.querySelector('[data-testid="dashboard-create-workset"]')).not.toBeNull();
@@ -202,9 +209,37 @@ describe("DashboardViewerToolbar", () => {
     expect(scheduling).not.toBeNull();
     expect(scheduling.getAttribute("aria-label")).toBe("全局調度設定");
     expect(tasks.querySelector('[data-testid="workset-catalog-tabs"]')).toBeNull();
-    expect(tasks.textContent).not.toContain("流程圖");
+    expect(tasks.querySelector('[data-testid="workspace-section-tabs"]')?.textContent).toContain(
+      "流程圖",
+    );
 
     const worksets = track({ isWorksetView: true, taskCount: 0 }, "/worksets");
     expect(worksets.querySelector('[data-testid="open-global-scheduling"]')).toBeNull();
+    expect(worksets.querySelector('[data-testid="workspace-section-tabs"]')).toBeNull();
+  });
+
+  it("hides workspace tabs on the tasks toolbar in simple mode", () => {
+    simpleModeState.simpleMode = true;
+    const container = track({ isWorksetView: false, taskCount: 2 }, "/tasks");
+    expect(container.querySelector('[data-testid="workspace-section-tabs"]')).toBeNull();
+    expect(container.querySelector('[data-testid="tasks-search"]')).not.toBeNull();
+  });
+
+  it("hides task search, mode chips, and system-tasks toggle while showing workset graph filter on /tasks?tab=graph", () => {
+    const container = track(
+      {
+        isWorksetView: false,
+        isTaskGraph: true,
+        hideSearch: true,
+        hideCreateWorkset: true,
+        taskCount: 3,
+      },
+      "/tasks?tab=graph",
+    );
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeNull();
+    expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
+    expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).not.toBeNull();
+    expect(toolbar.textContent).not.toContain("全部模式");
   });
 });

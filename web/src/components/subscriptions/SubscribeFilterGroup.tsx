@@ -1,7 +1,9 @@
 import { Bookmark } from "lucide-react";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+
+import { CALENDAR_SHARE_ACCOUNT_PATH } from "./CalendarShareConnectionStatusIcon";
 
 import {
   SourceFilterColumnShell,
@@ -142,7 +144,7 @@ export function SubscribeFilterGroup({
             {statusCopy}{" "}
             {availability === "loggedOut" ? (
               <Link
-                to="/subscriptions/account"
+                to={CALENDAR_SHARE_ACCOUNT_PATH}
                 className="font-medium text-accent no-underline hover:underline"
               >
                 {t("loginLink")}
@@ -205,7 +207,7 @@ export function SubscribeFilterGroup({
             {statusCopy}{" "}
             {availability === "loggedOut" ? (
               <Link
-                to="/subscriptions/account"
+                to={CALENDAR_SHARE_ACCOUNT_PATH}
                 className="font-medium text-accent no-underline hover:underline"
               >
                 {t("loginLink")}

@@ -27,7 +27,6 @@ export type TimelineAnnotations = {
   eventTimeOverrides: TimelineEventTimeOverrideMap;
 };
 
-let cached: TimelineAnnotations | null = null;
 let hydratePromise: Promise<TimelineAnnotations> | null = null;
 
 function isStatus(value: unknown): value is TimelineEventStatus {
@@ -79,23 +78,8 @@ function toPayload(data: TimelineAnnotations): TimelineAnnotationsPayload {
   };
 }
 
-function setCache(data: TimelineAnnotations): void {
-  cached = {
-    eventStatuses: { ...data.eventStatuses },
-    eventTimeOverrides: { ...data.eventTimeOverrides },
-  };
-}
-
-/** Sync read from memory (empty maps before hydrate). */
-export function loadTimelineAnnotations(): TimelineAnnotations {
-  if (cached) {
-    return {
-      eventStatuses: { ...cached.eventStatuses },
-      eventTimeOverrides: { ...cached.eventTimeOverrides },
-    };
-  }
-  return { eventStatuses: {}, eventTimeOverrides: {} };
-}
+/** Hydrate helper callback. Callers use the returned copy, not a module cache. */
+function setCache(_data: TimelineAnnotations): void {}
 
 /** Hydrate from SQLite. Empty server → empty maps (no localStorage migrate). */
 export async function hydrateTimelineAnnotations(): Promise<TimelineAnnotations> {
@@ -145,6 +129,5 @@ export async function saveTimelineAnnotations(
 }
 
 export function resetTimelineAnnotationsCacheForTests(): void {
-  cached = null;
   hydratePromise = null;
 }

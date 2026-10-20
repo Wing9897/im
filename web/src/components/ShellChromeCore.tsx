@@ -1,3 +1,4 @@
+import { CreateMenu } from "./AppTopBar/CreateMenu";
 import { TopBarStatusActions } from "./AppTopBar/TopBarStatusActions";
 import { CommandPaletteTrigger } from "./CommandPaletteTrigger";
 import { AssistantQuickTrigger } from "./AssistantQuickTrigger";
@@ -56,6 +57,7 @@ export function ShellChromeCore({
       {mode}
       <div className={resolvedActionsClass} data-testid="shell-chrome-actions">
         <div className="shell-chrome-spacer min-w-2 flex-1 self-stretch" aria-hidden="true" />
+        <CreateMenu />
         <CommandPaletteTrigger compact />
         <AssistantQuickTrigger compact />
         <TopBarStatusActions variant="titleBar" />

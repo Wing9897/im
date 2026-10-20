@@ -14,6 +14,7 @@ import {
   MONITOR_MODE_KEY,
   PAGES_LAST_PATH_KEY,
 } from "../domain/prefs";
+import { normalizeLegacyPath } from "../routing/legacyPaths";
 
 export type MonitorMode = "pages" | "canvas";
 
@@ -38,12 +39,12 @@ function readPagesLastPath(): string {
   try {
     const raw = window.localStorage.getItem(PAGES_LAST_PATH_KEY);
     if (raw && raw.startsWith("/")) {
-      return raw;
+      return normalizeLegacyPath(raw);
     }
   } catch {
     // ignore
   }
-  return "/monitor";
+  return "/timeline";
 }
 
 function writeMode(mode: MonitorMode): void {

@@ -1,6 +1,6 @@
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/calendarShare", async () =>
@@ -34,7 +34,13 @@ import {
   SubscriptionsPublishedPage,
 } from "./SubscriptionsPublishedPage";
 import { SubscriptionsShell } from "./SubscriptionsShell";
-import { i18n, wrapWithI18n } from "../../test/i18nHarness";
+import { i18n } from "../../test/i18nHarness";
+import {
+  connectedSession,
+  mountSubscriptionsPage,
+  renderWithI18n,
+  unmountSubscriptionsPage,
+} from "./subscriptionsPageTestHarness";
 import { setAppLocale } from "../../i18n/locale";
 import {
   calendarShareApiMocks,
@@ -95,12 +101,9 @@ describe("SubscriptionsPublishedPage", () => {
     resetCalendarShareApiMocks();
     vi.mocked(deleteWorkset).mockReset();
     vi.mocked(listWorksets).mockReset().mockResolvedValue([WORKSET]);
-    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
-      connected: true,
-      baseUrl: "http://127.0.0.1:8787",
-      handle: "Wing",
-      status: "connected",
-    });
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(
+      connectedSession,
+    );
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
       items: [],
       ownHandle: "Wing",
@@ -114,97 +117,53 @@ describe("SubscriptionsPublishedPage", () => {
       slug: "",
     });
     calendarShareApiMocks.syncCalendarSharePublish.mockResolvedValue(LIVE);
-    mount = document.createElement("div");
-    document.body.appendChild(mount);
-    root = createRoot(mount);
+    ({ mount, root } = mountSubscriptionsPage());
   });
 
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
-    mount.remove();
+    unmountSubscriptionsPage(root, mount);
     resetCalendarShareCatalogForTests();
     vi.useRealTimers();
   });
 
   async function renderPage() {
-    await act(async () => {
-      root.render(
-        wrapWithI18n(
-          createElement(
-            MemoryRouter,
-            null,
-            createElement(SubscriptionsPublishedPage),
-          ),
-        ),
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await renderWithI18n(
+      root,
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(SubscriptionsPublishedPage),
+      ),
+    );
   }
 
-  async function renderShell(path: string) {
-    await act(async () => {
-      root.render(
-        wrapWithI18n(
-          createElement(MemoryRouter, {
-            initialEntries: [path],
-            children: createElement(
-              Routes,
-              null,
-              createElement(
-                Route,
-                {
-                  path: "/subscriptions",
-                  element: createElement(SubscriptionsShell),
-                },
-                createElement(Route, {
-                  path: "mine",
-                  element: createElement("div", { "data-testid": "mine-stub" }),
-                }),
-                createElement(Route, {
-                  path: "published",
-                  element: createElement(SubscriptionsPublishedPage),
-                }),
-                createElement(Route, {
-                  path: "account",
-                  element: createElement("div", {
-                    "data-testid": "account-stub",
-                  }),
-                }),
-                createElement(Route, {
-                  path: "search",
-                  element: createElement("div", {
-                    "data-testid": "search-stub",
-                  }),
-                }),
-              ),
-            ),
-          }),
-        ),
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+  async function renderShell() {
+    await renderWithI18n(
+      root,
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(SubscriptionsShell, { tab: "published" }),
+      ),
+    );
   }
 
   it("shows mine / published / account / search tabs and the published route", async () => {
-    await renderShell("/subscriptions/published");
+    await renderShell();
     const shell = document.querySelector('[data-testid="subscriptions-shell"]');
     expect(shell?.textContent).toContain("My subscriptions");
     expect(shell?.textContent).toContain("My published");
     expect(shell?.textContent).toContain("Calendar share");
     expect(shell?.textContent).toContain("Find calendars");
-    const hrefs = [...document.querySelectorAll("a")].map((el) =>
-      el.getAttribute("href"),
+    const tabLabels = [...document.querySelectorAll('[role="tab"]')].map(
+      (el) => el.textContent,
     );
-    expect(hrefs).toContain("/subscriptions/mine");
-    expect(hrefs).toContain("/subscriptions/published");
-    expect(hrefs).toContain("/subscriptions/account");
-    expect(hrefs).toContain("/subscriptions/search");
+    expect(tabLabels).toEqual([
+      "My subscriptions",
+      "My published",
+      "Calendar share",
+      "Find calendars",
+    ]);
     expect(
       document.querySelector('[data-testid="subscriptions-published-list"]'),
     ).toBeTruthy();
@@ -226,15 +185,6 @@ describe("SubscriptionsPublishedPage", () => {
     expect(
       document.querySelector('[data-testid="subscriptions-shell"] > .mt-lg'),
     ).toBeNull();
-    expect(hrefs.indexOf("/subscriptions/mine")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/published"),
-    );
-    expect(hrefs.indexOf("/subscriptions/published")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/account"),
-    );
-    expect(hrefs.indexOf("/subscriptions/account")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/search"),
-    );
   });
 
   it("surfaces lastError on the published card", async () => {
@@ -366,7 +316,7 @@ describe("SubscriptionsPublishedPage", () => {
       '[data-testid="subscriptions-published-open-form"]',
     ) as HTMLButtonElement;
     expect(open).toBeTruthy();
-    expect(open.textContent).toContain("Publish a workset");
+    expect(open.textContent).toContain("Publish a space");
     await act(async () => {
       open.click();
       await Promise.resolve();
@@ -808,7 +758,7 @@ describe("SubscriptionsPublishedPage", () => {
       handle: "",
       status: "disconnected",
     });
-    await renderShell("/subscriptions/published");
+    await renderShell();
     const statusIcon = document.querySelector(
       '[data-testid="calendar-share-connection-status"]',
     );
@@ -842,7 +792,7 @@ describe("SubscriptionsPublishedPage", () => {
     expect(
       document.querySelector('[data-testid="subscriptions-published-ws-gone"]')
         ?.textContent,
-    ).toContain("Local workset deleted; the public calendar is still up.");
+    ).toContain("Local space deleted; the public calendar is still up.");
     expect(
       document.querySelector(
         '[data-testid="subscriptions-published-missing-ws-gone"]',

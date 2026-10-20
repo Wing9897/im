@@ -103,7 +103,7 @@ describe("notify scanner", () => {
       );
       expect(
         buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user"),
-      ).not.toContain("工作集");
+      ).not.toContain("專區");
     });
 
     it("maps user-event rows with the shared filter label as taskName", () => {

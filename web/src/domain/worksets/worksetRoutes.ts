@@ -44,22 +44,27 @@ export function serializeWorksetGraphFilter(ids: readonly string[]): string {
   return ids.length === 0 ? WORKSET_GRAPH_FILTER_NONE : ids.join(",");
 }
 
+/** Drawer that lists worksets on the timeline. */
+export function worksetsListPath(): string {
+  return "/timeline?workset=list";
+}
+
 export function worksetsCatalogPath(
   tab?: WorksetCatalogTab,
   graphWorksetId?: string | readonly string[] | null,
 ): string {
-  if (!tab || tab === DEFAULT_WORKSET_CATALOG_TAB) return WORKSETS_PATH;
+  if (!tab || tab === DEFAULT_WORKSET_CATALOG_TAB) return worksetsListPath();
   const params = new URLSearchParams();
-  params.set("tab", tab);
-  if (tab === "graph" && graphWorksetId != null) {
+  params.set("tab", "graph");
+  if (graphWorksetId != null) {
     const value =
       typeof graphWorksetId === "string" ? graphWorksetId : serializeWorksetGraphFilter(graphWorksetId);
     if (value) params.set(WORKSET_GRAPH_FILTER_PARAM, value);
   }
-  return `${WORKSETS_PATH}?${params.toString()}`;
+  return `/tasks?${params.toString()}`;
 }
 
-/** Workset contents page (lists + toolbar). No in-page flow tab. */
+/** Workset contents drawer on the timeline. */
 export function worksetDetailPath(worksetId: string): string {
-  return `${WORKSETS_PATH}/${encodeURIComponent(worksetId)}`;
+  return `/timeline?workset=${encodeURIComponent(worksetId)}`;
 }

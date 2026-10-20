@@ -32,25 +32,12 @@ export const LLM_GLOBAL_SLOTS: readonly LlmGlobalSlotId[] = [
   "taskEditor",
 ] as const;
 
-const STAFF_CLASS_SET = new Set<string>(LLM_STAFF_CLASSES);
-
 /** Keep only known OpenAPI staff-class literals (API-boundary SoT). */
 export function normalizeLlmStaffClasses(
   raw: readonly string[] | null | undefined,
 ): LlmStaffClass[] {
   if (!raw || raw.length === 0) return [];
   return LLM_STAFF_CLASSES.filter((c) => raw.includes(c));
-}
-
-/** Keep task-mode classes only. */
-export function normalizeTaskStaffClasses(
-  raw: readonly string[] | null | undefined,
-): LlmStaffClass[] {
-  return normalizeLlmStaffClasses(raw);
-}
-
-export function isLlmStaffClass(value: string): value is LlmStaffClass {
-  return STAFF_CLASS_SET.has(value);
 }
 
 export type LlmWebSearchProvider = LlmProfileUpsertBody["webSearchProvider"];

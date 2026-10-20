@@ -48,10 +48,10 @@ export function UserEventTimeSection({
 
   return (
     <div
-      className="flex flex-col gap-sm rounded-md border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-overlay)_35%,transparent)] px-md py-sm"
+      className="flex min-w-0 w-full flex-col gap-md rounded-lg border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-overlay)_35%,transparent)] px-md py-md"
       data-testid="user-event-time-section"
     >
-      <div className="flex min-w-0 items-center gap-md">
+      <div className="flex min-w-0 items-center justify-between gap-md">
         <FieldLabel className="mb-0 min-w-0 flex-1">
           {t("userEvent.allDay")}
         </FieldLabel>
@@ -65,9 +65,9 @@ export function UserEventTimeSection({
       </div>
 
       {!isRecurring ? (
-        <div className="flex flex-col gap-xs">
+        <div className="flex min-w-0 flex-col gap-xs">
           <FieldLabel className="mb-0">{t("userEvent.durationPresets")}</FieldLabel>
-          <div className="flex flex-wrap items-center gap-xs">
+          <div className="flex min-w-0 flex-wrap items-center gap-xs">
             {USER_EVENT_DAY_PRESETS.map((days) => (
               <PillButton
                 key={days}
@@ -78,7 +78,7 @@ export function UserEventTimeSection({
                 {t("userEvent.daysPreset", { count: days })}
               </PillButton>
             ))}
-            <div className="inline-flex items-center gap-xs">
+            <div className="inline-flex min-w-0 items-center gap-xs">
               <TextField
                 aria-label={t("userEvent.customDaysAria")}
                 placeholder={t("userEvent.customDaysPlaceholder")}
@@ -111,40 +111,44 @@ export function UserEventTimeSection({
 
       {isRecurring ? (
         !values.isAllDay ? (
-          <div className="flex flex-col gap-sm">
-            <div className="flex min-w-0 items-center gap-xs">
-              <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-event-start">
-                {startLabel}
-              </FieldLabel>
-              <TextField
-                id="user-event-event-start"
-                aria-label={startLabel}
-                type="time"
-                value={values.eventStartTime}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, eventStartTime: event.target.value }))
-                }
-                className="min-w-0 w-[9.5rem] max-w-full shrink-0"
-                required
-                data-testid="user-event-event-start"
-              />
-              <NowFillButton onClick={onNowFill} />
-            </div>
-            <div className="flex min-w-0 items-center gap-xs">
-              <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-event-end">
-                {endLabel}
-              </FieldLabel>
-              <TextField
-                id="user-event-event-end"
-                aria-label={endLabel}
-                type="time"
-                value={values.eventEndTime}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, eventEndTime: event.target.value }))
-                }
-                className="w-[9.5rem] max-w-full shrink-0"
-                data-testid="user-event-event-end"
-              />
+          <div className="flex min-w-0 flex-col gap-sm">
+            <div className="grid min-w-0 grid-cols-1 gap-sm sm:grid-cols-2">
+              <div className="flex min-w-0 flex-col gap-xs">
+                <FieldLabel className="mb-0" htmlFor="user-event-event-start">
+                  {startLabel}
+                </FieldLabel>
+                <div className="flex min-w-0 items-center gap-xs">
+                  <TextField
+                    id="user-event-event-start"
+                    aria-label={startLabel}
+                    type="time"
+                    value={values.eventStartTime}
+                    onChange={(event) =>
+                      setValues((prev) => ({ ...prev, eventStartTime: event.target.value }))
+                    }
+                    className="min-w-0 flex-1"
+                    required
+                    data-testid="user-event-event-start"
+                  />
+                  <NowFillButton onClick={onNowFill} />
+                </div>
+              </div>
+              <div className="flex min-w-0 flex-col gap-xs">
+                <FieldLabel className="mb-0" htmlFor="user-event-event-end">
+                  {endLabel}
+                </FieldLabel>
+                <TextField
+                  id="user-event-event-end"
+                  aria-label={endLabel}
+                  type="time"
+                  value={values.eventEndTime}
+                  onChange={(event) =>
+                    setValues((prev) => ({ ...prev, eventEndTime: event.target.value }))
+                  }
+                  className="min-w-0 w-full"
+                  data-testid="user-event-event-end"
+                />
+              </div>
             </div>
             <OvernightClockHint
               startClock={values.eventStartTime}
@@ -154,27 +158,29 @@ export function UserEventTimeSection({
           </div>
         ) : null
       ) : (
-        <div className="flex flex-col gap-sm">
-          <div className="flex min-w-0 items-center gap-xs">
-            <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-start">
+        <div className="grid min-w-0 grid-cols-1 gap-sm sm:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-xs">
+            <FieldLabel className="mb-0" htmlFor="user-event-start">
               {startLabel}
             </FieldLabel>
-            <TextField
-              id="user-event-start"
-              aria-label={startLabel}
-              type={values.isAllDay ? "date" : "datetime-local"}
-              value={values.startTime}
-              onChange={(event) =>
-                setValues((prev) => ({ ...prev, startTime: event.target.value }))
-              }
-              className="min-w-0 w-[16rem] max-w-full shrink-0"
-              required
-              data-testid="user-event-start"
-            />
-            <NowFillButton onClick={onNowFill} />
+            <div className="flex min-w-0 items-center gap-xs">
+              <TextField
+                id="user-event-start"
+                aria-label={startLabel}
+                type={values.isAllDay ? "date" : "datetime-local"}
+                value={values.startTime}
+                onChange={(event) =>
+                  setValues((prev) => ({ ...prev, startTime: event.target.value }))
+                }
+                className="min-w-0 flex-1"
+                required
+                data-testid="user-event-start"
+              />
+              <NowFillButton onClick={onNowFill} />
+            </div>
           </div>
-          <div className="flex min-w-0 items-center gap-xs">
-            <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-end">
+          <div className="flex min-w-0 flex-col gap-xs">
+            <FieldLabel className="mb-0" htmlFor="user-event-end">
               {endLabel}
             </FieldLabel>
             <TextField
@@ -185,7 +191,7 @@ export function UserEventTimeSection({
               onChange={(event) =>
                 setValues((prev) => ({ ...prev, endTime: event.target.value }))
               }
-              className="w-[16rem] max-w-full shrink-0"
+              className="min-w-0 w-full"
               data-testid="user-event-end"
             />
           </div>
@@ -193,7 +199,7 @@ export function UserEventTimeSection({
       )}
 
       <div className="flex min-w-0 flex-col gap-xs">
-        <div className="flex min-w-0 items-center gap-md">
+        <div className="flex min-w-0 items-center justify-between gap-md">
           <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor="user-event-remind-before">
             {t("userEvent.remindBeforeDays")}
           </FieldLabel>
@@ -213,7 +219,7 @@ export function UserEventTimeSection({
             data-testid="user-event-remind-before"
           />
         </div>
-        <p className="m-0 text-caption text-text-muted">{remindHint}</p>
+        <p className="m-0 min-w-0 break-words text-caption text-text-muted">{remindHint}</p>
       </div>
     </div>
   );

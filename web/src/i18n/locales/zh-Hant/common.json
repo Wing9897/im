@@ -82,7 +82,7 @@
       "settings": "設定",
       "actions": "動作",
       "tasks": "任務",
-      "worksets": "工作集"
+      "worksets": "專區"
     },
     "unnamedTask": "未命名任務",
     "monitorWall": "監控牆",
@@ -132,7 +132,7 @@
   "systemTasks": {
     "userOrAssistant": {
       "title": "用戶或助手",
-      "shortDescription": "系統功能：手動或助手建立日程事件。歸屬由工作集決定，預設為內建「一般」；不是可編輯的分析任務。"
+      "shortDescription": "系統功能：手動或助手建立日程事件。必須歸入專區，預設內建「一般」；不是可編輯的分析任務。"
     },
     "clientManager": {
       "title": "客戶經理",
@@ -153,7 +153,7 @@
     },
     "localNotify": {
       "title": "本機通知",
-      "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及工作集事件，並以語音、畫面或最近一天收件匣通知。",
+      "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及專區事件，並以語音、畫面或最近一天收件匣通知。",
       "linkLabel": "前往本機通知"
     },
     "retention": {
@@ -245,6 +245,15 @@
     "folder": "資料夾",
     "endpoint": "端點"
   },
+  "createMenu": {
+    "label": "＋新增",
+    "aria": "新增",
+    "event": "事件",
+    "recurring": "週期事件",
+    "item": "物品",
+    "task": "任務",
+    "source": "來源"
+  },
   "channelPicker": {
     "all": "全部",
     "platformFilterAria": "平台過濾",
@@ -261,6 +270,7 @@
     "emptyDefault": "尚無可用頻道",
     "emptyForPlatform": "此平台尚無可用頻道",
     "emptyNeedSources": "尚無可用頻道，請先到來源管理新增來源",
+    "addSource": "＋新增來源",
     "summaryMonitorScope": "監控範圍",
     "taskTitle": "選擇分析來源頻道",
     "taskSummary": "分析來源",
@@ -355,8 +365,8 @@
   "notify": {
     "prefLabel": "通知",
     "prefAria": "此條目是否通知",
-    "prefHint": "跟隨工作集與全局開關",
-    "prefHelp": "勾選後仍跟工作集與全局開關；工作集關掉則不響。",
+    "prefHint": "跟隨專區與全局開關",
+    "prefHelp": "勾選後仍跟專區與全局開關；專區關掉則不響。",
     "inboxTitle": "最近一天",
     "inboxEmpty": "最近一天沒有通知。",
     "inboxOpenAria": "打開最近一天通知",
@@ -520,6 +530,7 @@
     "presetScheduleEvents": "行程提取",
     "stepEventsTitle": "等第一次分析完成",
     "stepEventsBody": "任務啟用後，分析結果會寫入情報事件；有時間的事件也會出現在時間規劃。",
+    "viewResults": "查看結果",
     "stepAiTitle": "建立 AI 設定檔並綁定助手槽",
     "stepAiBody": "可選。打開 AI 供應商頁面，建立設定檔，再綁定助手全局槽。不會自動種子預設檔。",
     "openAiProvider": "AI 供應商"

@@ -25,7 +25,7 @@ describe("simpleMode", () => {
 
   it("picks home by mode", () => {
     expect(homePathForMode(true)).toBe("/timeline");
-    expect(homePathForMode(false)).toBe("/monitor");
+    expect(homePathForMode(false)).toBe("/timeline");
   });
 
   it("hides collect/analyze paths and task editors, not the workset catalog", () => {

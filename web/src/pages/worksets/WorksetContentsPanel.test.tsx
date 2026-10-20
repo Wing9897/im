@@ -9,6 +9,7 @@ const listItems = vi.fn();
 const listItemCategories = vi.fn();
 const listUserEventsPage = vi.fn();
 const navigate = vi.fn();
+const simpleModeState = vi.hoisted(() => ({ simpleMode: false }));
 
 vi.mock("../../api/items", () => ({
   listItems: (...args: unknown[]) => listItems(...args),
@@ -21,6 +22,13 @@ vi.mock("../../api/userEvents", () => ({
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
+}));
+
+vi.mock("../../context/SimpleModeContext", () => ({
+  useSimpleMode: () => ({
+    simpleMode: simpleModeState.simpleMode,
+    setSimpleMode: vi.fn(),
+  }),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -133,6 +141,7 @@ describe("WorksetContentsPanel", () => {
   let root: Root | null = null;
 
   beforeEach(() => {
+    simpleModeState.simpleMode = false;
     listItems.mockReset();
     listItemCategories.mockReset();
     listUserEventsPage.mockReset();
@@ -288,6 +297,29 @@ describe("WorksetContentsPanel", () => {
         .click();
     });
     expect(navigate).toHaveBeenCalledWith("/tasks/new?worksetId=ws-1");
+  });
+
+  it("hides tasks section and add-task in simple mode", async () => {
+    simpleModeState.simpleMode = true;
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <WorksetContentsPanel
+          workset={{
+            id: "ws-1",
+            title: "Ops",
+            isSystem: false,
+            tasks: [task({ id: "t1", name: "Scan" })],
+          }}
+        />,
+      );
+    });
+
+    await flushLoads();
+    expect(container.querySelector('[data-testid="workset-detail-add-task"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-detail-task-t1"]')).toBeNull();
+    expect(container.textContent).not.toContain("Tasks in this workset");
+    expect(container.querySelector('[data-testid="workset-detail-add-item"]')).toBeTruthy();
   });
 
   it("shows empty summary copy when nothing is due", async () => {

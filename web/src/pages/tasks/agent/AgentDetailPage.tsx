@@ -24,6 +24,7 @@ import { AgentDetailHeader } from "./AgentDetailHeader";
 import { AgentDetailMetaSection } from "./AgentDetailMetaSection";
 import { AgentDetailSourcesSection } from "./AgentDetailSourcesSection";
 import { AgentDetailTickSection } from "./AgentDetailTickSection";
+import { RecurringSeriesDialog } from "../../schedule/RecurringSeriesDialog";
 import { useAgentDetail } from "./useAgentDetail";
 import { useAgentDetailRetract } from "./useAgentDetailRetract";
 
@@ -50,6 +51,8 @@ export function AgentDetailPage() {
     goBack,
     goEdit,
     goEditChild,
+    editingChildId,
+    closeEditChild,
     goTimeline,
   } = useAgentDetail();
 
@@ -141,6 +144,9 @@ export function AgentDetailPage() {
           spanLoading={spanLoading}
         />
       </div>
+      {editingChildId ? (
+        <RecurringSeriesDialog seriesId={editingChildId} open onClose={closeEditChild} />
+      ) : null}
       {retract.confirmOpen ? (
         <ConfirmDialog
           title={t("tasks:agentDetail.retractLastWave")}

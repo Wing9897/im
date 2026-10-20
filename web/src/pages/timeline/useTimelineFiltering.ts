@@ -21,6 +21,8 @@ interface UseTimelineFilteringOptions {
   monthCursor: Date;
   /** When false, soft-dismissed events are excluded from timeline views. Product default is true. */
   showDismissed: boolean;
+  /** When false, `item_remind` rows are excluded. Product default is true. */
+  showItemRemind?: boolean;
   focusedDay: Date | null;
 }
 
@@ -57,6 +59,7 @@ export function useTimelineFiltering({
   rangeEnd,
   monthCursor,
   showDismissed,
+  showItemRemind = true,
   focusedDay,
 }: UseTimelineFilteringOptions): UseTimelineFilteringReturn {
   const effectiveEvents = useMemo(
@@ -80,9 +83,12 @@ export function useTimelineFiltering({
   );
 
   const filteredEvents = useMemo(() => {
-    if (showDismissed) return effectiveEvents;
-    return effectiveEvents.filter((event) => !event.dismissed);
-  }, [effectiveEvents, showDismissed]);
+    return effectiveEvents.filter((event) => {
+      if (!showDismissed && event.dismissed) return false;
+      if (!showItemRemind && event.source === "item_remind") return false;
+      return true;
+    });
+  }, [effectiveEvents, showDismissed, showItemRemind]);
 
   const visibleEvents = useMemo(
     () =>

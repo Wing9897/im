@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { createTask, updateTask } from "../api/tasks";
 import {
   analysisTaskToFormState,
@@ -16,6 +16,7 @@ import {
   clearChatEditorDrafts,
   hasMeaningfulChatEditorFormDraft,
 } from "../domain/prefs";
+import { readReturnTo } from "../routing/returnTo";
 
 // ============================================================
 // Types
@@ -49,6 +50,8 @@ export function useTaskPersistence({
 }: UseTaskPersistenceOptions): UseTaskPersistenceReturn {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = readReturnTo(location.search, "/tasks");
   const { showToast } = useToast();
   const { tasks, tasksLoading, taskLoadError, refreshTasks } = useTaskCatalog();
 
@@ -122,7 +125,7 @@ export function useTaskPersistence({
       // Refresh the task catalog so the list page shows the new/updated task immediately
       await refreshTasks().catch(() => {});
       if (!isMountedRef.current) return;
-      navigate("/tasks");
+      navigate(returnTo);
     } catch (err) {
       if (!isMountedRef.current) return;
       const message = handleCommandError(err, showToast);
@@ -136,6 +139,7 @@ export function useTaskPersistence({
     taskId,
     isSaving,
     navigate,
+    returnTo,
     showToast,
     isMountedRef,
     onError,

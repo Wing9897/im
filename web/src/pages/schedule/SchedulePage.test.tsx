@@ -44,6 +44,14 @@ vi.mock("../../api/userEvents", () => ({
 vi.mock("../../api/recurringSeries", () => ({
   listRecurringSeries: (...args: unknown[]) => mockListRecurringSeries(...args),
   deleteRecurringSeries: (...args: unknown[]) => mockDeleteRecurringSeries(...args),
+  getRecurringSeries: vi.fn(async () => ({
+    name: "Daily",
+    rrule: "FREQ=DAILY",
+    eventStartTime: "",
+    eventEndTime: "",
+    eventLocation: "",
+    notifyPref: null,
+  })),
   patchRecurringSeries: vi.fn(),
 }));
 
@@ -188,7 +196,7 @@ describe("SchedulePage", () => {
     });
   });
 
-  it("navigates to series editor when recurring edit is clicked", async () => {
+  it("opens the series dialog when recurring edit is clicked", async () => {
     await act(async () => {
       root = createRoot(container);
       root.render(createElement(SchedulePage));
@@ -203,9 +211,11 @@ describe("SchedulePage", () => {
 
     await act(async () => {
       editBtn.click();
+      await Promise.resolve();
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/schedule/recurring/rec-1/edit");
+    expect(document.querySelector('[data-testid="recurring-series-dialog"]')).toBeTruthy();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   async function renderPage() {

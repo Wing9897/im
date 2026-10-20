@@ -34,7 +34,6 @@ export {
   sourceIdsForTaskChannels,
   taskCalendarWriteEnabled,
   taskIntelEnabled,
-  taskNotifyEnabled,
   taskNotifyPrefOn,
   taskOwnerWorksetId,
   taskTimelineEnabled,

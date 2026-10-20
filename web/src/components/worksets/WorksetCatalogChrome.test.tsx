@@ -209,7 +209,7 @@ describe("WorksetCatalogChrome", () => {
       harness.container.querySelector('[data-testid="workset-graph-filter-value"]')?.textContent,
     ).toContain("10/11");
     expect(document.body.querySelector('[data-testid="workset-graph-filter-cap-hint"]')?.textContent).toContain(
-      "最多同時顯示 10 個工作集",
+      "最多同時顯示 10 個專區",
     );
 
     await act(async () => {

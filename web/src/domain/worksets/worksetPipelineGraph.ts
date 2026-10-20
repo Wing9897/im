@@ -71,7 +71,6 @@ export {
   taskIntelEnabled,
   taskTimelineEnabled,
   taskCalendarWriteEnabled,
-  taskNotifyEnabled,
   taskNotifyPrefOn,
   worksetNotifyOn,
   worksetExternalOn,

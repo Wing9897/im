@@ -10,11 +10,13 @@ import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { TimelineControlBar } from "./TimelineControlBar";
+import { TimelinePageProvider } from "../TimelinePageContext";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import type { TimelineMonthLayout } from "../../../domain/timeline/monthCardSources";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
+import { makeTimelinePageContext } from "../../../test/timelinePageContextFixtures";
 
 interface RenderOpts {
   selectedSources?: SourceFilterSelection;
@@ -45,37 +47,62 @@ interface RenderOpts {
 }
 
 function renderControlBar(opts: RenderOpts = {}) {
-  const props = {
-    selectedSources: opts.selectedSources ?? null,
-    setSelectedSources: opts.setSelectedSources ?? (() => {}),
-    timelineTasks: opts.timelineTasks ?? [],
-    worksets: opts.worksets,
-    expandTasks: opts.expandTasks,
-    viewMode: opts.viewMode ?? ("calendar" as const),
-    setViewMode: opts.setViewMode ?? (() => {}),
-    timeScale: opts.timeScale ?? ("month" as TimelineScale),
-    monthLayout: opts.monthLayout,
-    onMonthLayoutChange: opts.onMonthLayoutChange,
-    onJumpTo: opts.onJumpTo ?? (() => {}),
-    onMoveCursor: opts.onMoveCursor ?? (() => {}),
-    visibleRangeLabel: opts.visibleRangeLabel ?? "2025年1月",
-    overviewMode: opts.overviewMode,
-    onOverviewModeChange: opts.onOverviewModeChange,
-    overviewRangeId: opts.overviewRangeId,
-    onOverviewRangeChange: opts.onOverviewRangeChange,
-    jumpDateValue: opts.jumpDateValue,
-    onJumpDate: opts.onJumpDate,
-    isFullscreen: opts.isFullscreen,
-    onToggleFullscreen: opts.onToggleFullscreen,
-    onAddEvent: opts.onAddEvent,
-    showLoadingIndicator: opts.showLoadingIndicator,
-    loadingLabel: opts.loadingLabel,
-    subscribeAvailability: opts.subscribeAvailability,
-  };
+  const ctx = makeTimelinePageContext({
+    chrome: {
+      selectedSources: opts.selectedSources ?? null,
+      setSelectedSources: opts.setSelectedSources ?? (() => {}),
+      timelineTasks: opts.timelineTasks ?? [],
+      ...(opts.worksets !== undefined ? { worksets: opts.worksets } : {}),
+      ...(opts.expandTasks !== undefined ? { expandTasks: opts.expandTasks } : {}),
+      viewMode: opts.viewMode ?? "calendar",
+      setViewMode: opts.setViewMode ?? (() => {}),
+      ...(opts.monthLayout !== undefined ? { monthLayout: opts.monthLayout } : {}),
+      ...(opts.onMonthLayoutChange !== undefined
+        ? { onMonthLayoutChange: opts.onMonthLayoutChange }
+        : {}),
+      ...(opts.overviewMode !== undefined ? { overviewMode: opts.overviewMode } : {}),
+      ...(opts.onOverviewModeChange !== undefined
+        ? { onOverviewModeChange: opts.onOverviewModeChange }
+        : {}),
+      ...(opts.onAddEvent !== undefined ? { onAddEvent: opts.onAddEvent } : {}),
+      ...(opts.showLoadingIndicator !== undefined
+        ? { showLoadingIndicator: opts.showLoadingIndicator }
+        : {}),
+      ...(opts.loadingLabel !== undefined ? { loadingLabel: opts.loadingLabel } : {}),
+      ...(opts.subscribeAvailability !== undefined
+        ? { subscribeAvailability: opts.subscribeAvailability }
+        : {}),
+    },
+    navigation: {
+      ...(opts.timeScale !== undefined ? { timeScale: opts.timeScale } : {}),
+      onJumpTo: opts.onJumpTo ?? (() => {}),
+      onMoveCursor: opts.onMoveCursor ?? (() => {}),
+      visibleRangeLabel: opts.visibleRangeLabel ?? "2025年1月",
+      ...(opts.overviewRangeId !== undefined ? { overviewRangeId: opts.overviewRangeId } : {}),
+      ...(opts.onOverviewRangeChange !== undefined
+        ? { onOverviewRangeChange: opts.onOverviewRangeChange }
+        : {}),
+      ...(opts.jumpDateValue !== undefined ? { jumpDateValue: opts.jumpDateValue } : {}),
+      ...(opts.onJumpDate !== undefined ? { onJumpDate: opts.onJumpDate } : {}),
+    },
+  });
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      wrapWithI18n(createElement(MemoryRouter, null, createElement(TimelineControlBar, props))),
+      wrapWithI18n(
+        createElement(
+          TimelinePageProvider,
+          { value: ctx },
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(TimelineControlBar, {
+              isFullscreen: opts.isFullscreen,
+              onToggleFullscreen: opts.onToggleFullscreen,
+            }),
+          ),
+        ),
+      ),
     );
   });
   return container;
@@ -544,6 +571,37 @@ describe("TimelineControlBar", () => {
       btn.click();
     });
     expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses icon buttons for schedule and subscriptions, keeping the zh-Hant labels", () => {
+    const container = renderControlBar();
+    const schedule = container.querySelector<HTMLButtonElement>(
+      '[data-testid="timeline-open-schedule"]',
+    );
+    const subscriptions = container.querySelector<HTMLButtonElement>(
+      '[data-testid="timeline-open-subscriptions"]',
+    );
+    const today = container.querySelector<HTMLButtonElement>('[data-testid="timeline-jump-now"]');
+    expect(schedule).not.toBeNull();
+    expect(subscriptions).not.toBeNull();
+    expect(schedule!.getAttribute("aria-label")).toBe(i18n.t("timeline:toolbar.mySchedule"));
+    expect(schedule!.getAttribute("title")).toBe(i18n.t("timeline:toolbar.mySchedule"));
+    expect(schedule!.textContent?.trim()).toBe("");
+    expect(schedule!.querySelector("svg")?.classList.contains("lucide-calendar-clock")).toBe(true);
+    expect(subscriptions!.getAttribute("aria-label")).toBe(
+      i18n.t("timeline:toolbar.manageSubscriptions"),
+    );
+    expect(subscriptions!.getAttribute("title")).toBe(i18n.t("timeline:toolbar.manageSubscriptions"));
+    expect(subscriptions!.textContent?.trim()).toBe("");
+    expect(subscriptions!.querySelector("svg")?.classList.contains("lucide-bookmark")).toBe(true);
+    expect(schedule!.querySelector("svg")?.getAttribute("width")).toBe(
+      today!.querySelector("svg")?.getAttribute("width"),
+    );
+    expect(subscriptions!.querySelector("svg")?.getAttribute("width")).toBe("16");
+    const utilities = container.querySelector('[data-testid="timeline-toolbar-utilities"]');
+    expect(schedule!.parentElement).toBe(utilities);
+    expect(subscriptions!.parentElement).toBe(utilities);
+    expect(container.querySelectorAll('[data-testid="timeline-control-bar"]')).toHaveLength(1);
   });
 
   it("calls onAddEvent with no args (does not forward the click event)", () => {

@@ -19,5 +19,3 @@ export const ITEM_UNIT_PRESETS = [
   "ml",
   "L",
 ] as const;
-
-export type ItemUnitPreset = (typeof ITEM_UNIT_PRESETS)[number];

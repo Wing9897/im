@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from server.app_logging import record, summarize_error_message
+from server.domain.source_statuses import SOURCE_STATUS_CONNECTED, SOURCE_STATUS_ERROR
+from server.queries import sources_queries
 from server.util import utc_now_iso
 
 logger = logging.getLogger(__name__)
@@ -14,27 +16,13 @@ logger = logging.getLogger(__name__)
 async def mark_source_connected(db: Any, source_id: str, *, name: str | None = None) -> None:
     """Persist connected status (optionally renaming the source)."""
     now = utc_now_iso()
-    if name is None:
-        await db.execute(
-            "UPDATE sources SET status = 'connected', last_error = NULL, "
-            "last_connected_at = ?, updated_at = ? WHERE id = ?",
-            (now, now, source_id),
-        )
-    else:
-        await db.execute(
-            "UPDATE sources SET status = 'connected', last_error = NULL, name = ?, "
-            "last_connected_at = ?, updated_at = ? WHERE id = ?",
-            (name, now, now, source_id),
-        )
+    await sources_queries.update_source_status(db, source_id, SOURCE_STATUS_CONNECTED, name=name, now=now)
 
 
 async def _record_source_error(db: Any, source_id: str, error: str) -> None:
     """Best-effort Settings→Logs row for source connect / runtime failures."""
     try:
-        row = await db.fetch_one(
-            "SELECT name, platform FROM sources WHERE id = ?",
-            (source_id,),
-        )
+        row = await sources_queries.fetch_source_name_platform(db, source_id)
         source_name = str(row["name"]) if row and row.get("name") else source_id
         platform = str(row["platform"]) if row and row.get("platform") else "unknown"
         summary = summarize_error_message(error)
@@ -63,10 +51,7 @@ async def _record_source_error(db: Any, source_id: str, error: str) -> None:
 
 
 async def set_source_error(db: Any, source_id: str, error: str) -> None:
-    await db.execute(
-        "UPDATE sources SET status = 'error', last_error = ?, updated_at = ? WHERE id = ?",
-        (error, utc_now_iso(), source_id),
-    )
+    await sources_queries.update_source_status(db, source_id, SOURCE_STATUS_ERROR, last_error=error)
     await _record_source_error(db, source_id, error)
 
 
@@ -79,21 +64,15 @@ async def update_source_status(
 ) -> None:
     """Best-effort persist used by collector adapters during reconnect loops."""
     now = utc_now_iso()
-    previous = await db.fetch_one(
-        "SELECT status FROM sources WHERE id = ?",
-        (source_id,),
-    )
+    previous = await sources_queries.fetch_source_status(db, source_id)
     previous_status = str(previous["status"]) if previous else None
-    if status == "connected":
-        await db.execute(
-            "UPDATE sources SET status = ?, last_error = NULL, last_connected_at = ?, updated_at = ? WHERE id = ?",
-            (status, now, now, source_id),
-        )
-    else:
-        await db.execute(
-            "UPDATE sources SET status = ?, last_error = ?, updated_at = ? WHERE id = ?",
-            (status, last_error, now, source_id),
-        )
+    await sources_queries.update_source_status(
+        db,
+        source_id,
+        status,
+        last_error=last_error,
+        now=now,
+    )
     # Log only on transition into error (poll/reconnect loops can re-set error).
-    if status == "error" and last_error and previous_status != "error":
+    if status == SOURCE_STATUS_ERROR and last_error and previous_status != SOURCE_STATUS_ERROR:
         await _record_source_error(db, source_id, last_error)

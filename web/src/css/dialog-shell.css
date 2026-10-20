@@ -29,6 +29,8 @@
  */
 .im-dialog-body {
   min-height: var(--im-dialog-body-min-h, 7.5rem);
+  min-width: 0;
+  overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 

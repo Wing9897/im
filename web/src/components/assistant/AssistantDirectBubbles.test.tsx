@@ -452,6 +452,9 @@ describe("AssistantDirectBubbles", () => {
     expect(css).toMatch(
       /\.im-assistant-direct\s*\{[^}]*bottom:\s*calc\(20px \+ env\(safe-area-inset-bottom/s,
     );
+    expect(css).toMatch(
+      /\.im-assistant-direct:has\(\.im-assistant-direct__composer\)\s*\{[^}]*right:\s*12px/s,
+    );
     expect(css).not.toMatch(/bottom:\s*max\(24px,\s*calc\(12%/);
     expect(css).toMatch(
       /\.im-assistant-direct__presence-name\s*\{[^}]*color:\s*var\(--text-primary\)/s,

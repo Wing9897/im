@@ -20,13 +20,8 @@ export function formToCreatePayload(form: RssFormFields) {
   };
 }
 
-export function formToPatch(form: RssFormFields) {
-  return {
-    feedUrl: form.feedUrl.trim(),
-    name: form.name.trim() || null,
-    pollIntervalSeconds: Math.max(60, form.pollIntervalMinutes * 60),
-  };
-}
+/** Patch uses the same shape as create (full replace of editable fields). */
+export const formToPatch = formToCreatePayload;
 
 interface RssEditDialogProps {
   feed: RssFeedInfo;

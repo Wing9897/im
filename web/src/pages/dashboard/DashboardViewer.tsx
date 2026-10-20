@@ -87,6 +87,11 @@ export function DashboardViewer() {
   );
 
   const shell = useDashboardViewerShell({ visibleTasks, navigate });
+  const isTaskView = !shell.isWorksetView;
+  const isWorksetView = shell.isWorksetView;
+  const worksetCatalogTab = parseWorksetCatalogTab(searchParams.get("tab"));
+  const isTaskGraph = isTaskView && worksetCatalogTab === "graph";
+  const isWorksetGraph = isWorksetView && worksetCatalogTab === "graph";
 
   const openTask = useCallback(
     (task: AnalysisTask) => {
@@ -107,20 +112,17 @@ export function DashboardViewer() {
     onSelect: (task) => setFocusedId(task.id),
     onActivate: openTask,
     onEscape: clearTask,
-    enabled: !loading && visibleTasks.length > 0,
+    enabled: !loading && visibleTasks.length > 0 && !isTaskGraph,
   });
 
   const systemTasksSection =
-    !shell.isWorksetView && shell.showSystemTasks && !loading && !error ? (
+    isTaskView && !isTaskGraph && shell.showSystemTasks && !loading && !error ? (
       <DashboardSystemTasksSection
         catalog={systemCatalog}
         title={copy.systemSectionTitle}
         subtitle={copy.systemSectionSubtitle}
       />
     ) : null;
-
-  const isTaskView = !shell.isWorksetView;
-  const isWorksetView = shell.isWorksetView;
 
   useEffect(() => {
     if (!isTaskView) return;
@@ -131,8 +133,6 @@ export function DashboardViewer() {
     setSearchParams(next, { replace: true });
   }, [isTaskView, searchParams, setSearchParams]);
 
-  const worksetCatalogTab = parseWorksetCatalogTab(searchParams.get("tab"));
-  const isWorksetGraph = isWorksetView && worksetCatalogTab === "graph";
   const searchQueryForView = isWorksetView ? shell.worksetSearchQuery : searchQuery;
   const worksetSearchEmpty =
     isWorksetView &&
@@ -143,14 +143,15 @@ export function DashboardViewer() {
   return (
     <AppPageShell
       width={isWorksetView ? "fluid" : "standard"}
-      className={isWorksetGraph ? "im-ws-graph-page" : undefined}
+      className={isWorksetGraph || isTaskGraph ? "im-ws-graph-page" : undefined}
     >
       {!loading && !error ? (
         <DashboardViewerToolbar
           t={t}
           isWorksetView={isWorksetView}
-          hideSearch={isWorksetGraph}
-          hideCreateWorkset={isWorksetGraph}
+          isTaskGraph={isTaskGraph}
+          hideSearch={isWorksetGraph || isTaskGraph}
+          hideCreateWorkset={isWorksetGraph || isTaskGraph}
           modeFilter={modeFilter}
           taskCount={tasks.length}
           searchQuery={searchQueryForView}
@@ -172,14 +173,14 @@ export function DashboardViewer() {
       {loading ? <SkeletonScreen variant="card-grid" count={6} columns={3} /> : null}
 
       {/* Pipeline wizard is catalog-empty only; any task (incl. inactive demo) hides it. */}
-      {!loading && !error && isTaskView && tasks.length === 0 && pipeline.showChecklist ? (
+      {!loading && !error && isTaskView && !isTaskGraph && tasks.length === 0 && pipeline.showChecklist ? (
         <PipelineGuideChecklist
           state={pipeline.state}
           assistantSlotReady={pipeline.assistantSlotReady}
         />
       ) : null}
 
-      {!loading && !error && tasks.length === 0 && isTaskView && !pipeline.showChecklist && (
+      {!loading && !error && tasks.length === 0 && isTaskView && !isTaskGraph && !pipeline.showChecklist && (
         <EmptyState
           className="im-enter-rise"
           illustration={<EmptyStateGlyph icon={ListChecks} />}
@@ -193,7 +194,7 @@ export function DashboardViewer() {
         />
       )}
 
-      {!loading && tasks.length > 0 && filteredTasks.length === 0 && isTaskView && (
+      {!loading && tasks.length > 0 && filteredTasks.length === 0 && isTaskView && !isTaskGraph && (
         <EmptyState
           illustration={<EmptyStateGlyph icon={Search} />}
           title={t("tasks:noMatchTitle")}
@@ -201,7 +202,7 @@ export function DashboardViewer() {
         />
       )}
 
-      {!loading && filteredTasks.length > 0 && visibleTasks.length === 0 && isTaskView && (
+      {!loading && filteredTasks.length > 0 && visibleTasks.length === 0 && isTaskView && !isTaskGraph && (
         <EmptyState
           illustration={<EmptyStateGlyph icon={ListChecks} />}
           title={t("tasks:emptyModeTitle")}
@@ -224,7 +225,7 @@ export function DashboardViewer() {
         />
       ) : null}
 
-      {!loading && !error && isWorksetGraph ? <WorksetPipelineGraphPanel /> : null}
+      {!loading && !error && (isWorksetGraph || isTaskGraph) ? <WorksetPipelineGraphPanel /> : null}
 
       {!loading && !error && isWorksetView && !isWorksetGraph && !worksetSearchEmpty ? (
         <DashboardByWorksetList
@@ -238,7 +239,7 @@ export function DashboardViewer() {
         />
       ) : null}
 
-      {!loading && visibleTasks.length > 0 && isTaskView ? (
+      {!loading && visibleTasks.length > 0 && isTaskView && !isTaskGraph ? (
         <DashboardByTaskList
           tasks={visibleTasks}
           navigate={navigate}

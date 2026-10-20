@@ -64,15 +64,15 @@
   "published": {
     "needLogin": "Sign in to calendar share before publishing or unpublishing.",
     "empty": "No published calendars yet.",
-    "formTitle": "Publish a workset",
-    "worksetLabel": "Local workset",
-    "worksetPlaceholder": "Choose a workset",
+    "formTitle": "Publish a space",
+    "worksetLabel": "Local space",
+    "worksetPlaceholder": "Choose a space",
     "edit": "Settings",
     "syncNow": "Update public copy",
     "syncing": "Updating…",
     "unpublish": "Unpublish",
     "unpublishing": "Unpublishing…",
-    "missingWorkset": "Local workset deleted; the public calendar is still up.",
+    "missingWorkset": "Local space deleted; the public calendar is still up.",
     "pendingSync": "Pending automatic update",
     "autoSync": {
       "label": "Auto-update",
@@ -84,14 +84,14 @@
         "3600": "Every 1 hour"
       }
     },
-    "publishCta": "Publish a workset",
+    "publishCta": "Publish a space",
     "grantsSummary": "{count} granted handles",
     "grantsClosed": "Private group — {count} handles can subscribe",
     "grantsEmpty": "Private group — add handles in Settings so others can subscribe",
     "form": {
-      "help": "Confirm uploads this workset now. Later event changes follow the toolbar Auto-update interval (minimum 1 minute). Turn it off to push only with the card refresh icon. Use the trash icon to unpublish.",
-      "catalogHelp": "Cover and description are copied from this workset when you upload. Change them on the workset card.",
-      "generalWarning": "The General workset includes unfiled events. Confirm nothing private should be published.",
+      "help": "Confirm uploads this space now. Later event changes follow the toolbar Auto-update interval (minimum 1 minute). Turn it off to push only with the card refresh icon. Use the trash icon to unpublish.",
+      "catalogHelp": "Cover and description are copied from this space when you upload. Change them on the space card.",
+      "generalWarning": "General holds events with no other space. Confirm nothing private should be published.",
       "slugLabel": "Calendar slug",
       "slugHelp": "Remote path looks like handle/slug. 1–64 characters; start with a letter or digit; then letters, digits, dot, underscore, or hyphen.",
       "slugRequired": "Enter a slug",

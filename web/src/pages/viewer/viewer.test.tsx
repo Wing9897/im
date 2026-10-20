@@ -6,14 +6,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
+import { SimpleModeProvider } from "../../context/SimpleModeContext";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("react-router-dom", () => ({
   NavLink: (props: { to: string; children: React.ReactNode; style?: unknown }) =>
     createElement("a", { href: props.to, "data-testid": "viewer-navlink" }, props.children),
   Outlet: () => createElement("div", { "data-testid": "outlet" }, "outlet-content"),
-  useLocation: () => ({ pathname: "/monitor" }),
+  useLocation: () => ({ pathname: "/monitor", search: "", hash: "" }),
   useNavigate: () => vi.fn(),
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
   Link: (props: { to: string; children: React.ReactNode; style?: unknown; [key: string]: unknown }) =>
     createElement(
       "a",
@@ -167,7 +169,9 @@ describe("Write UI hidden when access context is remote", () => {
 
   it("renders the top bar actions even when remote", () => {
     act(() => {
-      createRoot(container).render(wrapWithI18n(createElement(AppTopBar)));
+      createRoot(container).render(
+        wrapWithI18n(createElement(SimpleModeProvider, null, createElement(AppTopBar))),
+      );
     });
 
     const iconArea = container.querySelector("[data-testid='topbar-icon-actions']");
@@ -178,7 +182,9 @@ describe("Write UI hidden when access context is remote", () => {
 
   it("still renders status indicators and navigation when remote", () => {
     act(() => {
-      createRoot(container).render(wrapWithI18n(createElement(AppTopBar)));
+      createRoot(container).render(
+        wrapWithI18n(createElement(SimpleModeProvider, null, createElement(AppTopBar))),
+      );
     });
 
     expect(container.querySelector("[data-testid='topbar-status-area']")).not.toBeNull();

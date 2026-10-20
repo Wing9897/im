@@ -53,3 +53,14 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
     if channel_refs is not None:
         task["channelIds"] = channel_refs
     return task
+
+
+def task_response(
+    row: Mapping[str, Any],
+    channel_refs: list[dict[str, Any]] | None,
+    *,
+    deleted: int = 0,
+) -> dict[str, Any]:
+    result = serialize_task(row, channel_refs)
+    result.update({"deletedBatchCount": deleted})
+    return result

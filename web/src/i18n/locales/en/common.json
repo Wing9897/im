@@ -83,7 +83,7 @@
       "settings": "Settings",
       "actions": "Actions",
       "tasks": "Tasks",
-      "worksets": "Worksets"
+      "worksets": "Spaces"
     },
     "unnamedTask": "Untitled task",
     "monitorWall": "Monitor wall",
@@ -133,7 +133,7 @@
   "systemTasks": {
     "userOrAssistant": {
       "title": "User or Assistant",
-      "shortDescription": "System feature: create calendar events manually or via the assistant. Ownership is chosen by workset (default builtin General); not an editable analysis task."
+      "shortDescription": "System feature: create calendar events manually or via the assistant. Each event must belong to a space (default built-in General); not an editable analysis task."
     },
     "clientManager": {
       "title": "Account manager",
@@ -154,7 +154,7 @@
     },
     "localNotify": {
       "title": "Local notifications",
-      "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and workset events, then notifies via voice, on-screen, or the last-day inbox.",
+      "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and space events, then notifies via voice, on-screen, or the last-day inbox.",
       "linkLabel": "Go to local notifications"
     },
     "retention": {
@@ -246,6 +246,15 @@
     "folder": "Folder",
     "endpoint": "Endpoint"
   },
+  "createMenu": {
+    "label": "+ New",
+    "aria": "Create",
+    "event": "Event",
+    "recurring": "Recurring event",
+    "item": "Item",
+    "task": "Task",
+    "source": "Source"
+  },
   "channelPicker": {
     "all": "All",
     "platformFilterAria": "Platform filter",
@@ -262,6 +271,7 @@
     "emptyDefault": "No channels available",
     "emptyForPlatform": "No channels for this platform",
     "emptyNeedSources": "No channels yet — add sources in Sources first",
+    "addSource": "+ Add source",
     "summaryMonitorScope": "Monitor scope",
     "taskTitle": "Select analysis source channels",
     "taskSummary": "Analysis sources",
@@ -357,8 +367,8 @@
   "notify": {
     "prefLabel": "Notify",
     "prefAria": "Notify for this item",
-    "prefHint": "Follows workset and global switches",
-    "prefHelp": "When checked, still follows the workset and global switches; if the workset is off, this row does not fire.",
+    "prefHint": "Follows space and global switches",
+    "prefHelp": "When checked, still follows the space and global switches; if the space is off, this row does not fire.",
     "inboxTitle": "Last 24 hours",
     "inboxEmpty": "No notifications in the last day.",
     "inboxOpenAria": "Open last-day notifications",
@@ -522,6 +532,7 @@
     "presetScheduleEvents": "Extract schedule",
     "stepEventsTitle": "Wait for the first analysis",
     "stepEventsBody": "After the task is active, results appear as intel events; timed ones also show on Timeline.",
+    "viewResults": "View results",
     "stepAiTitle": "Create an AI profile and bind the assistant slot",
     "stepAiBody": "Optional. Open AI provider, create a profile, then bind the assistant global slot. Nothing is auto-seeded.",
     "openAiProvider": "AI provider"

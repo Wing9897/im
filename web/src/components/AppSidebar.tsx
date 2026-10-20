@@ -241,7 +241,7 @@ export function AppSidebar() {
                     className="im-auto-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2"
                     data-testid="app-sidebar-nav-scroll"
                   >
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-1">
                       {visibleGroups.map((group, groupIndex) => (
                         <div key={group.labelKey ?? `group-${groupIndex}`} className="flex flex-col gap-0.5">
                           {group.labelKey ? (

@@ -25,7 +25,6 @@ export {
   resolveEventListProvenanceKind,
   resolveEventListTaskName,
   resolveSubscribedCalendarPath,
-  eventListShowsWorksetAffiliation,
   eventListShowsProvenance,
   resolveSubscribedCalendarDescription,
   formatEventListAffiliationLabel,

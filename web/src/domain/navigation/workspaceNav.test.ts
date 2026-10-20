@@ -40,11 +40,11 @@ describe("aiWorkspaceNavItems", () => {
 
 describe("subscriptionsWorkspaceNavItems", () => {
   it("keeps mine / published / account / search with search last", () => {
-    expect(subscriptionsWorkspaceNavItems.map((item) => item.to)).toEqual([
-      "/subscriptions/mine",
-      "/subscriptions/published",
-      "/subscriptions/account",
-      "/subscriptions/search",
+    expect(subscriptionsWorkspaceNavItems.map((item) => item.id)).toEqual([
+      "mine",
+      "published",
+      "account",
+      "search",
     ]);
     expect(subscriptionsWorkspaceNavItems.map((item) => item.labelKey)).toEqual([
       "tabs.mine",

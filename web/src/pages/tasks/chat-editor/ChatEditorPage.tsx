@@ -13,6 +13,7 @@ import { usePersistedState } from "../../../hooks/usePersistedState";
 import { CHAT_EDITOR_TEMPLATE_USAGE_KEY } from "../../../domain/prefs";
 import { analysisModeSupportsTaskPresets } from "../../../domain/tasks/taskPresetModes";
 import { stickyChromePageFillClass } from "../../../components/ui/pageChrome";
+import { readReturnTo } from "../../../routing/returnTo";
 
 export function ChatEditorPage() {
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ export function ChatEditorPage() {
     scheduleError ?? (!llmProfileGate.ready ? llmProfileGate.reason : null) ?? saveBlockReason;
 
   const handleBack = () => {
-    navigate("/tasks");
+    navigate(readReturnTo(searchParams.toString(), "/tasks"));
   };
 
   const handlePresetApply = () => {
@@ -174,7 +175,7 @@ export function ChatEditorPage() {
       <div className="im-auto-scrollbar min-h-0 overflow-y-auto [scrollbar-gutter:stable]">
         <div className="mx-auto w-full max-w-5xl px-page-x pb-xl pt-sm">
           {error ? (
-            <p className="mb-sm text-caption text-danger" role="alert">
+            <p className="mb-sm text-caption text-error" role="alert">
               {error}
             </p>
           ) : null}

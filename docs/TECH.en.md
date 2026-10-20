@@ -54,14 +54,14 @@ The script removes known `intelligence_monitor.db` files and their `-wal` / `-sh
 
 ## 3. Data scope
 
-Most business rows carry `workset_id`. The builtin system row is `__general__` (UI “General”, `is_system=1`). Creating an analysis task, handwritten event, or item without a workset lands on `__general__`. Deleting a custom workset reassigns child rows to `__general__` first; `__general__` itself cannot be deleted or renamed.
+Most business rows carry `workset_id` (shown in the UI as Space). The builtin system row is `__general__` (UI “General”, `is_system=1`). Creating an analysis task, handwritten event, or item without a space lands on `__general__`. Deleting a custom space reassigns child rows to `__general__` first; `__general__` itself cannot be deleted or renamed.
 
-Sidebar **Worksets** is `/worksets`. **Tasks** is a **standalone route** `/tasks` (not a tab under a workset; the old `/tasks/worksets/…` helper is gone). `GET /api/v1/tasks` returns analysis tasks only. Recurring calendar series live on `/api/v1/calendar/recurring`, not as rows in the task catalog.
+Sidebar **Spaces** is `/worksets`. **Tasks** is a **standalone route** `/tasks` (not a tab under a space; the old `/tasks/worksets/…` helper is gone). `GET /api/v1/tasks` returns analysis tasks only. Recurring calendar series live on `/api/v1/calendar/recurring`, not as rows in the task catalog.
 
-Worksets also have:
+Spaces also have:
 
-- `notify_enabled` — default reminder for that workset
-- `external_enabled` — whether MCP / A2A can see that workset’s intel / messages / items (default on; all-off is fail-closed). Calendar “My schedule” is household-scoped and does not use this flag. The built-in assistant is not constrained by it.
+- `notify_enabled` — default reminder for that space
+- `external_enabled` — whether MCP / A2A can see that space’s intel / messages / items (default on; all-off is fail-closed). Calendar “My schedule” is household-scoped and does not use this flag. The built-in assistant is not constrained by it.
 
 ## 4. Auth
 
@@ -91,7 +91,7 @@ Business APIs live under `/api/v1`. Main groups (OpenAPI / source are authoritat
 | Prefix | Role |
 |--------|------|
 | `/api/v1/setup` | First-run register, login, refresh, devices, password |
-| `/api/v1/worksets` | Worksets |
+| `/api/v1/worksets` | Spaces |
 | `/api/v1/tasks` | Analysis tasks (including templates, activity-spans, agent-ticks) |
 | `/api/v1/sources`, `/messages`, `/channels` | Sources and collected messages |
 | `/api/v1/results` | Intel events (map / list; separate from the calendar window) |
@@ -110,11 +110,19 @@ MCP: `{API origin}/api/v1/mcp`, Streamable HTTP only. OpenClaw config example an
 
 Household master switches: `system_config.mcp_enabled` and `a2a_enabled` (default on, independent). Off → 403 on that HTTP surface. The same `mcp_cap_*` groups filter MCP `list_tools` / `call_tool` and the A2A internal tool loop.
 
+### 5.1 Backend layering (Route → Service → Query)
+
+The backend enforces a one-way three-tier dependency graph:
+
+- **Route (`server/api/routes/`)**: FastAPI endpoints, Pydantic request/response schemas, HTTP status mapping, SSE broadcast, and scheduler registration/unregistration.
+- **Service & domain packages (`server/services/`, `server/calendar/`, `server/items/`, `server/worksets/`, etc.)**: Transaction boundaries (`db.transaction()`), cross-table invariants, business validation, and orchestration. Reverse imports from `server.api.routes` are forbidden.
+- **Query & Wire (`server/queries/*_queries.py`, `server/wire/`)**: Centralized SQL helpers (including batched queries to prevent N+1 hotspots) and wire serialization exposed through the `server/wire/serializers.py` façade.
+
 ## 6. Calendar share
 
 Optional. Default public origin: `https://subscribe.devents.tech` (`DEFAULT_BASE_URL` in `server/calendar_share/constants.py`). That hub is a separate public service, **not** this product’s brand or a required component.
 
-This app is only a proxy: the UI calls `/api/v1/calendar-share/*` and **never** talks to the hub directly. Proxy paths cover session / timezone / profile, publish (push / unpublish per workset), subscriptions, and search. Tokens and the auto-sync interval live in local `system_config`. Stamp 7’s `calendar_share_publish` table no longer depends on the old household auto-sync cache columns.
+This app is only a proxy: the UI calls `/api/v1/calendar-share/*` and **never** talks to the hub directly. Proxy paths cover session / timezone / profile, publish (push / unpublish per space), subscriptions, and search. Tokens and the auto-sync interval live in local `system_config`. Stamp 7’s `calendar_share_publish` table no longer depends on the old household auto-sync cache columns.
 
 Hub traffic has its own rate limit; the prefix skips some of the general `/api/v1` HTTP limits. There is no bidirectional CalDAV / OAuth sync. One-shot ICS import is local (`/api/v1/calendar/imports/preview` and `/commit`).
 

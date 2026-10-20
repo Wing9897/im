@@ -25,6 +25,7 @@ import {
   itemFormPageFillClass,
   itemsFormPageMaxWidthClass,
 } from "../../../styles/itemsPageChromeClasses";
+import { withReturnTo } from "../../../routing/returnTo";
 import {
   buildItemsEditPath,
   resolveCreateInitialCategoryId,
@@ -50,6 +51,7 @@ export function ItemFormPage() {
   const [toolbarState, setToolbarState] = useState({ canSubmit: false, busy: false });
 
   const categoryIdParam = searchParams.get("categoryId")?.trim() || null;
+  const returnToParam = searchParams.get("returnTo");
   const initialCategoryId = resolveCreateInitialCategoryId(categoryIdParam);
   const initialWorksetId = searchParams.get("worksetId")?.trim() || null;
 
@@ -96,6 +98,7 @@ export function ItemFormPage() {
   useEffect(() => scheduleEmojiPickerPreload(2000), []);
 
   const backPath = resolveItemFormBackPath({
+    returnTo: returnToParam,
     categoryIdParam,
     itemCategoryId: item?.categoryId ?? null,
     itemKnown: isEditMode && Boolean(item),
@@ -122,11 +125,14 @@ export function ItemFormPage() {
         return saved;
       }
       if (!draft.id && saved.id) {
-        navigate(`/items/${encodeURIComponent(saved.id)}/edit`, { replace: true });
+        navigate(
+          withReturnTo(`/items/${encodeURIComponent(saved.id)}/edit`, returnToParam ?? ""),
+          { replace: true },
+        );
       }
       return saved;
     },
-    [backPath, navigate],
+    [backPath, navigate, returnToParam],
   );
 
   const handleArchiveToggle = useCallback(async () => {
@@ -146,14 +152,17 @@ export function ItemFormPage() {
     try {
       const created = await createItem(buildDuplicateItemBody(item, t("duplicateItemSuffix")));
       navigate(
-        buildItemsEditPath(created.id, {
-          categoryId: created.categoryId ?? categoryIdParam,
-        }),
+        withReturnTo(
+          buildItemsEditPath(created.id, {
+            categoryId: created.categoryId ?? categoryIdParam,
+          }),
+          returnToParam ?? "",
+        ),
       );
     } catch (err) {
       setLoadError(formatItemsError(err, t));
     }
-  }, [item, t, navigate, categoryIdParam]);
+  }, [item, t, navigate, categoryIdParam, returnToParam]);
 
   const triggerSave = () => {
     void formRef.current?.submit();

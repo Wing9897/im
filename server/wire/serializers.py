@@ -42,7 +42,7 @@ from server.wire.serializer_domains.sources import (
     serialize_message,
     serialize_source,
 )
-from server.wire.serializer_domains.tasks import serialize_task
+from server.wire.serializer_domains.tasks import serialize_task, task_response
 from server.wire.serializer_domains.worksets import serialize_workset
 
 __all__ = [
@@ -71,6 +71,7 @@ __all__ = [
     "serialize_recurring_series",
     "serialize_source",
     "serialize_task",
+    "task_response",
     "serialize_trending_topic",
     "serialize_user_event",
     "serialize_workset",

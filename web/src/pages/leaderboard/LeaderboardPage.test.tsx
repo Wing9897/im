@@ -290,6 +290,27 @@ describe("LeaderboardPage", () => {
   });
 
   describe("task filter toolbar", () => {
+    it("keeps a leading section switch inside the toolbar when there are no tasks", async () => {
+      taskCatalogState.tasks = [];
+      await act(async () => {
+        root = createRoot(container);
+        root.render(
+          wrapWithI18n(
+            createElement(LeaderboardPage, {
+              leading: createElement("div", { "data-testid": "intelligence-section-tabs" }, "事件"),
+            }),
+          ),
+        );
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      const toolbar = container.querySelector('[data-testid="leaderboard-toolbar"]');
+      expect(toolbar).not.toBeNull();
+      expect(toolbar!.querySelector('[data-testid="intelligence-section-tabs"]')).not.toBeNull();
+      expect(container.querySelectorAll(".im-control-bar")).toHaveLength(1);
+    });
+
     it("renders the task select without a search field", async () => {
       await act(async () => {
         root = createRoot(container);

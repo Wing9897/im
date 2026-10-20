@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Clock, Zap } from "lucide-react";
 import { AccentBarCard, Badge, Button, CardFieldRow } from "../../../components/ui";
+import { surfaceOverlayFill40Class } from "../../../components/ui/controlStyles";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import type { Action, ActionType } from "../../../types";
 import {
@@ -57,7 +58,7 @@ export function ActionCard({
         }
       >
         <div className="flex items-center gap-sm">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--surface-overlay)_40%,transparent)]">
+          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${surfaceOverlayFill40Class}`}>
             <PlatformIcon platform={platform} size={18} />
           </div>
           <div className="min-w-0 flex-1">

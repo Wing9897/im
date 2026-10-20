@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from server.collector.backoff import BASE_DELAY_SECONDS, MAX_DELAY_SECONDS, next_delay
 from server.db.database import Database
 from server.ingestion import insert_message
+from server.queries.sources_queries import fetch_source_status
 from server.source_status import update_source_status
 from server.sse import SseBroadcaster
 from server.util import new_id
@@ -140,7 +141,7 @@ class BasePlatformAdapter(ABC):
     async def _source_disabled(self) -> bool:
         """True when the source row is gone or explicitly disconnected."""
         try:
-            row = await self._db.fetch_one("SELECT status FROM sources WHERE id = ?", (self._source_id,))
+            row = await fetch_source_status(self._db, self._source_id)
         except Exception:  # noqa: BLE001 — a read error must not abort retries
             return False
         if row is None:

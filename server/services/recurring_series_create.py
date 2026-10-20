@@ -50,21 +50,17 @@ async def create_recurring_series(
         raise TaskWriteError("eventStartTime is required unless eventIsAllDay is true (HH:MM or ISO)")
 
     parent: str | None = None
-    parent_row: dict[str, Any] | None = None
+    parent_workset_id: str | None = None
     if parent_task_id:
-        parent = await assert_parent_agent_row(db, str(parent_task_id).strip())
+        parent, parent_workset_id = await assert_parent_agent_row(db, str(parent_task_id).strip())
         parent = resolve_series_parent_task_id(
             series_id=None,
             supplied_parent_task_id=parent,
             parent_mode="agent",
         )
-        parent_row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (parent,))
 
     if workset_id is ...:
-        if parent_row and parent_row.get("workset_id"):
-            resolved_workset = str(parent_row["workset_id"])
-        else:
-            resolved_workset = SYSTEM_WORKSET_ID
+        resolved_workset = parent_workset_id or SYSTEM_WORKSET_ID
     elif workset_id is None or str(workset_id).strip() == "":
         resolved_workset = SYSTEM_WORKSET_ID
     else:

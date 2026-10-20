@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 
 import { listChannelsWithSources } from "../api/channels";
+import { subscribeSourceDrawerClosed } from "../domain/sources/sourceDrawerEvents";
 import type { ChannelWithSource } from "../types";
 import { useAsyncResource, type UseAsyncResourceOptions } from "./useAsyncResource";
 
@@ -43,6 +44,8 @@ export function useChannelsWithSources(
   const refresh = useCallback(() => {
     void execute(undefined);
   }, [execute]);
+
+  useEffect(() => subscribeSourceDrawerClosed(refresh), [refresh]);
 
   return {
     channels: data ?? EMPTY_CHANNELS,

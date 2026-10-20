@@ -1,6 +1,6 @@
 /* Caption assistant / direct composer chrome. */
 
-/* Caption assistant — near-bottom subtitle bubbles + frosted composer. */
+/* Caption assistant — near-bottom subtitle bubbles + right-docked Copilot composer. */
 .im-assistant-direct {
   position: fixed;
   left: 50%;
@@ -17,6 +17,16 @@
   /* Overlay chrome only: denser than photo-BG --surface-panel (~63%).
      Same color-mix recipe as --surface-inset (86% card ≈ 80–90% opacity). */
   --im-assistant-overlay-fill: color-mix(in srgb, var(--surface-card) 86%, transparent);
+}
+
+/* When the text composer is open, dock as a right-side Copilot panel on desktop so
+   the left Timeline / Intelligence feed remains unobstructed. */
+.im-assistant-direct:has(.im-assistant-direct__composer) {
+  left: auto;
+  right: 12px;
+  transform: none;
+  width: min(460px, calc(100vw - 24px));
+  align-items: stretch;
 }
 
 .im-assistant-direct__stack {

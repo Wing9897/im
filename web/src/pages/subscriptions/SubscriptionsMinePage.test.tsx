@@ -1,5 +1,5 @@
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,6 +11,12 @@ vi.mock("../../api/calendarShare", async () =>
 
 import { SubscriptionsMinePage } from "./SubscriptionsMinePage";
 import { i18n, wrapWithI18n } from "../../test/i18nHarness";
+import {
+  connectedSession,
+  mountSubscriptionsPage,
+  renderWithI18n,
+  unmountSubscriptionsPage,
+} from "./subscriptionsPageTestHarness";
 import { setAppLocale } from "../../i18n/locale";
 import {
   calendarShareApiMocks,
@@ -27,12 +33,9 @@ describe("SubscriptionsMinePage", () => {
     await i18n.changeLanguage("en");
     resetCalendarShareCatalogForTests();
     resetCalendarShareApiMocks();
-    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
-      connected: true,
-      baseUrl: "http://127.0.0.1:8787",
-      handle: "Wing",
-      status: "connected",
-    });
+    calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue(
+      connectedSession,
+    );
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockResolvedValue({
       items: [
         {
@@ -48,16 +51,11 @@ describe("SubscriptionsMinePage", () => {
       items: [],
       ownHandle: "Wing",
     });
-    mount = document.createElement("div");
-    document.body.appendChild(mount);
-    root = createRoot(mount);
+    ({ mount, root } = mountSubscriptionsPage());
   });
 
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
-    mount.remove();
+    unmountSubscriptionsPage(root, mount);
     resetCalendarShareCatalogForTests();
   });
 
@@ -173,20 +171,14 @@ describe("SubscriptionsMinePage", () => {
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue(
       new Error("Not found"),
     );
-    await act(async () => {
-      root.render(
-        wrapWithI18n(
-          createElement(
-            MemoryRouter,
-            null,
-            createElement(SubscriptionsMinePage),
-          ),
-        ),
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await renderWithI18n(
+      root,
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(SubscriptionsMinePage),
+      ),
+    );
     expect(
       document.querySelector('[data-testid="subscriptions-mine-empty"]'),
     ).toBeTruthy();
@@ -292,12 +284,7 @@ describe("SubscriptionsMinePage", () => {
     ).toBeNull();
     expect(mount.textContent).not.toContain("Sign in to calendar share");
     await act(async () => {
-      resolveSession({
-        connected: true,
-        baseUrl: "http://127.0.0.1:8787",
-        handle: "Wing",
-        status: "connected",
-      });
+      resolveSession(connectedSession);
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -308,20 +295,14 @@ describe("SubscriptionsMinePage", () => {
   });
 
   it("greys remove actions when calendar share is unreachable", async () => {
-    await act(async () => {
-      root.render(
-        wrapWithI18n(
-          createElement(
-            MemoryRouter,
-            null,
-            createElement(SubscriptionsMinePage),
-          ),
-        ),
-      );
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await renderWithI18n(
+      root,
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(SubscriptionsMinePage),
+      ),
+    );
     calendarShareApiMocks.fetchCalendarShareSubscriptions.mockRejectedValue({
       status: 502,
       message: "calendar share 502",

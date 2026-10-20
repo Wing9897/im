@@ -6,6 +6,7 @@ import type { ConnectionStatus } from "../../../types";
 import { formatStatusLabel } from "../../../styles/statusDot";
 import { formatOsDateTime } from "../../../utils/time";
 import { AccentBarCard, CardFieldIcon } from "../../../components/ui";
+import { surfaceOverlayFill40Class } from "../../../components/ui/controlStyles";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { SelectableSurface, stopSelectableActivation } from "../../../components/detail";
 
@@ -104,7 +105,7 @@ export function SourceCard({
       <AccentBarCard accentClass={accentByStatus[status]} interactive>
         <div className="flex items-center gap-sm">
           {platform ? (
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--surface-overlay)_40%,transparent)]">
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${surfaceOverlayFill40Class}`}>
               <PlatformIcon platform={platform} size={18} />
             </div>
           ) : null}

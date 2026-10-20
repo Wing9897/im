@@ -43,7 +43,7 @@
       "search": "Search messages"
     },
     "worksets": {
-      "list": "List worksets"
+      "list": "List spaces"
     },
     "web": {
       "search": "Web search",
@@ -63,7 +63,7 @@
     "events": "{count} events",
     "eventInWindow": "{count} in window",
     "calendars": "{count} calendars",
-    "worksets": "{count} worksets",
+    "worksets": "{count} spaces",
     "messages": "{count} messages",
     "results": "{count} results",
     "resultsVia": "{count} results via {provider}",
@@ -81,8 +81,8 @@
     "placeholderIdle": "Click to type; hold Space to talk when unfocused"
   },
   "targetWorkset": {
-    "label": "Ownership workset",
-    "aria": "Ownership workset for schedule creates"
+    "label": "Space",
+    "aria": "Required space for schedule creates"
   },
   "slotUnbound": {
     "message": "The assistant global slot has no complete AI profile bound yet.",

@@ -54,7 +54,7 @@ describe("systemTaskCatalog", () => {
     expect(userOrAssistant?.title).toBe("用戶或助手");
     expect(userOrAssistant?.staffId).toBe("assistant");
     expect(userOrAssistant?.shortDescription).toContain("一般");
-    expect(userOrAssistant?.shortDescription).toContain("工作集");
+    expect(userOrAssistant?.shortDescription).toContain("專區");
 
     const clientManager = catalog.find((item) => item.id === "client-manager");
     expect(clientManager?.kind).toBe("agent");

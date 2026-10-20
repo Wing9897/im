@@ -11,6 +11,7 @@ import {
   UNCATEGORIZED_CATEGORY_ID,
   isSyntheticCategoryId,
 } from "../../domain/items/categoryAggregates";
+import { isSafeReturnTo } from "../../routing/returnTo";
 
 export type ItemsFormQueryOpts = {
   /** List-layer category route id the user came from (or create prefill). */
@@ -47,12 +48,14 @@ export function buildItemsEditPath(itemId: string, opts?: ItemsFormQueryOpts): s
  * Where the item form Back / post-save should land.
  *
  * Priority:
- * 1. Explicit `categoryId` query (list layer user came from, including `all` / `uncategorized`)
- * 2. Item's own category (deep link / refresh with no history)
- * 3. Uncategorized list when a loaded edit item has no category
- * 4. Items root overview
+ * 1. Safe `returnTo` (in-app path the editor was opened from)
+ * 2. Explicit `categoryId` query (list layer user came from, including `all` / `uncategorized`)
+ * 3. Item's own category (deep link / refresh with no history)
+ * 4. Uncategorized list when a loaded edit item has no category
+ * 5. Items root overview
  */
 export function resolveItemFormBackPath(args: {
+  returnTo?: string | null;
   categoryIdParam?: string | null;
   itemCategoryId?: string | null;
   /**
@@ -61,6 +64,8 @@ export function resolveItemFormBackPath(args: {
    */
   itemKnown?: boolean;
 }): string {
+  const requested = args.returnTo?.trim() || "";
+  if (requested && isSafeReturnTo(requested)) return requested;
   const fromQuery = args.categoryIdParam?.trim() || null;
   if (fromQuery) {
     return `/items/category/${encodeURIComponent(fromQuery)}`;

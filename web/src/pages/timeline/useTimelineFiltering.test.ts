@@ -39,6 +39,36 @@ describe("useTimelineFiltering", () => {
   const rangeEnd = new Date("2026-08-01T00:00:00.000Z");
   const monthCursor = new Date("2026-07-01T00:00:00.000Z");
 
+  it("hides item_remind rows when showItemRemind is off", () => {
+    const events = [
+      makeEvent({ id: "u", title: "Meeting", source: "user" }),
+      makeEvent({ id: "r", title: "Milk", source: "item_remind" }),
+    ];
+    const getOff = renderHook({
+      events,
+      eventTimeOverrides: {},
+      rangeStart,
+      rangeEnd,
+      monthCursor,
+      showDismissed: true,
+      showItemRemind: false,
+      focusedDay: null,
+    });
+    expect(getOff().filteredEvents.map((event) => event.id)).toEqual(["u"]);
+
+    const getOn = renderHook({
+      events,
+      eventTimeOverrides: {},
+      rangeStart,
+      rangeEnd,
+      monthCursor,
+      showDismissed: true,
+      showItemRemind: true,
+      focusedDay: null,
+    });
+    expect(getOn().filteredEvents.map((event) => event.id).sort()).toEqual(["r", "u"]);
+  });
+
   it("includes dismissed by default and hides them when showDismissed is off", () => {
     const events = [
       makeEvent({ id: "a", title: "Active" }),

@@ -1,11 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import {
-  createUserEvent,
   deleteUserEvent,
-  updateUserEvent,
   type UserEvent,
 } from "../../api/userEvents";
 import {
@@ -15,33 +13,12 @@ import {
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
 import { useTaskCatalog, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
-import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
 import { defaultCreateTimedRange } from "../../domain/timeline/dateUtils";
-import { parseRemindBeforeDays } from "../../domain/timeline/parseRemindBeforeDays";
+import { submitStandardUserEvent } from "../../domain/timeline/submitUserEventForm";
+import { userEventToFormValues } from "../../domain/timeline/userEventFormMapping";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { handleCommandError } from "../../utils/errors";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
-
-function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
-  return {
-    kind: "one_off",
-    calendarKind: event.kind ?? "normal",
-    title: event.title,
-    startTime: event.startTime,
-    endTime: event.endTime ?? "",
-    location: event.location ?? "",
-    body: event.body ?? "",
-    worksetId: event.worksetId || SYSTEM_WORKSET_ID,
-    isAllDay: Boolean(event.isAllDay),
-    remindBeforeDays:
-      event.remindBeforeDays == null ? "" : String(event.remindBeforeDays),
-    notifyPref: event.notifyPref ?? "inherit",
-    itemId: event.itemId ?? "",
-    amountInput: event.amount == null ? "" : String(event.amount),
-    direction: event.direction === "income" ? "income" : "expense",
-  };
-}
 
 export function useSchedulePageDialogs(opts: {
   reloadOneOff: () => Promise<void>;
@@ -51,10 +28,14 @@ export function useSchedulePageDialogs(opts: {
   const { t } = useTranslation("schedule");
   const { t: tTimeline } = useTranslation("timeline");
   const { showToast } = useToast();
-  const navigate = useNavigate();
   const { worksets } = useTaskCatalog();
   const worksetNameById = useWorksetNameById();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const seriesFromUrl = searchParams.get("series")?.trim() ?? "";
+  const [localSeriesId, setLocalSeriesId] = useState<string | null>(null);
+  const editingSeriesId: string | null =
+    localSeriesId ?? (seriesFromUrl.length > 0 ? seriesFromUrl : null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogInitial, setDialogInitial] = useState<Partial<UserEventFormValues> | null>(
@@ -103,13 +84,25 @@ export function useSchedulePageDialogs(opts: {
     setDialogOpen(true);
   }, []);
 
-  /** Series edit stays on RecurringSeriesEditor (same as Timeline create → series edit elsewhere). */
-  const openEditRecurring = useCallback(
-    (task: ScheduleRecurringItem) => {
-      navigate(`/schedule/recurring/${task.id}/edit`);
-    },
-    [navigate],
-  );
+  /** Series edit stays in RecurringSeriesDialog, on this page. */
+  const openEditRecurring = useCallback((task: ScheduleRecurringItem) => {
+    setLocalSeriesId(task.id);
+  }, []);
+
+  const closeEditRecurring = useCallback(() => {
+    setLocalSeriesId(null);
+    if (seriesFromUrl) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("series");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+    void reloadRecurring();
+  }, [reloadRecurring, seriesFromUrl, setSearchParams]);
 
   const closeDialog = useCallback(() => {
     if (dialogBusy) return;
@@ -124,60 +117,22 @@ export function useSchedulePageDialogs(opts: {
       setDialogBusy(true);
       setDialogError(null);
       try {
-        const worksetId = toUserEventFormWorksetId(values.worksetId);
-        let remindBeforeDays: number | null = null;
-        try {
-          remindBeforeDays = parseRemindBeforeDays(values.remindBeforeDays);
-        } catch {
+        const status = await submitStandardUserEvent({
+          mode: dialogMode,
+          values,
+          editingEventId: editingEvent?.id ?? null,
+        });
+        if (status === "remindInvalid") {
           setDialogError(tTimeline("userEvent.errors.remindInvalid"));
           return;
         }
-        const itemId = (values.itemId ?? "").trim() || null;
-
-        if (dialogMode === "create" && values.kind === "recurring") {
-          await createRecurringTimelineEvent({
-            title: values.title,
-            worksetId,
-            isAllDay: values.isAllDay,
-            eventStartTime: values.eventStartTime,
-            eventEndTime: values.eventEndTime,
-            location: values.location,
-            body: values.body,
-            rrule: values.rrule,
-            itemId,
-            notifyPref: values.notifyPref,
-          });
+        if (status === "recurringCreated") {
           showToast(t("toast.recurringCreated"), "success");
           await reloadRecurring();
-        } else if (dialogMode === "create") {
-          await createUserEvent({
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            remindBeforeDays,
-            itemId,
-            worksetId,
-            kind: "normal",
-            notifyPref: values.notifyPref,
-          });
+        } else if (status === "oneOffCreated") {
           showToast(t("toast.oneOffCreated"), "success");
           await reloadOneOff();
-        } else if (editingEvent) {
-          await updateUserEvent(editingEvent.id, {
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            remindBeforeDays,
-            itemId,
-            worksetId,
-            notifyPref: values.notifyPref,
-          });
+        } else if (status === "oneOffUpdated") {
           showToast(t("toast.oneOffUpdated"), "success");
           await reloadOneOff();
         }
@@ -255,9 +210,11 @@ export function useSchedulePageDialogs(opts: {
     dialogInitial,
     dialogBusy,
     dialogError,
+    editingSeriesId,
     openCreate,
     openEditOneOff,
     openEditRecurring,
+    closeEditRecurring,
     closeDialog,
     handleSubmit,
     deleteTarget,

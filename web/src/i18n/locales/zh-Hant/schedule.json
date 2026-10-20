@@ -19,11 +19,11 @@
     "typeAll": "全部",
     "typeOneOff": "一般",
     "typeRecurring": "循環",
-    "worksetAria": "工作集",
-    "worksetAll": "全部工作集",
-    "worksetSearchPlaceholder": "搜尋工作集",
-    "worksetSearchAria": "搜尋工作集",
-    "worksetEmpty": "沒有符合的工作集",
+    "worksetAria": "專區",
+    "worksetAll": "全部專區",
+    "worksetSearchPlaceholder": "搜尋專區",
+    "worksetSearchAria": "搜尋專區",
+    "worksetEmpty": "沒有符合的專區",
     "dateRange": "日期",
     "dateFromAria": "開始日期",
     "dateToAria": "結束日期",
@@ -49,7 +49,7 @@
   },
   "emptyFiltered": {
     "title": "沒有符合篩選的日程",
-    "hint": "試試調整類型、工作集或日期範圍。"
+    "hint": "試試調整類型、專區或日期範圍。"
   },
   "card": {
     "edit": "編輯",
@@ -57,7 +57,7 @@
     "delete": "刪除",
     "deleteAria": "刪除 {title}",
     "allDay": "全天",
-    "workset": "工作集",
+    "workset": "專區",
     "item": "關聯物品",
     "rrule": "重複規則",
     "noRrule": "未設定重複規則",

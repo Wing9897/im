@@ -6,19 +6,6 @@ export type CalendarShareListingVisibility = (typeof LISTING_VISIBILITY)[number]
 export const GRANT_VISIBILITY = ["busy", "details"] as const;
 export type CalendarShareGrantVisibility = (typeof GRANT_VISIBILITY)[number];
 
-export const SEARCH_HIT_KIND = ["listing", "grant"] as const;
-export type CalendarShareSearchHitKind = (typeof SEARCH_HIT_KIND)[number];
-
-/** Search mixes public listings with grant-only hits. */
-export const SEARCH_HIT_VISIBILITY = ["public", "public_busy", "busy", "details"] as const;
-export type CalendarShareSearchHitVisibility = (typeof SEARCH_HIT_VISIBILITY)[number];
-
-export type CalendarShareSearchHitFields = {
-  hitKind: CalendarShareSearchHitKind;
-  publicVisibility?: CalendarShareListingVisibility | null;
-  visibility?: CalendarShareGrantVisibility | null;
-};
-
 export function isListingVisibility(value: string): value is CalendarShareListingVisibility {
   return (LISTING_VISIBILITY as readonly string[]).includes(value);
 }

@@ -103,6 +103,7 @@ export const TIMELINE_VIEW_MODE_STORAGE_KEY = "im:timeline:view-mode";
 export const TIMELINE_SHOW_DISMISSED_STORAGE_KEY = "im:timeline:show-dismissed";
 export const TIMELINE_SHOW_ONGOING_STORAGE_KEY = "im:timeline:show-ongoing";
 export const TIMELINE_SHOW_ENDING_STORAGE_KEY = "im:timeline:show-ending";
+export const TIMELINE_SHOW_ITEM_REMIND_STORAGE_KEY = "im:timeline:show-item-remind";
 export const TIMELINE_FOCUSED_DAY_STORAGE_KEY = "im:timeline:focused-day";
 export const TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY =
   "im:timeline:selected-gantt-task-id";
@@ -116,7 +117,6 @@ export const TIMELINE_MONTH_LAYOUT_STORAGE_KEY = "im:timeline:month-layout";
 /** Per-source Block card accent keyed by `workset:<id>` or `subscribe:<handle/slug>`. */
 export const TIMELINE_BLOCK_CARD_COLORS_STORAGE_KEY = "im:timeline:block-card-colors";
 export const TIMELINE_TIME_CURSOR_STORAGE_KEY = "im:timeline:time-cursor";
-export const TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY = "im:timeline:event-list-show-all";
 
 // ── Tasks / chat editor ─────────────────────────────────────────────────────
 

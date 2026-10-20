@@ -140,6 +140,7 @@ export function useTimelinePageContainer() {
     rangeEnd: visibleRangeEnd,
     monthCursor: navigation.monthCursor,
     showDismissed: prefs.showDismissed,
+    showItemRemind: prefs.showItemRemind,
     focusedDay: sidebarFocus.day,
   });
 
@@ -283,6 +284,8 @@ export function useTimelinePageContainer() {
       setShowOngoing: prefs.setShowOngoing,
       showEnding: prefs.showEnding,
       setShowEnding: prefs.setShowEnding,
+      showItemRemind: prefs.showItemRemind,
+      setShowItemRemind: prefs.setShowItemRemind,
       filteredEvents: filtering.filteredEvents,
       sidebarEvents: filtering.sidebarEvents,
       sidebarDay: sidebarFocus.day,

@@ -64,15 +64,15 @@
   "published": {
     "needLogin": "请先登录日历分享服务，才能发布或取消上传。",
     "empty": "尚未发布日历。",
-    "formTitle": "发布工作集",
-    "worksetLabel": "本地工作集",
-    "worksetPlaceholder": "选择工作集",
+    "formTitle": "发布专区",
+    "worksetLabel": "本地专区",
+    "worksetPlaceholder": "选择专区",
     "edit": "设置",
     "syncNow": "更新公开副本",
     "syncing": "更新中…",
     "unpublish": "取消上传",
     "unpublishing": "取消上传中…",
-    "missingWorkset": "本地工作集已删，公开日历仍在。",
+    "missingWorkset": "本地专区已删，公开日历仍在。",
     "pendingSync": "待自动更新",
     "autoSync": {
       "label": "自动更新",
@@ -84,14 +84,14 @@
         "3600": "每 1 小时"
       }
     },
-    "publishCta": "发布工作集",
+    "publishCta": "发布专区",
     "grantsSummary": "{count} 个已授权 handle",
     "grantsClosed": "私人群组 — {count} 个 handle 可订阅",
     "grantsEmpty": "私人群组 — 在设置中加入 handle，对方才能订阅",
     "form": {
-      "help": "确定会把当前工作集上传到远端。之后行程变更跟工具列「自动更新」统一间隔推送（最短 1 分钟）；关闭后请按卡片更新图标。取消上传用垃圾桶图标。",
-      "catalogHelp": "上传时会复制这个工作集的封面和描述。请在工作集卡片上修改。",
-      "generalWarning": "「一般」工作集包含未归类行程。公开上传前请确认没有不该分享的内容。",
+      "help": "确定会把当前专区上传到远端。之后行程变更跟工具列「自动更新」统一间隔推送（最短 1 分钟）；关闭后请按卡片更新图标。取消上传用垃圾桶图标。",
+      "catalogHelp": "上传时会复制这个专区的封面和描述。请在专区卡片上修改。",
+      "generalWarning": "「一般」专区含未另外归属的行程。公开前请确认没有不该分享的内容。",
       "slugLabel": "日历 slug",
       "slugHelp": "远端路径格式为 handle/slug。1–64 字符，须以字母或数字开头，其后可为字母、数字、点、下划线或连字符。",
       "slugRequired": "请输入 slug",

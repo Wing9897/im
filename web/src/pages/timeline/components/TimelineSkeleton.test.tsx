@@ -4,10 +4,15 @@ import { createRoot, type Root } from "react-dom/client";
 
 import { TimelineSkeleton } from "./TimelineSkeleton";
 import { TimelineViewSwitch } from "./TimelineViewSwitch";
-import { TimelinePageProvider, type TimelinePageContextValue } from "../TimelinePageContext";
-import { buildCalendarDays, buildWeekDays } from "../../../domain/timeline/dateUtils";
+import { TimelinePageProvider } from "../TimelinePageContext";
+import { buildCalendarDays, buildWeekDays, type TimelineScale } from "../../../domain/timeline/dateUtils";
 import { mockShowToast } from "../../../test/context-mocks";
 import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
+import {
+  makeTimelinePageContext,
+  type TimelinePageContextOverrides,
+} from "../../../test/timelinePageContextFixtures";
+import type { TimelineItem } from "../../../types";
 
 vi.mock("../../../context/ToastContext", async () =>
   (await import("../../../test/context-mocks")).toastContextModuleMock());
@@ -34,46 +39,31 @@ function withI18n(children: React.ReactNode) {
   return wrapWithI18n(children);
 }
 
-function makeContextValue(
-  overrides: Partial<TimelinePageContextValue> = {},
-): TimelinePageContextValue {
-  return {
-    selectedEvent: null,
-    onSelectEvent: () => {},
-    editStartTime: "",
-    editEndTime: "",
-    setEditStartTime: () => {},
-    setEditEndTime: () => {},
-    onSaveTimeOverride: () => {},
-    onResetTimeOverride: () => {},
-    onSetEventStatus: () => {},
-    eventStatuses: {},
-    taskSpans: [],
-    selectedGanttTaskId: null,
-    onSelectGanttTask: () => {},
-    spansInitialLoading: false,
-    spansIsRefreshing: false,
-    spansError: null,
-    onRetrySpans: () => {},
-    selectedGanttSpan: null,
-    onCloseGanttPanel: () => {},
-    ganttColumns: [],
-    timelineEvents: [],
-    timelineEventsInitialLoading: false,
-    timelineEventsIsRefreshing: false,
-    timelineEventsError: null,
-    onRetryTimelineEvents: () => {},
-    showDismissed: false,
-    showOngoing: true,
-    showEnding: true,
-    monthDatesRevealed: false,
-    monthLayout: "unified",
-    ...overrides,
-  };
-}
+type ViewSwitchInput = {
+  initialLoading?: boolean;
+  isRefreshing?: boolean;
+  events?: TimelineItem[];
+  filteredEvents?: TimelineItem[];
+  emptyState?: string;
+  viewMode?: "calendar" | "gantt";
+  timeScale?: TimelineScale;
+  rangeStart?: Date;
+  rangeEvents?: TimelineItem[];
+  sidebarEvents?: TimelineItem[];
+  weekDays?: Date[];
+  timeCursor?: Date;
+  monthCursor?: Date;
+  monthDays?: Date[];
+  monthEvents?: TimelineItem[];
+  focusedDay?: Date | null;
+  onFocusDay?: (day: Date) => void;
+  error?: string | null;
+  sidebarDay?: Date | null;
+  sidebarOutOfView?: boolean;
+};
 
-/** Minimal props for TimelineViewSwitch to render in loading/error states */
-function makeViewSwitchProps(overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {}) {
+/** Minimal view data for TimelineViewSwitch loading/error states. */
+function makeViewSwitchProps(overrides: ViewSwitchInput = {}): ViewSwitchInput {
   const now = new Date(2026, 6, 15);
   return {
     initialLoading: false,
@@ -81,8 +71,8 @@ function makeViewSwitchProps(overrides: Partial<Parameters<typeof TimelineViewSw
     events: [],
     filteredEvents: [],
     emptyState: "沒有事件",
-    viewMode: "calendar" as const,
-    timeScale: "month" as const,
+    viewMode: "calendar",
+    timeScale: "month",
     rangeStart: now,
     rangeEvents: [],
     sidebarEvents: [],
@@ -94,9 +84,45 @@ function makeViewSwitchProps(overrides: Partial<Parameters<typeof TimelineViewSw
     focusedDay: null,
     onFocusDay: () => {},
     error: null,
-    onRetry: () => {},
     ...overrides,
   };
+}
+
+function viewSwitchContext(
+  props: ViewSwitchInput,
+  contextOverrides: TimelinePageContextOverrides = {},
+) {
+  return makeTimelinePageContext({
+    showDismissed: false,
+    monthLayout: "unified",
+    ...contextOverrides,
+    navigation: {
+      timeScale: props.timeScale ?? "month",
+      rangeStart: props.rangeStart ?? new Date(2026, 6, 15),
+      rangeEvents: props.rangeEvents ?? [],
+      weekDays: props.weekDays ?? [],
+      timeCursor: props.timeCursor ?? props.rangeStart ?? new Date(2026, 6, 15),
+      monthCursor: props.monthCursor ?? props.rangeStart ?? new Date(2026, 6, 15),
+      monthDays: props.monthDays ?? [],
+      monthEvents: props.monthEvents ?? [],
+      focusedDay: props.focusedDay ?? null,
+      onFocusDay: props.onFocusDay ?? (() => {}),
+      events: props.events ?? [],
+      filteredEvents: props.filteredEvents ?? [],
+      initialLoading: props.initialLoading ?? false,
+      isRefreshing: props.isRefreshing ?? false,
+      emptyState: props.emptyState ?? "沒有事件",
+      sidebarEvents: props.sidebarEvents ?? [],
+      sidebarDay: props.sidebarDay ?? null,
+      sidebarOutOfView: props.sidebarOutOfView ?? false,
+      ...contextOverrides.navigation,
+    },
+    chrome: {
+      viewMode: props.viewMode ?? "calendar",
+      monthLayout: contextOverrides.monthLayout ?? "unified",
+      ...contextOverrides.chrome,
+    },
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -182,13 +208,13 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
   const mounts: Mount[] = [];
 
   function renderViewSwitch(
-    overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {},
-    contextOverrides: Partial<TimelinePageContextValue> = {},
+    overrides: ViewSwitchInput = {},
+    contextOverrides: TimelinePageContextOverrides = {},
   ) {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const props = makeViewSwitchProps(overrides);
-    const ctx = makeContextValue(contextOverrides);
+    const ctx = viewSwitchContext(props, contextOverrides);
     let root!: Root;
     act(() => {
       root = createRoot(container);
@@ -196,7 +222,7 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
         withI18n(
           createElement(TimelinePageProvider, {
             value: ctx,
-            children: createElement(TimelineViewSwitch, props),
+            children: createElement(TimelineViewSwitch, { error: props.error }),
           }),
         ),
       );
@@ -205,14 +231,15 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     return {
       container,
       root,
-      rerender: (newOverrides: Partial<Parameters<typeof TimelineViewSwitch>[0]>) => {
+      rerender: (newOverrides: ViewSwitchInput) => {
         const newProps = makeViewSwitchProps(newOverrides);
+        const nextCtx = viewSwitchContext(newProps, contextOverrides);
         act(() => {
           root.render(
             withI18n(
               createElement(TimelinePageProvider, {
-                value: ctx,
-                children: createElement(TimelineViewSwitch, newProps),
+                value: nextCtx,
+                children: createElement(TimelineViewSwitch, { error: newProps.error }),
               }),
             ),
           );

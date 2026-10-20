@@ -1,41 +1,15 @@
-import { act } from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { makeEvent } from "../../../test/timelineTestHelpers";
 import {
   buildCalendarDays,
   buildWeekDays,
-  makeTimelineCalendarViewProps,
+  makeProps,
+  mockUseErrorToast,
   prepareTimelineCalendarViewTests,
-  renderTimelineCalendarView,
+  render,
 } from "./timelineCalendarViewTestHarness";
 
-const { mockUseErrorToast } = vi.hoisted(() => ({
-  mockUseErrorToast: vi.fn(),
-}));
-
-vi.mock("../../../hooks/useMonthWeather", () => ({
-  weatherIcon: () => "☀️",
-}));
-
-vi.mock("../../../hooks/useErrorToast", () => ({
-  useErrorToast: mockUseErrorToast,
-}));
-
-const { TimelineCalendarView } = await import("./TimelineCalendarView");
-
 const MONTH_DAY_CELL = '[data-testid="timeline-month-day-cell"]';
-const MONTH_WATERMARK = '[data-testid="timeline-month-day-watermark"]';
-const MONTH_SURFACE = '[data-testid="timeline-month-day-surface"]';
-
-type Props = Parameters<typeof TimelineCalendarView>[0];
-
-function makeProps(overrides: Partial<Props> = {}): Props {
-  return makeTimelineCalendarViewProps<Props>(overrides);
-}
-
-function render(props: Props) {
-  return renderTimelineCalendarView(TimelineCalendarView, props);
-}
 
 describe("TimelineCalendarView", () => {
   beforeEach(async () => {

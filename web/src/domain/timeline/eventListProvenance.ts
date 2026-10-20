@@ -145,11 +145,6 @@ export function resolveSubscribedCalendarPath(event: TimelineItem): string | nul
   return parseSubscribedTimelineSource(event.source);
 }
 
-/** Subscribed rows use calendar affiliation instead of local workset ownership. */
-export function eventListShowsWorksetAffiliation(event: TimelineItem): boolean {
-  return !isSubscribedTimelineSource(event.source);
-}
-
 /** Subscribed rows merge affiliation into the calendar line — no separate provenance. */
 export function eventListShowsProvenance(event: TimelineItem): boolean {
   return !isSubscribedTimelineSource(event.source);

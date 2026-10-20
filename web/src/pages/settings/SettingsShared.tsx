@@ -8,8 +8,10 @@ import {
 import { ThemePicker } from "../../components/settings/ThemePicker";
 import { Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
-import { aiWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
-import { settingsTabItems } from "../shared/WorkspaceShell";
+import {
+  aiWorkspaceNavItems,
+  settingsWorkspaceNavItems,
+} from "../../domain/navigation/workspaceNav";
 import { createWorkspacePage } from "../shared/createWorkspacePage";
 
 /**
@@ -81,7 +83,7 @@ export function SettingsDocsExample({
 }
 
 export const SettingsShellPage = createWorkspacePage(
-  settingsTabItems,
+  settingsWorkspaceNavItems,
   "shell.systemSettingsSection",
 );
 

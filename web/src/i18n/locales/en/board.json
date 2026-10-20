@@ -139,7 +139,7 @@
     "labelTask": "Tasks",
     "labelEvent": "Events",
     "emptyEvents": "No events yet",
-    "worksetSpanLegend": "Workset bar = manual/assistant event envelope (alongside task analysis bars, not a duplicate)"
+    "worksetSpanLegend": "Space span = manual/assistant event envelope (beside task bars, not a duplicate)"
   },
   "shell": {
     "loadFailed": "Failed to load — retry",
@@ -208,7 +208,7 @@
     },
     "gantt": {
       "title": "Gantt / by task",
-      "description": "Task activity spans; workset bars are the manual/assistant event envelope (shown alongside task bars)"
+      "description": "Task activity spans. A space span is the manual/assistant event envelope, shown beside task bars."
     },
     "ganttEvents": {
       "title": "Gantt / by event",

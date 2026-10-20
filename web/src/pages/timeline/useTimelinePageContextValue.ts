@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { TimelinePageContextValue } from "./TimelinePageContext";
 import type { useTimelinePageContainer } from "./useTimelinePageContainer";
@@ -18,6 +19,13 @@ type Args = {
   gantt: Container["gantt"];
   dialogs: Dialogs;
   overlays: Overlays;
+  worksets: readonly { id: string; name: string }[];
+  expandTasks: readonly {
+    id: string;
+    name?: string;
+    worksetId?: string | null;
+    analysisMode?: string | null;
+  }[];
 };
 
 /** Assemble TimelinePageProvider value from container + overlays + dialogs. */
@@ -30,7 +38,10 @@ export function useTimelinePageContextValue({
   gantt,
   dialogs,
   overlays,
+  worksets,
+  expandTasks,
 }: Args): TimelinePageContextValue {
+  const { t } = useTranslation("timeline");
   return useMemo(
     () => ({
       selectedEvent: selection.selectedEvent,
@@ -81,6 +92,60 @@ export function useTimelinePageContextValue({
       overviewWindow: navigation.overviewWindow,
       onOverviewWindowChange: navigation.setOverviewWindow,
       onOverviewFetchCommit: navigation.commitFetchWindow,
+      navigation: {
+        timeScale: navigation.timeScale,
+        rangeStart: navigation.rangeStart,
+        rangeEvents: navigation.rangeEvents,
+        weekDays: navigation.weekDays,
+        timeCursor: navigation.timeCursor,
+        monthCursor: navigation.monthCursor,
+        monthDays: navigation.monthDays,
+        monthEvents: navigation.monthEvents,
+        focusedDay: navigation.focusedDay,
+        onFocusDay: sources.focusDay,
+        events: data.events,
+        filteredEvents: filters.filteredEvents,
+        initialLoading: data.initialLoading,
+        isRefreshing: data.isRefreshing,
+        emptyState: sources.emptyState,
+        sidebarEvents: filters.sidebarEvents,
+        sidebarDay: filters.sidebarDay,
+        sidebarOutOfView: filters.sidebarOutOfView,
+        visibleRangeLabel: navigation.visibleRangeLabel,
+        onJumpTo: navigation.jumpTo,
+        onMoveCursor: navigation.moveCursor,
+        overviewRangeId: navigation.overviewRangeId ?? "",
+        onOverviewRangeChange: navigation.applyOverviewRange,
+        jumpDateValue: navigation.jumpDateValue,
+        onJumpDate: navigation.jumpToDate,
+      },
+      chrome: {
+        selectedSources: sources.selectedSources,
+        setSelectedSources: sources.setSelectedSources,
+        timelineTasks: sources.timelineTasks,
+        worksets: worksets.map((ws) => ({ id: ws.id, name: ws.name })),
+        expandTasks: expandTasks.map((row) => ({
+          id: row.id,
+          name: row.name,
+          worksetId: row.worksetId ?? null,
+          analysisMode: row.analysisMode ?? null,
+        })),
+        viewMode: sources.viewMode,
+        setViewMode: sources.setViewMode,
+        monthLayout: sources.monthLayout,
+        onMonthLayoutChange: sources.setMonthLayout,
+        overviewMode: sources.overviewMode ?? false,
+        onOverviewModeChange: sources.setOverviewMode,
+        onAddEvent: () => {
+          dialogs.openCreateDialog();
+        },
+        showLoadingIndicator: data.initialLoading || data.isRefreshing,
+        loadingLabel: data.initialLoading ? t("view.loading") : t("view.refreshing"),
+        subscribeCalendars: sources.subscribeCalendars,
+        selectedSubscribeKeys: sources.selectedSubscribeKeys ?? null,
+        onChangeSubscribeKeys: sources.setSelectedSubscribeKeys,
+        subscribeAvailability: sources.subscribeAvailability ?? "ok",
+      },
     }),
     [
       sources,
@@ -101,6 +166,29 @@ export function useTimelinePageContextValue({
       navigation.monthCardModels,
       navigation.monthCardsOmitted,
       navigation.monthCardsEmptyReason,
+      navigation.timeScale,
+      navigation.rangeStart,
+      navigation.rangeEvents,
+      navigation.weekDays,
+      navigation.timeCursor,
+      navigation.monthCursor,
+      navigation.monthDays,
+      navigation.monthEvents,
+      navigation.focusedDay,
+      navigation.visibleRangeLabel,
+      navigation.jumpTo,
+      navigation.moveCursor,
+      navigation.overviewRangeId,
+      navigation.applyOverviewRange,
+      navigation.jumpDateValue,
+      navigation.jumpToDate,
+      filters.filteredEvents,
+      filters.sidebarEvents,
+      filters.sidebarDay,
+      filters.sidebarOutOfView,
+      worksets,
+      expandTasks,
+      t,
     ],
   );
 }

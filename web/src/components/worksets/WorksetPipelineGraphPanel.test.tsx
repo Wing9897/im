@@ -207,7 +207,7 @@ describe("WorksetPipelineGraphPanel", () => {
       taskPoint.click();
     });
     expect(harness.container.querySelector('[data-testid="workset-graph-connect-hint"]')?.textContent).toContain(
-      "點選工作集以歸屬此任務",
+      "點選專區以歸屬此任務",
     );
     const generalAfter = harness.container.querySelector(
       '[data-testid="workset-graph-point-workset-__general__"]',
@@ -494,7 +494,7 @@ describe("WorksetPipelineGraphPanel", () => {
       assistantPoint.click();
     });
     expect(harness.container.querySelector('[data-testid="workset-graph-connect-hint"]')?.textContent).toContain(
-      "點選工作集以設為語音預設歸屬",
+      "點選專區以設為語音預設歸屬",
     );
     const opsAfter = harness.container.querySelector(
       '[data-testid="workset-graph-point-workset-ws-1"]',

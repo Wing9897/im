@@ -25,7 +25,7 @@ from server.calendar.user_events_normalize import (
     resolve_user_event_workset_id,
 )
 from server.calendar.user_events_read import get_user_event
-from server.db.database import Database, TransactionDb
+from server.db.database import Database
 from server.domain.emoji import EmojiValidationError, emoji_from_row, normalize_optional_emoji
 from server.domain.notify_prefs import (
     DEFAULT_CALENDAR_NOTIFY_PREF,
@@ -33,6 +33,12 @@ from server.domain.notify_prefs import (
     normalize_notify_pref,
 )
 from server.queries.calendar_queries import fetch_user_event
+from server.queries.user_event_queries import (
+    delete_user_event_row,
+    fetch_analysis_task_workset_value,
+    insert_user_event,
+    update_user_event_row,
+)
 from server.util import new_id, utc_now_iso
 from server.worksets_const import SYSTEM_WORKSET_ID
 
@@ -92,11 +98,7 @@ async def create_user_event(
         if clean_task_id is None:
             clean_workset_id = SYSTEM_WORKSET_ID
         else:
-            task_row = await db.fetch_one(
-                "SELECT workset_id FROM analysis_tasks WHERE id = ?",
-                (clean_task_id,),
-            )
-            raw_ws = task_row.get("workset_id") if task_row else None
+            raw_ws = await fetch_analysis_task_workset_value(db, clean_task_id)
             if isinstance(raw_ws, str) and raw_ws.strip():
                 clean_workset_id = await resolve_user_event_workset_id(db, raw_ws.strip())
             else:
@@ -106,33 +108,26 @@ async def create_user_event(
 
     event_id = new_id()
     now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO user_events "
-        "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
-        "remind_before_days, task_id, item_id, workset_id, kind, amount, direction, "
-        "notify_pref, emoji, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            event_id,
-            clean_title,
-            (body or "").strip(),
-            clean_start,
-            clean_end,
-            (location or "").strip(),
-            clean_origin,
-            1 if clean_all_day else 0,
-            clean_remind,
-            clean_task_id,
-            clean_item_id,
-            clean_workset_id,
-            clean_kind,
-            clean_amount,
-            clean_direction,
-            clean_notify,
-            clean_emoji,
-            now,
-            now,
-        ),
+    await insert_user_event(
+        db,
+        event_id=event_id,
+        title=clean_title,
+        body=(body or "").strip(),
+        start_time=clean_start,
+        end_time=clean_end,
+        location=(location or "").strip(),
+        origin=clean_origin,
+        is_all_day=clean_all_day,
+        remind_before_days=clean_remind,
+        task_id=clean_task_id,
+        item_id=clean_item_id,
+        workset_id=clean_workset_id,
+        kind=clean_kind,
+        amount=clean_amount,
+        direction=clean_direction,
+        notify_pref=clean_notify,
+        emoji=clean_emoji,
+        now=now,
     )
     item = await get_user_event(db, event_id)
     assert item is not None
@@ -252,30 +247,25 @@ async def update_user_event(
         except EmojiValidationError as exc:
             raise UserEventValidationError(str(exc)) from exc
 
-    await db.execute(
-        "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
-        "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
-        "workset_id = ?, kind = ?, amount = ?, direction = ?, notify_pref = ?, emoji = ?, updated_at = ? "
-        "WHERE id = ?",
-        (
-            next_title,
-            next_body,
-            next_start,
-            next_end,
-            next_location,
-            1 if next_all_day else 0,
-            next_remind,
-            next_task_id,
-            next_item_id,
-            next_workset_id,
-            next_kind,
-            next_amount,
-            next_direction,
-            next_notify,
-            next_emoji,
-            utc_now_iso(),
-            event_id,
-        ),
+    await update_user_event_row(
+        db,
+        event_id,
+        title=next_title,
+        body=next_body,
+        start_time=next_start,
+        end_time=next_end,
+        location=next_location,
+        is_all_day=next_all_day,
+        remind_before_days=next_remind,
+        task_id=next_task_id,
+        item_id=next_item_id,
+        workset_id=next_workset_id,
+        kind=next_kind,
+        amount=next_amount,
+        direction=next_direction,
+        notify_pref=next_notify,
+        emoji=next_emoji,
+        now=utc_now_iso(),
     )
     item = await get_user_event(db, event_id)
     assert item is not None
@@ -295,17 +285,7 @@ async def delete_user_event(db: Database, event_id: str) -> bool:
     existing = await fetch_user_event(db, event_id)
     if existing is None:
         return False
-    async with db.transaction() as conn:
-        tx = TransactionDb(conn)
-        await tx.execute(
-            "DELETE FROM timeline_dismissals WHERE source = 'user' AND event_id = ?",
-            (event_id,),
-        )
-        await tx.execute(
-            "DELETE FROM timeline_importance WHERE source = 'user' AND event_id = ?",
-            (event_id,),
-        )
-        await tx.execute("DELETE FROM user_events WHERE id = ?", (event_id,))
+    await delete_user_event_row(db, event_id)
     from server.calendar_share.dirty import mark_published_workset_dirty
 
     prev_workset = str(existing.get("workset_id") or "").strip() or SYSTEM_WORKSET_ID

@@ -18,18 +18,13 @@ layer that maps to/from trigger RRULE locally; the HTTP wire carries
 
 from __future__ import annotations
 
-from typing import Final, Literal
+from typing import Final
 
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-from server.domain.analysis_modes import (
-    SCHEDULABLE_ANALYSIS_MODES,
-    get_analysis_mode_spec,
-)
+from server.domain.analysis_modes import SCHEDULABLE_ANALYSIS_MODES
 from server.domain.rrule_parts import parse_rrule_body_parts
-
-SchedulePurpose = Literal["trigger", "calendar"]
 
 #: FE editor preset vocabulary (maps to trigger RRULE locally; not on HTTP wire).
 ALLOWED_SCHEDULE_PRESETS: Final[tuple[str, ...]] = (
@@ -70,19 +65,6 @@ class ScheduleValidationError(ValueError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
-
-
-def schedule_purpose_for_mode(analysis_mode: str | None) -> SchedulePurpose | None:
-    """Return the schedule purpose owned by ``analysis_mode``, or None if unknown.
-
-    Calendar series are not analysis modes — use ``may_calendar_expand_series``.
-    """
-    spec = get_analysis_mode_spec(analysis_mode)
-    if spec is None:
-        return None
-    if spec.schedulable:
-        return "trigger"
-    return None
 
 
 def may_calendar_expand_series(row: dict | None) -> bool:

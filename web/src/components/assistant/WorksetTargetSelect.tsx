@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { MenuSelect } from "../ui";
+import { worksetsListPath } from "../../domain/worksets/worksetRoutes";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 
@@ -96,13 +98,16 @@ export function WorksetTargetSelect({
   "data-testid"?: string;
   "aria-label"?: string;
 }) {
+  const { t } = useTranslation("workset");
   const { worksets } = useTaskCatalog();
+  const navigate = useNavigate();
   const options = useMemo<WorksetTargetOption[]>(
     () => worksets.map((ws) => ({ id: ws.id, name: ws.name })),
     [worksets],
   );
 
   return (
+    <span className="inline-flex min-w-0 flex-1 items-center gap-1">
     <WorksetTargetSelectField
       id={id}
       value={value}
@@ -114,5 +119,14 @@ export function WorksetTargetSelect({
       data-testid={testId}
       aria-label={ariaLabel}
     />
+    <button
+      type="button"
+      className="shrink-0 text-caption text-accent"
+      data-testid="workset-target-manage"
+      onClick={() => navigate(worksetsListPath())}
+    >
+      {t("label")}
+    </button>
+    </span>
   );
 }

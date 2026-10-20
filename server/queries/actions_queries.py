@@ -11,6 +11,10 @@ async def fetch_all_action_rows(db: Any) -> list[dict[str, Any]]:
     return await db.fetch_all("SELECT * FROM actions ORDER BY created_at ASC")
 
 
+async def fetch_action_row(db: Any, action_id: str) -> dict[str, Any] | None:
+    return await db.fetch_one("SELECT * FROM actions WHERE id = ?", (action_id,))
+
+
 async def fetch_trigger_history_page(
     db: Any,
     *,

@@ -3,6 +3,8 @@
  * Replaces “paste household API key” as the primary remote auth path.
  */
 
+import { CONNECTION_STORAGE_KEY } from "../prefs/keys";
+
 export type ConnectionMode = "local" | "remote";
 
 export interface DeviceSessionTokens {
@@ -25,8 +27,6 @@ export interface ConnectionSnapshot {
   deviceId: string | null;
   deviceLabel: string | null;
 }
-
-const STORAGE_KEY = "im:connection";
 
 const EMPTY: ConnectionSnapshot = {
   connectionMode: null,
@@ -53,7 +53,7 @@ export function normalizeBaseUrl(url: string | null | undefined): string | null 
 function readRaw(): ConnectionSnapshot {
   if (typeof window === "undefined") return { ...EMPTY };
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(CONNECTION_STORAGE_KEY);
     if (!raw) return { ...EMPTY };
     const parsed = JSON.parse(raw) as Partial<ConnectionSnapshot>;
     const mode = parsed.connectionMode;
@@ -78,7 +78,7 @@ function writeRaw(next: ConnectionSnapshot): void {
   cached = next;
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    window.localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify(next));
   } catch {
     /* quota / private mode */
   }

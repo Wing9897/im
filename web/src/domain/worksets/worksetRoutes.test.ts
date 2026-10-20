@@ -24,17 +24,17 @@ describe("worksetRoutes", () => {
   });
 
   it("builds contents-only detail paths and catalog tab URLs", () => {
-    expect(worksetDetailPath("ws-1")).toBe("/worksets/ws-1");
-    expect(worksetsCatalogPath()).toBe("/worksets");
-    expect(worksetsCatalogPath("catalog")).toBe("/worksets");
-    expect(worksetsCatalogPath("graph")).toBe("/worksets?tab=graph");
-    expect(worksetsCatalogPath("graph", "ws-1")).toBe("/worksets?tab=graph&worksetId=ws-1");
+    expect(worksetDetailPath("ws-1")).toBe("/timeline?workset=ws-1");
+    expect(worksetsCatalogPath()).toBe("/timeline?workset=list");
+    expect(worksetsCatalogPath("catalog")).toBe("/timeline?workset=list");
+    expect(worksetsCatalogPath("graph")).toBe("/tasks?tab=graph");
+    expect(worksetsCatalogPath("graph", "ws-1")).toBe("/tasks?tab=graph&worksetId=ws-1");
     expect(WORKSET_GRAPH_FILTER_PARAM).toBe("worksetId");
     expect(parseWorksetGraphFilter(null)).toBeNull();
     expect(parseWorksetGraphFilter("")).toBeNull();
     expect(parseWorksetGraphFilter("__none__")).toEqual([]);
     expect(serializeWorksetGraphFilter([])).toBe("__none__");
-    expect(worksetsCatalogPath("graph", [])).toBe("/worksets?tab=graph&worksetId=__none__");
+    expect(worksetsCatalogPath("graph", [])).toBe("/tasks?tab=graph&worksetId=__none__");
     expect(parseWorksetGraphFilter("ws-1")).toEqual(["ws-1"]);
     expect(parseWorksetGraphFilter("ws-1,__general__")).toEqual(["ws-1", "__general__"]);
     const multi = worksetsCatalogPath("graph", ["ws-1", "__general__"]);

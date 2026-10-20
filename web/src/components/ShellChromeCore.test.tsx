@@ -3,6 +3,7 @@ import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { MonitorModeProvider } from "../context/MonitorModeContext";
+import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { PRODUCT_MARK_SRC } from "./ProductMark";
 
 vi.mock("../context/CollectorStatusContext", () => ({
@@ -68,7 +69,7 @@ describe("ShellChromeCore", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(ShellChromeCore, { layout: "web" }),
+            createElement(SimpleModeProvider, null, createElement(ShellChromeCore, { layout: "web" })),
           ),
         ),
       );
@@ -104,10 +105,14 @@ describe("ShellChromeCore", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(ShellChromeCore, {
-              layout: "desktop",
-              actionsClassName: "desktop-title-bar-actions",
-            }),
+            createElement(
+              SimpleModeProvider,
+              null,
+              createElement(ShellChromeCore, {
+                layout: "desktop",
+                actionsClassName: "desktop-title-bar-actions",
+              }),
+            ),
           ),
         ),
       );
@@ -127,7 +132,7 @@ describe("ShellChromeCore", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(ShellChromeCore, { layout: "web" }),
+            createElement(SimpleModeProvider, null, createElement(ShellChromeCore, { layout: "web" })),
           ),
         ),
       );

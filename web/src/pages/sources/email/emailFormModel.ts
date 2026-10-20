@@ -60,20 +60,26 @@ export function applyEmailPreset(
   };
 }
 
-export function formToPatch(form: EmailFormFields, resetCursors: boolean): EmailMailboxPatch {
-  const password = form.password === MASKED_SECRET ? null : form.password || null;
+function emailFormPayload(form: EmailFormFields) {
   return {
     imapHost: form.imapHost.trim(),
     imapPort: form.imapPort,
     useSsl: form.useSsl,
     username: form.username.trim(),
-    password,
     folders: parseDelimitedList(form.foldersText),
     pollIntervalSeconds: Math.round(form.pollIntervalMinutes * 60),
     initialSyncDays: form.initialSyncDays,
     initialSyncMaxMessages: form.initialSyncMaxMessages,
     senderAllowlist: parseDelimitedList(form.senderAllowlistText),
     markAsRead: form.markAsRead,
+  };
+}
+
+export function formToPatch(form: EmailFormFields, resetCursors: boolean): EmailMailboxPatch {
+  const password = form.password === MASKED_SECRET ? null : form.password || null;
+  return {
+    ...emailFormPayload(form),
+    password,
     resetCursors,
   };
 }
@@ -92,17 +98,8 @@ export function formToCreatePayload(form: EmailFormFields): {
   markAsRead: boolean;
 } {
   return {
-    imapHost: form.imapHost.trim(),
-    imapPort: form.imapPort,
-    useSsl: form.useSsl,
-    username: form.username.trim(),
+    ...emailFormPayload(form),
     password: form.password,
-    folders: parseDelimitedList(form.foldersText),
-    pollIntervalSeconds: Math.round(form.pollIntervalMinutes * 60),
-    initialSyncDays: form.initialSyncDays,
-    initialSyncMaxMessages: form.initialSyncMaxMessages,
-    senderAllowlist: parseDelimitedList(form.senderAllowlistText),
-    markAsRead: form.markAsRead,
   };
 }
 

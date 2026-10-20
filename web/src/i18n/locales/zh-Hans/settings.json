@@ -287,7 +287,7 @@
     "disclaimer": "语音只作输入／朗读。桌面版不支持浏览器识别，请改用文字。",
     "sttSectionTitle": "听写 STT",
     "ttsSectionTitle": "朗读 TTS",
-    "sessionSectionTitle": "语言／PTT／工作集",
+    "sessionSectionTitle": "语言／PTT／专区",
     "sttLabel": "语音识别（STT）",
     "sttHelp": "不可用时隐藏麦克风，仍可打字。",
     "sttHelpDesktopBlocked": "桌面版不支持浏览器语音识别，请改用文字输入。",
@@ -327,8 +327,8 @@
     "ttsPreviewing": "播放中…",
     "ttsPreviewFailed": "试听失败，请检查浏览器语音或系统音量。",
     "ttsPreviewSample": "这是语音试听，你好。",
-    "defaultWorksetLabel": "默认归属工作集",
-    "defaultWorksetHelp": "助手写入日程的默认工作集（完整页、系统栏对话、空格键语音共用）。默认为内置「一般」。"
+    "defaultWorksetLabel": "预设归属专区",
+    "defaultWorksetHelp": "助手写入日程的必填归属。预设内建「一般」。完整页、系统栏与空格键语音共用。"
   },
   "analysis": {
     "loading": "载入分析调度设定中…",

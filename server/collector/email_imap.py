@@ -30,7 +30,6 @@ from server.collector.email_imap_fetch import (
     FetchedEmail,
     FolderPollResult,
     fetch_folder,
-    parse_imap_message,
     sender_allowed,
 )
 from server.collector.email_imap_mailbox import (
@@ -241,9 +240,6 @@ class EmailImapAdapter(BasePlatformAdapter):
 
     def _sender_allowed(self, msg: Any) -> bool:
         return sender_allowed(msg, self._sender_allowlist)
-
-    def _parse_message(self, folder: str, msg: Any) -> FetchedEmail:
-        return parse_imap_message(folder, msg)
 
     async def _ingest_fetched(self, fetched: FetchedEmail) -> None:
         platform_id = email_channel_platform_id(

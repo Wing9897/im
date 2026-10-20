@@ -43,7 +43,7 @@
       "search": "搜索讯息"
     },
     "worksets": {
-      "list": "列出工作集"
+      "list": "列出专区"
     },
     "web": {
       "search": "搜索网页",
@@ -63,7 +63,7 @@
     "events": "{count} 件",
     "eventInWindow": "时段内 {count} 件",
     "calendars": "{count} 个日历",
-    "worksets": "{count} 个工作集",
+    "worksets": "{count} 个专区",
     "messages": "{count} 则讯息",
     "results": "{count} 笔结果",
     "resultsVia": "{count} 笔结果（{provider}）",
@@ -81,8 +81,8 @@
     "placeholderIdle": "点此输入文字；未聚焦时按住空格键说话"
   },
   "targetWorkset": {
-    "label": "目标归属工作集",
-    "aria": "助手写入日程的目标归属工作集"
+    "label": "目标归属专区",
+    "aria": "助手写入日程的目标归属专区"
   },
   "slotUnbound": {
     "message": "助手全局槽位尚未绑定完整的 AI 设定档。",

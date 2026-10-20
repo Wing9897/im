@@ -11,24 +11,6 @@ function resolveTasksPrefetch(
   if (/\/tasks\/[^/]+\/agent$/.test(path)) {
     return ROUTE_PAGES.AgentDetailPage;
   }
-  if (/^\/worksets\/.+/.test(path)) {
-    return ROUTE_PREFETCHERS["/worksets/:id"];
-  }
-  if (path === "/worksets") {
-    return ROUTE_PREFETCHERS["/worksets"];
-  }
-  return undefined;
-}
-
-function resolveSchedulePrefetch(
-  path: string,
-): (() => Promise<unknown>) | undefined {
-  if (/\/schedule\/recurring\/[^/]+\/edit$/.test(path)) {
-    return ROUTE_PAGES.RecurringSeriesEditor;
-  }
-  if (path.startsWith("/schedule")) {
-    return ROUTE_PREFETCHERS["/schedule"];
-  }
   return undefined;
 }
 
@@ -55,16 +37,13 @@ export function prefetchRoute(to: string): void {
   const path = to.split("?")[0] ?? to;
   const loader =
     ROUTE_PREFETCHERS[path] ??
-    resolveSchedulePrefetch(path) ??
     resolveTasksPrefetch(path) ??
     resolveItemsPrefetch(path) ??
     (path.startsWith("/settings/ai")
       ? ROUTE_PREFETCHERS["/settings/ai"]
       : path.startsWith("/settings")
         ? ROUTE_PREFETCHERS["/settings"]
-        : path.startsWith("/subscriptions")
-          ? ROUTE_PREFETCHERS["/subscriptions"]
-          : undefined);
+        : undefined);
   if (!loader || prefetched.has(path)) return;
   prefetched.add(path);
   void loader().catch(() => {

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Request, Response
 
 from server.api.deps import get_db, publish_resource_modified
@@ -11,6 +9,7 @@ from server.api.query_aliases import qalias
 from server.api.schemas.requests.calendar import RecurringSeriesCreateBody, RecurringSeriesPatchBody
 from server.api.schemas.responses.events import RecurringSeriesPageResponse, RecurringSeriesResponse
 from server.calendar.user_events_normalize import UserEventItemIdError, resolve_user_event_item_id
+from server.calendar.write_input import RecurringSeriesWriteInput
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries.recurring_series_queries import fetch_series_row, list_series_rows
 from server.services.recurring_series_writes import (
@@ -20,7 +19,6 @@ from server.services.recurring_series_writes import (
 )
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_recurring_series
-from server.worksets_const import SYSTEM_WORKSET_ID
 
 router = APIRouter(prefix="/recurring", tags=["calendar"])
 
@@ -64,27 +62,10 @@ async def create_recurring_series_endpoint(
     body: RecurringSeriesCreateBody,
 ) -> RecurringSeriesResponse:
     db = get_db(request)
+    payload = RecurringSeriesWriteInput.from_pydantic_body(body)
     try:
-        clean_item_id = await resolve_user_event_item_id(db, body.itemId)
-        workset: Any = ...
-        if "worksetId" in body.model_fields_set:
-            workset = body.worksetId if body.worksetId else SYSTEM_WORKSET_ID
-        row = await create_recurring_series(
-            db,
-            name=body.name,
-            rrule=body.rrule,
-            event_start_time=body.eventStartTime,
-            event_end_time=body.eventEndTime,
-            event_is_all_day=bool(body.eventIsAllDay),
-            event_location=body.eventLocation,
-            event_description=body.eventDescription,
-            description=body.description,
-            workset_id=workset,
-            parent_task_id=body.parentTaskId,
-            item_id=clean_item_id,
-            notify_pref=body.notifyPref,
-            emoji=body.emoji if "emoji" in body.model_fields_set else None,
-        )
+        payload = payload.with_item_id(await resolve_user_event_item_id(db, payload.itemId))
+        row = await create_recurring_series(db, **payload.service_kwargs())
     except (TaskWriteError, UserEventItemIdError) as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     payload = serialize_recurring_series(row)
@@ -107,36 +88,11 @@ async def patch_recurring_series_endpoint(
     body: RecurringSeriesPatchBody,
 ) -> RecurringSeriesResponse:
     db = get_db(request)
-    fields = body.model_fields_set
-    kwargs: dict[str, Any] = {"series_id": series_id}
-    if "name" in fields:
-        kwargs["name"] = body.name
-    if "rrule" in fields:
-        kwargs["rrule"] = body.rrule
-    if "eventStartTime" in fields:
-        kwargs["event_start_time"] = body.eventStartTime
-    if "eventEndTime" in fields:
-        kwargs["event_end_time"] = body.eventEndTime
-    if "eventIsAllDay" in fields:
-        kwargs["event_is_all_day"] = body.eventIsAllDay
-    if "eventLocation" in fields:
-        kwargs["event_location"] = body.eventLocation
-    if "eventDescription" in fields:
-        kwargs["event_description"] = body.eventDescription
-    if "description" in fields:
-        kwargs["description"] = body.description
-    if "isActive" in fields:
-        kwargs["is_active"] = body.isActive
-    if "worksetId" in fields:
-        kwargs["workset_id"] = body.worksetId if body.worksetId else SYSTEM_WORKSET_ID
-    if "notifyPref" in fields:
-        kwargs["notify_pref"] = body.notifyPref
-    if "emoji" in fields:
-        kwargs["emoji"] = body.emoji
+    payload = RecurringSeriesWriteInput.from_pydantic_body(body)
     try:
-        if "itemId" in fields:
-            kwargs["item_id"] = await resolve_user_event_item_id(db, body.itemId)
-        row = await patch_recurring_series(db, **kwargs)
+        if "itemId" in payload.fields_set:
+            payload = payload.with_item_id(await resolve_user_event_item_id(db, payload.itemId))
+        row = await patch_recurring_series(db, series_id=series_id, **payload.service_kwargs())
     except (TaskWriteError, UserEventItemIdError) as exc:
         status = 404 if "not found" in str(exc).lower() else 422
         raise http_error(status, str(exc), error_code=NOT_FOUND if status == 404 else VALIDATION_ERROR) from exc

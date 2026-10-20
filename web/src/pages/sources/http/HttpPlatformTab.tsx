@@ -2,6 +2,7 @@ import { useCallback, useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { SegmentedControl } from "../../../components/ui";
+import type { SourcePlatformTabProps } from "../plugins/types";
 import { WebhookPanel } from "../webhook/WebhookPanel";
 import { HttpTab } from "./HttpTab";
 
@@ -36,11 +37,14 @@ function HttpModeToggle({
 }
 
 /** Top-level HTTP sources tab: poll sources + inbound Webhook config. */
-export function HttpPlatformTab() {
+export function HttpPlatformTab({
+  tabParam = "tab",
+  modeParam = "mode",
+}: SourcePlatformTabProps = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = useMemo(
-    () => parseHttpSubMode(searchParams.get("mode")),
-    [searchParams],
+    () => parseHttpSubMode(searchParams.get(modeParam)),
+    [modeParam, searchParams],
   );
 
   const setMode = useCallback(
@@ -48,15 +52,15 @@ export function HttpPlatformTab() {
       setSearchParams(
         (prev) => {
           const params = new URLSearchParams(prev);
-          params.set("tab", "http");
-          if (next === "poll") params.delete("mode");
-          else params.set("mode", next);
+          params.set(tabParam, "http");
+          if (next === "poll") params.delete(modeParam);
+          else params.set(modeParam, next);
           return params;
         },
         { replace: true },
       );
     },
-    [setSearchParams],
+    [modeParam, setSearchParams, tabParam],
   );
 
   const modeToggle: ReactNode = (

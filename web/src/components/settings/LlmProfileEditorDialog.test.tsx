@@ -41,8 +41,8 @@ describe("LlmProfileEditorDialog", () => {
     expect(dialog).toBeTruthy();
 
     const shell = dialog?.querySelector('[role="dialog"]');
-    expect(shell?.className ?? "").toContain("w-[720px]");
-    expect(shell?.className ?? "").toContain("h-[min(86vh,780px)]");
+    expect(shell?.className ?? "").toContain("w-[640px]");
+    expect(shell?.className ?? "").toContain("max-h-[min(86vh,780px)]");
 
     expect(dialog?.querySelector('[aria-label="設定檔"]')).toBeTruthy();
     expect(dialog?.querySelector('[aria-label="供應商與模型"]')).toBeTruthy();

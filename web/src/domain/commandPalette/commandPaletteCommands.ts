@@ -90,7 +90,7 @@ export function buildWorksetCommandPaletteItems(
     to: worksetDetailPath(ws.id),
     icon: Layers,
     group,
-    keywords: [ws.id, ws.name, "workset", "工作集"],
+    keywords: [ws.id, ws.name, "workset", "space", "專區", "专区", "工作集"],
   }));
 }
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import type { ChannelWithSource } from "../../types";
 import { Button, FieldLabel } from "../../components/ui";
@@ -55,6 +56,16 @@ export function ChannelPickerDialogShell({
   closeAriaLabel,
 }: ChannelPickerDialogShellProps) {
   const { t } = useTranslation("common");
+  const [, setSearchParams] = useSearchParams();
+
+  const openSourceDrawer = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("source", "new");
+      return next;
+    });
+  };
+
   const {
     platformFilter,
     setPlatformFilter,
@@ -151,6 +162,18 @@ export function ChannelPickerDialogShell({
             />
           </div>
         )}
+
+        <div className="mb-2 flex justify-end">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            data-testid="channel-picker-add-source"
+            onClick={openSourceDrawer}
+          >
+            {t("channelPicker.addSource")}
+          </Button>
+        </div>
 
         <SourceChannelPickerContent
           channels={visibleChannels}

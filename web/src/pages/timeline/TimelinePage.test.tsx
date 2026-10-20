@@ -20,7 +20,6 @@ const {
   mockUseTimelinePageContainer,
 } = vi.hoisted(() => ({
   captures: {
-    addEvent: null as (() => void) | null,
     context: null as unknown,
     dialog: null as unknown,
   },
@@ -134,14 +133,7 @@ vi.mock("../../components/ui", () => ({
 }));
 
 vi.mock("./components/TimelineControlBar", () => ({
-  TimelineControlBar: ({
-    children,
-    onAddEvent,
-  }: {
-    children: ReactNode;
-    onAddEvent: () => void;
-  }) => {
-    captures.addEvent = onAddEvent;
+  TimelineControlBar: ({ children }: { children: ReactNode }) => {
     return <div>{children}</div>;
   },
 }));
@@ -307,7 +299,6 @@ describe("TimelinePage user-event CRUD", () => {
   beforeEach(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
-    captures.addEvent = null;
     captures.context = null;
     captures.dialog = null;
     mockSearchParams = new URLSearchParams();
@@ -410,7 +401,10 @@ describe("TimelinePage user-event CRUD", () => {
 
   it("creates an event and refreshes the visible data", async () => {
     await renderPage();
-    await flushAction(() => captures.addEvent!());
+    await flushAction(() => {
+      const context = captures.context as TimelinePageContextValue;
+      context.chrome.onAddEvent!();
+    });
     const dialog = captures.dialog as CapturedDialog;
     expect(dialog.open).toBe(true);
     expect(dialog.mode).toBe("create");
@@ -436,7 +430,10 @@ describe("TimelinePage user-event CRUD", () => {
 
   it("creates a recurring event via the recurring-series API path", async () => {
     await renderPage();
-    await flushAction(() => captures.addEvent!());
+    await flushAction(() => {
+      const context = captures.context as TimelinePageContextValue;
+      context.chrome.onAddEvent!();
+    });
     const dialog = captures.dialog as CapturedDialog;
 
     await flushAction(() =>
@@ -481,7 +478,10 @@ describe("TimelinePage user-event CRUD", () => {
   it("toasts when create fails instead of closing silently", async () => {
     mockCreateUserEvent.mockRejectedValue(new Error("CHECK constraint failed"));
     await renderPage();
-    await flushAction(() => captures.addEvent!());
+    await flushAction(() => {
+      const context = captures.context as TimelinePageContextValue;
+      context.chrome.onAddEvent!();
+    });
     const dialog = captures.dialog as CapturedDialog;
     await flushAction(() => dialog.onSubmit(formValues));
     expect(mockShowToast).toHaveBeenCalledWith("CHECK constraint failed", "error");

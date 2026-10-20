@@ -22,6 +22,8 @@ from server.domain.user_event_origins import (
     ALLOWED_USER_EVENT_ORIGINS,
     USER_EVENT_ORIGIN_ERROR,
 )
+from server.queries.tasks_queries import fetch_task_id_mode_workset
+from server.queries.worksets_queries import fetch_workset_row
 from server.time_iso import parse_iso, to_iso_z
 from server.worksets_const import SYSTEM_WORKSET_ID
 
@@ -179,10 +181,7 @@ async def resolve_user_event_task_id(db: Database, task_id: Any) -> str | None:
     if normalized is None:
         return None
     assert isinstance(normalized, str)
-    row = await db.fetch_one(
-        "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",
-        (normalized,),
-    )
+    row = await fetch_task_id_mode_workset(db, normalized)
     if row is None:
         raise UserEventTaskIdError("taskId does not refer to an existing task")
     mode = str(row.get("analysis_mode") or "")
@@ -195,7 +194,7 @@ async def resolve_user_event_workset_id(db: Database, workset_id: Any) -> str:
     """Resolve wire worksetId to a stored FK (defaults to builtin ``__general__``)."""
     normalized = normalize_user_event_workset_id_wire(workset_id)
     assert isinstance(normalized, str)
-    row = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (normalized,))
+    row = await fetch_workset_row(db, normalized)
     if row is None:
         raise UserEventWorksetIdError("worksetId does not refer to an existing workset")
     return normalized

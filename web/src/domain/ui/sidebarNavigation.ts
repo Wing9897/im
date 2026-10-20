@@ -1,27 +1,21 @@
+import {
+  appDestinationPrefetchPaths,
+  appDestinationsInSidebarOrder,
+  resolveAppDestinationHref,
+  type SidebarAppDestination,
+  type SidebarIconKey,
+} from "../navigation/appDestinations";
 import { isSimpleModeHiddenPath } from "./simpleMode";
 
-export type SidebarIconKey =
-  | "monitor"
-  | "tasks"
-  | "worksets"
-  | "schedule"
-  | "items"
-  | "sources"
-  | "leaderboard"
-  | "intelligence"
-  | "timeline"
-  | "subscriptions"
-  | "notify"
-  | "assistant"
-  | "ai"
-  | "settings"
-  | "account";
+export type { SidebarIconKey };
 
 export interface SidebarNavItemModel {
   to: string;
   labelKey: string;
   icon: SidebarIconKey;
   activePrefix?: string;
+  /** When one item covers more than one URL family (tasks and sources). */
+  activePrefixes?: readonly string[];
 }
 
 export interface SidebarNavGroupModel {
@@ -29,45 +23,33 @@ export interface SidebarNavGroupModel {
   items: readonly SidebarNavItemModel[];
 }
 
-export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
-  { labelKey: null, items: [{ to: "/monitor", labelKey: "monitor", icon: "monitor" }] },
-  {
-    labelKey: "groupManage",
-    items: [
-      { to: "/worksets", labelKey: "worksets", icon: "worksets", activePrefix: "/worksets" },
-      { to: "/tasks", labelKey: "tasks", icon: "tasks", activePrefix: "/tasks" },
-      { to: "/schedule", labelKey: "schedule", icon: "schedule", activePrefix: "/schedule" },
-      { to: "/items", labelKey: "items", icon: "items", activePrefix: "/items" },
-      { to: "/sources", labelKey: "sources", icon: "sources", activePrefix: "/sources" },
-    ],
-  },
-  {
-    labelKey: "groupIntelligence",
-    items: [
-      { to: "/leaderboard", labelKey: "leaderboard", icon: "leaderboard" },
-      { to: "/intelligence", labelKey: "keyEvents", icon: "intelligence" },
-    ],
-  },
-  {
-    labelKey: "groupTime",
-    items: [
-      { to: "/timeline", labelKey: "timeline", icon: "timeline" },
-      {
-        to: "/subscriptions",
-        labelKey: "subscriptions",
-        icon: "subscriptions",
-        activePrefix: "/subscriptions",
-      },
-    ],
-  },
-  {
-    labelKey: "groupInteract",
-    items: [
-      { to: "/notify", labelKey: "notify", icon: "notify" },
-      { to: "/assistant", labelKey: "assistant", icon: "assistant" },
-    ],
-  },
-];
+function toSidebarItem(dest: SidebarAppDestination): SidebarNavItemModel {
+  const { icon, activePrefix, activePrefixes } = dest.sidebar;
+  return {
+    to: resolveAppDestinationHref(dest.paths[0]),
+    labelKey: dest.labelKey,
+    icon,
+    ...(activePrefix ? { activePrefix } : {}),
+    ...(activePrefixes ? { activePrefixes } : {}),
+  };
+}
+
+function projectMainGroups(): readonly SidebarNavGroupModel[] {
+  const groups: SidebarNavGroupModel[] = [];
+  for (const dest of appDestinationsInSidebarOrder()) {
+    const labelKey = dest.sidebar.groupKey;
+    const item = toSidebarItem(dest);
+    const current = groups[groups.length - 1];
+    if (current && current.labelKey === labelKey) {
+      groups[groups.length - 1] = { labelKey, items: [...current.items, item] };
+    } else {
+      groups.push({ labelKey, items: [item] });
+    }
+  }
+  return groups;
+}
+
+export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = projectMainGroups();
 
 export const SIDEBAR_BOTTOM_ITEMS: readonly SidebarNavItemModel[] = [
   { to: "/settings/ai/provider", labelKey: "aiSettings", icon: "ai", activePrefix: "/settings/ai" },
@@ -80,9 +62,7 @@ export const SIDEBAR_BOTTOM_ITEMS: readonly SidebarNavItemModel[] = [
   { to: "/account/identity", labelKey: "account", icon: "account", activePrefix: "/account" },
 ];
 
-export const MAIN_SIDEBAR_PREFETCH_PATHS: readonly string[] = SIDEBAR_MAIN_GROUPS.flatMap(
-  (group) => group.items.map((item) => item.to),
-);
+export const MAIN_SIDEBAR_PREFETCH_PATHS: readonly string[] = appDestinationPrefetchPaths();
 
 export function visibleSidebarGroups(simpleMode: boolean): SidebarNavGroupModel[] {
   return SIDEBAR_MAIN_GROUPS.map((group) => ({
@@ -94,6 +74,9 @@ export function visibleSidebarGroups(simpleMode: boolean): SidebarNavGroupModel[
 }
 
 export function isSidebarItemActive(item: SidebarNavItemModel, pathname: string): boolean {
+  if (item.activePrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return true;
+  }
   if (item.activePrefix === "/settings") {
     return pathname.startsWith("/settings") && !pathname.startsWith("/settings/ai");
   }

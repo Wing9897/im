@@ -54,14 +54,14 @@ uv run python scripts/reset_local_databases.py --apply
 
 ## 3. 資料範圍
 
-大多數業務列帶 `workset_id`。內建系統列 id 為 `__general__`（介面「一般」，`is_system=1`）。建立分析任務、手寫事件、物品時若省略工作集，落到 `__general__`。刪除自建工作集會先把下屬列改指 `__general__`；`__general__` 本身不能刪、不能改名。
+大多數業務列帶 `workset_id`（畫面稱為專區）。內建系統列 id 為 `__general__`（介面「一般」，`is_system=1`）。建立分析任務、手寫事件、物品時若省略專區，落到 `__general__`。刪除自建專區會先把下屬列改指 `__general__`；`__general__` 本身不能刪、不能改名。
 
-側欄「工作集」是 `/worksets`。「任務設定」是**獨立路由** `/tasks`（不是工作集底下的分頁；舊的 `/tasks/worksets/…` 已移除）。`GET /api/v1/tasks` 只回分析任務；週期日曆系列走 `/api/v1/calendar/recurring`，不是任務目錄的一列。
+側欄沒有專區。專區抽屜在時間規劃（`?workset=list` 或 `?workset=<id>`）。「任務與來源」是側欄項目：任務在 `/tasks`，來源在 `/sources`，流程圖在 `/tasks?tab=graph`。`GET /api/v1/tasks` 只回分析任務；週期日曆系列走 `/api/v1/calendar/recurring`，不是任務目錄的一列。
 
-工作集另有：
+專區另有：
 
-- `notify_enabled`：該集提醒預設
-- `external_enabled`：MCP／A2A 是否看得到該集的情報／訊息／物品（預設開；全關則 fail closed）。日曆「我的日程」是家庭層，不套這欄。內建助手不受約束。
+- `notify_enabled`：該專區提醒預設
+- `external_enabled`：MCP／A2A 是否看得到該專區的情報／訊息／物品（預設開；全關則 fail closed）。日曆「我的日程」是家庭層，不套這欄。內建助手不受約束。
 
 ## 4. 鑑權
 
@@ -91,7 +91,7 @@ uv run python scripts/reset_local_databases.py --apply
 | 前綴 | 說明 |
 |------|------|
 | `/api/v1/setup` | 首次註冊、登入、刷新、裝置、改密 |
-| `/api/v1/worksets` | 工作集 |
+| `/api/v1/worksets` | 專區 |
 | `/api/v1/tasks` | 分析任務（含 templates、activity-spans、agent-ticks） |
 | `/api/v1/sources`、`/messages`、`/channels` | 來源與已收訊息 |
 | `/api/v1/results` | 情報事件（地圖／列表與日曆 window 分開） |
@@ -110,11 +110,19 @@ MCP：`{API origin}/api/v1/mcp`，只做 Streamable HTTP。設定範例（OpenCl
 
 家庭層總開關：`system_config.mcp_enabled`、`a2a_enabled`（預設開，互不控制）。關則對應 HTTP 回 403。同一套 `mcp_cap_*` 過濾 MCP `list_tools`／`call_tool` 與 A2A 內部 tool loop。
 
+### 5.1 後端分層（Route → Service → Query）
+
+後端依單向依賴拆為三層，避免路由堆積業務細節或反向依賴：
+
+- **Route（`server/api/routes/`）**：FastAPI 路由、Pydantic 請求／回應 schema、HTTP 狀態碼映射、SSE 廣播與排程器註冊／反註冊。
+- **Service 與領域套件（`server/services/`、`server/calendar/`、`server/items/`、`server/worksets/` 等）**：交易邊界（`db.transaction()`）、跨表規則、業務驗證與流程編排。禁止反向匯入 `server.api.routes`。
+- **Query 與 Wire（`server/queries/*_queries.py`、`server/wire/`）**：集中 SQL 查詢與寫入 helper（含批次查詢避免 N+1），以及由 `server/wire/serializers.py` 單一門面輸出的 wire 序列化。
+
 ## 6. 日曆分享
 
 可選。預設公開 origin：`https://subscribe.devents.tech`（`server/calendar_share/constants.py` `DEFAULT_BASE_URL`）。這是獨立的公開 hub，**不是**本產品的品牌或必裝元件。
 
-本應用只當代理：前端只打 `/api/v1/calendar-share/*`，**不**直連 hub。代理路徑包括 session／timezone／profile、publish（依工作集推／撤）、subscriptions、search。憑證與自動同步間隔存在本機 `system_config`；stamp 7 的 `calendar_share_publish` 不再依賴舊 stamp 的 household auto-sync cache 欄。
+本應用只當代理：前端只打 `/api/v1/calendar-share/*`，**不**直連 hub。代理路徑包括 session／timezone／profile、publish（依專區推／撤）、subscriptions、search。憑證與自動同步間隔存在本機 `system_config`；stamp 7 的 `calendar_share_publish` 不再依賴舊 stamp 的 household auto-sync cache 欄。
 
 對 hub 的流量另有 rate limit；路徑前綴不走一般 `/api/v1` 的部分 HTTP 限制。沒有雙向 CalDAV／OAuth 同步；本機可一次性 ICS 匯入（`/api/v1/calendar/imports/preview`、`/commit`）。
 
@@ -134,7 +142,7 @@ Electron `userData/connection.json`（與伺服器讀的 `{DATA_DIR}/connection.
 
 兩條線不要混：
 
-**週期日曆系列**（`recurring_schedules`，編輯在「我的日程」／`/api/v1/calendar/recurring`）：RFC 5545 RRULE 本體（不要 `RRULE:` 前綴）。**僅於查詢時展開**（`GET /api/v1/calendar/window` 與助手／MCP 日曆工具）。**不會觸發 AI 分析**，也不會建立分析排程 job。暫停用 `is_active`；硬刪才拿掉系列列。
+**週期日曆系列**（`recurring_schedules`，編輯在時間規劃的「我的日程」側板 `?sheet=schedule`／`/api/v1/calendar/recurring`）：RFC 5545 RRULE 本體（不要 `RRULE:` 前綴）。**僅於查詢時展開**（`GET /api/v1/calendar/window` 與助手／MCP 日曆工具）。**不會觸發 AI 分析**，也不會建立分析排程 job。暫停用 `is_active`；硬刪才拿掉系列列。
 
 **分析任務排程**（`analysis_tasks`，「任務設定」／`/api/v1/tasks`）：具名預設——10 秒、每小時、每日、每週、自訂秒數。內部可能用 RRULE **形狀**的字串給 APScheduler 算下次執行，但那是 trigger 用途，**不會**展開進月曆 window。分析任務沒有「用日曆 RRULE 來排 AI」。
 

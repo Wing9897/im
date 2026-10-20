@@ -12,6 +12,7 @@ from typing import Any
 from server.calendar.rrule import RruleValidationError, validate_rrule
 from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR
 from server.domain.analysis_modes import AGENT_MODE
+from server.queries.tasks_queries import clear_recurring_parent_links, fetch_task_id_mode_workset
 from server.time_iso import parse_iso
 
 #: Calendar RRULE must not be written onto analysis tasks.
@@ -24,7 +25,15 @@ _CLOCK_RE = re.compile(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$")
 
 
 class TaskWriteError(ValueError):
-    """A task write rejected before any row was touched."""
+    """A task write rejected before any row was touched.
+
+    ``http_status`` is what routes translate to. Field validation stays 422.
+    A missing or incomplete LLM profile stays 400 (a missing row stays 404).
+    """
+
+    def __init__(self, message: str, *, http_status: int = 422) -> None:
+        super().__init__(message)
+        self.http_status = http_status
 
 
 def normalize_rrule(rrule_raw: Any) -> str:
@@ -148,26 +157,18 @@ def resolve_parent_task_id(
     return None
 
 
-async def assert_parent_agent_row(db: Any, parent_task_id: str) -> str:
-    """Load parent row and ensure it is ``agent`` mode; return its id."""
-    row = await db.fetch_one(
-        "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",
-        (parent_task_id,),
-    )
+async def assert_parent_agent_row(db: Any, parent_task_id: str) -> tuple[str, str | None]:
+    """Load parent row and ensure it is ``agent`` mode; return ``(id, workset_id)``."""
+    row = await fetch_task_id_mode_workset(db, parent_task_id)
     if row is None:
         raise TaskWriteError(f"parent_task_id not found: {parent_task_id}")
     mode = str(row.get("analysis_mode") or "")
     if mode != AGENT_MODE:
         raise TaskWriteError(f"parent_task_id must reference an agent task (got analysis_mode={mode!r})")
-    return str(row["id"])
+    workset_id = str(row["workset_id"]) if row.get("workset_id") else None
+    return str(row["id"]), workset_id
 
 
 async def clear_children_parent_links(db: Any, parent_task_id: str, *, now: str) -> int:
     """Clear ``parent_task_id`` on child series when an agent parent leaves agent mode."""
-    return int(
-        await db.execute(
-            "UPDATE recurring_schedules SET parent_task_id = NULL, updated_at = ? WHERE parent_task_id = ?",
-            (now, parent_task_id),
-        )
-        or 0
-    )
+    return await clear_recurring_parent_links(db, parent_task_id, now=now)

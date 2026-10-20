@@ -1,4 +1,9 @@
 {
+  "tabs": {
+    "aria": "情报分页",
+    "events": "事件",
+    "topics": "热点排行"
+  },
   "toolbar": {
     "aria": "情报事件工具列",
     "taskSelectAria": "情报事件任务",
@@ -123,7 +128,7 @@
     "filteredTimeTitle": "目前时间范围内无符合条件的情报",
     "filteredTimeDescription": "请尝试调整时间筛选条件，或清除条件后重新浏览。",
     "filteredSourceTitle": "目前来源筛选下没有情报",
-    "filteredSourceDescription": "请调整来源（任务／工作集）筛选，或清除条件后重新浏览。",
+    "filteredSourceDescription": "请调整来源（任务／专区）筛选，或清除条件后重新浏览。",
     "filteredHint": "清除条件后可以快速确认，是资料真的没有，还是只是被筛选藏起来。",
     "noneTitle": "目前还没有情报",
     "noneDescription": "资料已载入，但还没有任何情报结果可显示。",

@@ -1,7 +1,7 @@
 {
   "monitor": "实时监控",
   "tasks": "任务设定",
-  "worksets": "工作集",
+  "worksets": "专区",
   "schedule": "我的日程",
   "leaderboard": "排行榜",
   "keyEvents": "情报事件",
@@ -10,6 +10,11 @@
   "items": "物品",
   "notify": "通知与动作",
   "sources": "来源",
+  "tasksAndSources": "任务与来源",
+  "workspaceTasks": "任务",
+  "workspaceSources": "来源",
+  "workspaceGraph": "流程图",
+  "workspaceTabsAria": "工作区分页",
   "assistant": "助手",
   "aiSettings": "AI 设定",
   "systemSettings": "系统设定",
@@ -24,8 +29,8 @@
   "history": "纪录",
   "mainNav": "主导航",
   "railMode": "侧栏模式",
-  "tasksPendingAria": "任务（待分析 {count}）",
-  "tasksPendingTitle": "任务设定 · 待分析 {count}",
+  "tasksPendingAria": "任务与来源（待分析 {count}）",
+  "tasksPendingTitle": "任务与来源 · 待分析 {count}",
   "pendingAnalysisBadge": "待分析 {count}",
   "appVersionTitle": "应用版本（前后端共用 semver）"
 }

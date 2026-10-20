@@ -22,7 +22,6 @@ import {
   materializeFocalApplyUrl,
   pickFocalUrlForApply,
   resolveThemeBgMode,
-  saveThemeBgMode,
   themeBgWashPct,
   type ThemeBgMode,
   utcDayIso,
@@ -230,11 +229,4 @@ export function loadBgForTheme(themeId: string): string | null {
     });
 
   return url;
-}
-
-/** Persist mode and apply (custom keeps upload; focal triggers refresh). */
-export function setThemeBgMode(themeId: string, mode: ThemeBgMode): void {
-  const id = resolveThemeId(themeId);
-  saveThemeBgMode(id, mode);
-  loadBgForTheme(id);
 }

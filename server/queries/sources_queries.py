@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import TransactionDb
+from server.domain.source_statuses import SOURCE_STATUS_CONNECTED, SOURCE_STATUS_ERROR
 from server.ingestion import upsert_channel
+from server.util import utc_now_iso
 
 # Columns needed by ``serialize_source`` (credentials blob omitted).
 SOURCE_LIST_COLUMNS = "id, platform, name, status, last_error, last_connected_at, created_at, updated_at"
@@ -34,6 +36,24 @@ async def fetch_all_source_list_rows(db: Any) -> list[dict[str, Any]]:
     )
 
 
+async def fetch_source_row(db: Any, source_id: str) -> dict[str, Any] | None:
+    return await db.fetch_one("SELECT * FROM sources WHERE id = ?", (source_id,))
+
+
+async def fetch_source_name_platform(db: Any, source_id: str) -> dict[str, Any] | None:
+    return await db.fetch_one(
+        "SELECT name, platform FROM sources WHERE id = ?",
+        (source_id,),
+    )
+
+
+async def fetch_source_status(db: Any, source_id: str) -> dict[str, Any] | None:
+    return await db.fetch_one(
+        "SELECT status FROM sources WHERE id = ?",
+        (source_id,),
+    )
+
+
 async def fetch_all_source_rows(db: Any) -> list[dict[str, Any]]:
     return await db.fetch_all("SELECT * FROM sources")
 
@@ -57,6 +77,37 @@ async def insert_source(
 
 async def delete_source(db: Any, source_id: str) -> None:
     await db.execute("DELETE FROM sources WHERE id = ?", (source_id,))
+
+
+async def update_source_status(
+    db: Any,
+    source_id: str,
+    status: str,
+    *,
+    last_error: str | None = None,
+    name: str | None = None,
+    now: str | None = None,
+) -> None:
+    """Persist ``sources.status``. Connected clears ``last_error`` and stamps ``last_connected_at``."""
+    timestamp = now if now is not None else utc_now_iso()
+    if status == SOURCE_STATUS_CONNECTED:
+        if name is not None:
+            await db.execute(
+                "UPDATE sources SET status = ?, last_error = NULL, name = ?, "
+                "last_connected_at = ?, updated_at = ? WHERE id = ?",
+                (SOURCE_STATUS_CONNECTED, name, timestamp, timestamp, source_id),
+            )
+        else:
+            await db.execute(
+                "UPDATE sources SET status = ?, last_error = NULL, last_connected_at = ?, updated_at = ? WHERE id = ?",
+                (SOURCE_STATUS_CONNECTED, timestamp, timestamp, source_id),
+            )
+        return
+    stored_status = SOURCE_STATUS_ERROR if status == SOURCE_STATUS_ERROR else status
+    await db.execute(
+        "UPDATE sources SET status = ?, last_error = ?, updated_at = ? WHERE id = ?",
+        (stored_status, last_error, timestamp, source_id),
+    )
 
 
 async def update_source_name(db: Any, source_id: str, name: str, now: str) -> None:

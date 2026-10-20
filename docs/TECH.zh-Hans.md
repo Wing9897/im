@@ -54,14 +54,14 @@ uv run python scripts/reset_local_databases.py --apply
 
 ## 3. 资料范围
 
-大多数业务行带 `workset_id`。内建系统行 id 为 `__general__`（界面「一般」，`is_system=1`）。建立分析任务、手写事件、物品时若省略工作集，落到 `__general__`。删除自建工作集会先把下属行改指 `__general__`；`__general__` 本身不能删、不能改名。
+大多数业务行带 `workset_id`（画面称为专区）。内建系统行 id 为 `__general__`（界面「一般」，`is_system=1`）。建立分析任务、手写事件、物品时若省略专区，落到 `__general__`。删除自建专区会先把下属行改指 `__general__`；`__general__` 本身不能删、不能改名。
 
-侧栏「工作集」是 `/worksets`。「任务设定」是**独立路由** `/tasks`（不是工作集底下的分页；旧的 `/tasks/worksets/…` 已移除）。`GET /api/v1/tasks` 只回分析任务；周期日历系列走 `/api/v1/calendar/recurring`，不是任务目录的一行。
+侧栏「专区」是 `/worksets`。「任务设定」是**独立路由** `/tasks`（不是专区底下的分页；旧的 `/tasks/worksets/…` 已移除）。`GET /api/v1/tasks` 只回分析任务；周期日历系列走 `/api/v1/calendar/recurring`，不是任务目录的一行。
 
-工作集另有：
+专区另有：
 
-- `notify_enabled`：该集提醒预设
-- `external_enabled`：MCP／A2A 是否看得到该集的情报／讯息／物品（预设开；全关则 fail closed）。日历「我的日程」是家庭层，不套这栏。内建助手不受约束。
+- `notify_enabled`：该专区提醒预设
+- `external_enabled`：MCP／A2A 是否看得到该专区的情报／讯息／物品（预设开；全关则 fail closed）。日历「我的日程」是家庭层，不套这栏。内建助手不受约束。
 
 ## 4. 鉴权
 
@@ -91,7 +91,7 @@ uv run python scripts/reset_local_databases.py --apply
 | 前缀 | 说明 |
 |------|------|
 | `/api/v1/setup` | 首次注册、登录、刷新、装置、改密 |
-| `/api/v1/worksets` | 工作集 |
+| `/api/v1/worksets` | 专区 |
 | `/api/v1/tasks` | 分析任务（含 templates、activity-spans、agent-ticks） |
 | `/api/v1/sources`、`/messages`、`/channels` | 来源与已收讯息 |
 | `/api/v1/results` | 情报事件（地图／列表与日历 window 分开） |
@@ -110,11 +110,19 @@ MCP：`{API origin}/api/v1/mcp`，只做 Streamable HTTP。设置范例（OpenCl
 
 家庭层总开关：`system_config.mcp_enabled`、`a2a_enabled`（预设开，互不控制）。关则对应 HTTP 回 403。同一套 `mcp_cap_*` 过滤 MCP `list_tools`／`call_tool` 与 A2A 内部 tool loop。
 
+### 5.1 后端分层（Route → Service → Query）
+
+后端依单向依赖拆为三层，避免路由堆积业务细节或反向依赖：
+
+- **Route（`server/api/routes/`）**：FastAPI 路由、Pydantic 请求／响应 schema、HTTP 状态码映射、SSE 广播与排程器注册／反注册。
+- **Service 与领域套件（`server/services/`、`server/calendar/`、`server/items/`、`server/worksets/` 等）**：事务边界（`db.transaction()`）、跨表规则、业务验证与流程编排。禁止反向导入 `server.api.routes`。
+- **Query 与 Wire（`server/queries/*_queries.py`、`server/wire/`）**：集中 SQL 查询与写入 helper（含批次查询避免 N+1），以及由 `server/wire/serializers.py` 单一门面输出的 wire 序列化。
+
 ## 6. 日历分享
 
 可选。预设公开 origin：`https://subscribe.devents.tech`（`server/calendar_share/constants.py` `DEFAULT_BASE_URL`）。这是独立的公开 hub，**不是**本产品的品牌或必装组件。
 
-本应用只当代理：前端只打 `/api/v1/calendar-share/*`，**不**直连 hub。代理路径包括 session／timezone／profile、publish（依工作集推／撤）、subscriptions、search。凭证与自动同步间隔存在本机 `system_config`；stamp 7 的 `calendar_share_publish` 不再依赖旧 stamp 的 household auto-sync cache 栏。
+本应用只当代理：前端只打 `/api/v1/calendar-share/*`，**不**直连 hub。代理路径包括 session／timezone／profile、publish（依专区推／撤）、subscriptions、search。凭证与自动同步间隔存在本机 `system_config`；stamp 7 的 `calendar_share_publish` 不再依赖旧 stamp 的 household auto-sync cache 栏。
 
 对 hub 的流量另有 rate limit；路径前缀不走一般 `/api/v1` 的部分 HTTP 限制。没有双向 CalDAV／OAuth 同步；本机可一次性 ICS 导入（`/api/v1/calendar/imports/preview`、`/commit`）。
 

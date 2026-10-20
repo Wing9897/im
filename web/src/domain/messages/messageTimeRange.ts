@@ -25,9 +25,3 @@ export const MESSAGE_TIME_RANGE_VALUES = [
 ] as const;
 
 export type MessageTimeRange = TaskAnalysisTimeRange | MessageOnlyTimeRange;
-
-const MESSAGE_TIME_RANGE_SET = new Set<string>(MESSAGE_TIME_RANGE_VALUES);
-
-export function isMessageTimeRange(value: unknown): value is MessageTimeRange {
-  return typeof value === "string" && MESSAGE_TIME_RANGE_SET.has(value);
-}

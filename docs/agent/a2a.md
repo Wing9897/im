@@ -15,7 +15,7 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 - **僅** household access key（`Authorization: Bearer <key>`）。
 - **拒絕** device session；loopback 豁免**不**適用。
 - 金鑰需完整 scope `["*"]`（`read` 只讀金鑰不可呼叫 A2A；舊 `a2a:agent` / `a2a:events` 已硬切拒絕）。
-- 建立：帳戶 → 存取金鑰只產生完整 `*` 金鑰（UI 無唯讀／scopes 選項）。既有 `read` 金鑰仍可用，列表僅顯示「唯讀」狀態。家庭層能力群組（`mcp_cap_*`）在設定 → 外部接口 → MCP **與** A2A 顯示同一套開關；工作集可見性在工作集頁「外部接口」（`worksets.external_enabled`）。與金鑰 read/`*` 正交；**不是** per-key scope。
+- 建立：帳戶 → 存取金鑰只產生完整 `*` 金鑰（UI 無唯讀／scopes 選項）。既有 `read` 金鑰仍可用，列表僅顯示「唯讀」狀態。家庭層能力群組（`mcp_cap_*`）在設定 → 外部接口 → MCP **與** A2A 顯示同一套開關；專區可見性在專區頁「外部接口」（`worksets.external_enabled`）。與金鑰 read/`*` 正交；**不是** per-key scope。
 
 ## 總開關（`a2a_enabled`）
 
@@ -35,13 +35,13 @@ A2A 只有一條 HTTP 方法（`POST /api/v1/a2a/agent`）。細粒度門檻是�
 | 情報搜尋 | `mcp_cap_intelligence_search` | `intelligence.search_events` |
 | 物品讀 | `mcp_cap_items_read` | `items.list` / `items.list_expiring` |
 | 物品寫 | `mcp_cap_items_write` | `items.create` / `items.update` |
-| 工作集讀 | （無獨立 `mcp_cap_*`；A2A 開啟即有） | `worksets.list` |
+| 專區讀 | （無獨立 `mcp_cap_*`；A2A 開啟即有） | `worksets.list` |
 
 關閉某群組時：system prompt 不列出該批工具；若模型仍呼叫，`execute_tool` 回傳 `calendar_read_disabled`／`calendar_writes_disabled` 等。內建助手（`channel=assistant`）**不受**這些家庭層開關約束。
 
-## 工作集權限（與 MCP 共用）
+## 專區權限（與 MCP 共用）
 
-每張工作集的「外部接口」（`worksets.external_enabled`，預設開；內建「一般」可關）。關則該工作集對 MCP **和** A2A 的情報／訊息／物品不可見、不可寫，且不出現在 `worksets.list`。全部關閉 fail closed。日曆「我的日程」不套用。內建助手不受約束。開關在 `/worksets`，不在外部接口頁。
+每張專區的「外部接口」（`worksets.external_enabled`，預設開；內建「一般」可關）。關則該專區對 MCP **和** A2A 的情報／訊息／物品不可見、不可寫，且不出現在 `worksets.list`。全部關閉 fail closed。日曆「我的日程」不套用。內建助手不受約束。開關在時間規劃的專區抽屜（`?workset=`），不在外部接口頁。
 
 無對應群組的 A2A 工具：`worksets.list` 無獨立 `mcp_cap_*`（資料仍受 `external_enabled`）；`web.search` 仍走既有助手聯網設定（不是 `mcp_cap_*`）；`tasks.consult_advisor` 本就不在 A2A（僅助手 task editor）。`mcp_enabled` 只關 MCP HTTP；`a2a_enabled` 只關 A2A HTTP。兩者獨立。
 

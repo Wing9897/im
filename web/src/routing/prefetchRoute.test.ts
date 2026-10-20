@@ -20,9 +20,10 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/ai/voice")).not.toThrow(); // retired path — ignore, do not prefetch settings
   });
 
-  it("maps /tasks to DashboardViewer", () => {
+  it("maps /tasks and /sources to WorkspaceShell", () => {
     const src = readFileSync(resolve(__dirname, "./routeModules.ts"), "utf8");
-    expect(src).toContain('"/tasks": ROUTE_PAGES.DashboardViewer');
+    expect(src).toContain('"/tasks": ROUTE_PAGES.WorkspaceShell');
+    expect(src).toContain('"/sources": ROUTE_PAGES.WorkspaceShell');
     expect(src).not.toContain('"/ai/analysis-strategy"');
   });
 

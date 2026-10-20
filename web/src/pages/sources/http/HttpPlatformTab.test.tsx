@@ -147,4 +147,45 @@ describe("HttpPlatformTab", () => {
     expect(latestParams.get("tab")).toBe("http");
     expect(container.querySelector('[data-testid="http-webhook-panel"]')).toBeTruthy();
   });
+
+  it("writes sourceMode in the drawer and leaves the page tab alone", async () => {
+    let latestParams = new URLSearchParams();
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        wrapWithI18n(createElement(
+            MemoryRouter,
+            { initialEntries: ["/tasks?tab=graph&source=new&sourceTab=http"] },
+            createElement(
+              "div",
+              null,
+              createElement(SearchParamsProbe, {
+                onParams: (params) => {
+                  latestParams = params;
+                },
+              }),
+              createElement(HttpPlatformTab, { tabParam: "sourceTab", modeParam: "sourceMode" }),
+            ),
+          )),
+      );
+      await Promise.resolve();
+    });
+
+    const webhookButton = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "Webhook",
+    );
+    expect(webhookButton).toBeTruthy();
+
+    await act(async () => {
+      webhookButton!.click();
+      await Promise.resolve();
+    });
+
+    expect(latestParams.get("tab")).toBe("graph");
+    expect(latestParams.get("mode")).toBeNull();
+    expect(latestParams.get("sourceTab")).toBe("http");
+    expect(latestParams.get("sourceMode")).toBe("webhook");
+    expect(container.querySelector('[data-testid="http-webhook-panel"]')).toBeTruthy();
+  });
 });

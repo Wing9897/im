@@ -1,35 +1,85 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PageBreadcrumb, SegmentedTabs, type SegmentedTabItem } from "../../components/ui";
+import { PageBreadcrumb, SegmentedControl } from "../../components/ui";
 import { pageShellRootClass } from "../../components/ui/pageLayout";
-import { subscriptionsWorkspaceNavItems } from "../../domain/navigation/workspaceNav";
+import {
+  subscriptionsWorkspaceNavItems,
+  type SubscriptionsWorkspaceTabId,
+} from "../../domain/navigation/workspaceNav";
+import { SubscriptionsIdentityPanel } from "./SubscriptionsIdentityPanel";
+import { SubscriptionsMinePage } from "./SubscriptionsMinePage";
+import { SubscriptionsPublishedPage } from "./SubscriptionsPublishedPage";
+import { SubscriptionsSearchPage } from "./SubscriptionsSearchPage";
+
+export const SUBSCRIPTIONS_TAB_IDS = subscriptionsWorkspaceNavItems.map((item) => item.id);
+
+export type SubscriptionsTabId = SubscriptionsWorkspaceTabId;
+
+export function parseSubscriptionsTab(value: string | null | undefined): SubscriptionsTabId {
+  if (value && (SUBSCRIPTIONS_TAB_IDS as readonly string[]).includes(value)) {
+    return value as SubscriptionsTabId;
+  }
+  return "mine";
+}
+
+type SubscriptionsShellProps = {
+  /** Active tab. The sheet passes `?tab=`; the shell does not read the pathname. */
+  tab?: SubscriptionsTabId;
+  onTabChange?: (tab: SubscriptionsTabId) => void;
+  embedded?: boolean;
+};
 
 /** Subscriptions workspace: mine / published / account / search. */
-export function SubscriptionsShell() {
+export function SubscriptionsShell({
+  tab = "mine",
+  onTabChange,
+  embedded = false,
+}: SubscriptionsShellProps) {
   const { t } = useTranslation("subscriptions");
-  const { pathname } = useLocation();
+  const [uncontrolled, setUncontrolled] = useState<SubscriptionsTabId>(tab);
+  const current = onTabChange ? tab : uncontrolled;
 
-  const tabs: SegmentedTabItem[] = subscriptionsWorkspaceNavItems.map(({ to, labelKey }) => ({
-    to,
-    label: t(labelKey),
-  }));
+  useEffect(() => {
+    if (!onTabChange) setUncontrolled(tab);
+  }, [onTabChange, tab]);
 
-  const current =
-    subscriptionsWorkspaceNavItems.find((item) => pathname === item.to) ??
-    subscriptionsWorkspaceNavItems.find((item) => pathname.startsWith(`${item.to}/`));
+  const select = (next: string) => {
+    const id = parseSubscriptionsTab(next);
+    if (onTabChange) onTabChange(id);
+    else setUncontrolled(id);
+  };
+
+  const currentItem =
+    subscriptionsWorkspaceNavItems.find((item) => item.id === current) ??
+    subscriptionsWorkspaceNavItems[0];
+
+  const containerClass = embedded
+    ? "flex w-full min-w-0 flex-col gap-md"
+    : `${pageShellRootClass} max-w-[1200px]`;
 
   return (
-    <div className={`${pageShellRootClass} max-w-[1200px]`} data-testid="subscriptions-shell">
-      <PageBreadcrumb
+    <div className={containerClass} data-testid="subscriptions-shell">
+      {embedded ? null : (
+        <PageBreadcrumb
+          className="!mb-0"
+          items={[{ label: t("root") }, { label: currentItem ? t(currentItem.labelKey) : t("root") }]}
+        />
+      )}
+      <SegmentedControl
         className="!mb-0"
-        items={[
-          { label: t("root"), to: "/subscriptions/mine" },
-          { label: current ? t(current.labelKey) : t("root") },
-        ]}
+        ariaLabel={t("tabsAria")}
+        value={current}
+        onChange={select}
+        items={subscriptionsWorkspaceNavItems.map((item) => ({
+          id: item.id,
+          label: t(item.labelKey),
+        }))}
       />
-      <SegmentedTabs className="!mb-0" items={tabs} ariaLabel={t("tabsAria")} />
       <div className="min-w-0">
-        <Outlet />
+        {current === "mine" ? <SubscriptionsMinePage /> : null}
+        {current === "published" ? <SubscriptionsPublishedPage /> : null}
+        {current === "account" ? <SubscriptionsIdentityPanel /> : null}
+        {current === "search" ? <SubscriptionsSearchPage /> : null}
       </div>
     </div>
   );

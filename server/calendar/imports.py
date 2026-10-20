@@ -8,6 +8,7 @@ from typing import Any
 from server.calendar.ics import ParsedIcsEvent, parse_ics
 from server.calendar.imports_upsert import _upsert_recurring_task, _upsert_user_event
 from server.db.database import Database
+from server.queries.calendar_import_queries import fetch_existing_import_targets_by_uids
 from server.util import new_id, parse_json_list, utc_now_iso
 
 __all__ = [
@@ -16,6 +17,7 @@ __all__ = [
     "commit_calendar_import",
     "new_id",
     "preview_calendar_import",
+    "preview_ics_import",
 ]
 
 
@@ -85,37 +87,29 @@ def _changes(row: dict[str, Any], event: ParsedIcsEvent) -> list[dict[str, Any]]
     ]
 
 
-async def _find_existing(db: Database, source: str, uid: str) -> tuple[str, dict[str, Any]] | None:
-    event = await db.fetch_one(
-        "SELECT * FROM user_events WHERE ics_source = ? AND ics_uid = ?",
-        (source, uid),
-    )
-    series = await db.fetch_one(
-        "SELECT id, name, workset_id, is_active, rrule, "
-        "dtstart AS event_start_time, dtend AS event_end_time, "
-        "is_all_day AS event_is_all_day, location AS event_location, "
-        "description AS event_description, timezone AS event_timezone, "
-        "timezone_ical AS event_timezone_ical, dtstart AS event_start_local, "
-        "dtend AS event_end_local, exdates_json AS event_exdates_json, "
-        "rdates_json AS event_rdates_json, ics_import_fingerprint "
-        "FROM recurring_schedules "
-        "WHERE ics_source = ? AND ics_uid = ?",
-        (source, uid),
-    )
-    if event is not None and series is not None:
+def _resolve_existing_from_map(
+    existing_map: dict[str, tuple[str, dict[str, Any]]],
+    uid: str,
+) -> tuple[str, dict[str, Any]] | None:
+    entry = existing_map.get(uid)
+    if entry is None:
+        return None
+    target_type, row = entry
+    if target_type == "ambiguous":
         raise CalendarImportError(f"Imported event {uid!r} is mapped to more than one target")
-    if event is not None:
-        return "user_event", event
-    if series is not None:
-        return "recurring", series
-    return None
+    return target_type, row
 
 
 async def preview_calendar_import(db: Database, *, content: str, source: str) -> dict[str, Any]:
     parsed = parse_ics(content)
+    existing_map = await fetch_existing_import_targets_by_uids(
+        db,
+        [event.uid for event in parsed.events],
+        source=source,
+    )
     items: list[dict[str, Any]] = []
     for event in parsed.events:
-        existing = await _find_existing(db, source, event.uid)
+        existing = _resolve_existing_from_map(existing_map, event.uid)
         warnings = [warning.wire() for warning in event.warnings]
         supported = event.supported
         existing_id: str | None = None
@@ -173,6 +167,9 @@ async def preview_calendar_import(db: Database, *, content: str, source: str) ->
     }
 
 
+preview_ics_import = preview_calendar_import
+
+
 async def commit_calendar_import(
     db: Database,
     *,
@@ -189,6 +186,11 @@ async def commit_calendar_import(
     if len({selection.uid for selection in selections}) != len(selections):
         raise CalendarImportError("Selections contain duplicate UIDs")
 
+    existing_map = await fetch_existing_import_targets_by_uids(
+        db,
+        [selection.uid for selection in selections],
+        source=source,
+    )
     prepared: list[tuple[ParsedIcsEvent, str | None, str]] = []
     for selection in selections:
         candidates = by_uid.get(selection.uid, [])
@@ -199,7 +201,7 @@ async def commit_calendar_import(
             raise CalendarImportError(f"Selected UID {selection.uid!r} changed since preview")
         if not event.supported:
             raise CalendarImportError(f"Selected UID {selection.uid!r} is not importable")
-        existing = await _find_existing(db, source, event.uid)
+        existing = _resolve_existing_from_map(existing_map, event.uid)
         if existing is None:
             prepared.append((event, None, "create"))
             continue

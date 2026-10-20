@@ -120,8 +120,8 @@ describe("EventListPanel", () => {
     const worksets = Array.from(
       container.querySelectorAll('[data-testid="timeline-event-list-workset"]'),
     ).map((node) => node.textContent);
-    expect(worksets.some((text) => text?.includes("工作集：一般"))).toBe(true);
-    expect(worksets.some((text) => text?.includes("工作集：營運"))).toBe(true);
+    expect(worksets.some((text) => text?.includes("專區：一般"))).toBe(true);
+    expect(worksets.some((text) => text?.includes("專區：營運"))).toBe(true);
 
     const provenances = Array.from(
       container.querySelectorAll(
@@ -456,7 +456,7 @@ describe("EventListPanel", () => {
       container.querySelector('[data-testid="timeline-event-list-workset"]')
         ?.textContent,
     ).toContain("日曆：DemoPub/Open");
-    expect(statusWorkset?.textContent).not.toContain("工作集");
+    expect(statusWorkset?.textContent).not.toContain("專區");
     expect(statusWorkset?.textContent).not.toContain("訂閱");
     expect(provenance).toBeNull();
     expect(

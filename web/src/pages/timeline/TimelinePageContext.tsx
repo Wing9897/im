@@ -1,7 +1,16 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
-import type { GanttOverviewWindow } from "../../domain/gantt/ganttOverviewWindow";
-import type { GanttColumn } from "../../domain/timeline/dateUtils";
+import type {
+  GanttOverviewWindow,
+  OverviewRangePresetId,
+} from "../../domain/gantt/ganttOverviewWindow";
+import type { SubscribeCalendarOption } from "../../components/subscriptions/SubscribeFilterGroup";
+import type {
+  SubscribeAvailability,
+  SubscribedCalendarSelection,
+} from "../../domain/calendarShare/subscribedCalendars";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
+import type { GanttColumn, TimelineScale } from "../../domain/timeline/dateUtils";
 import type {
   MonthCardEmptyReason,
   MonthCardModel,
@@ -15,6 +24,65 @@ import type { DailyHoliday } from "../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../types";
 import type { TaskActivitySpan } from "../../types/analysis";
+
+/**
+ * Cursor window plus the view body TimelineViewSwitch used to take as props.
+ * Produced by useTimelineNavigation / useTimelinePagePrefs — not selection.
+ */
+export type TimelineNavigationSlice = {
+  timeScale: TimelineScale;
+  rangeStart: Date;
+  rangeEvents: TimelineItem[];
+  weekDays: Date[];
+  timeCursor: Date;
+  monthCursor: Date;
+  monthDays: Date[];
+  monthEvents: TimelineItem[];
+  focusedDay: Date | null;
+  onFocusDay: (day: Date) => void;
+  events: TimelineItem[];
+  filteredEvents: TimelineItem[];
+  initialLoading: boolean;
+  isRefreshing: boolean;
+  emptyState: string;
+  sidebarEvents: TimelineItem[];
+  sidebarDay: Date | null;
+  sidebarOutOfView: boolean;
+  visibleRangeLabel: string;
+  onJumpTo: (scale: TimelineScale) => void;
+  onMoveCursor: (delta: number) => void;
+  overviewRangeId: string;
+  onOverviewRangeChange?: (id: OverviewRangePresetId) => void;
+  jumpDateValue?: string;
+  onJumpDate?: (isoDate: string) => void;
+};
+
+/** Toolbar chrome. Fullscreen and weather refresh stay on TimelinePage. */
+export type TimelineChromeSlice = {
+  selectedSources: SourceFilterSelection;
+  setSelectedSources: (ids: SourceFilterSelection) => void;
+  timelineTasks: { id: string; name: string }[];
+  worksets: { id: string; name: string }[];
+  expandTasks?: {
+    id: string;
+    name?: string;
+    worksetId?: string | null;
+    analysisMode?: string | null;
+  }[];
+  viewMode: "calendar" | "gantt";
+  setViewMode: (mode: "calendar" | "gantt") => void;
+  monthLayout: TimelineMonthLayout;
+  onMonthLayoutChange?: (layout: TimelineMonthLayout) => void;
+  overviewMode: boolean;
+  onOverviewModeChange?: (next: boolean) => void;
+  onAddEvent?: () => void;
+  showLoadingIndicator: boolean;
+  loadingLabel?: string;
+  subscribeCalendars?: SubscribeCalendarOption[];
+  selectedSubscribeKeys: SubscribedCalendarSelection;
+  onChangeSubscribeKeys?: (next: SubscribedCalendarSelection) => void;
+  subscribeAvailability: SubscribeAvailability;
+};
 
 /**
  * Context that provides timeline page state to deeply nested components,
@@ -89,6 +157,13 @@ export interface TimelinePageContextValue {
   overviewWindow?: GanttOverviewWindow;
   onOverviewWindowChange?: (next: GanttOverviewWindow) => void;
   onOverviewFetchCommit?: () => void;
+
+  /**
+   * Read-only navigation and toolbar slices.
+   * Cursors stay owned by useTimelineNavigation / useTimelinePagePrefs.
+   */
+  navigation: TimelineNavigationSlice;
+  chrome: TimelineChromeSlice;
 }
 
 const TimelinePageContext = createContext<TimelinePageContextValue | null>(null);

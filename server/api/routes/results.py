@@ -19,47 +19,24 @@ from server.api.schemas.responses import (
     TaskAnalysisStatsResponse,
     TrendingTopicResponse,
 )
-from server.calendar.timeline_dismissals import attach_dismissed_flag
-from server.calendar.timeline_importance import attach_important_flag
 from server.config import get_config_bool
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.batch_stats import count_pending_current_batches
-from server.queries.pagination import clamp_offset_limit, offset_page_has_more
 from server.queries.results_queries import (
     fetch_attention_batches,
     fetch_processing_batches,
     fetch_task_analysis_stats,
     fetch_trending_topic_messages,
     fetch_trending_topics,
-    query_analysis_events,
 )
-from server.util import parse_bool
+from server.services.analysis_events_read import AnalysisEventsReadError, list_analysis_events
 from server.wire.serializers import (
-    serialize_analysis_event,
     serialize_message,
     serialize_queue_batch,
     serialize_trending_topic,
 )
 
 router = APIRouter(prefix="/api/v1/results", tags=["results"], dependencies=API_DEPS)
-
-_EVENT_SORTS = frozenset({"event_time", "analyzed_at"})
-_FALSE_FLAG_VALUES = frozenset({"0", "false", "no", "off"})
-
-
-def _parse_bool_flag(value: str | None) -> bool | None:
-    """Optional query bool: None / True / False; invalid → 422.
-
-    Truthiness delegates to ``util.parse_bool``; explicit false sentinels
-    mirror its on/off symmetry (0/false/no/off).
-    """
-    if value is None:
-        return None
-    if parse_bool(value):
-        return True
-    if value.strip().lower() in _FALSE_FLAG_VALUES:
-        return False
-    raise http_error(422, f"Invalid boolean flag: {value!r}", error_code=VALIDATION_ERROR)
 
 
 @router.get("/trending", response_model=list[TrendingTopicResponse])
@@ -102,47 +79,25 @@ async def fetch_events(
         ),
     ),
 ) -> AnalysisEventsPageResponse:
-    sort_key = (sort or "event_time").strip().lower()
-    if sort_key not in _EVENT_SORTS:
-        raise http_error(
-            422,
-            f"Invalid sort: {sort!r}. Allowed: {', '.join(sorted(_EVENT_SORTS))}",
-            error_code=VALIDATION_ERROR,
+    try:
+        page = await list_analysis_events(
+            get_db(request),
+            task_id=task_id,
+            task_ids=task_ids,
+            search=search,
+            start_date=start_date,
+            end_date=end_date,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+            has_time=has_time,
+            has_coords=has_coords,
+            include_total=include_total,
+            include_in_timeline=include_in_timeline,
         )
-    normalized_limit, normalized_offset = clamp_offset_limit(limit, offset)
-    resolved_include_total = True if include_total is None else bool(include_total)
-    # Repeated ``taskIds`` wins over single ``taskId`` when the param is present.
-    rows, total_count = await query_analysis_events(
-        get_db(request),
-        task_id=task_id,
-        task_ids=task_ids,
-        search=search,
-        start_date=start_date,
-        end_date=end_date,
-        sort=sort_key,
-        limit=normalized_limit,
-        offset=normalized_offset,
-        has_time=_parse_bool_flag(has_time),
-        has_coords=_parse_bool_flag(has_coords),
-        include_total=resolved_include_total,
-        require_include_in_timeline=_parse_bool_flag(include_in_timeline) is True,
-    )
-    items = [serialize_analysis_event(row) for row in rows]
-    db = get_db(request)
-    await attach_dismissed_flag(db, source="analysis", items=items)
-    await attach_important_flag(db, source="analysis", items=items)
-    return AnalysisEventsPageResponse.model_validate(
-        {
-            "items": items,
-            "totalCount": total_count if resolved_include_total else 0,
-            "hasMore": (
-                offset_page_has_more(normalized_offset, len(rows), total_count)
-                if resolved_include_total
-                else len(rows) >= normalized_limit
-            ),
-            "sort": sort_key,
-        }
-    )
+    except AnalysisEventsReadError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    return AnalysisEventsPageResponse.model_validate(page)
 
 
 @router.get("/queue", response_model=ResultsQueueResponse)

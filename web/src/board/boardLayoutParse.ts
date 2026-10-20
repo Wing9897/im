@@ -169,12 +169,6 @@ export function liftCrushedDefaultMosaic(widgets: BoardWidgetItem[]): BoardWidge
   });
 }
 
-/** Normalize one widget in the current grid/preset schema. */
-export function normalizeLayoutWidget(raw: unknown, index: number): BoardWidgetItem | null {
-  const read = readLayoutWidget(raw, index);
-  return read ? clampLayoutWidget(read) : null;
-}
-
 /**
  * Migrate a widget list onto the current layout schema version.
  * Keeps recognized widgets across version bumps; only falls back to the default

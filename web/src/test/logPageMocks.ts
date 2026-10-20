@@ -92,6 +92,5 @@ export function analysisStatusLogPageModuleMock() {
 export function workspaceShellLogPageModuleMock() {
   return {
     SettingsTopTabs: () => null,
-    settingsTabItems: [],
   };
 }

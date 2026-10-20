@@ -5,12 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from server.api.channel_refs import parse_channel_refs
-from server.api.routes.task_helpers import (
-    TaskConfigBody,
-    channel_refs_for,
-    resolve_llm_profile_id,
-    task_response,
-)
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import (
     AGENT_MODE,
@@ -20,6 +14,7 @@ from server.domain.notify_prefs import normalize_notify_pref
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.batch_housekeeping import purge_superseded_task_version_data
 from server.queries.tasks_queries import (
+    delete_agent_message_cursor,
     delete_incomplete_batches,
     fetch_task_channel_rows,
     replace_task_channels,
@@ -45,10 +40,14 @@ from server.services.task_writes import (
     resolve_include_in_timeline,
     should_reset_agent_message_cursor,
 )
+from server.services.tasks.channel_refs import channel_refs_for
+from server.services.tasks.llm_profile import ensure_complete_llm_profile, resolve_llm_profile_id
+from server.services.tasks.write_input import TaskWriteInput
 from server.util import utc_now_iso
+from server.wire.serializers import task_response
 
 
-async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -> TaskMutationResult:
+async def update_task_record(db: Database, task_id: str, body: TaskWriteInput) -> TaskMutationResult:
     validate_task_config_body(body)
     existing = await require_task_row_or_lookup(db, task_id)
     existing_mode = str(existing.get("analysis_mode") or "")
@@ -115,6 +114,14 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         channels_changed=channels_changed,
     )
 
+    active_after: bool | None = None
+    if body.isActive is not None:
+        active_after = bool(body.isActive)
+        desired = 1 if active_after else 0
+        current = int(existing.get("is_active") or 0)
+        if current != desired and desired:
+            await ensure_complete_llm_profile(db, llm_profile_id)
+
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         deleted = await delete_incomplete_batches(conn, task_id)
@@ -151,16 +158,19 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         await purge_superseded_task_version_data(tx, task_id, new_version)
 
         if reset_agent_cursor:
-            await tx.execute(
-                "DELETE FROM agent_message_cursors WHERE task_id = ?",
-                (task_id,),
-            )
+            await delete_agent_message_cursor(tx, task_id)
 
         if refs is not None:
             await replace_task_channels(tx, task_id, refs)
 
         if leaving_agent_parent or (existing_mode == AGENT_MODE and effective_mode != AGENT_MODE):
             await clear_children_parent_links(tx, task_id, now=now)
+
+        if active_after is not None:
+            desired = 1 if active_after else 0
+            current = int(existing.get("is_active") or 0)
+            if current != desired:
+                await set_task_active(tx, task_id, desired, now)
 
     prev_workset = str(existing.get("workset_id") or "")
     prev_timeline = bool(existing.get("include_in_timeline"))
@@ -169,27 +179,17 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
 
         await mark_published_workset_dirty(db, prev_workset, str(workset_id or ""))
 
-    if body.isActive is not None:
-        desired = 1 if body.isActive else 0
-        current = int(existing.get("is_active") or 0)
-        if current != desired:
-            if desired:
-                from server.analyzer.llm_config import require_complete_profile_row
-
-                await require_complete_profile_row(db, llm_profile_id)
-            await set_task_active(db, task_id, desired, utc_now_iso())
-
     row = await require_task_row_or_lookup(db, task_id)
     return TaskMutationResult(
         task_id=task_id,
         payload=task_response(row, await channel_refs_for(db, task_id), deleted=len(deleted)),
         register=True,
+        active_after=active_after,
     )
 
 
 async def patch_task_emoji_record(db: Database, task_id: str, emoji: str | None) -> dict[str, Any]:
     """Update only the card glyph; does not bump analysis version."""
-    from server.api.routes.task_helpers import channel_refs_for, task_response
     from server.domain.emoji import EmojiValidationError, normalize_optional_emoji
 
     await require_task_row_or_lookup(db, task_id)

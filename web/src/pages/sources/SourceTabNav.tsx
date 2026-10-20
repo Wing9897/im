@@ -14,21 +14,26 @@ const TAB_ITEMS = SOURCE_TAB_ORDER.map((platform) => ({
 interface SourceTabNavProps {
   activeTab: SourceTabKey;
   onTabChange: (tab: SourceTabKey) => void;
+  /** Drop the page-tab bottom margin when this nav shares a toolbar row. */
+  flush?: boolean;
 }
 
-export function SourceTabNav({ activeTab, onTabChange }: SourceTabNavProps) {
+export function SourceTabNav({ activeTab, onTabChange, flush = false }: SourceTabNavProps) {
   const { t } = useTranslation("sources");
 
   return (
-    <SegmentedControl
-      ariaLabel={t("nav.aria")}
-      value={activeTab}
-      onChange={(id) => onTabChange(id as SourceTabKey)}
-      items={TAB_ITEMS.map(({ id, label, platform }) => ({
-        id,
-        label,
-        icon: <PlatformIcon platform={platform} size={14} />,
-      }))}
-    />
+    <div data-testid="source-platform-tabs" className={flush ? "min-w-0 flex-1" : undefined}>
+      <SegmentedControl
+        ariaLabel={t("nav.aria")}
+        className={flush ? "!mb-0" : undefined}
+        value={activeTab}
+        onChange={(id) => onTabChange(id as SourceTabKey)}
+        items={TAB_ITEMS.map(({ id, label, platform }) => ({
+          id,
+          label,
+          icon: <PlatformIcon platform={platform} size={14} />,
+        }))}
+      />
+    </div>
   );
 }

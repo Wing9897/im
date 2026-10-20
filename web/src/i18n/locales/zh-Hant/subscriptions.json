@@ -64,15 +64,15 @@
   "published": {
     "needLogin": "請先登入日曆分享服務，才能發佈或取消上載。",
     "empty": "尚未發佈日曆。",
-    "formTitle": "發佈工作集",
-    "worksetLabel": "本機工作集",
-    "worksetPlaceholder": "選擇工作集",
+    "formTitle": "發佈專區",
+    "worksetLabel": "本機專區",
+    "worksetPlaceholder": "選擇專區",
     "edit": "設定",
     "syncNow": "更新公開副本",
     "syncing": "更新中…",
     "unpublish": "取消上載",
     "unpublishing": "取消上載中…",
-    "missingWorkset": "本機工作集已刪，公開日曆仍在。",
+    "missingWorkset": "本機專區已刪，公開日曆仍在。",
     "pendingSync": "待自動更新",
     "autoSync": {
       "label": "自動更新",
@@ -84,14 +84,14 @@
         "3600": "每 1 小時"
       }
     },
-    "publishCta": "發佈工作集",
+    "publishCta": "發佈專區",
     "grantsSummary": "{count} 個已授權 handle",
     "grantsClosed": "私人群組 — {count} 個 handle 可訂閱",
     "grantsEmpty": "私人群組 — 在設定中加入 handle，對方才能訂閱",
     "form": {
-      "help": "確定會把目前工作集上載到遠端。之後行程變更跟工具列「自動更新」統一間隔推送（最短 1 分鐘）；關閉後請按卡片更新圖示。取消上載用垃圾桶圖示。",
-      "catalogHelp": "上載時會複製這個工作集的封面和描述。請在工作集卡片上修改。",
-      "generalWarning": "「一般」工作集包含未歸類行程。公開上載前請確認沒有不該分享的內容。",
+      "help": "確定會把目前專區上載到遠端。之後行程變更跟工具列「自動更新」統一間隔推送（最短 1 分鐘）；關閉後請按卡片更新圖示。取消上載用垃圾桶圖示。",
+      "catalogHelp": "上載時會複製這個專區的封面和描述。請在專區卡片上修改。",
+      "generalWarning": "「一般」專區含未另外歸屬的行程。公開前請確認沒有不該分享的內容。",
       "slugLabel": "日曆 slug",
       "slugHelp": "遠端路徑格式為 handle/slug。1–64 字元，須以字母或數字開頭，其後可為字母、數字、點、底線或連字號。",
       "slugRequired": "請輸入 slug",

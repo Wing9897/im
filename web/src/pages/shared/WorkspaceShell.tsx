@@ -18,11 +18,6 @@ import { workspaceTabIcons } from "./WorkspaceNavIcons";
 type SettingsPageState = SystemSettingsPageState;
 type WorkspaceTabItem = Pick<WorkspaceNavItem, "to" | "labelKey">;
 
-export const settingsTabItems = settingsWorkspaceNavItems.map(({ to, labelKey }) => ({
-  to,
-  labelKey,
-})) as readonly WorkspaceTabItem[];
-
 function toSegmentedItems(
   tabItems: readonly WorkspaceTabItem[],
   t: (key: string) => string,
@@ -41,7 +36,7 @@ export function SettingsTopTabs() {
   const { t } = useTranslation("settings");
   return (
     <SegmentedTabs
-      items={toSegmentedItems(settingsTabItems, t)}
+      items={toSegmentedItems(settingsWorkspaceNavItems, t)}
       ariaLabel={t("shell.tabsAria")}
     />
   );

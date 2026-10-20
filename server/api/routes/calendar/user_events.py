@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from server.api.deps import get_db, publish_resource_modified
@@ -22,6 +20,7 @@ from server.calendar.user_events_write import (
     delete_user_event,
     update_user_event,
 )
+from server.calendar.write_input import UserEventWriteInput
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/user-events", tags=["calendar"])
@@ -77,30 +76,9 @@ async def list_events(
 @router.post("", status_code=201, response_model=UserEventResponse)
 async def create_event(request: Request, body: UserEventCreateBody) -> UserEventResponse:
     db = get_db(request)
-    fields_set = body.model_fields_set
     try:
-        kwargs: dict[str, Any] = {
-            "title": body.title,
-            "start_time": body.startTime,
-            "end_time": body.endTime,
-            "body": body.body,
-            "location": body.location,
-            "origin": "manual",
-            "is_all_day": bool(body.isAllDay),
-            "remind_before_days": body.remindBeforeDays,
-            "task_id": body.taskId,
-            "item_id": body.itemId,
-            "kind": body.kind,
-            "amount": body.amount,
-            "direction": body.direction,
-        }
-        if "notifyPref" in fields_set:
-            kwargs["notify_pref"] = body.notifyPref
-        if "emoji" in fields_set:
-            kwargs["emoji"] = body.emoji
-        if "worksetId" in fields_set:
-            kwargs["workset_id"] = body.worksetId
-        item = await create_user_event(db, **kwargs)
+        payload = UserEventWriteInput.from_pydantic_body(body)
+        item = await create_user_event(db, **payload.service_kwargs())
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
     _notify(request, item["id"], "created")
@@ -122,34 +100,15 @@ async def patch_event(
     body: UserEventPatchBody,
 ) -> UserEventResponse:
     db = get_db(request)
-    raw = body.model_dump(exclude_unset=True)
-    if not raw:
+    payload = UserEventWriteInput.from_pydantic_body(body)
+    if not payload.fields_set:
         item = await get_user_event(db, event_id)
         if item is None:
             raise _not_found()
         return UserEventResponse.model_validate(item)
 
-    wire_to_service = {
-        "title": "title",
-        "startTime": "start_time",
-        "endTime": "end_time",
-        "body": "body",
-        "location": "location",
-        "isAllDay": "is_all_day",
-        "remindBeforeDays": "remind_before_days",
-        "taskId": "task_id",
-        "itemId": "item_id",
-        "worksetId": "workset_id",
-        "kind": "kind",
-        "amount": "amount",
-        "direction": "direction",
-        "notifyPref": "notify_pref",
-        "emoji": "emoji",
-    }
-    kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}
-
     try:
-        item = await update_user_event(db, event_id, **kwargs)
+        item = await update_user_event(db, event_id, **payload.service_kwargs())
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
     if item is None:

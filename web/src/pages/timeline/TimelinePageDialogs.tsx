@@ -2,7 +2,7 @@ import {
   UserEventDialog,
   type UserEventFormValues,
 } from "../../components/calendar/UserEventDialog";
-import { normalizeNotifyPref } from "../../domain/notify/notifyPref";
+import { timelineItemToFormInitial } from "../../domain/timeline/userEventFormMapping";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import type { TimelineItem } from "../../types";
 
@@ -39,23 +39,7 @@ export function TimelinePageDialogs({
       worksetOptions={worksetOptions}
       initial={
         editingEvent
-          ? {
-              title: editingEvent.title,
-              startTime: editingEvent.startTime ?? "",
-              endTime: editingEvent.endTime ?? "",
-              location: editingEvent.location ?? "",
-              body: editingEvent.body ?? "",
-              worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
-              isAllDay: Boolean(editingEvent.isAllDay),
-              remindBeforeDays:
-                editingEvent.remindBeforeDays != null
-                  ? String(editingEvent.remindBeforeDays)
-                  : "",
-              itemId: editingEvent.itemId?.trim() ?? "",
-              notifyPref: normalizeNotifyPref(editingEvent.notifyPref),
-              // Timeline never edits special kinds / finance — Items UI only.
-              calendarKind: "normal",
-            }
+          ? timelineItemToFormInitial(editingEvent)
           : {
               worksetId: toUserEventFormWorksetId(createInitial?.worksetId),
               isAllDay: Boolean(createInitial?.isAllDay),

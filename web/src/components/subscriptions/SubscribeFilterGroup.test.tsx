@@ -180,6 +180,8 @@ describe("SubscribeFilterGroup", () => {
     const status = container.querySelector('[data-testid="timeline-subscribe-disabled"]');
     expect(status?.textContent).toMatch(/sign in/i);
     expect(status?.textContent).not.toMatch(/unreachable/i);
-    expect(status?.querySelector('a[href="/subscriptions/account"]')?.textContent).toMatch(/calendar share/i);
+    expect(
+      status?.querySelector('a[href="/timeline?sheet=subscriptions&tab=account"]')?.textContent,
+    ).toMatch(/calendar share/i);
   });
 });

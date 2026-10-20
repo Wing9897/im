@@ -1,6 +1,6 @@
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/calendarShare", async () =>
@@ -25,9 +25,11 @@ vi.mock("../../context/ToastContext", async () =>
 );
 
 import { SubscriptionsShell } from "./SubscriptionsShell";
-import { SubscriptionsMinePage } from "./SubscriptionsMinePage";
-import { SubscriptionsIdentityPanel } from "./SubscriptionsIdentityPanel";
 import { i18n, wrapWithI18n } from "../../test/i18nHarness";
+import {
+  mountSubscriptionsPage,
+  unmountSubscriptionsPage,
+} from "./subscriptionsPageTestHarness";
 import { setAppLocale } from "../../i18n/locale";
 import {
   calendarShareApiMocks,
@@ -49,18 +51,15 @@ describe("SubscriptionsShell", () => {
       pendingPublicTimezone: false,
       lastPublicTimezone: "Asia/Taipei",
     });
-    mount = document.createElement("div");
-    document.body.appendChild(mount);
-    root = createRoot(mount);
+    ({ mount, root } = mountSubscriptionsPage());
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    mount.remove();
+    unmountSubscriptionsPage(root, mount);
     resetCalendarShareCatalogForTests();
   });
 
-  async function renderShell(path: string) {
+  async function renderShell(tab: "mine" | "account" = "mine") {
     calendarShareApiMocks.fetchCalendarShareSession.mockResolvedValue({
       connected: false,
       baseUrl: "http://127.0.0.1:8787",
@@ -76,26 +75,8 @@ describe("SubscriptionsShell", () => {
         wrapWithI18n(
           createElement(
             MemoryRouter,
-            { initialEntries: [path] },
-            createElement(
-              Routes,
-              null,
-              createElement(
-                Route,
-                {
-                  path: "/subscriptions",
-                  element: createElement(SubscriptionsShell),
-                },
-                createElement(Route, {
-                  path: "mine",
-                  element: createElement(SubscriptionsMinePage),
-                }),
-                createElement(Route, {
-                  path: "account",
-                  element: createElement(SubscriptionsIdentityPanel),
-                }),
-              ),
-            ),
+            null,
+            createElement(SubscriptionsShell, { tab }),
           ),
         ),
       );
@@ -104,24 +85,18 @@ describe("SubscriptionsShell", () => {
     });
   }
 
+  function tabLabels(): string[] {
+    return [...document.querySelectorAll('[role="tab"]')].map((el) => el.textContent ?? "");
+  }
+
   it("renders four tabs without identity chrome on mine", async () => {
-    await renderShell("/subscriptions/mine");
-    const hrefs = [...document.querySelectorAll("a")].map((el) =>
-      el.getAttribute("href"),
-    );
-    expect(hrefs).toContain("/subscriptions/mine");
-    expect(hrefs).toContain("/subscriptions/published");
-    expect(hrefs).toContain("/subscriptions/account");
-    expect(hrefs).toContain("/subscriptions/search");
-    expect(hrefs.indexOf("/subscriptions/mine")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/published"),
-    );
-    expect(hrefs.indexOf("/subscriptions/published")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/account"),
-    );
-    expect(hrefs.indexOf("/subscriptions/account")).toBeLessThan(
-      hrefs.indexOf("/subscriptions/search"),
-    );
+    await renderShell("mine");
+    expect(tabLabels()).toEqual([
+      "My subscriptions",
+      "My published",
+      "Calendar share",
+      "Find calendars",
+    ]);
     expect(
       document.querySelector('[data-testid="subscriptions-identity-panel"]'),
     ).toBeNull();
@@ -136,7 +111,7 @@ describe("SubscriptionsShell", () => {
   });
 
   it("renders the identity panel only on the account tab", async () => {
-    await renderShell("/subscriptions/account");
+    await renderShell("account");
     expect(
       document.querySelector('[data-testid="subscriptions-identity-panel"]'),
     ).toBeTruthy();

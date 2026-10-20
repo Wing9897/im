@@ -80,6 +80,20 @@ describe("PipelineGuideChecklist", () => {
     );
   });
 
+  it("links 查看結果 to the intelligence page", async () => {
+    await ensureZhHantLocale();
+    const container = document.createElement("div");
+    renderChecklist(container, { state: "no_events" });
+    const link = container.querySelector(
+      '[data-testid="pipeline-guide-view-results"]',
+    ) as HTMLButtonElement | null;
+    expect(link?.textContent).toBe("查看結果");
+    act(() => {
+      link!.click();
+    });
+    expect(container.querySelector('[data-testid="pathname"]')?.textContent).toBe("/intelligence");
+  });
+
   it("hides the AI provider CTA once the assistant slot is bound", async () => {
     await ensureZhHantLocale();
     const container = document.createElement("div");

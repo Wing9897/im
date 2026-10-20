@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import Database
+from server.queries.sources_queries import fetch_all_source_rows
 
 
 async def fetch_channel_rows(db: Database) -> list[dict[str, Any]]:
@@ -22,7 +23,7 @@ async def fetch_source_channel_rows(db: Database) -> list[dict[str, Any]]:
 
 
 async def fetch_source_rows(db: Database) -> list[dict[str, Any]]:
-    return await db.fetch_all("SELECT * FROM sources")
+    return await fetch_all_source_rows(db)
 
 
 async def fetch_latest_message_rows(

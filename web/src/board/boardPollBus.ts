@@ -55,13 +55,3 @@ export function subscribeBoardPoll(intervalMs: number, onTick: TickHandler): () 
     syncTimer(bucket);
   };
 }
-
-/** Test helper. */
-export function resetBoardPollBusForTests(): void {
-  for (const bucket of buckets.values()) {
-    if (bucket.timer !== null) {
-      window.clearInterval(bucket.timer);
-    }
-  }
-  buckets.clear();
-}

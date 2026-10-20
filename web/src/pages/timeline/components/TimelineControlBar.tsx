@@ -1,114 +1,84 @@
-import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { Bookmark, CalendarClock, CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { CalendarShareConnectionStatusIcon } from "../../../components/subscriptions/CalendarShareConnectionStatusIcon";
-import { TimelineSourceFilterDialog, type SubscribeCalendarOption } from "./TimelineSourceFilterDialog";
+import { TimelineSourceFilterDialog } from "./TimelineSourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import {
   OVERVIEW_RANGE_PRESET_IDS,
   type OverviewRangePresetId,
 } from "../../../domain/gantt/ganttOverviewWindow";
-import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import {
   applyCalendarScalePill,
   calendarScalePills,
   isCalendarScalePillActive,
   type CalendarScalePill,
-  type TimelineMonthLayout,
 } from "../../../domain/timeline/monthCardSources";
 import { MenuSelect, OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
 import { compactSelectTriggerClass, pageOpsControlClass } from "../../../components/ui/controlStyles";
-import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
-import type { SubscribeAvailability, SubscribedCalendarSelection } from "../../../domain/calendarShare/subscribedCalendars";
+import { useTimelinePageContext } from "../TimelinePageContext";
 
 const rangeLabelClass =
   "min-w-[7.5rem] select-none px-1 text-center text-sm font-medium tabular-nums text-text-secondary";
 
-type TimelineTaskOption = {
-  id: string;
-  name: string;
-};
-
-type WorksetOption = {
-  id: string;
-  name: string;
-};
-
-type ExpandTaskOption = {
-  id: string;
-  name?: string;
-  worksetId?: string | null;
-  analysisMode?: string | null;
-};
-
 type TimelineControlBarProps = {
-  selectedSources: SourceFilterSelection;
-  setSelectedSources: (ids: SourceFilterSelection) => void;
-  timelineTasks: TimelineTaskOption[];
-  worksets?: WorksetOption[];
-  expandTasks?: ExpandTaskOption[];
-  viewMode: "calendar" | "gantt";
-  setViewMode: (mode: "calendar" | "gantt") => void;
-  timeScale: TimelineScale;
-  monthLayout?: TimelineMonthLayout;
-  onMonthLayoutChange?: (layout: TimelineMonthLayout) => void;
-  onJumpTo: (scale: TimelineScale) => void;
-  onMoveCursor: (delta: number) => void;
-  visibleRangeLabel: string;
-  overviewMode?: boolean;
-  onOverviewModeChange?: (next: boolean) => void;
-  /** 全局 range-menu value (`12h`…`1y`); empty when the visible span is custom. */
-  overviewRangeId?: string;
-  onOverviewRangeChange?: (id: OverviewRangePresetId) => void;
-  /** `YYYY-MM-DD` for the range-label jump-date picker (calendar and Gantt). */
-  jumpDateValue?: string;
-  onJumpDate?: (isoDate: string) => void;
-  onAddEvent?: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
-  /** Show compact spinner in the sticky toolbar (avoids layout jump). */
-  showLoadingIndicator?: boolean;
-  loadingLabel?: string;
-  subscribeCalendars?: SubscribeCalendarOption[];
-  selectedSubscribeKeys?: SubscribedCalendarSelection;
-  onChangeSubscribeKeys?: (next: SubscribedCalendarSelection) => void;
-  subscribeAvailability?: SubscribeAvailability;
   children?: ReactNode;
 };
 
 /** Single-row ops bar (task/view · scale · nav). */
 export function TimelineControlBar({
-  selectedSources,
-  setSelectedSources,
-  timelineTasks,
-  worksets = [],
-  expandTasks,
-  viewMode,
-  setViewMode,
-  timeScale,
-  monthLayout = "unified",
-  onMonthLayoutChange,
-  onJumpTo,
-  onMoveCursor,
-  visibleRangeLabel,
-  overviewMode = false,
-  onOverviewModeChange,
-  overviewRangeId = "",
-  onOverviewRangeChange,
-  jumpDateValue,
-  onJumpDate,
-  onAddEvent,
   isFullscreen = false,
   onToggleFullscreen,
-  showLoadingIndicator = false,
-  loadingLabel,
-  subscribeCalendars,
-  selectedSubscribeKeys = null,
-  onChangeSubscribeKeys,
-  subscribeAvailability = "ok",
   children,
 }: TimelineControlBarProps) {
+  const { navigation, chrome } = useTimelinePageContext();
+  const {
+    selectedSources,
+    setSelectedSources,
+    timelineTasks,
+    worksets,
+    expandTasks,
+    viewMode,
+    setViewMode,
+    monthLayout,
+    onMonthLayoutChange,
+    overviewMode,
+    onOverviewModeChange,
+    onAddEvent,
+    showLoadingIndicator,
+    loadingLabel,
+    subscribeCalendars,
+    selectedSubscribeKeys,
+    onChangeSubscribeKeys,
+    subscribeAvailability,
+  } = chrome;
+  const {
+    timeScale,
+    onJumpTo,
+    onMoveCursor,
+    visibleRangeLabel,
+    overviewRangeId,
+    onOverviewRangeChange,
+    jumpDateValue,
+    onJumpDate,
+  } = navigation;
   const { t } = useTranslation("timeline");
+  const [, setSearchParams] = useSearchParams();
+  const openSheet = (sheet: "schedule" | "subscriptions") => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("sheet", sheet);
+        if (sheet === "subscriptions") next.set("tab", "mine");
+        else next.delete("tab");
+        return next;
+      },
+      { replace: true },
+    );
+  };
   const filterOptions = useMemo(
     () => timelineTasks.map((task) => ({ id: task.id, name: task.name })),
     [timelineTasks],
@@ -229,6 +199,24 @@ export function TimelineControlBar({
               <RefreshIndicator label={loadingLabel ?? t("view.refreshing")} />
             ) : null}
           </span>
+          <PillButton
+            type="button"
+            onClick={() => openSheet("schedule")}
+            title={t("toolbar.mySchedule")}
+            aria-label={t("toolbar.mySchedule")}
+            data-testid="timeline-open-schedule"
+          >
+            <CalendarClock size={16} strokeWidth={2.5} aria-hidden="true" />
+          </PillButton>
+          <PillButton
+            type="button"
+            onClick={() => openSheet("subscriptions")}
+            title={t("toolbar.manageSubscriptions")}
+            aria-label={t("toolbar.manageSubscriptions")}
+            data-testid="timeline-open-subscriptions"
+          >
+            <Bookmark size={16} strokeWidth={2.5} aria-hidden="true" />
+          </PillButton>
           <CalendarShareConnectionStatusIcon availability={subscribeAvailability} />
           {onAddEvent ? (
             <PillButton

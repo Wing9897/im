@@ -17,7 +17,7 @@ from server.calendar.normalize import (
 )
 from server.calendar.rrule import expand_calendar_occurrences
 from server.calendar.timeline_dismissals import attach_dismissed_flag
-from server.calendar.timeline_importance import attach_important_flag
+from server.calendar.timeline_markers import attach_timeline_flags
 from server.calendar.user_events_read import list_user_events
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
@@ -230,8 +230,7 @@ async def _fetch_rrule_in_range(
     occurrences = await expand_active_calendar_occurrences(db, range_start, range_end, series_id=series_id)
     items = [build_occurrence_item(occ) for occ in occurrences]
     # DB dismissal source is "recurring" for RRULE occurrence ids.
-    await attach_dismissed_flag(db, source="recurring", items=items)
-    await attach_important_flag(db, source="recurring", items=items)
+    await attach_timeline_flags(db, source="recurring", items=items)
     return items
 
 
@@ -239,9 +238,7 @@ async def _annotate_analysis_dismissed(
     db: Database,
     items: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    await attach_dismissed_flag(db, source="analysis", items=items)
-    await attach_important_flag(db, source="analysis", items=items)
-    return items
+    return await attach_timeline_flags(db, source="analysis", items=items)
 
 
 async def _fetch_items_in_range(
@@ -259,6 +256,5 @@ async def _fetch_items_in_range(
         workset_id=workset_id,
     )
     items = [build_item_calendar_item(item) for item in raw]
-    await attach_dismissed_flag(db, source="item_remind", items=items)
-    await attach_important_flag(db, source="item_remind", items=items)
+    await attach_timeline_flags(db, source="item_remind", items=items)
     return items

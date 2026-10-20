@@ -6,7 +6,7 @@ from fastapi import Request
 
 from server.api.deps import get_db
 from server.api.query_aliases import qalias
-from server.api.routes.task_helpers import TaskConfigBody
+from server.api.routes.task_helpers import TaskConfigBody, task_write_http_error, to_task_write_input
 from server.api.routes.tasks._common import notify, register_task
 from server.api.routes.tasks._router import router
 from server.api.schemas.responses import (
@@ -66,9 +66,9 @@ async def list_tasks(
 @router.post("", status_code=201, response_model=TaskResponse)
 async def create_task(request: Request, body: TaskConfigBody) -> TaskResponse:
     try:
-        result = await create_task_record(get_db(request), body)
+        result = await create_task_record(get_db(request), to_task_write_input(body))
     except TaskWriteError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+        raise task_write_http_error(exc) from exc
     if result.register:
         await register_task(request, result.task_id)
     notify(request, result.task_id, "created")

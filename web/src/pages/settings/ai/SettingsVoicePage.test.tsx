@@ -105,7 +105,7 @@ describe("SettingsVoicePage", () => {
     const language = sessionCard?.querySelector("#voice-speech-language");
     const ptt = sessionCard?.querySelector('[data-testid="voice-space-ptt-mode"]');
     const workset = sessionCard?.querySelector('[data-testid="voice-default-calendar-workset"]');
-    expect(sessionCard?.getAttribute("aria-label")).toBe("語言／PTT／工作集");
+    expect(sessionCard?.getAttribute("aria-label")).toBe("語言／PTT／專區");
     expect(language).not.toBeNull();
     expect(ptt).not.toBeNull();
     expect(workset).not.toBeNull();

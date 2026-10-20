@@ -6,9 +6,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { isCalendarShareUnreachable } from "../../../domain/calendarShare/subscribedCalendars";
-import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../../hooks/useErrorToast";
-import type { TimelineItem } from "../../../types";
 import { TimelineGrid } from "../calendar/TimelineGrid";
 import { TimelineSidebar } from "./TimelineSidebar";
 import { TaskDetailPanel } from "./TaskDetailPanel";
@@ -24,51 +22,10 @@ import {
 } from "../timelineViewLayout";
 
 interface TimelineViewSwitchProps {
-  initialLoading: boolean;
-  isRefreshing: boolean;
-  events: TimelineItem[];
-  filteredEvents: TimelineItem[];
-  emptyState: string;
-  viewMode: "calendar" | "gantt";
-  timeScale: TimelineScale;
-  rangeStart: Date;
-  rangeEvents: TimelineItem[];
-  sidebarEvents: TimelineItem[];
-  weekDays: Date[];
-  timeCursor: Date;
-  monthCursor: Date;
-  monthDays: Date[];
-  monthEvents: TimelineItem[];
-  focusedDay: Date | null;
-  onFocusDay: (day: Date) => void;
   error?: string | null;
-  /** Sidebar day (may follow the visible window center in 全局). */
-  sidebarDay?: Date | null;
-  sidebarOutOfView?: boolean;
 }
 
-export function TimelineViewSwitch({
-  initialLoading,
-  isRefreshing: _isRefreshing,
-  events,
-  filteredEvents,
-  emptyState,
-  viewMode,
-  timeScale,
-  rangeStart,
-  rangeEvents,
-  sidebarEvents,
-  weekDays,
-  timeCursor,
-  monthCursor,
-  monthDays,
-  monthEvents,
-  focusedDay,
-  onFocusDay,
-  error,
-  sidebarDay,
-  sidebarOutOfView = false,
-}: TimelineViewSwitchProps) {
+export function TimelineViewSwitch({ error }: TimelineViewSwitchProps = {}) {
   const { t } = useTranslation("timeline");
   const {
     onSelectEvent,
@@ -77,7 +34,30 @@ export function TimelineViewSwitch({
     selectedGanttSpan,
     onCloseGanttPanel,
     monthLayout = "unified",
+    navigation,
+    chrome,
   } = useTimelinePageContext();
+  const {
+    initialLoading,
+    isRefreshing: _isRefreshing,
+    events,
+    filteredEvents,
+    emptyState,
+    timeScale,
+    rangeStart,
+    rangeEvents,
+    sidebarEvents,
+    weekDays,
+    timeCursor,
+    monthCursor,
+    monthDays,
+    monthEvents,
+    focusedDay,
+    onFocusDay,
+    sidebarDay,
+    sidebarOutOfView,
+  } = navigation;
+  const { viewMode } = chrome;
 
   const hideDayEventSidebar =
     viewMode === "calendar" &&

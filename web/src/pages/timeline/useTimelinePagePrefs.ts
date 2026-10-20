@@ -14,6 +14,7 @@ import {
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
   TIMELINE_SHOW_DISMISSED_STORAGE_KEY,
   TIMELINE_SHOW_ENDING_STORAGE_KEY,
+  TIMELINE_SHOW_ITEM_REMIND_STORAGE_KEY,
   TIMELINE_SHOW_ONGOING_STORAGE_KEY,
   TIMELINE_VIEW_MODE_STORAGE_KEY,
 } from "../../domain/prefs";
@@ -60,6 +61,10 @@ export function useTimelinePagePrefs() {
     TIMELINE_SHOW_ENDING_STORAGE_KEY,
     true,
   );
+  const [showItemRemind, setShowItemRemind] = usePersistedState(
+    TIMELINE_SHOW_ITEM_REMIND_STORAGE_KEY,
+    true,
+  );
 
   const [focusedDayIso, setFocusedDayIso] = usePersistedState<string | null>(
     TIMELINE_FOCUSED_DAY_STORAGE_KEY,
@@ -97,6 +102,8 @@ export function useTimelinePagePrefs() {
     setShowOngoing,
     showEnding,
     setShowEnding,
+    showItemRemind,
+    setShowItemRemind,
     focusedDay,
     setFocusedDay,
     selectedGanttTaskId,
