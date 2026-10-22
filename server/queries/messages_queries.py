@@ -9,7 +9,7 @@ from server.db.database import Database
 from server.domain.channel_keys import ChannelKeyError, parse_channel_key_csv
 from server.domain.workset_scope import bind_workset_ids_sql
 from server.queries.pagination import fetch_cursor_page
-from server.wire.serializers import serialize_message
+from server.wire.serializer_domains.sources import serialize_message
 
 MAX_FILTER_SOURCE_IDS = 100
 MAX_FILTER_CHANNEL_IDS = 100

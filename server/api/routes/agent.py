@@ -20,7 +20,7 @@ from server.api.agent_errors import (
     agent_timeout_http_error,
 )
 from server.api.deps import API_DEPS, get_db
-from server.api.schemas.requests import AgentChatBody
+from server.api.schemas.requests.agents import AgentChatBody
 from server.api.schemas.responses import AgentChatResponse
 from server.config import get_config_int
 

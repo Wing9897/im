@@ -1,1 +1,1 @@
-"""Domain implementations behind the stable ``server.wire.serializers`` facade."""
+"""Wire serializers grouped by domain."""

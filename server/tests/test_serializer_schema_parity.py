@@ -28,26 +28,29 @@ from server.api.schemas.responses import (
 )
 from server.api.schemas.responses.items import ItemCategoryResponse, ItemResponse
 from server.api.schemas.responses.llm_profiles import LlmProfileResponse
-from server.wire.serializers import (
-    serialize_action,
+from server.wire.serializer_domains.calendar import (
     serialize_analysis_event,
-    serialize_app_log,
-    serialize_calendar_share_event,
-    serialize_channel,
     serialize_dismissal,
     serialize_importance,
-    serialize_item,
-    serialize_item_category,
-    serialize_llm_profile,
-    serialize_message,
-    serialize_queue_batch,
-    serialize_recurring_series,
-    serialize_source,
-    serialize_task,
     serialize_trending_topic,
     serialize_user_event,
-    serialize_workset,
 )
+from server.wire.serializer_domains.calendar_share import serialize_calendar_share_event
+from server.wire.serializer_domains.items import serialize_item, serialize_item_category
+from server.wire.serializer_domains.llm_profiles import serialize_llm_profile
+from server.wire.serializer_domains.operations import (
+    serialize_action,
+    serialize_app_log,
+    serialize_queue_batch,
+)
+from server.wire.serializer_domains.recurring import serialize_recurring_series
+from server.wire.serializer_domains.sources import (
+    serialize_channel,
+    serialize_message,
+    serialize_source,
+)
+from server.wire.serializer_domains.tasks import serialize_task
+from server.wire.serializer_domains.worksets import serialize_workset
 
 Serializer = Callable[[], dict[str, Any]]
 

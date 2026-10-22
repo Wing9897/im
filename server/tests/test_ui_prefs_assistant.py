@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from server.config import get_config
 from server.tests.ui_prefs_helpers import ui_pref_payload
-from server.ui_prefs import sanitize_assistant_voice_io
+from server.ui_prefs.assistant import sanitize_assistant_voice_io
 
 DEVICE_A = "11111111-1111-4111-8111-111111111111"
 DEVICE_B = "22222222-2222-4222-8222-222222222222"

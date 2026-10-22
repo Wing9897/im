@@ -33,24 +33,24 @@ from server.api.schemas.responses import (
     TimelineAnnotationsResponse,
 )
 from server.errors import VALIDATION_ERROR, http_error
-from server.ui_prefs import (
-    UiPrefsValidationError,
-    claim_notify_fired,
+from server.ui_prefs.assistant import (
     get_assistant_sessions,
     get_assistant_voice_io,
-    get_board_prefs,
+    put_assistant_sessions,
+    put_assistant_voice_io,
+)
+from server.ui_prefs.board import get_board_prefs, put_board_prefs
+from server.ui_prefs.common import UiPrefsValidationError
+from server.ui_prefs.notify import (
+    claim_notify_fired,
     get_notify_fired,
     get_notify_history,
     get_notify_settings,
-    get_timeline_annotations,
-    put_assistant_sessions,
-    put_assistant_voice_io,
-    put_board_prefs,
     put_notify_fired,
     put_notify_history,
     put_notify_settings,
-    put_timeline_annotations,
 )
+from server.ui_prefs.timeline import get_timeline_annotations, put_timeline_annotations
 
 router = APIRouter(prefix="/api/v1/ui-prefs", tags=["ui-prefs"], dependencies=API_DEPS)
 

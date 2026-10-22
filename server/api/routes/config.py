@@ -15,7 +15,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
-from server.api.schemas.requests import SystemSettingsUpdateBody
+from server.api.schemas.requests.system import SystemSettingsUpdateBody
 from server.api.schemas.responses import SystemSettingsSnapshot
 from server.config import (
     get_auto_pause_on_retries_exhausted,

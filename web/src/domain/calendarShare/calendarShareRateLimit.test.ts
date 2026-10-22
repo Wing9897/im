@@ -4,7 +4,7 @@ import {
   CalendarShareRateLimitError,
   consumeCalendarShareRateLimit,
 } from "./calendarShareRateLimit";
-import { resetCalendarShareRateLimitForTests } from "./calendarShareRateLimit.testing";
+import { resetCalendarShareRateLimitForTests } from "../../test/helpers/calendarShareRateLimit.testing";
 describe("calendarShareRateLimit", () => {
   it("allows a subscribe then blocks the next one in the same window", () => {
     resetCalendarShareRateLimitForTests();

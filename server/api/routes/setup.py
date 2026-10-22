@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
-from server.api.schemas.requests import (
+from server.api.schemas.requests.auth import (
     ChangePasswordBody,
     LoginBody,
     RefreshBody,
@@ -22,7 +22,6 @@ from server.api.schemas.responses import (
     SetupOkResponse,
     SetupStatusResponse,
 )
-from server.auth import is_loopback, presented_token
 from server.auth.access_keys import is_valid_access_token
 from server.auth.admin_auth import (
     AdminAuthError,
@@ -36,18 +35,18 @@ from server.auth.admin_auth import (
     verify_admin_credentials,
     verify_password,
 )
-from server.auth.device_auth import (
-    create_device_session,
+from server.auth.device_session_ops import (
     credentials_configured,
     has_active_device_session,
     is_bootstrapped,
     list_devices,
     mark_household_secured,
-    refresh_device_session,
     resolve_session_id_for_access_token,
     revoke_session,
     revoke_session_for_access_token,
 )
+from server.auth.device_token_issue import create_device_session, refresh_device_session
+from server.auth.household_auth import is_loopback, presented_token
 from server.config import get_config_bool
 from server.connection_file import (
     disarm_local_password_reset,

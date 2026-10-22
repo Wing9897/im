@@ -49,7 +49,7 @@ import {
   calendarShareApiMocks,
   resetCalendarShareApiMocks,
 } from "../../test/calendarShareApiMock";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../test/helpers/useCalendarShareCatalog.testing";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 type HookResult = ReturnType<typeof useTimelinePageContainer>;

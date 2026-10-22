@@ -12,7 +12,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.calendar_share.store import mark_all_live_replicas_pending, mark_workset_pending
+from server.calendar_share.store.publish_household_overlay import (
+    mark_all_live_replicas_pending,
+    mark_workset_pending,
+)
 from server.db.database import Database
 from server.worksets_const import SYSTEM_WORKSET_ID
 

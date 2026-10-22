@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AddSourceDialog } from "../../../components/dialogs/AddSourceDialog";
+import { AddSourceDialog } from "./AddSourceDialog";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { SourceBoardShell } from "./SourceBoardShell";
 import { SourceFormPanel } from "./SourceFormPanel";

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import Database, TransactionDb
-from server.queries.tasks_queries import delete_incomplete_batches, set_task_active
+from server.queries.tasks_queries import delete_analysis_task, delete_incomplete_batches, set_task_active
 from server.services.task_crud_create import create_task_record
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
@@ -17,17 +17,15 @@ from server.services.task_crud_mutate_common import (
 )
 from server.services.task_crud_update import patch_task_emoji_record, update_task_record
 from server.util import utc_now_iso
-from server.wire.serializers import serialize_task
+from server.wire.serializer_domains.tasks import serialize_task
 
 
 async def delete_task_record(db: Database, task_id: str) -> dict[str, Any]:
     await require_task_row_or_lookup(db, task_id)
-    # Resolve through the façade so tests can monkeypatch ``task_crud.delete_analysis_task``.
-    from server.services import task_crud as task_crud_facade
 
     async with db.transaction() as conn:
         deleted = await delete_incomplete_batches(conn, task_id)
-        await task_crud_facade.delete_analysis_task(TransactionDb(conn), task_id)
+        await delete_analysis_task(TransactionDb(conn), task_id)
     return {
         "taskId": task_id,
         "deletedBatchCount": len(deleted),

@@ -21,9 +21,10 @@ from server.calendar_share.publish_snapshot import (
     snapshot_remote_events,
     snapshot_remote_series,
 )
-from server.calendar_share.remote import authorized_request
+from server.calendar_share.remote_http import authorized_request
 from server.calendar_share.snapshot import fingerprint_maps, grants_content_hash, snapshot_unchanged
-from server.calendar_share.store import delete_workset_entry, upsert_workset_entry
+from server.calendar_share.store.publish_household_overlay import upsert_workset_entry
+from server.calendar_share.store.publish_io import delete_workset_entry
 from server.db.database import Database
 from server.errors import CALENDAR_EVENT_LIMIT, VALIDATION_ERROR, http_error
 from server.queries.worksets_queries import fetch_workset_row
@@ -84,7 +85,7 @@ async def unpublish_workset_calendar(
             )
             raise
     await delete_workset_entry(db, workset_id)
-    from server.calendar_share.store import empty_workset_entry
+    from server.calendar_share.store.publish_io import empty_workset_entry
 
     return empty_workset_entry(workset_id, slug=slug)
 

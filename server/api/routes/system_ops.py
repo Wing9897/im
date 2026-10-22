@@ -24,7 +24,7 @@ from server.api.deps import (
     get_db,
     get_scheduler,
 )
-from server.api.schemas.requests import AiEngineTestBody, AnalysisPauseBody
+from server.api.schemas.requests.system import AiEngineTestBody, AnalysisPauseBody
 from server.api.schemas.responses import (
     AiEngineHealthStatusResponse,
     AiEngineTestResultResponse,

@@ -23,7 +23,12 @@ from server.queries.channels_queries import (
     fetch_source_channel_rows,
     fetch_source_rows,
 )
-from server.wire.serializers import channel_key, serialize_channel, serialize_message, serialize_source
+from server.wire.serializer_domains.sources import (
+    channel_key,
+    serialize_channel,
+    serialize_message,
+    serialize_source,
+)
 
 router = APIRouter(prefix="/api/v1/channels", tags=["channels"], dependencies=API_DEPS)
 

@@ -8,7 +8,7 @@ import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import type { AnalysisEvent } from "../../types";
 import { SegmentedControl } from "../../components/ui";
-import { LeaderboardPage } from "../leaderboard/LeaderboardPage";
+import { LeaderboardPage } from "./leaderboard/LeaderboardPage";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import { useIntelligenceFeed } from "./useIntelligenceFeed";
 import { useIntelligenceUrlState } from "./useIntelligenceUrlState";

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router-dom";
 
+import { RecurringSeriesDialog } from "../../../components/calendar/RecurringSeriesDialog";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import {
   getTaskEmployeeDisplayName,
@@ -24,7 +25,6 @@ import { AgentDetailHeader } from "./AgentDetailHeader";
 import { AgentDetailMetaSection } from "./AgentDetailMetaSection";
 import { AgentDetailSourcesSection } from "./AgentDetailSourcesSection";
 import { AgentDetailTickSection } from "./AgentDetailTickSection";
-import { RecurringSeriesDialog } from "../../schedule/RecurringSeriesDialog";
 import { useAgentDetail } from "./useAgentDetail";
 import { useAgentDetailRetract } from "./useAgentDetailRetract";
 

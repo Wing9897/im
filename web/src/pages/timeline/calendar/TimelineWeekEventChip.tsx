@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { EventListPhaseBadges } from "../../../components/timeline/EventListPhaseBadges";
+import { EventListPhaseBadges } from "../components/EventListPhaseBadges";
 import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
-import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { SubscribedEventSubscribeIcon } from "../components/SubscribedEventSubscribeIcon";
 import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 import {
   resolveEventCardDisplay,

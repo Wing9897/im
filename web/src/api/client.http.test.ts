@@ -6,7 +6,7 @@ import { ApiClient, ApiRequestError, NetworkError } from "./client";
 import type { ApiError } from "./client";
 import { errorToastEmitter } from "./errorToastEmitter";
 import { saveDeviceSession } from "../domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../test/helpers/connectionStore.testing";
 import { localStorageMock, mockFetch } from "./clientTestUtils";
 
 describe("ApiClient", () => {

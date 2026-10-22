@@ -10,7 +10,7 @@ import {
 import { MonitorModeSwitch } from "../components/MonitorModeSwitch";
 import { ToastProvider } from "../context/ToastContext";
 import { BoardRoot } from "./BoardRoot";
-import { resetBoardPrefsCacheForTests } from "./boardPrefsStore.testing";
+import { resetBoardPrefsCacheForTests } from "../test/helpers/boardPrefsStore.testing";
 vi.mock("../api/results", () => ({
   fetchEvents: vi.fn(async () => ({
     items: [],

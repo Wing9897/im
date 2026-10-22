@@ -17,12 +17,10 @@ from server.api.schemas.responses import (
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.presets.task_presets import BUILTIN_PRESETS
 from server.queries.tasks_queries import fetch_activity_span_rows
-from server.services.task_crud import (
-    create_task_record,
-    list_tasks_payload,
-)
+from server.services.task_crud_list import list_tasks_payload
+from server.services.task_crud_mutate import create_task_record
 from server.services.task_writes import TaskWriteError
-from server.wire.serializers import serialize_activity_span
+from server.wire.serializer_domains.operations import serialize_activity_span
 
 
 @router.get("/templates", response_model=list[TaskTemplateResponse])

@@ -6,8 +6,7 @@ from fastapi import Request
 
 from server.api.deps import get_collector, get_db
 from server.api.routes.sources.common import router
-from server.api.routes.sources.helpers import get_source_row
-from server.api.schemas.requests import (
+from server.api.schemas.requests.sources import (
     Telegram2faBody,
     TelegramCodeBody,
     TelegramCredentials,
@@ -20,6 +19,7 @@ from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries import sources_queries
 from server.services.sources.credentials import merge_telegram_credentials
 from server.services.sources.errors import SourceFlowError
+from server.services.sources.route_helpers import get_source_row
 from server.services.sources.telegram_login import (
     start_telegram_phone_login,
     start_telegram_qr_login,
@@ -29,7 +29,7 @@ from server.services.sources.telegram_login import (
 )
 from server.source_credentials import mutate_source_credentials
 from server.util import utc_now_iso
-from server.wire.serializers import serialize_source
+from server.wire.serializer_domains.sources import serialize_source
 
 
 def _raise_source_flow(exc: SourceFlowError) -> None:

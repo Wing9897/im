@@ -19,7 +19,7 @@ import { AssistantQuickDialog } from "./components/AssistantQuickDialog";
 import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
 import { SourceDrawerHost } from "./pages/sources/SourceDrawerHost";
 import { UserEventEditorHost } from "./pages/timeline/UserEventEditorHost";
-import { WorksetDrawerHost } from "./pages/worksets/WorksetDrawerHost";
+import { WorksetDrawerHost } from "./pages/timeline/worksets/WorksetDrawerHost";
 import { DesktopTrayAnalysisBridge } from "./components/analysis/DesktopTrayAnalysisBridge";
 import { RecentDayInboxDrawer } from "./components/notify/RecentDayInboxDrawer";
 import { NotifyFlashHost } from "./components/notify/NotifyFlashHost";

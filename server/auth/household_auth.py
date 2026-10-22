@@ -18,7 +18,7 @@ from server.auth.access_keys import (
     resolve_access_token,
     touch_access_key_last_used,
 )
-from server.auth.device_auth import (
+from server.auth.device_session_ops import (
     credentials_configured,
     maybe_touch_session,
     resolve_session_id_for_access_token,

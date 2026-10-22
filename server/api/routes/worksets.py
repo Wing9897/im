@@ -5,8 +5,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified, require_row
-from server.api.schemas.requests import WorksetCreateBody, WorksetUpdateBody
-from server.api.schemas.requests.worksets import WORKSET_COVER_MAX_CHARS, WORKSET_DESCRIPTION_MAX
+from server.api.schemas.requests.worksets import (
+    WORKSET_COVER_MAX_CHARS,
+    WORKSET_DESCRIPTION_MAX,
+    WorksetCreateBody,
+    WorksetUpdateBody,
+)
 from server.api.schemas.responses.worksets import WorksetDeleteResponse, WorksetResponse
 from server.db.database import TransactionDb
 from server.errors import FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, http_error
@@ -19,7 +23,7 @@ from server.queries.worksets_queries import (
     workset_is_system,
 )
 from server.util import new_id, utc_now_iso
-from server.wire.serializers import serialize_workset
+from server.wire.serializer_domains.worksets import serialize_workset
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 router = APIRouter(prefix="/api/v1/worksets", tags=["worksets"], dependencies=API_DEPS)

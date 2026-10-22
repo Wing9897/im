@@ -4,7 +4,7 @@ import {
   hasDeviceSession,
   saveDeviceSession,
 } from "./connectionStore";
-import { _resetConnectionStoreForTests } from "./connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../../test/helpers/connectionStore.testing";
 const fetchSetupStatus = vi.fn();
 const fetchSetupDevices = vi.fn();
 

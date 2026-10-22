@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.util import utc_now_iso
-from server.wire.serializers import serialize_message
+from server.wire.serializer_domains.sources import serialize_message
 
 
 async def upsert_channel(

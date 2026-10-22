@@ -8,8 +8,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import HTTPException
 
-from server.calendar_share.remote import CalendarShareRemoteError, authorized_request
-from server.calendar_share.store import session_connected
+from server.calendar_share.remote_errors import CalendarShareRemoteError
+from server.calendar_share.remote_http import authorized_request
+from server.calendar_share.store.session import session_connected
 from server.db.database import Database
 from server.errors import VALIDATION_ERROR, http_error
 

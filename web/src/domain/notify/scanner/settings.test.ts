@@ -9,7 +9,7 @@ import {
   reminderChannelDelivery,
   saveNotifySettings,
 } from "./settings";
-import { resetNotifySettingsCacheForTests } from "./settings.testing";
+import { resetNotifySettingsCacheForTests } from "../../../test/helpers/settings.testing";
 const { mockFetchSettings, mockPutSettings } = vi.hoisted(() => ({
   mockFetchSettings: vi.fn(),
   mockPutSettings: vi.fn(),

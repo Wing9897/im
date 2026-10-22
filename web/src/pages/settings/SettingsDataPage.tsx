@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { RetentionCleanupPanel } from "../../components/settings/RetentionCleanupPanel";
-import { RuntimeResetPanel } from "../../components/settings/RuntimeResetPanel";
+import { RetentionCleanupPanel } from "./RetentionCleanupPanel";
+import { RuntimeResetPanel } from "./RuntimeResetPanel";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { Button, FieldLabel, FormStack, TextField, formHelpClass } from "../../components/ui";
 import { SettingsContentCard, SettingsFieldGroup } from "./SettingsShared";

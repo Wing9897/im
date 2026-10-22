@@ -3,7 +3,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { SettingsIntegrationsPage } from "./SettingsIntegrationsPage";
-import { _resetConnectionStoreForTests } from "../../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../../test/helpers/connectionStore.testing";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("../../api/baseUrl", () => ({

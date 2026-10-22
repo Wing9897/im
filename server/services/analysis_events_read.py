@@ -14,7 +14,7 @@ from server.db.database import Database
 from server.queries.pagination import MAX_PAGE_LIMIT, clamp_offset_limit, offset_page_has_more
 from server.queries.results_queries import query_analysis_events
 from server.util import parse_bool
-from server.wire.serializers import serialize_analysis_event
+from server.wire.serializer_domains.calendar import serialize_analysis_event
 
 _EVENT_SORTS = frozenset({"event_time", "analyzed_at"})
 _FALSE_FLAG_VALUES = frozenset({"0", "false", "no", "off"})

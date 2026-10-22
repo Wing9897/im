@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { AlignLeft, Clock, MapPin } from "lucide-react";
 
 import { CardFieldIcon, CardFieldRow } from "../../../components/ui";
-import { EventListPhaseBadges } from "../../../components/timeline/EventListPhaseBadges";
+import { EventListPhaseBadges } from "../components/EventListPhaseBadges";
 import {
   isUserScheduleTimelineEvent,
   scheduleCardText,
@@ -36,7 +36,7 @@ import {
 } from "./calendarCellClasses";
 import { dayCardTimeLabel } from "../../../domain/timeline/dateUtils";
 import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
-import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { SubscribedEventSubscribeIcon } from "../components/SubscribedEventSubscribeIcon";
 
 type DayEventCardProps = {
   event: TimelineItem;

@@ -57,7 +57,7 @@ import {
   taskCatalogState,
 } from "../../test/context-mocks";
 import { resetCalendarShareApiMocks } from "../../test/calendarShareApiMock";
-import { resetCalendarShareCatalogForTests } from "../../domain/calendarShare/useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../test/helpers/useCalendarShareCatalog.testing";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 
 // --- Test harness component ---

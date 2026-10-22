@@ -10,7 +10,7 @@ import {
   isStoredAccessExpired,
   refreshAccessTokenOnce,
 } from "./authRefresh";
-import { _resetAuthRefreshForTests } from "./authRefresh.testing";
+import { _resetAuthRefreshForTests } from "../test/helpers/authRefresh.testing";
 
 vi.mock("../domain/connection/connectionStore", () => ({
   clearDeviceSession: vi.fn(),

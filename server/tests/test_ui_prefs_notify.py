@@ -6,12 +6,14 @@ from datetime import UTC, datetime, timedelta
 
 from server.config import get_config
 from server.tests.ui_prefs_helpers import ui_pref_payload
-from server.ui_prefs import (
+from server.ui_prefs.common import (
     KEY_NOTIFY_FIRED,
     KEY_NOTIFY_SETTINGS,
     KEY_NOTIFY_TRIGGER_HISTORY,
     MAX_NOTIFY_HISTORY_ENTRIES,
     MAX_PREF_JSON_CHARS,
+)
+from server.ui_prefs.notify import (
     sanitize_fired_keys,
     sanitize_notify_history,
     sanitize_notify_settings,

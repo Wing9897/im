@@ -13,7 +13,7 @@ from server.api.schemas.responses.ui_prefs import (
 )
 from server.config import CONFIG_DEFAULTS
 from server.tests.contract_helpers import assert_keys
-from server.ui_prefs import UI_PREF_KEYS
+from server.ui_prefs.common import UI_PREF_KEYS
 
 
 def test_ui_prefs_pydantic_shapes_are_concrete() -> None:

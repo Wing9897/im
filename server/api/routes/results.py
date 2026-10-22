@@ -30,11 +30,9 @@ from server.queries.results_queries import (
     fetch_trending_topics,
 )
 from server.services.analysis_events_read import AnalysisEventsReadError, list_analysis_events
-from server.wire.serializers import (
-    serialize_message,
-    serialize_queue_batch,
-    serialize_trending_topic,
-)
+from server.wire.serializer_domains.calendar import serialize_trending_topic
+from server.wire.serializer_domains.operations import serialize_queue_batch
+from server.wire.serializer_domains.sources import serialize_message
 
 router = APIRouter(prefix="/api/v1/results", tags=["results"], dependencies=API_DEPS)
 

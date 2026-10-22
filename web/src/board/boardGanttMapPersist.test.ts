@@ -7,7 +7,7 @@ import {
 import {
   resetBoardPrefsCacheForTests,
   seedBoardPrefsCacheForTests,
-} from "./boardPrefsStore.testing";
+} from "../test/helpers/boardPrefsStore.testing";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 import { putBoardPrefs } from "../api/uiPrefs";
 

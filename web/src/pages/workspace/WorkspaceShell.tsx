@@ -1,6 +1,6 @@
 import { useLocation, useSearchParams } from "react-router-dom";
 
-import { DashboardViewer } from "../dashboard/DashboardViewer";
+import { DashboardViewer } from "./dashboard/DashboardViewer";
 import { SourceManagementPage } from "../sources/SourceManagementPage";
 import { resolveWorkspaceTab } from "./workspaceNav";
 

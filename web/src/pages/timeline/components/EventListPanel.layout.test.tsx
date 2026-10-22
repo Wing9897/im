@@ -6,7 +6,7 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../../test/context-mocks";
-import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../../test/helpers/useCalendarShareCatalog.testing";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import {
   makeEvent,

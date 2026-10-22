@@ -9,7 +9,7 @@ import {
   hydrateNotifyHistory,
   loadNotifyTriggers,
 } from "./triggerHistory";
-import { resetNotifyHistoryCacheForTests } from "./triggerHistory.testing";
+import { resetNotifyHistoryCacheForTests } from "../../../test/helpers/triggerHistory.testing";
 const { mockFetchHistory, mockPutHistory } = vi.hoisted(() => ({
   mockFetchHistory: vi.fn(),
   mockPutHistory: vi.fn(),

@@ -102,7 +102,7 @@ async def test_search_calendars_unreachable_uses_remote_error_code(client, monke
             error_code="CALENDAR_SHARE_UNREACHABLE",
         )
 
-    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", boom)
+    monkeypatch.setattr("server.calendar_share.remote_http.calendar_share_request", boom)
     resp = await client.get("/api/v1/calendar-share/search", params={"q": "Demo"})
     assert resp.status_code == 502
     assert resp.json()["error_code"] == "CALENDAR_SHARE_UNREACHABLE"

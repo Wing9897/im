@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
-from server.api.schemas.requests import AccessKeyCreateBody
+from server.api.schemas.requests.auth import AccessKeyCreateBody
 from server.api.schemas.responses import (
     AccessKeyCreatedResponse,
     AccessKeyDeleteResponse,

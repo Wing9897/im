@@ -7,7 +7,7 @@ from typing import Any
 from server.calendar.timeline_markers import TimelineMarkers
 from server.db.database import Database
 from server.domain.timeline_sources import ALLOWED_TIMELINE_SOURCES, TimelineSource
-from server.wire.serializers import serialize_dismissal
+from server.wire.serializer_domains.calendar import serialize_dismissal
 
 DismissSource = TimelineSource
 ALLOWED_SOURCES = ALLOWED_TIMELINE_SOURCES

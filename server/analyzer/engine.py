@@ -24,7 +24,7 @@ from server.analyzer.prompt import AssembledPrompt
 from server.config import get_config, get_config_int
 from server.db.database import Database
 from server.errors import diagnostic_error_fields
-from server.prompts import CHAT_ASSISTANT_SYSTEM_PROMPT
+from server.prompts.assistant import CHAT_ASSISTANT_SYSTEM_PROMPT
 from server.prompts.locale import normalize_ui_locale, output_language_directive
 from server.util import is_openai_json_mode_enabled
 

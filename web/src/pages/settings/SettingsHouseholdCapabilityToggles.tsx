@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
+import { SettingsSaveBar } from "./SettingsSaveBar";
 import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
 import { ToggleSwitch } from "../../components/ToggleSwitch";
 import { CollapsePanel, FieldLabel, SelectTile, SelectTileGrid } from "../../components/ui";

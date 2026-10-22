@@ -7,7 +7,7 @@ import pytest
 from server.agent.tools_registry import execute_tool
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE
-from server.services.recurring_series_writes import create_recurring_series
+from server.services.recurring_series_create import create_recurring_series
 from server.tests.db_helpers import insert_direct_analysis_task
 
 

@@ -7,7 +7,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../components/sources/SourceDrawer", () => ({
+vi.mock("./SourceDrawer", () => ({
   SourceDrawer: ({
     children,
     onClose,

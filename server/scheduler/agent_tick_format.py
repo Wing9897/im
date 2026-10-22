@@ -10,7 +10,7 @@ from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.domain.agent_task_spec import AgentTaskSpecError, agent_task_spec_from_row
 from server.prompts.agent_task import build_agent_seed_message
 from server.queries.agent_tick_queries import AgentMessageCursor
-from server.wire.serializers import parse_tool_call_entries
+from server.wire.serializer_domains.operations import parse_tool_call_entries
 
 #: Fallback when ``agent_max_tool_rounds`` config is missing / non-positive.
 #: Matches ``server.config`` default (28). Assistant chat keeps runtime default 8.

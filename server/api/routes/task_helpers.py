@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 
-from server.api.schemas.requests import TaskConfigBody
+from server.api.schemas.requests.tasks import TaskConfigBody
 from server.errors import http_error
 from server.services.task_writes import TaskWriteError
 from server.services.tasks.write_input import TaskWriteInput

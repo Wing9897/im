@@ -66,7 +66,7 @@ async def test_series_is_not_mutable_through_task_routes(client, app) -> None:
     assert create_proj.status_code == 201
     proj_id = create_proj.json()["id"]
 
-    from server.services.recurring_series_writes import create_recurring_series
+    from server.services.recurring_series_create import create_recurring_series
 
     row = await create_recurring_series(
         app.state.db,
@@ -116,7 +116,7 @@ async def test_put_agent_mode_change_clears_children_parent(client, app) -> None
     assert create_proj.status_code == 201
     proj_id = create_proj.json()["id"]
 
-    from server.services.recurring_series_writes import create_recurring_series
+    from server.services.recurring_series_create import create_recurring_series
 
     child = await create_recurring_series(
         app.state.db,
@@ -195,7 +195,7 @@ async def test_task_catalog_excludes_series_and_calendar_top_level_hides_childre
         },
     )
     proj_id = create_proj.json()["id"]
-    from server.services.recurring_series_writes import create_recurring_series
+    from server.services.recurring_series_create import create_recurring_series
 
     child = await create_recurring_series(
         app.state.db,

@@ -7,12 +7,8 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from server.calendar_share.remote import (
-    CalendarShareRemoteError,
-    authorized_request,
-    authorized_request_raw,
-    raise_remote_status,
-)
+from server.calendar_share.remote_errors import CalendarShareRemoteError, raise_remote_status
+from server.calendar_share.remote_http import authorized_request, authorized_request_raw
 from server.calendar_share.snapshot import diff_uid_maps
 from server.db.database import Database
 from server.errors import CALENDAR_SHARE_REQUEST_FAILED, CALENDAR_SHARE_UNREACHABLE, diagnostic_error_fields

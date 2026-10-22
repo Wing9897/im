@@ -5,7 +5,7 @@ import {
   DEFAULT_NOTIFY_SETTINGS,
   saveNotifySettings,
 } from "../../domain/notify/scanner/settings";
-import { resetNotifySettingsCacheForTests } from "../../domain/notify/scanner/settings.testing";
+import { resetNotifySettingsCacheForTests } from "../../test/helpers/settings.testing";
 import { NotifyChannelToggles } from "./NotifyChannelToggles";
 
 vi.mock("react-i18next", () => ({

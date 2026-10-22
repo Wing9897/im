@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.queries import sources_queries
-from server.wire.serializers import serialize_channel
+from server.wire.serializer_domains.sources import serialize_channel
 
 
 async def list_source_channels(db: Any, source_id: str, platform: str) -> list[dict[str, Any]]:

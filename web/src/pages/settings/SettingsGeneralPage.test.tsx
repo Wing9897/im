@@ -17,7 +17,7 @@ const { settingsState } = vi.hoisted(() => ({
 
 vi.mock("../../api/config", () => ({ saveSystemSettings }));
 vi.mock("../../api/system", () => ({ restartCollector }));
-vi.mock("../../components/settings/SystemVersionPanel", () => ({
+vi.mock("./SystemVersionPanel", () => ({
   SystemVersionPanel: () => createElement("div", { "data-testid": "system-version-panel" }, "version"),
 }));
 vi.mock("../../context/ToastContext", async () =>

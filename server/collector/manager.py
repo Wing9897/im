@@ -15,7 +15,7 @@ from collections.abc import Awaitable, Callable
 from server.collector import telegram_login
 from server.collector.adapter_factory import build_adapter
 from server.collector.base import AdapterStatus, BasePlatformAdapter
-from server.collector.manager_retry import CollectorRetryOrchestrator
+from server.collector.manager_retry import CollectorRetryOrchestrator, _safe_disconnect
 from server.db.database import Database
 from server.paths import ensure_sessions_dir
 from server.secrets import unprotect_text
@@ -76,7 +76,7 @@ class CollectorManager:
 
         async def _disconnect_all() -> None:
             await asyncio.gather(
-                *(self._safe_disconnect(source_id, adapter) for source_id, adapter in self._adapters.items()),
+                *(_safe_disconnect(source_id, adapter, logger) for source_id, adapter in self._adapters.items()),
                 return_exceptions=True,
             )
 
@@ -304,9 +304,3 @@ class CollectorManager:
     def _default_session_dir() -> str:
         # Unified {DATA_DIR}/sessions (Desktop userData / CLI product data root).
         return str(ensure_sessions_dir())
-
-    async def _safe_disconnect(self, source_id: str, adapter: BasePlatformAdapter) -> None:
-        try:
-            await adapter.disconnect()
-        except Exception:  # noqa: BLE001 — shutdown must not raise
-            logger.exception("Error disconnecting adapter %s", source_id)

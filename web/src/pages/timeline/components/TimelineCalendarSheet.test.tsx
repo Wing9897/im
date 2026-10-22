@@ -9,11 +9,11 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
-vi.mock("../../schedule/SchedulePage", () => ({
+vi.mock("../schedule/SchedulePage", () => ({
   SchedulePage: () => createElement("div", { "data-testid": "schedule-stub" }),
 }));
 
-vi.mock("../../subscriptions/SubscriptionsShell", () => ({
+vi.mock("../subscriptions/SubscriptionsShell", () => ({
   parseSubscriptionsTab: (value: string | null | undefined) =>
     value === "published" || value === "account" || value === "search" || value === "mine"
       ? value

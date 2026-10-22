@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Pencil, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AiStaffAvatar } from "../../../components/aiStaff/AiStaffAvatar";
-import { AssistantHistorySettingsDialog } from "../../../components/aiStaff/AssistantHistorySettingsDialog";
+import { AssistantHistorySettingsDialog } from "./AssistantHistorySettingsDialog";
 import { Badge, Button, SurfaceCard, TextField } from "../../../components/ui";
 import {
   cardBodyClass,

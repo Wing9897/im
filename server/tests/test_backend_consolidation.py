@@ -214,6 +214,21 @@ def test_fe_mirrors_notify_kind_trigger_and_message_ranges() -> None:
     assert (*fe_task_ranges, *fe_message_only) == ALL_MESSAGE_TIME_RANGES
 
 
+def test_fe_mirrors_calendar_share_listing_visibility() -> None:
+    """Listing and grant visibility stay aligned with calendar-share constants.
+
+    Search-hit visibility is intentionally not the same tuple: server
+    ``VISIBILITY_SEARCH_HIT`` mixes listing and grant literals, and the web
+    module branches in ``searchHitToneKey`` instead of exporting that array.
+    """
+    from server.calendar_share.constants import VISIBILITY_GRANT, VISIBILITY_PUBLIC
+
+    root = Path(__file__).resolve().parents[2]
+    path = root / "web" / "src" / "domain" / "calendarShare" / "listingVisibility.ts"
+    assert _parse_ts_string_array(path, "LISTING_VISIBILITY") == VISIBILITY_PUBLIC
+    assert _parse_ts_string_array(path, "GRANT_VISIBILITY") == VISIBILITY_GRANT
+
+
 def test_vocabulary_reexports_every_domain_check_sql() -> None:
     import importlib
     import pkgutil

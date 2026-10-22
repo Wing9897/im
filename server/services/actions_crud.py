@@ -16,7 +16,7 @@ from server.db.database import Database
 from server.prompts.locale import normalize_ui_locale
 from server.queries import actions_queries
 from server.util import new_id, utc_now_iso
-from server.wire.serializers import serialize_action
+from server.wire.serializer_domains.operations import serialize_action
 
 _TEST_MESSAGES: dict[str, str] = {
     "zh-Hant": "[Intelligence Monitor] 測試訊息：動作設定運作正常。",

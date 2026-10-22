@@ -15,7 +15,7 @@ import {
   saveBoardGanttViewModeToApi,
   saveSourceFilterToApi,
 } from "./boardPrefsStore";
-import { resetBoardPrefsCacheForTests } from "./boardPrefsStore.testing";
+import { resetBoardPrefsCacheForTests } from "../test/helpers/boardPrefsStore.testing";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 
 /** A client-only LS key — hydrate must ignore it (no LS→server bridge). */

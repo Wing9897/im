@@ -8,7 +8,7 @@ from typing import Any
 from server.calendar.query_fetch import fetch_workset_analysis_items, fetch_workset_item_remind_items
 from server.calendar.user_events_read import list_user_events
 from server.calendar_share.snapshot import json_array_text
-from server.calendar_share.store import get_calendar_timezone
+from server.calendar_share.store.timezone import get_calendar_timezone
 from server.db.database import Database
 from server.queries.recurring_series_queries import list_series_rows
 from server.time_iso import parse_iso, to_iso_z

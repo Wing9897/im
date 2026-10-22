@@ -9,7 +9,7 @@ from typing import Any
 
 from server.db.database import Database, TransactionDb
 from server.time_iso import parse_iso, to_iso_z
-from server.util import utc_now_iso
+from server.util import new_id, utc_now_iso
 
 ACCESS_TTL = timedelta(hours=1)
 REFRESH_TTL = timedelta(days=90)
@@ -48,9 +48,6 @@ async def _issue_tokens(
     label: str,
     session_id: str | None = None,
 ) -> dict[str, Any]:
-    # Resolve through the façade so tests can monkeypatch ``device_auth.new_id``.
-    from server.auth import device_auth as device_auth_facade
-
     now = utc_now_iso()
     access_plain = _new_opaque_token()
     refresh_plain = _new_opaque_token()
@@ -63,7 +60,7 @@ async def _issue_tokens(
     async with db.transaction() as conn:
         tdb = TransactionDb(conn)
         if session_id is None:
-            session_id = device_auth_facade.new_id()
+            session_id = new_id()
             await tdb.execute(
                 """
                 INSERT INTO device_sessions
@@ -97,7 +94,7 @@ async def _issue_tokens(
                 (id, session_id, token_hash, created_at, expires_at, revoked_at)
             VALUES (?, ?, ?, ?, ?, NULL)
             """,
-            (device_auth_facade.new_id(), session_id, _hash_secret(access_plain), now, access_expires),
+            (new_id(), session_id, _hash_secret(access_plain), now, access_expires),
         )
 
         session = await tdb.fetch_one("SELECT * FROM device_sessions WHERE id = ?", (session_id,))
@@ -123,8 +120,6 @@ async def create_device_session(db: Database, *, label: str = "Device") -> dict[
 
 async def refresh_device_session(db: Database, refresh_token: str) -> dict[str, Any] | None:
     """Rotate tokens atomically; CAS on refresh_token_hash requires rowcount==1."""
-    from server.auth import device_auth as device_auth_facade
-
     presented = (refresh_token or "").strip()
     if not presented:
         return None
@@ -136,7 +131,7 @@ async def refresh_device_session(db: Database, refresh_token: str) -> dict[str, 
     now = utc_now_iso()
     new_refresh_hash = _hash_secret(refresh_plain)
     new_access_hash = _hash_secret(access_plain)
-    access_id = device_auth_facade.new_id()
+    access_id = new_id()
 
     try:
         async with db.transaction() as conn:

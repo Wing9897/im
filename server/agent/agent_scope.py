@@ -15,7 +15,7 @@ from typing import Any
 
 from server.db.database import Database
 from server.queries.tasks_queries import fetch_task_channel_rows
-from server.wire.serializers import channel_key
+from server.wire.serializer_domains.sources import channel_key
 
 AGENT_SCOPE_READ_TOOLS = frozenset(
     {

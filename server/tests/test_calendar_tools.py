@@ -312,7 +312,7 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
 
 async def test_delete_recurring_series_clears_calendar_dismissals(app) -> None:
     """Series hard-delete clears only that series' occurrence dismissals."""
-    from server.services.recurring_series_writes import hard_delete_recurring_series
+    from server.services.recurring_series_patch import hard_delete_recurring_series
     from server.util import utc_now_iso
 
     db = app.state.db

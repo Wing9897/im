@@ -14,7 +14,7 @@ from server.agent.mcp_tools import (
 )
 from server.agent.tools_registry import CALENDAR_WRITE_TOOL_NAMES
 from server.auth.access_keys import FULL_SCOPE, READ_SCOPE, seed_access_key
-from server.auth.device_auth import create_device_session
+from server.auth.device_token_issue import create_device_session
 from server.config import set_configs
 
 

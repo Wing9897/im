@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 
 from server.scheduler.agent_tick_format import serialize_tick_tool_calls
-from server.wire.serializers import parse_tool_call_entries, serialize_batch_tool_calls
+from server.wire.serializer_domains.operations import (
+    parse_tool_call_entries,
+    serialize_batch_tool_calls,
+)
 
 
 def test_parse_tool_call_entries_from_json_string_and_list() -> None:

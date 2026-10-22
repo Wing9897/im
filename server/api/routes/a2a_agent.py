@@ -19,7 +19,7 @@ from server.analyzer.llm_client import ConfigurableLlmClient
 from server.api.a2a_auth import require_a2a_enabled, require_full_access_key
 from server.api.agent_errors import agent_http_error, agent_timeout_http_error
 from server.api.deps import get_db
-from server.api.schemas.requests import A2aAgentBody
+from server.api.schemas.requests.agents import A2aAgentBody
 from server.api.schemas.responses import AgentChatResponse
 from server.config import get_config_int
 from server.errors import VALIDATION_ERROR, http_error

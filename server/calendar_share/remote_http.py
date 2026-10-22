@@ -13,7 +13,7 @@ from server.calendar_share.remote_errors import (
     _message_from_payload,
     raise_remote_status,
 )
-from server.calendar_share.store import (
+from server.calendar_share.store.session import (
     clear_tokens,
     get_access_token,
     get_base_url,
@@ -92,7 +92,6 @@ async def authorized_request_raw(
         raise http_error(401, "Not signed in to calendar share", error_code=AUTH_REQUIRED)
 
     async def _once(token: str) -> tuple[int, Any]:
-        from server.calendar_share.remote import calendar_share_request
 
         return await calendar_share_request(
             base_url=base_url,

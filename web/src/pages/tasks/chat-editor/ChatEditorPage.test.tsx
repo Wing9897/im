@@ -45,7 +45,7 @@ vi.mock("../../../api/llmProfiles", () => ({
   ]),
 }));
 
-vi.mock("../../../components/task/TaskTemplatePresetDialog", () => ({
+vi.mock("./TaskTemplatePresetDialog", () => ({
   TaskTemplatePresetDialog: (props: {
     onApply: () => void;
     onClose: () => void;

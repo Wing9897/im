@@ -31,7 +31,7 @@ from server.services.tasks.channel_refs import channel_refs_for
 from server.services.tasks.llm_profile import resolve_llm_profile_id
 from server.services.tasks.write_input import TaskWriteInput
 from server.util import new_id, utc_now_iso
-from server.wire.serializers import task_response
+from server.wire.serializer_domains.tasks import task_response
 
 
 async def create_task_record(db: Database, body: TaskWriteInput) -> TaskMutationResult:

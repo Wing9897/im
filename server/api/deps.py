@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import Depends, Request
 
-from server.auth import verify_auth, verify_write_access
+from server.auth.household_auth import verify_auth, verify_write_access
 from server.db.database import Database
 from server.errors import NOT_FOUND, http_error
 from server.sse import publish_resource_modified as sse_publish_resource_modified

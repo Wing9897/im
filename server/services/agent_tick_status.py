@@ -14,7 +14,7 @@ from server.queries.agent_tick_queries import (
 )
 from server.queries.tasks_queries import fetch_task_row
 from server.services.task_writes import TaskWriteError
-from server.wire.serializers import (
+from server.wire.serializer_domains.operations import (
     serialize_agent_tick_in_flight,
     serialize_agent_tick_log_entry,
 )

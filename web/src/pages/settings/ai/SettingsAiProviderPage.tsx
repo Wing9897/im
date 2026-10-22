@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { testAiEngine } from "../../../api/system";
-import { SettingsSaveBar } from "../../../components/settings/SettingsSaveBar";
+import { SettingsSaveBar } from "../SettingsSaveBar";
 import { useSettingsPageState } from "../../../components/settings/useSettingsPageState";
 import { SettingsRow, TextField } from "../../../components/ui";
 import { formHelpClass, sectionTitleClass } from "../../../components/ui/pageTypography";
@@ -18,7 +18,7 @@ import {
 } from "../../../api/llmProfiles";
 import { ErrorRetryBanner } from "../../../components/common/ErrorRetryBanner";
 import { LoadingSpinner } from "../../../components/common/LoadingSpinner";
-import { LlmGlobalSlotsPanel } from "../../../components/settings/LlmGlobalSlotsPanel";
+import { LlmGlobalSlotsPanel } from "./LlmGlobalSlotsPanel";
 import {
   draftToUpsertBody,
   emptyProfileDraft,
@@ -26,8 +26,8 @@ import {
   profileToDraft,
   validateProfileDraft,
   type LlmProfileDraft,
-} from "../../../components/settings/LlmProfileEditorDialog";
-import { LlmTaskProfilesSection } from "../../../components/settings/LlmTaskProfilesSection";
+} from "./LlmProfileEditorDialog";
+import { LlmTaskProfilesSection } from "./LlmTaskProfilesSection";
 import {
   SettingsContentCard,
   SettingsFieldGroup,

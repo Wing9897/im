@@ -8,10 +8,10 @@ from server.api.deps import get_db
 from server.api.routes.task_helpers import TaskConfigBody, task_write_http_error, to_task_write_input
 from server.api.routes.tasks._common import notify, register_task, unregister_task
 from server.api.routes.tasks._router import router
-from server.api.schemas.requests import TaskPatchBody
+from server.api.schemas.requests.tasks import TaskPatchBody
 from server.api.schemas.responses import TaskDeleteResponse, TaskResponse
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
-from server.services.task_crud import (
+from server.services.task_crud_mutate import (
     delete_task_record,
     patch_task_emoji_record,
     toggle_task_active_record,

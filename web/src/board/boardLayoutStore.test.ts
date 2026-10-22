@@ -18,7 +18,7 @@ import {
 import {
   resetBoardPrefsCacheForTests,
   seedBoardPrefsCacheForTests,
-} from "./boardPrefsStore.testing";
+} from "../test/helpers/boardPrefsStore.testing";
 import {
   BOARD_LIST_WIDGET_MIN_ROWS,
   BOARD_SCHEDULE_MIN_ROWS,

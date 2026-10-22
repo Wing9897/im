@@ -11,9 +11,9 @@ import {
   resetCalendarShareApiMocks,
 } from "../../test/calendarShareApiMock";
 import { CalendarShareRateLimitError } from "./calendarShareRateLimit";
-import { resetCalendarShareRateLimitForTests } from "./calendarShareRateLimit.testing";
+import { resetCalendarShareRateLimitForTests } from "../../test/helpers/calendarShareRateLimit.testing";
 import { runCalendarSharePublishPut } from "./publishWorkset";
-import { resetCalendarShareCatalogForTests } from "./useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../test/helpers/useCalendarShareCatalog.testing";
 const STATE = {
   worksetId: "ws-general",
   slug: "general",

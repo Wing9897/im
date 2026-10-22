@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
-import { SourceDrawer } from "../../components/sources/SourceDrawer";
+import { SourceDrawer } from "./SourceDrawer";
 import { notifySourceDrawerClosed } from "../../domain/sources/sourceDrawerEvents";
 import { withReturnTo } from "../../routing/returnTo";
 import { SourceManagementPage } from "./SourceManagementPage";

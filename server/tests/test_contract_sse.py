@@ -31,7 +31,7 @@ from server.api.schemas.responses.sse import (
     SseSourceStatusChangedPayload,
 )
 from server.sse import _MAX_SUBSCRIBERS, EVENT_TYPES, SseBroadcaster, SseCapacityError, event_stream
-from server.wire.serializers import serialize_message
+from server.wire.serializer_domains.sources import serialize_message
 
 FRONTEND_EVENT_TYPES = {
     "messages_updated",

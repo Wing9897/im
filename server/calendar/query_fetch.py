@@ -144,7 +144,7 @@ async def expand_active_calendar_occurrences(
 
     series = await fetch_active_recurring_series(db, series_id=series_id, series_ids=series_ids)
     series = [row for row in series if may_calendar_expand_series(row)]
-    from server.calendar_share.store import get_calendar_timezone
+    from server.calendar_share.store.timezone import get_calendar_timezone
     from server.calendar_share.timezone import tzinfo_from_iana
 
     calendar_tz = tzinfo_from_iana(await get_calendar_timezone(db))

@@ -5,9 +5,9 @@ import {
   DEFAULT_NOTIFY_SETTINGS,
   saveNotifySettings,
 } from "../../domain/notify/scanner/settings";
-import { resetNotifySettingsCacheForTests } from "../../domain/notify/scanner/settings.testing";
+import { resetNotifySettingsCacheForTests } from "../../test/helpers/settings.testing";
 import { showNotifyFlash } from "../../domain/notify/notifyFlash";
-import { resetNotifyFlashForTests } from "../../domain/notify/notifyFlash.testing";
+import { resetNotifyFlashForTests } from "../../test/helpers/notifyFlash.testing";
 import { NotifyFlashHost } from "./NotifyFlashHost";
 
 const { mockIsElectronDesktop } = vi.hoisted(() => ({

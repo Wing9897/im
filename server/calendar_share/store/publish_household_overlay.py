@@ -23,7 +23,7 @@ from server.calendar_share.store.publish_io import (
 )
 from server.db.database import Database
 from server.errors import VALIDATION_ERROR, http_error
-from server.wire.serializers import serialize_catalog_wire_fields
+from server.wire.serializer_domains.calendar_share import serialize_catalog_wire_fields
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 

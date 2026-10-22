@@ -6,7 +6,7 @@ import {
   setConnectionMode,
   setServerBaseUrl,
 } from "../domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../test/helpers/connectionStore.testing";
 import {
   applyLocalWebConnectionDefaults,
   applyRemoteWebConnection,

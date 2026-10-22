@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ListChecks, Trash2, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { RecurringSeriesDialog } from "../../../components/calendar/RecurringSeriesDialog";
 import { Badge, Button, CardFieldIcon, PillButton, TextField } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import { itemDateKindLabel } from "../../../domain/items/itemCalendarProjection";
@@ -24,14 +25,13 @@ import { joinList } from "../../../i18n/formatMessage";
 import { formatOsDateTime } from "../../../utils/time";
 import { EventListPanel } from "./EventListPanel";
 import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
-import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { SubscribedEventSubscribeIcon } from "./SubscribedEventSubscribeIcon";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { dismissedTitleClass } from "../timelineDismissUtils";
 import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
 import { isSubscribedTimelineSource } from "../../../domain/calendarShare/subscribedCalendars";
 import { resolveCalendarLeadingGlyph } from "../../../domain/timeline/importantEventDisplay";
 import { useEventListMetaLookups } from "../../../domain/timeline/useEventListMetaLookups";
-import { RecurringSeriesDialog } from "../../schedule/RecurringSeriesDialog";
 
 const asideClass =
   "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";

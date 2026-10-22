@@ -20,7 +20,10 @@ from server.calendar_share.autosync import (
     sync_dirty_published_worksets,
 )
 from server.calendar_share.dirty import has_live_public_replica, mark_published_workset_dirty
-from server.calendar_share.store import get_workset_entry, load_workset_map
+from server.calendar_share.store.publish_household_overlay import (
+    get_workset_entry,
+    load_workset_map,
+)
 from server.db.database import TransactionDb
 from server.queries.worksets_queries import insert_workset
 from server.tests.calendar_share_fakes import login_calendar_share
@@ -205,7 +208,7 @@ async def test_offline_keeps_dirty_without_ic_write(client, app, fake_remote):
         start_time="2026-09-01T09:00:00",
         workset_id=SYSTEM_WORKSET_ID,
     )
-    from server.calendar_share.store import clear_tokens
+    from server.calendar_share.store.session import clear_tokens
 
     await clear_tokens(app.state.db)
     fake_remote.calls.clear()
@@ -315,7 +318,7 @@ async def test_autosync_respects_household_interval(client, app, fake_remote):
     assert resp.json()["autoSyncIntervalSeconds"] == 300
     entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
     base = datetime.now(UTC)
-    from server.calendar_share.store import upsert_workset_entry
+    from server.calendar_share.store.publish_household_overlay import upsert_workset_entry
 
     await upsert_workset_entry(
         app.state.db,
@@ -367,7 +370,7 @@ def test_auto_sync_interval_elapsed_uses_floor():
 
 
 async def test_unpublished_dirty_flag_is_not_scanned(client, app, fake_remote):
-    from server.calendar_share.store import delete_workset_entry
+    from server.calendar_share.store.publish_io import delete_workset_entry
 
     await login_calendar_share(client, fake_remote)
     await _publish(client)
@@ -380,7 +383,7 @@ async def test_unpublished_dirty_flag_is_not_scanned(client, app, fake_remote):
 
 
 def test_clean_workset_entry_persists_pending_sync():
-    from server.calendar_share.store import _clean_workset_entry, empty_workset_entry
+    from server.calendar_share.store.publish_io import _clean_workset_entry, empty_workset_entry
 
     empty = empty_workset_entry("ws")
     assert empty["pendingSync"] is False

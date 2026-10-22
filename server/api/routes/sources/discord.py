@@ -8,12 +8,16 @@ from fastapi import Request
 
 from server.api.deps import get_collector, get_db
 from server.api.routes.sources.common import router
-from server.api.routes.sources.helpers import bind_source_channel, get_source_row
-from server.api.schemas.requests import DiscordBotBody, DiscordBotPatchBody, DiscordSubscribeBody
+from server.api.schemas.requests.sources import (
+    DiscordBotBody,
+    DiscordBotPatchBody,
+    DiscordSubscribeBody,
+)
 from server.api.schemas.responses import AddDiscordBotResponse, DiscordSubscribeResponse
 from server.collector import manager_sources
 from server.errors import COLLECTOR_UNAVAILABLE, NOT_FOUND, http_error
 from server.services.sources.registry import DISCORD_SOURCE_SPEC, connect_registered_source, patch_registered_source
+from server.services.sources.route_helpers import bind_source_channel, get_source_row
 
 logger = logging.getLogger(__name__)
 

@@ -25,17 +25,18 @@ from server.calendar_share.auto_sync_config import (
 )
 from server.calendar_share.publish import push_workset_calendar, unpublish_workset_calendar
 from server.calendar_share.rate_limit import enforce_calendar_share_rate_limit
-from server.calendar_share.store import (
+from server.calendar_share.store.normalize import (
     coerce_publish_slug,
-    empty_workset_entry,
-    get_workset_entry,
-    is_published_entry,
-    list_publish_joined,
     normalize_handle,
     normalize_slug,
-    session_connected,
+)
+from server.calendar_share.store.publish_household_overlay import (
+    get_workset_entry,
+    list_publish_joined,
     upsert_workset_entry,
 )
+from server.calendar_share.store.publish_io import empty_workset_entry, is_published_entry
+from server.calendar_share.store.session import session_connected
 from server.errors import AUTH_REQUIRED, NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries.worksets_queries import fetch_workset_row
 from server.worksets_const import SYSTEM_WORKSET_ID

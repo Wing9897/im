@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import secrets
 from typing import Any
 
+from server.auth.device_token_issue import _hash_secret
 from server.db.database import Database
 from server.util import new_id, utc_now_iso
 
@@ -16,10 +16,6 @@ READ_SCOPE = "read"
 #: Retired A2A-only scopes — rejected on create/write; stripped on read (no silent upgrade to ``*``).
 _RETIRED_SCOPES = frozenset({"a2a:agent", "a2a:events"})
 _ALLOWED_SCOPES = frozenset({FULL_SCOPE, READ_SCOPE})
-
-
-def _hash_secret(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def _preview(secret: str) -> str:

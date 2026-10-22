@@ -7,16 +7,14 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from server.auth.admin_auth import create_admin_account
-from server.auth.device_auth import (
-    ACCESS_TTL,
-    create_device_session,
+from server.auth.device_session_ops import (
     has_active_device_session,
     is_bootstrapped,
     mark_household_secured,
-    refresh_device_session,
     resolve_session_id_for_access_token,
     revoke_session,
 )
+from server.auth.device_token_issue import ACCESS_TTL, create_device_session, refresh_device_session
 from server.time_iso import to_iso_z
 from server.util import utc_now_iso
 
@@ -104,10 +102,10 @@ async def test_issue_tokens_rolls_back_a_session_without_its_access_token(app, m
     Writing them as two independent statements left, on a mid-way failure, a
     session that could neither authenticate nor be refreshed.
     """
-    from server.auth import device_auth
+    from server.auth import device_token_issue as tokens
 
     db = app.state.db
-    real_new_id = device_auth.new_id
+    real_new_id = tokens.new_id
     seen = {"count": 0}
 
     def flaky_new_id() -> str:
@@ -116,7 +114,7 @@ async def test_issue_tokens_rolls_back_a_session_without_its_access_token(app, m
             raise RuntimeError("id generation exploded")
         return real_new_id()
 
-    monkeypatch.setattr(device_auth, "new_id", flaky_new_id)
+    monkeypatch.setattr(tokens, "new_id", flaky_new_id)
 
     with pytest.raises(RuntimeError):
         await create_device_session(db, label="A")

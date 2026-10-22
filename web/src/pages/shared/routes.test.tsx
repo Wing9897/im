@@ -134,16 +134,15 @@ describe("Route module imports", () => {
   it("all lazy-loaded page modules resolve without import errors", async () => {
     const pageModules = [
       () => import("../monitor/MonitorPage"),
-      () => import("../dashboard/DashboardViewer"),
-      () => import("../worksets/WorksetWorkspacePage"),
+      () => import("../workspace/dashboard/DashboardViewer"),
       () => import("../tasks/chat-editor/ChatEditorPage"),
       () => import("../tasks/agent/AgentDetailPage"),
-      () => import("../leaderboard/LeaderboardPage"),
+      () => import("../intelligence/leaderboard/LeaderboardPage"),
       () => import("../intelligence/IntelligencePage"),
       () => import("../timeline/TimelinePage"),
-      () => import("../subscriptions/SubscriptionsShell"),
-      () => import("../subscriptions/SubscriptionsPublishedPage"),
-      () => import("../subscriptions/SubscriptionsIdentityPanel"),
+      () => import("../timeline/subscriptions/SubscriptionsShell"),
+      () => import("../timeline/subscriptions/SubscriptionsPublishedPage"),
+      () => import("../timeline/subscriptions/SubscriptionsIdentityPanel"),
       () => import("../sources/SourceManagementPage"),
       () => import("../notify/NotifyWorkspacePage"),
       () => import("../logs/LogPage"),
@@ -216,7 +215,7 @@ describe("Route rendering — representative routes mount without errors", () =>
   });
 
   it("renders /tasks (top-level route) without errors", async () => {
-    const { DashboardViewer } = await import("../dashboard/DashboardViewer");
+    const { DashboardViewer } = await import("../workspace/dashboard/DashboardViewer");
     await act(async () => {
       root = createRoot(container);
       root.render(

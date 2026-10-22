@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.wire.serializers import serialize_source
+from server.wire.serializer_domains.sources import serialize_source
 
 
 def add_source_response(

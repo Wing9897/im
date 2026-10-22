@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button, CardFieldIcon, CardFieldRow, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
-import { EventListPhaseBadges } from "../../../components/timeline/EventListPhaseBadges";
+import { EventListPhaseBadges } from "./EventListPhaseBadges";
 import {
   isUserScheduleTimelineEvent,
   scheduleCardText,
@@ -30,7 +30,7 @@ import type { TimelineItem } from "../../../types";
 import { dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { EventListTitleMark } from "../../../components/timeline/EventListTitleMark";
-import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { SubscribedEventSubscribeIcon } from "./SubscribedEventSubscribeIcon";
 
 function EventProvenanceRow({
   event,

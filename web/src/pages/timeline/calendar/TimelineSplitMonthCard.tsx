@@ -14,7 +14,7 @@ import { SPLIT_MONTH_DOT_LIMIT } from "../../../domain/timeline/monthCardSources
 import { resolveWorksetCoverSrc } from "../../../domain/worksets/worksetCover";
 import { preferActiveEvents, dismissedTitleClass } from "../timelineDismissUtils";
 import { placeSplitDayPopover } from "./splitDayPopoverPlacement";
-import { SubscribedEventSubscribeIcon } from "../../../components/timeline/SubscribedEventSubscribeIcon";
+import { SubscribedEventSubscribeIcon } from "../components/SubscribedEventSubscribeIcon";
 import { TimelineSplitMonthColorControl } from "./TimelineSplitMonthColorControl";
 
 export function eventsForSplitMonthDay(

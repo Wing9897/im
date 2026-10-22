@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import Request
 
 from server.api.routes.sources.common import router
-from server.api.schemas.requests import HttpSourceBody, HttpSourcePatchBody
+from server.api.schemas.requests.sources import HttpSourceBody, HttpSourcePatchBody
 from server.api.schemas.responses import AddHttpSourceResponse
 from server.services.sources.registry import HTTP_SOURCE_SPEC, connect_registered_source, patch_registered_source
 

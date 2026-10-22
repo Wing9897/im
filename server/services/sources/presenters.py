@@ -25,7 +25,7 @@ from server.domain.collector_platforms import COLLECTOR_PLATFORMS_WITH_LIST_ENRI
 from server.secrets import MASKED_SECRET
 from server.services.sources.channels import list_source_channels, list_source_channels_batch
 from server.services.sources.credentials import parse_credentials
-from server.wire.serializers import serialize_source
+from server.wire.serializer_domains.sources import serialize_source
 
 _PlatformInfoFn = Callable[[Any, list[dict[str, Any]]], Awaitable[list[dict[str, Any]]]]
 

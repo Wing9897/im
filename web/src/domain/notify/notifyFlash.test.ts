@@ -5,7 +5,7 @@ import {
   loadNotifyFlashes,
   showNotifyFlash,
 } from "./notifyFlash";
-import { resetNotifyFlashForTests } from "./notifyFlash.testing";
+import { resetNotifyFlashForTests } from "../../test/helpers/notifyFlash.testing";
 describe("notifyFlash", () => {
   afterEach(() => {
     resetNotifyFlashForTests();

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from server.config import get_config
 from server.tests.ui_prefs_helpers import ui_pref_payload
-from server.ui_prefs import sanitize_timeline_annotations
+from server.ui_prefs.timeline import sanitize_timeline_annotations
 
 
 def test_sanitize_timeline_annotations_drops_invalid_entries() -> None:

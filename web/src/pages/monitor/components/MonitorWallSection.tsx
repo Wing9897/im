@@ -11,7 +11,7 @@ import {
   WallCard,
   WallChannelPicker,
 } from "../../../components/monitor/wall";
-import { useWallFullscreen } from "../../../components/monitor/wall/useWallFullscreen";
+import { useWallFullscreen } from "./useWallFullscreen";
 import { wallFullscreenGrid } from "../../../domain/monitor/wall/wallFullscreenLayout";
 import { MonitorToolbar } from "./MonitorToolbar";
 import type { MonitorViewMode } from "../../../domain/monitor/monitorViewMode";

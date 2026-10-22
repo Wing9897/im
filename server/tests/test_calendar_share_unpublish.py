@@ -26,7 +26,7 @@ async def test_unpublish_deletes_remote_calendar(client, app, fake_remote):
     assert not any(call["path"] == "/me/calendars/Work" and call["method"] == "PUT" for call in fake_remote.calls)
     assert not any(str(call["path"]).endswith("/grants") for call in fake_remote.calls)
 
-    from server.calendar_share.store import get_workset_entry
+    from server.calendar_share.store.publish_household_overlay import get_workset_entry
 
     entry = await get_workset_entry(app.state.db, SYSTEM_WORKSET_ID)
     assert entry["lastFingerprints"] == {"events": {}, "series": {}}

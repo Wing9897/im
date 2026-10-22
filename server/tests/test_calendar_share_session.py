@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 
 from server.calendar_share.constants import DEFAULT_BASE_URL, KEY_ACCESS_TOKEN, KEY_REFRESH_TOKEN
-from server.calendar_share.remote import _message_from_payload, authorized_request, parse_token_pair
+from server.calendar_share.remote_auth import parse_token_pair
+from server.calendar_share.remote_errors import _message_from_payload
+from server.calendar_share.remote_http import authorized_request
 from server.calendar_share.store.normalize import normalize_base_url
 from server.secrets import unprotect_text
 from server.tests.calendar_share_fakes import DEFAULT_URL, login_calendar_share
@@ -93,7 +95,7 @@ async def test_session_login_unreachable_uses_remote_error_code(client, monkeypa
             error_code="CALENDAR_SHARE_UNREACHABLE",
         )
 
-    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", boom)
+    monkeypatch.setattr("server.calendar_share.remote_http.calendar_share_request", boom)
     resp = await client.post(
         "/api/v1/calendar-share/session",
         json={"baseUrl": DEFAULT_URL, "handle": "Wing", "password": "secret"},
@@ -160,7 +162,7 @@ async def test_concurrent_authorized_requests_refresh_once(app, client, fake_rem
             refresh_token=refresh_token,
         )
 
-    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", gated)
+    monkeypatch.setattr("server.calendar_share.remote_http.calendar_share_request", gated)
 
     async def one():
         return await authorized_request(app.state.db, method="GET", path="/me/subscriptions")

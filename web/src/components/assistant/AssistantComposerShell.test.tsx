@@ -1,5 +1,6 @@
 import { act, createElement, type ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import type { AssistantComposerShellProps } from "./AssistantComposerShell";
@@ -52,7 +53,15 @@ describe("AssistantComposerShell", () => {
   function render(props: AssistantComposerShellProps): void {
     act(() => {
       root = createRoot(container);
-      root.render(wrapWithI18n(createElement(AssistantComposerShell, props) as ReactElement));
+      root.render(
+        wrapWithI18n(
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(AssistantComposerShell, props),
+          ) as ReactElement,
+        ),
+      );
     });
   }
 

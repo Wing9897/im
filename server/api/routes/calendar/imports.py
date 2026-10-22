@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 
 from server.api.deps import get_db, publish_resource_modified
-from server.api.schemas.requests import CalendarImportCommitBody, CalendarImportInput
+from server.api.schemas.requests.calendar import CalendarImportCommitBody, CalendarImportInput
 from server.api.schemas.responses import CalendarImportCommitResponse, CalendarImportPreviewResponse
 from server.calendar.ics import IcsParseError, normalize_ics_source
 from server.calendar.imports import (

@@ -41,7 +41,7 @@ from server.queries.calendar_queries import (
     fetch_user_event,
 )
 from server.time_iso import parse_iso
-from server.wire.serializers import serialize_user_event
+from server.wire.serializer_domains.calendar import serialize_user_event
 
 # Look-ahead / look-back cap for upcoming/recent (also calendar.upcoming days max).
 HORIZON_DAYS = 365

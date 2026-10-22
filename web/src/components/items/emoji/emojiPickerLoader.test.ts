@@ -5,7 +5,7 @@ import {
   preloadEmojiPickerModule,
   scheduleEmojiPickerPreload,
 } from "./emojiPickerLoader";
-import { __resetEmojiPickerLoaderForTests } from "./emojiPickerLoader.testing";
+import { __resetEmojiPickerLoaderForTests } from "../../../test/helpers/emojiPickerLoader.testing";
 vi.mock("emoji-picker-react", () => ({
   __esModule: true,
   default: () => null,

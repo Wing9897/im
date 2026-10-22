@@ -13,7 +13,7 @@ from typing import Any
 
 from server.analyzer.token_budget import apply_token_budget, estimate_tokens
 from server.domain.analysis_modes import LEADERBOARD_MODE
-from server.prompts import (
+from server.prompts.analysis import (
     EVENT_SCHEMA_INSTRUCTION,
     JSON_OUTPUT_PREAMBLE,
     LEADERBOARD_CONTEXT_HEADER,

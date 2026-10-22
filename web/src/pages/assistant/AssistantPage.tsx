@@ -29,7 +29,7 @@ import {
   AssistantToolSummary,
 } from "../../components/assistant/AssistantToolSteps";
 import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
-import { AiStaffChatRow } from "../../components/aiStaff/AiStaffChatRow";
+import { AiStaffChatRow } from "./AiStaffChatRow";
 import {
   assistantChatBubbleClass,
   userChatBubbleClass,

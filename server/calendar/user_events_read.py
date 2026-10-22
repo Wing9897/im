@@ -13,7 +13,7 @@ from server.calendar.timeline_markers import attach_timeline_flags
 from server.calendar.user_events_normalize import build_user_event_list_filters
 from server.db.database import Database
 from server.queries.calendar_queries import fetch_user_event
-from server.wire.serializers import serialize_user_event
+from server.wire.serializer_domains.calendar import serialize_user_event
 
 __all__ = [
     "get_user_event",

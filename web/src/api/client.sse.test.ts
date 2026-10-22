@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApiClient } from "./client";
 import { saveDeviceSession } from "../domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../test/helpers/connectionStore.testing";
 import { localStorageMock } from "./clientTestUtils";
 
 const SSE_RECONNECT_DELAY_MS = 5000;

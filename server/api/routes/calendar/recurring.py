@@ -12,13 +12,13 @@ from server.calendar.user_events_normalize import UserEventItemIdError, resolve_
 from server.calendar.write_input import RecurringSeriesWriteInput
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries.recurring_series_queries import fetch_series_row, list_series_rows
-from server.services.recurring_series_writes import (
-    create_recurring_series,
+from server.services.recurring_series_create import create_recurring_series
+from server.services.recurring_series_patch import (
     hard_delete_recurring_series,
     patch_recurring_series,
 )
 from server.services.task_writes import TaskWriteError
-from server.wire.serializers import serialize_recurring_series
+from server.wire.serializer_domains.recurring import serialize_recurring_series
 
 router = APIRouter(prefix="/recurring", tags=["calendar"])
 

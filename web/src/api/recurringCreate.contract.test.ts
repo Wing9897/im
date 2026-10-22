@@ -32,7 +32,7 @@ describe("recurring create FE contract", () => {
     expect(timeline).toMatch(/createRecurringSeries\s*\(/);
     expect(timeline).not.toMatch(/createTask\s*\(/);
 
-    const scheduleDialog = readSrc("pages/schedule/RecurringSeriesDialog.tsx");
+    const scheduleDialog = readSrc("components/calendar/RecurringSeriesDialog.tsx");
     expect(scheduleDialog).toMatch(/patchRecurringSeries|getRecurringSeries/);
 
     const routes = readSrc("routing/AppRoutes.tsx");
@@ -42,7 +42,7 @@ describe("recurring create FE contract", () => {
     expect(routes).not.toMatch(/RecurringSeriesEditor/);
 
     for (const rel of [
-      "pages/schedule/SchedulePage.tsx",
+      "pages/timeline/schedule/SchedulePage.tsx",
       "pages/timeline/components/TimelineSidebar.tsx",
       "pages/tasks/agent/AgentDetailPage.tsx",
     ]) {

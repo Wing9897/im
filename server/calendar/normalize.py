@@ -23,7 +23,7 @@ from typing import Any, Literal
 
 from server.domain.emoji import emoji_from_row
 from server.domain.notify_prefs import normalize_notify_pref
-from server.wire.serializers import serialize_analysis_event
+from server.wire.serializer_domains.calendar import serialize_analysis_event
 
 Source = Literal["analysis", "recurring", "user", "item_remind"]
 Detail = Literal["compact", "full"]
@@ -194,7 +194,7 @@ def build_user_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> d
     """User event as a calendar item.
 
     The input is already a ``serialize_user_event`` result (from
-    ``server.wire.serializers``), which *is* the full
+    ``server.wire.serializer_domains.calendar``), which *is* the full
     shape (including ``dismissed``), so this only chooses the detail level.
     """
     return _project(dict(item), detail, _COMPACT_USER_FIELDS)

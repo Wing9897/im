@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from server.config import get_config
 from server.tests.ui_prefs_helpers import ui_pref_payload
-from server.ui_prefs import (
+from server.ui_prefs.board import sanitize_board_layout, sanitize_board_widget_state
+from server.ui_prefs.common import (
     KEY_OPS_BOARD_LAYOUT,
     KEY_OPS_BOARD_WIDGET_STATE,
     MAX_PREF_JSON_CHARS,
-    sanitize_board_layout,
-    sanitize_board_widget_state,
 )
 
 

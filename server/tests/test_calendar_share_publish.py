@@ -278,7 +278,7 @@ async def test_publish_catalog_change_patches_without_event_diff(client, fake_re
 
 async def test_publish_skips_catalog_when_last_cover_unchanged(client, app, fake_remote):
     """skip_catalog: unchanged events + lastCover/lastDescription skip remote; cover change patches."""
-    from server.calendar_share.store import get_workset_entry
+    from server.calendar_share.store.publish_household_overlay import get_workset_entry
 
     await login_calendar_share(client, fake_remote)
     cover = "data:image/jpeg;base64,cover-v1"
@@ -417,7 +417,7 @@ async def test_publish_succeeds_when_grants_fail_after_snapshot(client, fake_rem
 
 
 async def test_publish_timeout_then_write_interval_is_success(client, fake_remote):
-    from server.calendar_share.remote import CalendarShareRemoteError
+    from server.calendar_share.remote_errors import CalendarShareRemoteError
 
     await login_calendar_share(client, fake_remote)
     fake_remote.put_calendar_queue = [
@@ -476,7 +476,7 @@ async def test_publish_rejects_over_event_cap_without_calling_ic(client, fake_re
 
 
 async def test_publish_ic_quota_422_keeps_last_sync_and_hash(client, app, fake_remote):
-    from server.calendar_share.store import get_workset_entry
+    from server.calendar_share.store.publish_household_overlay import get_workset_entry
     from server.errors import PUBLISH_CALENDAR_LIMIT
 
     await login_calendar_share(client, fake_remote)

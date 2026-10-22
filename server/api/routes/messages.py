@@ -15,7 +15,7 @@ from fastapi.responses import Response
 
 from server.api.deps import API_DEPS, get_broadcaster, get_collector, get_db
 from server.api.query_aliases import qalias
-from server.api.schemas.requests import IngestBatchBody, IngestMessageBody
+from server.api.schemas.requests.messages import IngestBatchBody, IngestMessageBody
 from server.api.schemas.responses import (
     MessageResponse,
     MessagesIngestBatchResponse,

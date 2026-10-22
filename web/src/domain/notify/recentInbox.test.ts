@@ -9,7 +9,7 @@ import {
   setRecentInboxOpen,
   unreadRecentInboxCount,
 } from "./recentInbox";
-import { resetRecentInboxForTests } from "./recentInbox.testing";
+import { resetRecentInboxForTests } from "../../test/helpers/recentInbox.testing";
 describe("recentInbox", () => {
   afterEach(() => {
     resetRecentInboxForTests();

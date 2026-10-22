@@ -24,7 +24,7 @@ import {
   userEventsToTimedKeyEvents,
   type TimedKeyEvent,
 } from "./scanner";
-import { resetFiredKeysCacheForTests } from "./scannerFiredStore.testing";
+import { resetFiredKeysCacheForTests } from "../../../test/helpers/scannerFiredStore.testing";
 const { mockFetchFired, mockPutFired, mockClaimFired } = vi.hoisted(() => ({
   mockFetchFired: vi.fn(),
   mockPutFired: vi.fn(),

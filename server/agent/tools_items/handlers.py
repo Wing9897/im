@@ -10,7 +10,7 @@ from server.domain.workset_scope import allowed_workset_ids_from_args
 from server.items.normalize import _UNSET, ItemValidationError
 from server.items.service import create_item, patch_item
 from server.queries.items_queries import fetch_expiring_items, fetch_item_row, fetch_item_rows
-from server.wire.serializers import serialize_item
+from server.wire.serializer_domains.items import serialize_item
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 

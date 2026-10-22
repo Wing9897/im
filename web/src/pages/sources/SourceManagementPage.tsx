@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { SourceTabKey } from "../../types/sources";
 import { AppPageShell, Button } from "../../components/ui";
 import { readReturnTo } from "../../routing/returnTo";
-import { WorkspaceSectionSwitch } from "../workspace/WorkspaceSectionSwitch";
+import { WorkspaceSectionSwitch } from "../shared/WorkspaceSectionSwitch";
 import { SourceTabNav } from "./SourceTabNav";
 import { getSourcePlatformPlugin, isSourceTabKey } from "./plugins";
 import type { SourcePlatformTabProps } from "./plugins/types";

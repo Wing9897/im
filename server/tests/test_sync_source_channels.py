@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from server.api.routes.sources.helpers import sync_source_channels
 from server.queries import sources_queries
 from server.services.sources.connect import finalize_source_setup
+from server.services.sources.route_helpers import sync_source_channels
 from server.util import new_id, utc_now_iso
 
 

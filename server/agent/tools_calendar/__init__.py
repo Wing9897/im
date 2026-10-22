@@ -1,7 +1,8 @@
 """Calendar tools for the Agent runtime: name → handler registry and dispatch.
 
-Handlers live in :mod:`.handlers`, the LLM-facing JSON schemas in :mod:`.schemas`.
-Importers keep using ``server.agent.tools_calendar`` for both.
+Handlers live in :mod:`.handlers_read` and :mod:`.handlers_write`.
+LLM-facing JSON schemas live in :mod:`.schemas`.
+Importers keep using ``server.agent.tools_calendar`` for the registry.
 
 ``HARD_CAP`` re-exports ``CALENDAR_RESULT_HARD_CAP`` for tests／callers that
 still import the short alias from this package.
@@ -13,20 +14,22 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from server.agent.tool_limits import CALENDAR_RESULT_HARD_CAP as HARD_CAP
-from server.agent.tools_calendar.handlers import (
+from server.agent.tools_calendar.handlers_read import (
+    _tool_get,
+    _tool_list_calendars,
+    _tool_recent,
+    _tool_upcoming,
+    _tool_window,
+)
+from server.agent.tools_calendar.handlers_write import (
     _tool_create_event,
     _tool_create_recurring_series,
     _tool_delete_event,
     _tool_delete_recurring_series,
-    _tool_get,
-    _tool_list_calendars,
     _tool_mark_important,
-    _tool_recent,
     _tool_unmark_important,
-    _tool_upcoming,
     _tool_update_event,
     _tool_update_recurring_series,
-    _tool_window,
 )
 from server.agent.tools_calendar.schemas import TOOL_SCHEMAS
 from server.db.database import Database

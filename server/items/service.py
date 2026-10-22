@@ -36,7 +36,7 @@ from server.queries.items_queries import (
 )
 from server.queries.worksets_queries import workset_exists
 from server.util import new_id, utc_now_iso
-from server.wire.serializers import serialize_item, serialize_item_category
+from server.wire.serializer_domains.items import serialize_item, serialize_item_category
 
 
 async def _require_workset(db: Database, workset_id: str) -> str:

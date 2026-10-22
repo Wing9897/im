@@ -5,7 +5,12 @@ from __future__ import annotations
 from fastapi import Request
 
 from server.api.routes.sources.common import router
-from server.api.schemas.requests import MqttBrokerBody, MqttBrokerPatchBody, RssFeedBody, RssFeedPatchBody
+from server.api.schemas.requests.sources import (
+    MqttBrokerBody,
+    MqttBrokerPatchBody,
+    RssFeedBody,
+    RssFeedPatchBody,
+)
 from server.api.schemas.responses import AddMqttBrokerResponse, AddRssFeedResponse
 from server.services.sources.registry import (
     MQTT_SOURCE_SPEC,

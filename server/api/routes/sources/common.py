@@ -1,7 +1,6 @@
 """Platform-agnostic source endpoints (list/delete/reconnect/refresh).
 
-Shared source helpers live in ``helpers.py``; platform modules import them
-directly. This module owns the shared FastAPI router and generic source routes.
+This module owns the shared FastAPI router and generic source routes.
 """
 
 from __future__ import annotations
@@ -13,10 +12,6 @@ from typing import Any
 from fastapi import APIRouter, Request, Response
 
 from server.api.deps import API_DEPS, get_collector, get_db
-from server.api.routes.sources.helpers import (
-    add_source_response,
-    get_source_row,
-)
 from server.api.schemas.responses import (
     AddSourceResponse,
     DiscordBotInfoResponse,
@@ -30,9 +25,11 @@ from server.api.schemas.responses import (
 from server.domain.collector_platforms import COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT
 from server.errors import COLLECTOR_UNAVAILABLE, NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries import sources_queries
+from server.services.sources.login_response import add_source_response
 from server.services.sources.presenters import present_sources
+from server.services.sources.route_helpers import get_source_row
 from server.source_status import mark_source_connected, set_source_error
-from server.wire.serializers import serialize_source
+from server.wire.serializer_domains.sources import serialize_source
 
 logger = logging.getLogger(__name__)
 

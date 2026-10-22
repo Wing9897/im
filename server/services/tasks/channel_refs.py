@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.queries.tasks_queries import fetch_task_channel_rows
-from server.wire.serializers import serialize_channel_ref
+from server.wire.serializer_domains.sources import serialize_channel_ref
 
 
 async def channel_refs_for(db: Any, task_id: str) -> list[dict[str, Any]]:

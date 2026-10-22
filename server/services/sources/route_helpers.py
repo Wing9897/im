@@ -1,4 +1,9 @@
-"""Shared source helpers used by source services and platform route modules."""
+"""Source helpers that routes and the connect registry share.
+
+Channel lists, credential parsing, and login payloads stay in the modules
+that own them. This module only keeps the row lookup and response bodies
+those callers build together.
+"""
 
 from __future__ import annotations
 
@@ -6,21 +11,11 @@ from typing import Any
 
 from server.api.deps import require_row
 from server.queries import sources_queries
-from server.services.sources.channels import list_source_channels, list_source_channels_batch
-from server.services.sources.credentials import parse_credentials
-from server.services.sources.login_response import add_source_response, add_source_response_from_login
-from server.services.sources.records import create_source_row
-from server.wire.serializers import serialize_source
+from server.wire.serializer_domains.sources import serialize_source
 
 __all__ = [
-    "add_source_response",
-    "add_source_response_from_login",
     "bind_source_channel",
-    "create_source_row",
     "get_source_row",
-    "list_source_channels",
-    "list_source_channels_batch",
-    "parse_credentials",
     "source_connect_error_response",
     "source_status_response",
     "sync_source_channels",

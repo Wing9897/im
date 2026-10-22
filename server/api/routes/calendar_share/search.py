@@ -8,17 +8,17 @@ from fastapi import APIRouter, Query, Request
 
 from server.api.deps import get_db
 from server.api.schemas.responses.calendar_share import CalendarShareSearchResponse
-from server.calendar_share import remote as calendar_share_remote
+from server.calendar_share import remote_http as calendar_share_http
 from server.calendar_share.constants import LISTING_PUBLIC, LISTING_PUBLIC_BUSY, VISIBILITY_GRANT
 from server.calendar_share.rate_limit import enforce_calendar_share_rate_limit
-from server.calendar_share.remote import (
+from server.calendar_share.remote_errors import (
     CalendarShareRemoteError,
-    authorized_request_raw,
     raise_mapped_remote_error,
     raise_remote_status,
 )
-from server.calendar_share.store import get_base_url, session_connected
-from server.wire.serializers import serialize_catalog_wire_fields
+from server.calendar_share.remote_http import authorized_request_raw
+from server.calendar_share.store.session import get_base_url, session_connected
+from server.wire.serializer_domains.calendar_share import serialize_catalog_wire_fields
 
 router = APIRouter(tags=["calendar-share"])
 
@@ -81,7 +81,7 @@ async def search_calendars(
         return _search_response(status, payload)
     base_url = await get_base_url(db)
     try:
-        status, payload = await calendar_share_remote.calendar_share_request(
+        status, payload = await calendar_share_http.calendar_share_request(
             base_url=base_url,
             method="GET",
             path="/search",

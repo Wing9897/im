@@ -23,7 +23,6 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from server import __version__
 from server.api.routes import all_routers
 from server.constants import (
     DB_PATH_ENV,
@@ -41,6 +40,7 @@ from server.runtime_ready import RuntimeReadyMiddleware
 from server.secrets_probe import probe_stored_secrets
 from server.sse import SseBroadcaster
 from server.static_files import mount_static_files
+from server.version import __version__
 
 logger = logging.getLogger(__name__)
 

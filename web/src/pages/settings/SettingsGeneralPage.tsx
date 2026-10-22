@@ -2,10 +2,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { saveSystemSettings } from "../../api/config";
 import { restartCollector } from "../../api/system";
-import { AnalysisDebugPanel } from "../../components/settings/AnalysisDebugPanel";
-import { CollectorRestartPanel } from "../../components/settings/CollectorRestartPanel";
+import { AnalysisDebugPanel } from "./AnalysisDebugPanel";
+import { CollectorRestartPanel } from "./CollectorRestartPanel";
 import { LanguageSwitcher } from "../../components/settings/LanguageSwitcher";
-import { SystemVersionPanel } from "../../components/settings/SystemVersionPanel";
+import { SystemVersionPanel } from "./SystemVersionPanel";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { ToggleSwitch } from "../../components/ToggleSwitch";
 import {

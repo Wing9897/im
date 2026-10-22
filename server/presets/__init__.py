@@ -1,5 +1,4 @@
-"""Static catalogs served over the API (task templates, …)."""
+"""Static catalogs served over the API (task templates, …).
 
-from server.presets.task_presets import BUILTIN_PRESETS
-
-__all__ = ["BUILTIN_PRESETS"]
+Import ``BUILTIN_PRESETS`` from ``server.presets.task_presets``.
+"""

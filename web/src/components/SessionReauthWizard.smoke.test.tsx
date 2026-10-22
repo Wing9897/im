@@ -2,7 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { SessionReauthWizard } from "./SessionReauthWizard";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../test/helpers/connectionStore.testing";
 import { wrapWithI18n } from "../test/i18nHarness";
 
 const loginWithPassword = vi.fn();

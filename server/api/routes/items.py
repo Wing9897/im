@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified
 from server.api.query_aliases import qalias
-from server.api.schemas.requests import (
+from server.api.schemas.requests.items import (
     CategoryCreateBody,
     CategoryUpdateBody,
     ItemCreateBody,
@@ -36,7 +36,7 @@ from server.queries.items_queries import (
     fetch_item_row,
     fetch_item_rows,
 )
-from server.wire.serializers import serialize_item, serialize_item_category
+from server.wire.serializer_domains.items import serialize_item, serialize_item_category
 
 router = APIRouter(prefix="/api/v1/items", tags=["items"], dependencies=API_DEPS)
 

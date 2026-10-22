@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, Response
 
 from server.api.deps import API_DEPS, get_db
 from server.api.query_aliases import qalias
-from server.api.schemas.requests import LogCreate
+from server.api.schemas.requests.logs import LogCreate
 from server.api.schemas.responses import AppLogCursorResponse, AppLogEntryResponse, AppLogPageResponse
 from server.app_logging import (
     ALLOWED_LOG_CATEGORIES,
@@ -17,7 +17,7 @@ from server.app_logging import (
 from server.domain.app_log_levels import ALLOWED_APP_LOG_LEVELS
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.logs_queries import fetch_app_logs_page
-from server.wire.serializers import serialize_app_log
+from server.wire.serializer_domains.operations import serialize_app_log
 
 router = APIRouter(prefix="/api/v1/logs", tags=["logs"], dependencies=API_DEPS)
 

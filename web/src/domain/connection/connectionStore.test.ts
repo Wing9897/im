@@ -8,7 +8,7 @@ import {
   setConnectionMode,
   setServerBaseUrl,
 } from "./connectionStore";
-import { _resetConnectionStoreForTests } from "./connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../../test/helpers/connectionStore.testing";
 describe("connectionStore", () => {
   beforeEach(() => {
     localStorage.clear();

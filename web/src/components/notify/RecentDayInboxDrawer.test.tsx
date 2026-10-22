@@ -7,7 +7,7 @@ import {
   setRecentInboxOpen,
   unreadRecentInboxCount,
 } from "../../domain/notify/recentInbox";
-import { resetRecentInboxForTests } from "../../domain/notify/recentInbox.testing";
+import { resetRecentInboxForTests } from "../../test/helpers/recentInbox.testing";
 import { RecentDayInboxDrawer } from "./RecentDayInboxDrawer";
 
 vi.mock("react-i18next", () => ({

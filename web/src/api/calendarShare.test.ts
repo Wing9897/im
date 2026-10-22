@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resetCalendarShareRateLimitForTests } from "../domain/calendarShare/calendarShareRateLimit.testing";
+import { resetCalendarShareRateLimitForTests } from "../test/helpers/calendarShareRateLimit.testing";
 vi.mock("./client", () => ({
   apiClient: {
     put: vi.fn().mockResolvedValue({}),

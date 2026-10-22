@@ -1,4 +1,5 @@
 import { act } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { zIndex } from "../../../styles/tokens";
 import { createTestHarness, type TestHarness } from "../../../test/render-helpers";
@@ -29,6 +30,14 @@ const { isAssistantDirectModeSupported } = await import(
 const { useBrowserTtsVoiceOptions } = await import("../../../speech/useBrowserTtsVoiceOptions");
 const { SettingsVoicePage } = await import("./SettingsVoicePage");
 
+function SettingsVoicePageUnderRouter() {
+  return (
+    <MemoryRouter>
+      <SettingsVoicePage />
+    </MemoryRouter>
+  );
+}
+
 describe("SettingsVoicePage", () => {
   let harness: TestHarness;
 
@@ -46,7 +55,7 @@ describe("SettingsVoicePage", () => {
   });
 
   it("puts auto-speak on a label+switch row instead of a tile", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
     const toggle = harness.container.querySelector('[data-testid="voice-tts-enabled"]');
     expect(toggle?.getAttribute("role")).toBe("switch");
     expect(toggle?.className).not.toContain("im-surface-inset");
@@ -55,13 +64,13 @@ describe("SettingsVoicePage", () => {
   });
 
   it("keeps the voice disclaimer as a short caption", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
     expect(harness.container.textContent).toContain("語音只作輸入／朗讀");
     expect(harness.container.textContent).not.toContain("Agent 只處理文字");
   });
 
   it("frames STT and TTS as two panel cards on one row", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
 
     const sttCard = harness.container.querySelector('[data-testid="voice-stt-card"]');
     const ttsCard = harness.container.querySelector('[data-testid="voice-tts-card"]');
@@ -87,7 +96,7 @@ describe("SettingsVoicePage", () => {
   });
 
   it("hosts auto-speak as a plain switch inside its own card", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
     const autoSpeakCard = harness.container.querySelector('[data-testid="voice-auto-speak-card"]');
     const toggle = autoSpeakCard?.querySelector('[data-testid="voice-tts-enabled"]');
     expect(toggle?.getAttribute("role")).toBe("switch");
@@ -98,7 +107,7 @@ describe("SettingsVoicePage", () => {
   });
 
   it("groups language, PTT, and workset in one session card", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
 
     const sessionCard = harness.container.querySelector('[data-testid="voice-session-card"]');
     const sttCard = harness.container.querySelector('[data-testid="voice-stt-card"]');
@@ -121,7 +130,7 @@ describe("SettingsVoicePage", () => {
   });
 
   it("explains that the voice list is what Web Speech API returns", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
     const ttsCard = harness.container.querySelector('[data-testid="voice-tts-card"]');
     expect(ttsCard?.textContent).toContain("清單即桌面 Web Speech API 回傳的語音");
     expect(ttsCard?.textContent).toContain("Windows 設定 → 時間與語言 → 語音");
@@ -151,7 +160,7 @@ describe("SettingsVoicePage", () => {
         label: "Microsoft Zira · en-US · 本機",
       },
     ]);
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
 
     const trigger = harness.container.querySelector(
       '[data-testid="voice-tts-voice-value"]',
@@ -183,7 +192,7 @@ describe("SettingsVoicePage", () => {
         label: `Voice ${i} · ${i < 5 ? "zh-HK" : "en-US"} · 本機`,
       })),
     );
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
 
     const trigger = harness.container.querySelector(
       '[data-testid="voice-tts-voice-value"]',
@@ -198,7 +207,7 @@ describe("SettingsVoicePage", () => {
   });
 
   it("uses portaled MenuSelect for STT/TTS instead of native select", async () => {
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
 
     expect(harness.container.querySelector("select")).toBeNull();
     const sttTrigger = harness.container.querySelector("#voice-stt-provider");
@@ -226,7 +235,7 @@ describe("SettingsVoicePage", () => {
 
   it("still shows the desktop STT unsupported message when PTT is blocked", async () => {
     vi.mocked(isAssistantDirectModeSupported).mockReturnValue(false);
-    await harness.render(SettingsVoicePage);
+    await harness.render(SettingsVoicePageUnderRouter);
     const notice = harness.container.querySelector('[data-testid="voice-stt-desktop-unavailable"]');
     expect(notice).not.toBeNull();
     expect(notice?.textContent).toContain("桌面版不支援瀏覽器語音辨識");

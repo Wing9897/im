@@ -83,7 +83,7 @@ import {
   SettingsContentCard,
   SettingsFieldGroup,
 } from "./SettingsShared";
-import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
+import { SettingsSaveBar } from "./SettingsSaveBar";
 import { SettingsTopTabs } from "../shared/WorkspaceShell";
 
 describe("SettingsContentCard visual styles", () => {

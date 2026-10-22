@@ -14,17 +14,17 @@ from server.api.schemas.responses.calendar_share import (
 )
 from server.calendar_share.events import project_subscription_window
 from server.calendar_share.rate_limit import enforce_calendar_share_rate_limit
-from server.calendar_share.remote import authorized_request, authorized_request_raw, raise_remote_status
-from server.calendar_share.store import (
-    get_handle,
+from server.calendar_share.remote_errors import raise_remote_status
+from server.calendar_share.remote_http import authorized_request, authorized_request_raw
+from server.calendar_share.store.normalize import (
     normalize_handle,
     normalize_slug,
     parse_calendar_path,
-    session_connected,
 )
+from server.calendar_share.store.session import get_handle, session_connected
 from server.errors import VALIDATION_ERROR, http_error
 from server.time_iso import parse_iso
-from server.wire.serializers import serialize_catalog_wire_fields
+from server.wire.serializer_domains.calendar_share import serialize_catalog_wire_fields
 
 router = APIRouter(tags=["calendar-share"])
 

@@ -12,14 +12,14 @@ import logging
 from fastapi import APIRouter, Request
 
 from server.api.deps import get_collector, get_db, get_scheduler
-from server.api.schemas.requests import RotateSecretsBody
+from server.api.schemas.requests.auth import RotateSecretsBody
 from server.api.schemas.responses import (
     RotateSecretsResponse,
     RotateSecretsScrubbedCounts,
     SystemMessageResponse,
 )
-from server.auth import verify_auth, verify_write_access
 from server.auth.admin_auth import verify_admin_credentials
+from server.auth.household_auth import verify_auth, verify_write_access
 from server.errors import INVALID_CREDENTIALS, http_error
 from server.paths import (
     clear_connection_json_files,

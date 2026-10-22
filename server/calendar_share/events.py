@@ -12,9 +12,9 @@ from typing import Any
 
 from server.calendar.rrule import expand_calendar_occurrences
 from server.calendar_share.snapshot import json_array_text
-from server.calendar_share.store import calendar_key, normalize_handle, normalize_slug
+from server.calendar_share.store.normalize import calendar_key, normalize_handle, normalize_slug
 from server.time_iso import parse_iso
-from server.wire.serializers import serialize_calendar_share_event
+from server.wire.serializer_domains.calendar_share import serialize_calendar_share_event
 
 
 def subscribed_source(handle: str, slug: str) -> str:

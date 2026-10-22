@@ -2,7 +2,7 @@ import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { saveDeviceSession } from "../../domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "../../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../../test/helpers/connectionStore.testing";
 const handleAnalysisPausedChange = vi.fn(async () => {});
 const handleEmergencyAbort = vi.fn(async () => {});
 

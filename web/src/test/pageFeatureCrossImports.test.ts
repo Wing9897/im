@@ -25,8 +25,32 @@ function featureDirs(): string[] {
 
 const FEATURES = featureDirs();
 
-/** Shared workset chrome lives in `components/worksets/` — no page-to-page exceptions. */
-const ALLOWED_CROSS_FEATURE = new Set<string>([]);
+/**
+ * Exact top-level set after schedule, subscriptions, worksets, leaderboard,
+ * and dashboard moved under timeline, intelligence, and workspace.
+ * A new or missing directory fails this lock.
+ */
+const EXPECTED_FEATURES = [
+  "account",
+  "assistant",
+  "intelligence",
+  "items",
+  "logs",
+  "monitor",
+  "notify",
+  "settings",
+  "sources",
+  "tasks",
+  "timeline",
+  "viewer",
+  "workspace",
+];
+
+/** Workset chrome stays in `components/worksets/`. One host composition is listed below. */
+const ALLOWED_CROSS_FEATURE = new Set<string>([
+  // WorkspaceShell hosts SourceManagementPage for both /tasks and /sources.
+  "pages/workspace/WorkspaceShell.tsx → ../sources/SourceManagementPage (sources)",
+]);
 
 const IMPORT_RE =
   /(?:from|import\()\s*['"]([^'"]+)['"]/g;
@@ -104,8 +128,8 @@ function displayPath(file: string): string {
 }
 
 describe("page feature cross-imports", () => {
-  it("covers every page directory except the shared chrome", () => {
-    expect(FEATURES.length).toBeGreaterThanOrEqual(15);
+  it("locks the top-level page feature directories", () => {
+    expect([...FEATURES].sort()).toEqual([...EXPECTED_FEATURES].sort());
     expect(FEATURES).not.toContain("shared");
   });
 

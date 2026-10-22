@@ -5,7 +5,7 @@ import {
   SettingsContentCard,
   SettingsFieldGroup,
 } from "../../components/settings/SettingsFormLayout";
-import { ThemePicker } from "../../components/settings/ThemePicker";
+import { ThemePicker } from "./ThemePicker";
 import { Button } from "../../components/ui";
 import { captionClass } from "../../components/ui/pageTypography";
 import {

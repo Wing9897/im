@@ -6,7 +6,11 @@ import pytest
 from fastapi import HTTPException
 
 from server.calendar_share.constants import DEFAULT_GENERAL_SLUG, INVALID_SLUG_MESSAGE, SLUG_MAX_LEN
-from server.calendar_share.store import coerce_publish_slug, default_publish_slug, normalize_slug
+from server.calendar_share.store.normalize import (
+    coerce_publish_slug,
+    default_publish_slug,
+    normalize_slug,
+)
 from server.errors import INVALID_CALENDAR_SLUG
 from server.worksets_const import SYSTEM_WORKSET_ID
 

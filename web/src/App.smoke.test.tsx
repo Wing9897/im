@@ -6,7 +6,7 @@ import {
   hasDeviceSession,
   saveDeviceSession,
 } from "./domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "./domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "./test/helpers/connectionStore.testing";
 import { wrapWithI18n } from "./test/i18nHarness";
 
 const fetchHealth = vi.fn();
@@ -95,9 +95,9 @@ vi.mock("./context/AppRuntimeContext", () => ({
   AppRuntimeProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-vi.mock("./context/TaskCatalogContext", () => ({
-  TaskCatalogProvider: ({ children }: { children: ReactNode }) => children,
-}));
+vi.mock("./context/TaskCatalogContext", async () =>
+  (await import("./test/context-mocks")).taskCatalogModuleMock(),
+);
 
 const { App } = await import("./App");
 

@@ -9,7 +9,7 @@ import {
   taskCatalogState,
 } from "../../../test/context-mocks";
 import { loadRecentInbox } from "../recentInbox";
-import { resetRecentInboxForTests } from "../recentInbox.testing";
+import { resetRecentInboxForTests } from "../../../test/helpers/recentInbox.testing";
 function windowRow(
   overrides: Partial<CalendarWindowItem> &
     Pick<CalendarWindowItem, "id" | "source" | "title">,

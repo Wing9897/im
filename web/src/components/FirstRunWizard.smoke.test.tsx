@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { FirstRunWizard } from "./FirstRunWizard";
 import { getConnectionSnapshot } from "../domain/connection/connectionStore";
-import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../test/helpers/connectionStore.testing";
 import { wrapWithI18n } from "../test/i18nHarness";
 
 const registerAdmin = vi.fn();

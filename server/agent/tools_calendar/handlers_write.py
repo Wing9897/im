@@ -23,13 +23,13 @@ from server.calendar.user_events_write import (
 )
 from server.calendar.write_input import RecurringSeriesWriteInput, UserEventWriteInput
 from server.db.database import Database
-from server.services.recurring_series_writes import (
-    create_recurring_series,
+from server.services.recurring_series_create import create_recurring_series
+from server.services.recurring_series_patch import (
     hard_delete_recurring_series,
     patch_recurring_series,
 )
 from server.services.task_writes import TaskWriteError
-from server.wire.serializers import serialize_recurring_series
+from server.wire.serializer_domains.recurring import serialize_recurring_series
 
 
 async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, Any]:

@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from server.calendar_share.remote_errors import CalendarShareRemoteError, _message_from_payload, raise_remote_status
-from server.calendar_share.store import (
+from server.calendar_share.store.session import (
     clear_tokens,
     get_access_token,
     get_refresh_token,
@@ -45,7 +45,7 @@ def parse_token_pair(payload: Any) -> tuple[str, str]:
 
 
 async def login_remote(base_url: str, handle: str, password: str) -> tuple[str, str]:
-    from server.calendar_share.remote import calendar_share_request
+    from server.calendar_share.remote_http import calendar_share_request
 
     status, payload = await calendar_share_request(
         base_url=base_url,
@@ -66,7 +66,7 @@ async def login_remote(base_url: str, handle: str, password: str) -> tuple[str, 
 
 
 async def refresh_remote(base_url: str, refresh_token: str) -> tuple[str, str]:
-    from server.calendar_share.remote import calendar_share_request
+    from server.calendar_share.remote_http import calendar_share_request
 
     status, payload = await calendar_share_request(
         base_url=base_url,
@@ -84,7 +84,7 @@ async def refresh_remote(base_url: str, refresh_token: str) -> tuple[str, str]:
 
 
 async def logout_remote(base_url: str, refresh_token: str) -> None:
-    from server.calendar_share.remote import calendar_share_request
+    from server.calendar_share.remote_http import calendar_share_request
 
     try:
         await calendar_share_request(

@@ -10,7 +10,7 @@ from server.api.deps import (
     get_db,
     publish_resource_modified,
 )
-from server.api.schemas.requests import ActionBody
+from server.api.schemas.requests.actions import ActionBody
 from server.api.schemas.responses import (
     ActionResponse,
     ActionTestResponse,
@@ -21,7 +21,10 @@ from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.queries import actions_queries
 from server.services import actions_crud
 from server.services.actions_crud import ActionValidationError
-from server.wire.serializers import serialize_action, serialize_action_trigger_history
+from server.wire.serializer_domains.operations import (
+    serialize_action,
+    serialize_action_trigger_history,
+)
 
 router = APIRouter(prefix="/api/v1/actions", tags=["actions"], dependencies=API_DEPS)
 

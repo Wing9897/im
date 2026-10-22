@@ -17,6 +17,14 @@ from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
 
+
+async def _safe_disconnect(source_id: str, adapter: BasePlatformAdapter, log: logging.Logger) -> None:
+    try:
+        await adapter.disconnect()
+    except Exception:  # noqa: BLE001 — cleanup must not raise
+        log.exception("Error disconnecting adapter %s", source_id)
+
+
 _AUTO_CONNECT_LOCK_RETRIES = 6
 _AUTO_CONNECT_LOCK_DELAYS_S = (0.5, 1.0, 2.0, 4.0, 8.0, 8.0)
 _FAILED_ADAPTER_RETRY_DELAY_S = 30.0
@@ -97,12 +105,6 @@ class CollectorRetryOrchestrator:
         for source_id, task in retries:
             self._remove_retry(source_id, task)
 
-    async def _safe_disconnect(self, source_id: str, adapter: BasePlatformAdapter) -> None:
-        try:
-            await adapter.disconnect()
-        except Exception:  # noqa: BLE001 — retry cleanup must continue
-            logger.exception("Error disconnecting adapter %s", source_id)
-
     async def _connect_with_db_lock_retry(self, adapter: BasePlatformAdapter) -> None:
         for attempt in range(_AUTO_CONNECT_LOCK_RETRIES):
             try:
@@ -114,7 +116,7 @@ class CollectorRetryOrchestrator:
                 is_last = attempt >= _AUTO_CONNECT_LOCK_RETRIES - 1
                 if not is_sqlite_busy(exc) or is_last:
                     raise
-                await self._safe_disconnect(adapter.state.source_id, adapter)
+                await _safe_disconnect(adapter.state.source_id, adapter, logger)
                 delay = _AUTO_CONNECT_LOCK_DELAYS_S[attempt]
                 logger.info(
                     "Database locked during auto-connect; retrying in %.1fs (attempt %d/%d)",

@@ -5,12 +5,12 @@ import { ModalDialog } from "../../../components/ModalDialog";
 import { dialogShellClass } from "../../../components/dialogs/dialogShellClasses";
 import { Button } from "../../../components/ui";
 import { subscriptionsWorkspaceNavItems } from "../../../domain/navigation/workspaceNav";
-import { SchedulePage } from "../../schedule/SchedulePage";
+import { SchedulePage } from "../schedule/SchedulePage";
 import {
   parseSubscriptionsTab,
   SubscriptionsShell,
   type SubscriptionsTabId,
-} from "../../subscriptions/SubscriptionsShell";
+} from "../subscriptions/SubscriptionsShell";
 
 const SUBSCRIPTION_SHEET_TABS = new Set<string>(
   subscriptionsWorkspaceNavItems.map((item) => item.id),

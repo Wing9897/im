@@ -10,7 +10,7 @@ import {
   taskCatalogState,
 } from "../../../test/context-mocks";
 import { applyCalendarShareCatalogItems } from "../../../domain/calendarShare/useCalendarShareCatalog";
-import { resetCalendarShareCatalogForTests } from "../../../domain/calendarShare/useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../../test/helpers/useCalendarShareCatalog.testing";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { TimelinePageProvider } from "../TimelinePageContext";
 import { makeContext, makeEvent, renderPanel } from "./eventListPanelTestUtils";

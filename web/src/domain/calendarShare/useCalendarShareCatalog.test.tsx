@@ -18,7 +18,7 @@ import {
   refreshCalendarShareCatalog,
   useCalendarShareCatalog,
 } from "./useCalendarShareCatalog";
-import { resetCalendarShareCatalogForTests } from "./useCalendarShareCatalog.testing";
+import { resetCalendarShareCatalogForTests } from "../../test/helpers/useCalendarShareCatalog.testing";
 function Harness({
   refOut,
 }: {

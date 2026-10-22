@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { lazyNamed } from "./LazyPage";
-import { resetLazyPageCacheForTests } from "./LazyPage.testing";
+import { resetLazyPageCacheForTests } from "../test/helpers/LazyPage.testing";
 describe("lazyNamed", () => {
   beforeEach(() => {
     resetLazyPageCacheForTests();

@@ -2,7 +2,7 @@
 
 Field names match the wire bodies. This is a plain data carrier, not an
 OpenAPI / Pydantic model: routes and calendar tools copy values here, then
-call ``user_events_write`` / ``recurring_series_writes``. ``fields_set`` is
+call ``user_events_write`` / ``recurring_series_create`` / ``recurring_series_patch``. ``fields_set`` is
 the keys the caller supplied. Create bodies also include the defaults the
 historical routes always forwarded. Omitted ``worksetId`` stays omitted so
 the service can keep its inherit-versus-explicit sentinel.

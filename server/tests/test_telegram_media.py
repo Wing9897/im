@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from telethon.tl.types import DocumentAttributeAnimated
 
 from server.collector.telegram_media import build_telegram_raw_data, extract_telegram_media
-from server.wire.serializers import serialize_message
+from server.wire.serializer_domains.sources import serialize_message
 
 
 def _msg(**attrs: object) -> MagicMock:

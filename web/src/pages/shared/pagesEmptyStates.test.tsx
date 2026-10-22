@@ -297,7 +297,7 @@ describe("Empty state rendering for list components", () => {
       mockFetchTrendingTopics.mockResolvedValue([]);
       mockListChannelsWithSources.mockResolvedValue([]);
 
-      const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
+      const { LeaderboardPage } = await import("../intelligence/leaderboard/LeaderboardPage");
       mountPage(createElement(LeaderboardPage));
 
       await vi.waitFor(() => {
@@ -319,7 +319,7 @@ describe("Empty state rendering for list components", () => {
       mockFetchTrendingTopics.mockResolvedValue([]);
       mockListChannelsWithSources.mockResolvedValue([]);
 
-      const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
+      const { LeaderboardPage } = await import("../intelligence/leaderboard/LeaderboardPage");
       mountPage(createElement(LeaderboardPage));
 
       await vi.waitFor(() => {

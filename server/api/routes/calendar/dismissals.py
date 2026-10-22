@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Query, Request, Response
 
 from server.api.deps import get_db, publish_resource_modified
-from server.api.schemas.requests import TimelineDismissalBody
+from server.api.schemas.requests.calendar import TimelineDismissalBody
 from server.api.schemas.responses import TimelineDismissalResponse
 from server.calendar.timeline_dismissals import (
     TimelineDismissalValidationError,

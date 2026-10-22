@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { AccountAccessKeysSection } from "./AccountAccessKeysSection";
-import { _resetConnectionStoreForTests } from "../../../domain/connection/connectionStore.testing";
+import { _resetConnectionStoreForTests } from "../../../test/helpers/connectionStore.testing";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const fetchAccessKeys = vi.fn();

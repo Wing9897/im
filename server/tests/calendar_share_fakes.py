@@ -181,7 +181,7 @@ class FakeRemote:
 @pytest.fixture
 def fake_remote(monkeypatch) -> FakeRemote:
     remote = FakeRemote()
-    monkeypatch.setattr("server.calendar_share.remote.calendar_share_request", remote)
+    monkeypatch.setattr("server.calendar_share.remote_http.calendar_share_request", remote)
     return remote
 
 

@@ -16,7 +16,7 @@ import {
   parseGeneratedSettingsSnapshotKeys,
   parseMcpCapabilitySettingsKeys,
   parseSettingsWireMap,
-} from "./settingsKeyContract";
+} from "../../test/helpers/settingsKeyContract";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../");
 

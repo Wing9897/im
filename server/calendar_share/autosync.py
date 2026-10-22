@@ -21,7 +21,12 @@ from server.calendar_share.auto_sync_config import (
 )
 from server.calendar_share.dirty import has_live_public_replica
 from server.calendar_share.publish import push_workset_calendar_result
-from server.calendar_share.store import get_workset_entry, load_workset_map, session_connected, upsert_workset_entry
+from server.calendar_share.store.publish_household_overlay import (
+    get_workset_entry,
+    load_workset_map,
+    upsert_workset_entry,
+)
+from server.calendar_share.store.session import session_connected
 from server.db.database import Database
 from server.errors import AUTH_REQUIRED
 

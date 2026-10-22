@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from server.api.deps import get_db, publish_resource_modified
 from server.api.query_aliases import qalias
-from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
+from server.api.schemas.requests.calendar import UserEventCreateBody, UserEventPatchBody
 from server.api.schemas.responses import UserEventResponse, UserEventsPageResponse
 from server.calendar.user_events_normalize import (
     UserEventItemIdError,

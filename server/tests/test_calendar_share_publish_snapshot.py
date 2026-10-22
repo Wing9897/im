@@ -153,7 +153,7 @@ def test_fingerprint_maps_include_series_and_visibility_skip():
 
 
 def test_workset_entry_ignores_legacy_last_events_hash():
-    from server.calendar_share.store import _clean_workset_entry
+    from server.calendar_share.store.publish_io import _clean_workset_entry
 
     cleaned = _clean_workset_entry(
         "ws",
@@ -175,7 +175,7 @@ def test_workset_entry_ignores_legacy_last_events_hash():
 
 
 def test_clean_workset_entry_keeps_canonical_listing_only():
-    from server.calendar_share.store import _clean_workset_entry
+    from server.calendar_share.store.publish_io import _clean_workset_entry
 
     for raw in ("off", "details", "busy", "mystery"):
         cleaned = _clean_workset_entry(
